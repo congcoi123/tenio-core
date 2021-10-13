@@ -34,9 +34,9 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.tenio.common.utilities.TimeUtility;
-import com.tenio.core.configuration.defines.ServerEvent;
-import com.tenio.core.entities.defines.modes.ConnectionDisconnectMode;
-import com.tenio.core.entities.defines.modes.PlayerDisconnectMode;
+import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.network.defines.TransportType;
 import com.tenio.core.network.entities.packet.PacketQueue;
 import com.tenio.core.network.entities.session.Session;

@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.event;
 
 /**
@@ -30,12 +31,11 @@ package com.tenio.core.event;
 @FunctionalInterface
 public interface Subscriber {
 
-	/**
-	 * To dispatch results from one event.
-	 * 
-	 * @param params all the results in an array
-	 * @return an object or <b>null</b>
-	 */
-	Object dispatch(Object... params);
-
+  /**
+   * To dispatch results from one event.
+   *
+   * @param params all the results in an array
+   * @return an object or <b>null</b>
+   */
+  Object dispatch(Object... params);
 }

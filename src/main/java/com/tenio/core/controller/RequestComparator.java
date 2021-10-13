@@ -21,41 +21,48 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.controller;
 
-import java.util.Comparator;
-
 import com.tenio.core.network.entities.protocols.Request;
+import java.util.Comparator;
+import org.apache.logging.log4j.core.tools.picocli.CommandLine.InitializationException;
 
+/**
+ * This class provides the comparator using for sort the requests bases on their priorities in
+ * the controller requests queue.
+ */
 public final class RequestComparator implements Comparator<Request> {
 
-	public static RequestComparator newInstance() {
-		return new RequestComparator();
-	}
+  private static final RequestComparator instance = new RequestComparator();
 
-	private RequestComparator() {
+  private RequestComparator() {
+    if (instance != null) {
+      throw new InitializationException("Could not recreate this class' instance");
+    }
+  }
 
-	}
+  public static RequestComparator newInstance() {
+    return instance;
+  }
 
-	@Override
-	public int compare(Request request1, Request request2) {
-		int result = 0;
+  @Override
+  public int compare(Request request1, Request request2) {
+    int result = 0;
 
-		if (request1.getPriority().getValue() < request2.getPriority().getValue()) {
-			result = -1;
-		} else if (request1.getPriority() == request2.getPriority()) {
-			if (request1.getTimestamp() < request2.getTimestamp()) {
-				result = -1;
-			} else if (request1.getTimestamp() > request2.getTimestamp()) {
-				result = 1;
-			} else {
-				result = 0;
-			}
-		} else {
-			result = 1;
-		}
-
-		return result;
-	}
-
+    if (request1.getPriority().getValue() < request2.getPriority().getValue()) {
+      result = -1;
+    } else if (request1.getPriority() == request2.getPriority()) {
+      if (request1.getTimestamp() < request2.getTimestamp()) {
+        result = -1;
+      } else if (request1.getTimestamp() > request2.getTimestamp()) {
+        result = 1;
+      } else {
+        result = 0;
+      }
+    } else {
+      result = 1;
+    }
+    return result;
+  }
 }

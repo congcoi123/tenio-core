@@ -120,7 +120,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager implements 
 				.option(ChannelOption.SO_BACKLOG, 5).childOption(ChannelOption.SO_SNDBUF, __senderBufferSize)
 				.childOption(ChannelOption.SO_RCVBUF, __receiverBufferSize)
 				.childOption(ChannelOption.SO_KEEPALIVE, true)
-				.childHandler(NettyWSInitializer.newInstance(__eventManager, __sessionManager, __connectionFilter,
+				.childHandler(NettyWSInitializer.newInstance(eventManager, __sessionManager, __connectionFilter,
 						__networkReaderStatistic, sslContext, __usingSSL));
 
 		var channelFuture = bootstrap.bind(__socketConfig.getPort()).sync()

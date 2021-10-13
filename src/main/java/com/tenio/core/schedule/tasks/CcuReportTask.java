@@ -28,8 +28,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import com.tenio.core.configuration.CoreConfiguration;
-import com.tenio.core.configuration.defines.ServerEvent;
-import com.tenio.core.entities.managers.PlayerManager;
+import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 
 /**

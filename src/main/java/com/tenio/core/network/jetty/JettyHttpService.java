@@ -100,7 +100,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
 		// Configuration
 		context.addServlet(new ServletHolder(new PingServlet()), CoreConstant.PING_PATH);
 		servlets.forEach((uri, list) -> {
-			context.addServlet(new ServletHolder(new ServletManager(__eventManager, list)), uri);
+			context.addServlet(new ServletHolder(new ServletManager(eventManager, list)), uri);
 		});
 
 		__server.setHandler(context);

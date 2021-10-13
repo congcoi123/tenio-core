@@ -21,56 +21,53 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.event.implement;
 
+import com.tenio.core.configuration.define.ServerEvent;
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.tenio.core.configuration.defines.ServerEvent;
-
 /**
- * Only for creating an event handler object, see {@link EventHandler}
+ * Only for creating an event handler object.
+ *
+ * @see EventHandler
  */
 @NotThreadSafe
 public final class EventProducer {
 
-	/**
-	 * @see EventHandler
-	 */
-	private final EventHandler<Object> __eventHandler;
+  private final EventHandler<Object> eventHandler;
 
-	public EventProducer() {
-		__eventHandler = new EventHandler<Object>();
-	}
+  public EventProducer() {
+    eventHandler = new EventHandler<Object>();
+  }
 
-	/**
-	 * Retrieves an event handler
-	 * 
-	 * @return see {@link EventHandler}
-	 */
-	public EventHandler<Object> getEventHandler() {
-		return __eventHandler;
-	}
+  /**
+   * Retrieves an event handler.
+   *
+   * @return see {@link EventHandler}
+   */
+  public EventHandler<Object> getEventHandler() {
+    return eventHandler;
+  }
 
-	/**
-	 * Emit an event with its parameters
-	 * 
-	 * @param event  see {@link ServerEvent}
-	 * @param params a list parameters of this event
-	 * @return the event result (the response of its subscribers), see
-	 *         {@link Object} or <b>null</b>
-	 * @see EventHandler#emit(ServerEvent, Object...)
-	 */
-	public Object emit(ServerEvent event, Object... params) {
-		return __eventHandler.emit(event, params);
-	}
+  /**
+   * Emit an event with its parameters.
+   *
+   * @param event  see {@link ServerEvent}
+   * @param params a list parameters of this event
+   * @return the event result (the response of its subscribers), see {@link Object} or <b>null</b>
+   * @see EventHandler#emit(ServerEvent, Object...)
+   */
+  public Object emit(ServerEvent event, Object... params) {
+    return eventHandler.emit(event, params);
+  }
 
-	/**
-	 * Clear all events and these handlers
-	 * 
-	 * @see EventHandler#clear()
-	 */
-	public void clear() {
-		__eventHandler.clear();
-	}
-
+  /**
+   * Clear all events and these handlers.
+   *
+   * @see EventHandler#clear()
+   */
+  public void clear() {
+    eventHandler.clear();
+  }
 }

@@ -21,28 +21,31 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.bootstrap;
 
-import com.tenio.common.bootstrap.annotations.Autowired;
-import com.tenio.common.bootstrap.annotations.Component;
+import com.tenio.common.bootstrap.annotation.Autowired;
+import com.tenio.common.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
 import com.tenio.core.bootstrap.event.EventHandler;
 
+/**
+ * This class provides instances for the event handling and configuration setup.
+ */
 @Component
 public final class BootstrapHandler {
 
-	@Autowired
-	private EventHandler __eventHandler;
+  @Autowired
+  private EventHandler eventHandler;
 
-	@Autowired
-	private ConfigurationHandler __configurationHandler;
+  @Autowired
+  private ConfigurationHandler configurationHandler;
 
-	public EventHandler getEventHandler() {
-		return __eventHandler;
-	}
+  public EventHandler getEventHandler() {
+    return eventHandler;
+  }
 
-	public ConfigurationHandler getConfigurationHandler() {
-		return __configurationHandler;
-	}
-
+  public ConfigurationHandler getConfigurationHandler() {
+    return configurationHandler;
+  }
 }

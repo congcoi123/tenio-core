@@ -21,10 +21,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.bootstrap.event;
 
-import com.tenio.common.bootstrap.annotations.Autowired;
-import com.tenio.common.bootstrap.annotations.Component;
+import com.tenio.common.bootstrap.annotation.Autowired;
+import com.tenio.common.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.event.handlers.ConnectionEventHandler;
 import com.tenio.core.bootstrap.event.handlers.HttpEventHandler;
 import com.tenio.core.bootstrap.event.handlers.MixinsEventHandler;
@@ -32,32 +33,37 @@ import com.tenio.core.bootstrap.event.handlers.PlayerEventHandler;
 import com.tenio.core.bootstrap.event.handlers.RoomEventHandler;
 import com.tenio.core.event.implement.EventManager;
 
+/**
+ * Dispatching all events in the server.
+ */
 @Component
 public final class EventHandler {
 
-	@Autowired
-	private ConnectionEventHandler __connectionEventHandler;
+  @Autowired
+  private ConnectionEventHandler connectionEventHandler;
 
-	@Autowired
-	private PlayerEventHandler __playerEventHandler;
+  @Autowired
+  private PlayerEventHandler playerEventHandler;
 
-	@Autowired
-	private RoomEventHandler __roomEventHandler;
+  @Autowired
+  private RoomEventHandler roomEventHandler;
 
-	@Autowired
-	private HttpEventHandler __httpEventHandler;
+  @Autowired
+  private HttpEventHandler httpEventHandler;
 
-	@Autowired
-	private MixinsEventHandler __mixinsEventHandler;
+  @Autowired
+  private MixinsEventHandler mixinsEventHandler;
 
-	public void initialize(EventManager eventManager) {
-
-		__connectionEventHandler.initialize(eventManager);
-		__playerEventHandler.initialize(eventManager);
-		__roomEventHandler.initialize(eventManager);
-		__httpEventHandler.initialize(eventManager);
-		__mixinsEventHandler.initialize(eventManager);
-
-	}
-
+  /**
+   * Initialization.
+   *
+   * @param eventManager the event manager
+   */
+  public void initialize(EventManager eventManager) {
+    connectionEventHandler.initialize(eventManager);
+    playerEventHandler.initialize(eventManager);
+    roomEventHandler.initialize(eventManager);
+    httpEventHandler.initialize(eventManager);
+    mixinsEventHandler.initialize(eventManager);
+  }
 }

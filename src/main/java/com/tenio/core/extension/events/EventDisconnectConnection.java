@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.tenio.core.extension.events;
 
-import com.tenio.core.entities.defines.modes.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.network.entities.session.Session;
 
 public interface EventDisconnectConnection {

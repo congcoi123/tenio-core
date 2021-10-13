@@ -23,8 +23,8 @@ THE SOFTWARE.
 */
 package com.tenio.core.extension.events;
 
-import com.tenio.core.entities.Player;
-import com.tenio.core.entities.defines.results.PlayerReconnectedResult;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.define.result.PlayerReconnectedResult;
 import com.tenio.core.network.entities.session.Session;
 
 public interface EventPlayerReconnectedResult {

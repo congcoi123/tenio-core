@@ -25,7 +25,7 @@ package com.tenio.core.schedule.tasks;
 
 import java.util.concurrent.ScheduledFuture;
 
-import com.tenio.core.entities.managers.PlayerManager;
+import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 
 /**

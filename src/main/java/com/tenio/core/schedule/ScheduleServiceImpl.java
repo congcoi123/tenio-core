@@ -25,8 +25,8 @@ package com.tenio.core.schedule;
 
 import com.tenio.common.task.TaskManager;
 import com.tenio.common.task.TaskManagerImpl;
-import com.tenio.core.entities.managers.PlayerManager;
-import com.tenio.core.entities.managers.RoomManager;
+import com.tenio.core.entity.manager.PlayerManager;
+import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.statistics.NetworkReaderStatistic;
@@ -58,12 +58,12 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
 	private ScheduleServiceImpl(EventManager eventManager) {
 		super(eventManager);
 
-		__autoDisconnectPlayerTask = AutoDisconnectPlayerTask.newInstance(__eventManager);
-		__autoRemoveRoomTask = AutoRemoveRoomTask.newInstance(__eventManager);
-		__ccuReportTask = CcuReportTask.newInstance(__eventManager);
-		__deadlockScanTask = DeadlockScanTask.newInstance(__eventManager);
-		__systemMonitoringTask = SystemMonitoringTask.newInstance(__eventManager);
-		__trafficCounterTask = TrafficCounterTask.newInstance(__eventManager);
+		__autoDisconnectPlayerTask = AutoDisconnectPlayerTask.newInstance(this.eventManager);
+		__autoRemoveRoomTask = AutoRemoveRoomTask.newInstance(this.eventManager);
+		__ccuReportTask = CcuReportTask.newInstance(this.eventManager);
+		__deadlockScanTask = DeadlockScanTask.newInstance(this.eventManager);
+		__systemMonitoringTask = SystemMonitoringTask.newInstance(this.eventManager);
+		__trafficCounterTask = TrafficCounterTask.newInstance(this.eventManager);
 
 		__initialized = false;
 	}

@@ -23,13 +23,11 @@ THE SOFTWARE.
 */
 package com.tenio.core.exceptions;
 
-import com.tenio.core.entities.Player;
-import com.tenio.core.entities.Room;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.Room;
 
 public final class AddedDuplicatedPlayerException extends RuntimeException {
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1303721781114060707L;
 
 	public AddedDuplicatedPlayerException(Player player, Room room) {

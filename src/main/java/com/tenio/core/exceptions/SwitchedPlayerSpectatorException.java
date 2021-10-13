@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.tenio.core.exceptions;
 
-import com.tenio.core.entities.defines.results.SwitchedPlayerSpectatorResult;
+import com.tenio.core.entity.define.result.SwitchedPlayerSpectatorResult;
 
 public final class SwitchedPlayerSpectatorException extends RuntimeException {
 	/**

@@ -21,187 +21,204 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.controller;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
-
-import com.tenio.common.utilities.StringUtility;
+import com.tenio.common.utility.StringUtility;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exceptions.RequestQueueFullException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entities.protocols.Request;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * The abstracted class for controllers.
+ */
 public abstract class AbstractController extends AbstractManager implements Controller, Runnable {
 
-	private static final int DEFAULT_MAX_QUEUE_SIZE = 50;
-	private static final int DEFAULT_NUMBER_WORKERS = 5;
+  private static final int DEFAULT_MAX_QUEUE_SIZE = 50;
+  private static final int DEFAULT_NUMBER_WORKERS = 5;
 
-	private volatile int __id;
-	private String __name;
+  private volatile int id;
+  private String name;
 
-	private ExecutorService __executor;
-	private int __executorSize;
+  private ExecutorService executorService;
+  private int executorSize;
 
-	private BlockingQueue<Request> __requestQueue;
+  private BlockingQueue<Request> requestQueue;
 
-	private int __maxQueueSize;
+  private int maxQueueSize;
 
-	private boolean __initialized;
-	private volatile boolean __activated;
+  private boolean initialized;
+  private volatile boolean activated;
 
-	protected AbstractController(EventManager eventManager) {
-		super(eventManager);
+  protected AbstractController(EventManager eventManager) {
+    super(eventManager);
 
-		__maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
-		__executorSize = DEFAULT_NUMBER_WORKERS;
-		__activated = false;
-		__initialized = false;
-	}
+    maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
+    executorSize = DEFAULT_NUMBER_WORKERS;
+    activated = false;
+    initialized = false;
+  }
 
-	private void __initializeWorkers() {
-		var requestComparator = RequestComparator.newInstance();
-		__requestQueue = new PriorityBlockingQueue<Request>(__maxQueueSize, requestComparator);
+  private void initializeWorkers() {
+    var requestComparator = RequestComparator.newInstance();
+    requestQueue = new PriorityBlockingQueue<Request>(maxQueueSize, requestComparator);
 
-		__executor = Executors.newFixedThreadPool(__executorSize);
-		for (int i = 0; i < __executorSize; i++) {
-			try {
-				Thread.sleep(100L);
-			} catch (InterruptedException e) {
-				error(e);
-			}
-			__executor.execute(this);
-		}
+    executorService = Executors.newFixedThreadPool(executorSize);
+    for (int i = 0; i < executorSize; i++) {
+      try {
+        Thread.sleep(100L);
+      } catch (InterruptedException e) {
+        error(e);
+      }
+      executorService.execute(this);
+    }
 
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			@Override
-			public void run() {
-				if (__executor != null && !__executor.isShutdown()) {
-					try {
-						__shutdown();
-					} catch (Exception e) {
-						error(e);
-					}
-				}
-			}
-		});
-	}
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        if (executorService != null && !executorService.isShutdown()) {
+          try {
+            attemptToShutdown();
+          } catch (Exception e) {
+            error(e);
+          }
+        }
+      }
+    });
+  }
 
-	private void __shutdown() {
-		__activated = false;
+  private void attemptToShutdown() {
+    activated = false;
 
-		__executor.shutdownNow();
+    info("STOPPING SERVICE", buildgen("controller-", getName(), " (", executorSize, ")"));
 
-		info("STOPPED SERVICE", buildgen("controller-", getName(), " (", __executorSize, ")"));
-		__destroy();
-		info("DESTROYED SERVICE", buildgen("controller-", getName(), " (", __executorSize, ")"));
-	}
+    executorService.shutdown();
 
-	@Override
-	public void run() {
-		__id++;
+    try {
+      if (executorService.awaitTermination(10, TimeUnit.SECONDS)) {
+        executorService.shutdownNow();
+        destroyController();
+      }
+    } catch (InterruptedException e) {
+      executorService.shutdownNow();
+      destroyController();
+    }
+  }
 
-		__setThreadName();
+  @Override
+  public void run() {
+    id++;
+    setThreadName();
 
-		while (true) {
-			if (__activated) {
-				try {
-					var request = __requestQueue.take();
-					processRequest(request);
-				} catch (InterruptedException e1) {
-					error(e1);
-				} catch (Throwable e2) {
-					error(e2);
-				}
-			}
-		}
-	}
+    while (true) {
+      if (activated) {
+        try {
+          var request = requestQueue.take();
+          processRequest(request);
+        } catch (InterruptedException e1) {
+          error(e1);
+        } catch (Throwable e2) {
+          error(e2);
+        }
+      }
+    }
+  }
 
-	private void __destroy() {
-		__executor = null;
-		__requestQueue.clear();
-		__requestQueue = null;
-		onDestroyed();
-	}
+  private void destroy() {
+    executorService = null;
+    requestQueue.clear();
+    requestQueue = null;
+    onDestroyed();
+  }
 
-	private void __setThreadName() {
-		Thread.currentThread().setName(StringUtility.strgen("controller-", getName(), "-", __id));
-	}
+  private void setThreadName() {
+    Thread.currentThread().setName(StringUtility.strgen("controller-", getName(), "-", id));
+  }
 
-	@Override
-	public void initialize() {
-		__initializeWorkers();
-		__initialized = true;
-	}
+  private void destroyController() {
+    info("STOPPING SERVICE", buildgen("controller-", getName(), " (", executorSize, ")"));
+    destroy();
+    info("DESTROYED SERVICE", buildgen("controller-", getName(), " (", executorSize, ")"));
+  }
 
-	@Override
-	public void start() {
-		__activated = true;
-		info("START SERVICE", buildgen("controller-", getName(), " (", __executorSize, ")"));
-	}
+  @Override
+  public void initialize() {
+    initializeWorkers();
+    initialized = true;
+  }
 
-	@Override
-	public void shutdown() {
-		if (!__initialized) {
-			return;
-		}
-		__shutdown();
-	}
+  @Override
+  public void start() {
+    activated = true;
+    info("START SERVICE", buildgen("controller-", getName(), " (", executorSize, ")"));
+  }
 
-	@Override
-	public String getName() {
-		return __name;
-	}
+  @Override
+  public void shutdown() {
+    if (!initialized) {
+      return;
+    }
+    attemptToShutdown();
+  }
 
-	@Override
-	public void setName(String name) {
-		__name = name;
-	}
+  @Override
+  public String getName() {
+    return name;
+  }
 
-	@Override
-	public boolean isActivated() {
-		return __activated;
-	}
+  @Override
+  public void setName(String name) {
+    this.name = name;
+  }
 
-	@Override
-	public void enqueueRequest(Request request) {
-		if (__requestQueue.size() >= __maxQueueSize) {
-			var exception = new RequestQueueFullException(__requestQueue.size());
-			error(exception, exception.getMessage());
-			throw exception;
-		}
-		__requestQueue.add(request);
-	}
+  @Override
+  public boolean isActivated() {
+    return activated;
+  }
 
-	@Override
-	public int getMaxRequestQueueSize() {
-		return __maxQueueSize;
-	}
+  @Override
+  public void enqueueRequest(Request request) {
+    if (requestQueue.size() >= maxQueueSize) {
+      var exception = new RequestQueueFullException(requestQueue.size());
+      error(exception, exception.getMessage());
+      throw exception;
+    }
+    requestQueue.add(request);
+  }
 
-	@Override
-	public void setMaxRequestQueueSize(int maxSize) {
-		__maxQueueSize = maxSize;
-	}
+  @Override
+  public int getMaxRequestQueueSize() {
+    return maxQueueSize;
+  }
 
-	@Override
-	public int getThreadPoolSize() {
-		return __executorSize;
-	}
+  @Override
+  public void setMaxRequestQueueSize(int maxSize) {
+    maxQueueSize = maxSize;
+  }
 
-	@Override
-	public void setThreadPoolSize(int maxSize) {
-		__executorSize = maxSize;
-	}
+  @Override
+  public int getThreadPoolSize() {
+    return executorSize;
+  }
 
-	@Override
-	public float getPercentageUsedRequestQueue() {
-		return __maxQueueSize == 0 ? 0.0f : (float) (__requestQueue.size() * 100) / (float) __maxQueueSize;
-	}
+  @Override
+  public void setThreadPoolSize(int maxSize) {
+    executorSize = maxSize;
+  }
 
-	public abstract void subscribe();
+  @Override
+  public float getPercentageUsedRequestQueue() {
+    return maxQueueSize == 0 ? 0.0f :
+        (float) (requestQueue.size() * 100) / (float) maxQueueSize;
+  }
 
-	public abstract void processRequest(Request request);
+  public abstract void subscribe();
 
+  public abstract void processRequest(Request request);
 }

@@ -21,20 +21,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.bootstrap.configuration;
 
-import com.tenio.common.bootstrap.annotations.Autowired;
-import com.tenio.common.bootstrap.annotations.Component;
+import com.tenio.common.bootstrap.annotation.Autowired;
+import com.tenio.common.bootstrap.annotation.Component;
 import com.tenio.common.configuration.Configuration;
 
+/**
+ * This class provides the instance of the project's configuration.
+ */
 @Component
 public final class ConfigurationHandler {
 
-	@Autowired
-	private Configuration __configuration;
+  @Autowired
+  private Configuration configuration;
 
-	public Configuration getConfiguration() {
-		return __configuration;
-	}
-
+  public Configuration getConfiguration() {
+    return configuration;
+  }
 }

@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.tenio.core.exceptions;
 
-import com.tenio.core.entities.Room;
+import com.tenio.core.entity.Room;
 
 public final class AddedDuplicatedRoomException extends RuntimeException {
 	/**

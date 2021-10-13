@@ -27,10 +27,10 @@ import java.io.IOException;
 
 import com.tenio.common.data.utilities.ZeroDataSerializerUtility;
 import com.tenio.common.loggers.SystemLogger;
-import com.tenio.core.configuration.defines.ServerEvent;
-import com.tenio.core.entities.data.ServerMessage;
-import com.tenio.core.entities.defines.modes.ConnectionDisconnectMode;
-import com.tenio.core.entities.defines.modes.PlayerDisconnectMode;
+import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.data.ServerMessage;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exceptions.RefusedConnectionAddressException;
 import com.tenio.core.network.entities.session.Session;
@@ -95,7 +95,7 @@ public final class NettyWSHandler extends ChannelInboundHandlerAdapter {
 			session.close(ConnectionDisconnectMode.LOST, PlayerDisconnectMode.CONNECTION_LOST);
 		} catch (IOException e) {
 			__logger.error(e, "Session: ", session.toString());
-			__eventManager.emit(ServerEvent.SESSION_OCCURED_EXCEPTION, session, e);
+			__eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, e);
 		} finally {
 			session = null;
 		}
@@ -141,7 +141,7 @@ public final class NettyWSHandler extends ChannelInboundHandlerAdapter {
 		Session session = __sessionManager.getSessionByWebSocket(ctx.channel());
 		if (session != null) {
 			__logger.error(cause, "Session: ", session.toString());
-			__eventManager.emit(ServerEvent.SESSION_OCCURED_EXCEPTION, session, cause);
+			__eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, cause);
 		} else {
 			__logger.error(cause, "Exception was occured on channel: %s", ctx.channel().toString());
 		}

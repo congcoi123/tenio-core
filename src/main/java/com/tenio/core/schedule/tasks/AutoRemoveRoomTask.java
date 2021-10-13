@@ -26,7 +26,7 @@ package com.tenio.core.schedule.tasks;
 import java.util.concurrent.ScheduledFuture;
 
 import com.tenio.core.configuration.CoreConfiguration;
-import com.tenio.core.entities.managers.RoomManager;
+import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;
 
 /**

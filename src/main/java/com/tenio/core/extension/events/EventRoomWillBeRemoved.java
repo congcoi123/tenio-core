@@ -23,8 +23,8 @@ THE SOFTWARE.
 */
 package com.tenio.core.extension.events;
 
-import com.tenio.core.entities.Room;
-import com.tenio.core.entities.defines.modes.RoomRemoveMode;
+import com.tenio.core.entity.Room;
+import com.tenio.core.entity.define.mode.RoomRemoveMode;
 
 public interface EventRoomWillBeRemoved {
 

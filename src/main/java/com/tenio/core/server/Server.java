@@ -25,8 +25,8 @@ package com.tenio.core.server;
 
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.bootstrap.BootstrapHandler;
-import com.tenio.core.entities.managers.PlayerManager;
-import com.tenio.core.entities.managers.RoomManager;
+import com.tenio.core.entity.manager.PlayerManager;
+import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entities.protocols.Response;
 

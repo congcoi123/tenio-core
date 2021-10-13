@@ -27,15 +27,15 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 
-import com.tenio.core.configuration.defines.ServerEvent;
+import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.controller.AbstractController;
-import com.tenio.core.entities.Player;
-import com.tenio.core.entities.defines.modes.ConnectionDisconnectMode;
-import com.tenio.core.entities.defines.modes.PlayerDisconnectMode;
-import com.tenio.core.entities.defines.results.AttachedConnectionResult;
-import com.tenio.core.entities.defines.results.ConnectionEstablishedResult;
-import com.tenio.core.entities.defines.results.PlayerReconnectedResult;
-import com.tenio.core.entities.managers.PlayerManager;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
+import com.tenio.core.entity.define.result.AttachedConnectionResult;
+import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
+import com.tenio.core.entity.define.result.PlayerReconnectedResult;
+import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entities.protocols.Request;
 import com.tenio.core.network.entities.protocols.implement.RequestImpl;
@@ -64,12 +64,12 @@ public final class InternalProcessorServiceImpl extends AbstractController imple
 	@Override
 	public void subscribe() {
 
-		__eventManager.on(ServerEvent.SESSION_CREATED, params -> {
+		eventManager.on(ServerEvent.SESSION_CREATED, params -> {
 			// do nothing
 			return null;
 		});
 
-		__eventManager.on(ServerEvent.SESSION_REQUEST_CONNECTION, params -> {
+		eventManager.on(ServerEvent.SESSION_REQUEST_CONNECTION, params -> {
 			Request request = __createRequest(ServerEvent.SESSION_REQUEST_CONNECTION, (Session) params[0]);
 			request.setAttribute(EVENT_KEY_SERVER_MESSAGE, params[1]);
 			enqueueRequest(request);
@@ -77,12 +77,12 @@ public final class InternalProcessorServiceImpl extends AbstractController imple
 			return null;
 		});
 
-		__eventManager.on(ServerEvent.SESSION_OCCURED_EXCEPTION, params -> {
-			__eventManager.emit(ServerEvent.SERVER_EXCEPTION, params);
+		eventManager.on(ServerEvent.SESSION_OCCURRED_EXCEPTION, params -> {
+			eventManager.emit(ServerEvent.SERVER_EXCEPTION, params);
 			return null;
 		});
 
-		__eventManager.on(ServerEvent.SESSION_WILL_BE_CLOSED, params -> {
+		eventManager.on(ServerEvent.SESSION_WILL_BE_CLOSED, params -> {
 			Request request = __createRequest(ServerEvent.SESSION_WILL_BE_CLOSED, (Session) params[0]);
 			request.setAttribute(EVENT_KEY_CONNECTION_DISCONNECTED_MODE, params[1]);
 			request.setAttribute(EVENT_KEY_PLAYER_DISCONNECTED_MODE, params[2]);
@@ -91,7 +91,7 @@ public final class InternalProcessorServiceImpl extends AbstractController imple
 			return null;
 		});
 
-		__eventManager.on(ServerEvent.SESSION_READ_MESSAGE, params -> {
+		eventManager.on(ServerEvent.SESSION_READ_MESSAGE, params -> {
 			Request request = __createRequest(ServerEvent.SESSION_READ_MESSAGE, (Session) params[0]);
 			request.setAttribute(EVENT_KEY_SERVER_MESSAGE, params[1]);
 			enqueueRequest(request);
@@ -99,7 +99,7 @@ public final class InternalProcessorServiceImpl extends AbstractController imple
 			return null;
 		});
 
-		__eventManager.on(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE, params -> {
+		eventManager.on(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE, params -> {
 			Request request = __createRequest(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE, null);
 			request.setAttribute(EVENT_KEY_DATAGRAM_CHANNEL, params[0]);
 			request.setAttribute(EVENT_KEY_DATAGRAM_REMOTE_ADDRESS, params[1]);
@@ -147,7 +147,7 @@ public final class InternalProcessorServiceImpl extends AbstractController imple
 		Player player = null;
 
 		if (__keepPlayerOnDisconnection) {
-			player = (Player) __eventManager.emit(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLE, session, message);
+			player = (Player) eventManager.emit(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLE, session, message);
 		}
 
 		// check reconnected case
@@ -156,19 +156,19 @@ public final class InternalProcessorServiceImpl extends AbstractController imple
 				var castException = new ClassCastException(
 						String.format("Unable to cast the object: %s to class Player", player.toString()));
 				error(castException);
-				__eventManager.emit(ServerEvent.SERVER_EXCEPTION, castException);
-				__eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player,
+				eventManager.emit(ServerEvent.SERVER_EXCEPTION, castException);
+				eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player,
 						PlayerReconnectedResult.INVALID_PLAYER_FORMAT);
 			} else {
 				session.setName(player.getName());
 				player.setSession(session);
-				__eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player, PlayerReconnectedResult.SUCCESS);
+				eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player, PlayerReconnectedResult.SUCCESS);
 			}
 			// check new reconnection
 		} else {
 			// check the number of current players
 			if (__playerManager.getPlayerCount() >= __maxNumberPlayers) {
-				__eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
+				eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
 						ConnectionEstablishedResult.REACHED_MAX_CONNECTION);
 				try {
 					session.close(ConnectionDisconnectMode.REACHED_MAX_CONNECTION,
@@ -177,7 +177,7 @@ public final class InternalProcessorServiceImpl extends AbstractController imple
 					error(e, "Session closed with error: ", session.toString());
 				}
 			} else {
-				__eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
+				eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
 						ConnectionEstablishedResult.SUCCESS);
 			}
 		}
@@ -193,17 +193,17 @@ public final class InternalProcessorServiceImpl extends AbstractController imple
 		var player = __playerManager.getPlayerBySession(session);
 		// the player maybe existed
 		if (player != null) {
-			__eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerClosedMode);
+			eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerClosedMode);
 			player.setSession(null);
 			if (!__keepPlayerOnDisconnection) {
 				__playerManager.removePlayerByName(player.getName());
 				player.clean();
 				player = null;
 			}
-			__eventManager.emit(ServerEvent.DISCONNECT_CONNECTION, session, connectionClosedMode);
+			eventManager.emit(ServerEvent.DISCONNECT_CONNECTION, session, connectionClosedMode);
 			// the free connection (without a corresponding player)
 		} else {
-			__eventManager.emit(ServerEvent.DISCONNECT_CONNECTION, session, connectionClosedMode);
+			eventManager.emit(ServerEvent.DISCONNECT_CONNECTION, session, connectionClosedMode);
 		}
 	}
 
@@ -215,14 +215,14 @@ public final class InternalProcessorServiceImpl extends AbstractController imple
 			var illegalValueException = new IllegalArgumentException(
 					String.format("Unable to find player for the session: %s", session.toString()));
 			error(illegalValueException);
-			__eventManager.emit(ServerEvent.SERVER_EXCEPTION, illegalValueException);
+			eventManager.emit(ServerEvent.SERVER_EXCEPTION, illegalValueException);
 
 			return;
 		}
 
 		var message = request.getAttribute(EVENT_KEY_SERVER_MESSAGE);
 
-		__eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
+		eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
 	}
 
 	private void __processDatagramChannelReadMessage(Request request) {
@@ -231,23 +231,23 @@ public final class InternalProcessorServiceImpl extends AbstractController imple
 		var message = request.getAttribute(EVENT_KEY_SERVER_MESSAGE);
 
 		// the condition for creating sub-connection
-		var player = (Player) __eventManager.emit(ServerEvent.ATTACH_CONNECTION_REQUEST_VALIDATION, message);
+		var player = (Player) eventManager.emit(ServerEvent.ATTACH_CONNECTION_REQUEST_VALIDATION, message);
 
 		if (player == null) {
-			__eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, null,
+			eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, null,
 					AttachedConnectionResult.PLAYER_NOT_FOUND);
 		} else if (!player.containsSession()) {
-			__eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player,
+			eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player,
 					AttachedConnectionResult.SESSION_NOT_FOUND);
 		} else if (!player.getSession().isTcp()) {
-			__eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player,
+			eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player,
 					AttachedConnectionResult.INVALID_SESSION_PROTOCOL);
 		} else {
 			var session = player.getSession();
 			var sessionManager = session.getSessionManager();
 			sessionManager.addDatagramForSession((DatagramChannel) datagramChannel, (SocketAddress) remoteAddress,
 					session);
-			__eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, AttachedConnectionResult.SUCCESS);
+			eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, AttachedConnectionResult.SUCCESS);
 		}
 	}
 

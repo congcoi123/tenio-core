@@ -29,7 +29,7 @@ import com.tenio.common.data.implement.ZeroArrayImpl;
 import com.tenio.common.data.implement.ZeroObjectImpl;
 import com.tenio.common.loggers.AbstractLogger;
 import com.tenio.core.api.ServerApi;
-import com.tenio.core.entities.settings.InitialRoomSetting;
+import com.tenio.core.entity.setting.InitialRoomSetting;
 import com.tenio.core.network.entities.protocols.Response;
 import com.tenio.core.network.entities.protocols.implement.ResponseImpl;
 import com.tenio.core.server.Server;

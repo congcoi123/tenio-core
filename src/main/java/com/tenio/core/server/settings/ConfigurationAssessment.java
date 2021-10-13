@@ -26,8 +26,8 @@ package com.tenio.core.server.settings;
 import java.util.List;
 
 import com.tenio.common.configuration.Configuration;
-import com.tenio.core.configuration.defines.CoreConfigurationType;
-import com.tenio.core.configuration.defines.ServerEvent;
+import com.tenio.core.configuration.define.CoreConfigurationType;
+import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exceptions.ConfigurationException;
 import com.tenio.core.exceptions.NotDefinedSubscribersException;

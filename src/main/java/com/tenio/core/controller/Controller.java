@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.controller;
 
 import com.tenio.core.exceptions.RequestQueueFullException;
@@ -28,18 +29,20 @@ import com.tenio.core.network.entities.protocols.Request;
 import com.tenio.core.service.Service;
 import com.tenio.core.service.ServiceListener;
 
+/**
+ * The supported APIs for a controller.
+ */
 public interface Controller extends Service, ServiceListener {
 
-	void enqueueRequest(Request request) throws RequestQueueFullException;
+  void enqueueRequest(Request request) throws RequestQueueFullException;
 
-	int getMaxRequestQueueSize();
+  int getMaxRequestQueueSize();
 
-	void setMaxRequestQueueSize(int maxSize);
+  void setMaxRequestQueueSize(int maxSize);
 
-	float getPercentageUsedRequestQueue();
+  float getPercentageUsedRequestQueue();
 
-	int getThreadPoolSize();
+  int getThreadPoolSize();
 
-	void setThreadPoolSize(int maxSize);
-
+  void setThreadPoolSize(int maxSize);
 }

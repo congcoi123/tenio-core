@@ -28,8 +28,8 @@ import java.util.Collection;
 import java.util.List;
 
 import com.tenio.common.data.implement.ZeroObjectImpl;
-import com.tenio.core.configuration.defines.ServerEvent;
-import com.tenio.core.entities.data.ServerMessage;
+import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.defines.TransportType;
@@ -307,7 +307,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
 		var playerIterator = response.getPlayers().iterator();
 		while (playerIterator.hasNext()) {
 			var player = playerIterator.next();
-			__eventManager.emit(ServerEvent.SEND_MESSAGE_TO_PLAYER, player, message);
+			eventManager.emit(ServerEvent.SEND_MESSAGE_TO_PLAYER, player, message);
 		}
 
 		var nonSessionPlayers = response.getNonSessionPlayers();
@@ -315,7 +315,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
 			var nonSessionIterator = nonSessionPlayers.iterator();
 			while (nonSessionIterator.hasNext()) {
 				var player = nonSessionIterator.next();
-				__eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
+				eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
 			}
 		}
 

@@ -21,63 +21,61 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.event.implement;
 
+import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.event.Emitter;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.tenio.core.configuration.defines.ServerEvent;
-import com.tenio.core.event.Emitter;
-
 /**
  * This class for handling events and these subscribers.
- * 
+ *
  * @param <T> the template
  */
 public final class EventHandler<T> {
 
-	/**
-	 * An instance creates a mapping between an event with its list of event
-	 * handlers.
-	 */
-	private final Map<ServerEvent, Emitter<T>> __delegate;
+  /**
+   * An instance creates a mapping between an event with its list of event
+   * handlers.
+   */
+  private final Map<ServerEvent, Emitter<T>> delegate;
 
-	public EventHandler() {
-		__delegate = new HashMap<ServerEvent, Emitter<T>>();
-	}
+  public EventHandler() {
+    delegate = new HashMap<ServerEvent, Emitter<T>>();
+  }
 
-	/**
-	 * Create a link between an event and its list of event handlers.
-	 * 
-	 * @param event   see {@link ServerEvent}
-	 * @param emitter see {@link Emitter}
-	 */
-	public void subscribe(ServerEvent event, Emitter<T> emitter) {
-		__delegate.put(event, emitter);
-	}
+  /**
+   * Create a link between an event and its list of event handlers.
+   *
+   * @param event   see {@link ServerEvent}
+   * @param emitter see {@link Emitter}
+   */
+  public void subscribe(ServerEvent event, Emitter<T> emitter) {
+    delegate.put(event, emitter);
+  }
 
-	/**
-	 * Emit an event with its parameters
-	 * 
-	 * @param event  see {@link ServerEvent}
-	 * @param params a list parameters of this event
-	 * @return the event result (the response of its subscribers), see
-	 *         {@link Object} or <b>null</b>
-	 */
-	public Object emit(ServerEvent event, @SuppressWarnings("unchecked") T... params) {
-		if (__delegate.containsKey(event)) {
-			return __delegate.get(event).emit(params);
-		}
-		return null;
-	}
+  /**
+   * Emit an event with its parameters.
+   *
+   * @param event  see {@link ServerEvent}
+   * @param params a list parameters of this event
+   * @return the event result (the response of its subscribers), see {@link Object} or <b>null</b>
+   */
+  public Object emit(ServerEvent event, @SuppressWarnings("unchecked") T... params) {
+    if (delegate.containsKey(event)) {
+      return delegate.get(event).emit(params);
+    }
+    return null;
+  }
 
-	/**
-	 * Clear all events and these handlers
-	 */
-	public void clear() {
-		if (!__delegate.isEmpty()) {
-			__delegate.clear();
-		}
-	}
-
+  /**
+   * Clear all events and these handlers.
+   */
+  public void clear() {
+    if (!delegate.isEmpty()) {
+      delegate.clear();
+    }
+  }
 }

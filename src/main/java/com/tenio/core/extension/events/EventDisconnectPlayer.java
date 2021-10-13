@@ -23,8 +23,8 @@ THE SOFTWARE.
 */
 package com.tenio.core.extension.events;
 
-import com.tenio.core.entities.Player;
-import com.tenio.core.entities.defines.modes.PlayerDisconnectMode;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 
 public interface EventDisconnectPlayer {
 

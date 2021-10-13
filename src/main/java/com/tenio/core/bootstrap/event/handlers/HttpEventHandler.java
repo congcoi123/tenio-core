@@ -21,75 +21,82 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.bootstrap.event.handlers;
 
-import java.util.Optional;
-import java.util.function.Consumer;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import com.tenio.common.bootstrap.annotations.AutowiredAcceptNull;
-import com.tenio.common.bootstrap.annotations.Component;
-import com.tenio.core.configuration.defines.ServerEvent;
+import com.tenio.common.bootstrap.annotation.AutowiredAcceptNull;
+import com.tenio.common.bootstrap.annotation.Component;
+import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.Subscriber;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.extension.events.EventHttpRequestHandle;
 import com.tenio.core.extension.events.EventHttpRequestValidation;
 import com.tenio.core.network.defines.RestMethod;
+import java.util.Optional;
+import java.util.function.Consumer;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+/**
+ * Dispatching all events related to HTTP.
+ */
 @Component
 public final class HttpEventHandler {
 
-	@AutowiredAcceptNull
-	private EventHttpRequestHandle __eventHttpRequestHandle;
+  @AutowiredAcceptNull
+  private EventHttpRequestHandle eventHttpRequestHandle;
 
-	@AutowiredAcceptNull
-	private EventHttpRequestValidation __eventHttpRequestValidation;
+  @AutowiredAcceptNull
+  private EventHttpRequestValidation eventHttpRequestValidation;
 
-	public void initialize(EventManager eventManager) {
+  /**
+   * Initialization.
+   *
+   * @param eventManager the event manager
+   */
+  public void initialize(EventManager eventManager) {
 
-		Optional<EventHttpRequestHandle> eventHttpRequestHandleOp = Optional.ofNullable(__eventHttpRequestHandle);
-		Optional<EventHttpRequestValidation> eventHttpRequestValidatedOp = Optional
-				.ofNullable(__eventHttpRequestValidation);
+    var eventHttpRequestHandleOp =
+        Optional.ofNullable(eventHttpRequestHandle);
+    var eventHttpRequestValidatedOp =
+        Optional.ofNullable(eventHttpRequestValidation);
 
-		eventHttpRequestValidatedOp.ifPresent(new Consumer<EventHttpRequestValidation>() {
+    eventHttpRequestValidatedOp.ifPresent(new Consumer<EventHttpRequestValidation>() {
 
-			@Override
-			public void accept(EventHttpRequestValidation event) {
-				eventManager.on(ServerEvent.HTTP_REQUEST_VALIDATION, new Subscriber() {
+      @Override
+      public void accept(EventHttpRequestValidation event) {
+        eventManager.on(ServerEvent.HTTP_REQUEST_VALIDATION, new Subscriber() {
 
-					@Override
-					public Object dispatch(Object... params) {
-						RestMethod method = (RestMethod) params[0];
-						HttpServletRequest request = (HttpServletRequest) params[1];
-						HttpServletResponse response = (HttpServletResponse) params[2];
+          @Override
+          public Object dispatch(Object... params) {
+            var method = (RestMethod) params[0];
+            var request = (HttpServletRequest) params[1];
+            var response = (HttpServletResponse) params[2];
 
-						return event.handle(method, request, response);
-					}
-				});
-			}
-		});
+            return event.handle(method, request, response);
+          }
+        });
+      }
+    });
 
-		eventHttpRequestHandleOp.ifPresent(new Consumer<EventHttpRequestHandle>() {
+    eventHttpRequestHandleOp.ifPresent(new Consumer<EventHttpRequestHandle>() {
 
-			@Override
-			public void accept(EventHttpRequestHandle event) {
-				eventManager.on(ServerEvent.HTTP_REQUEST_HANDLE, new Subscriber() {
+      @Override
+      public void accept(EventHttpRequestHandle event) {
+        eventManager.on(ServerEvent.HTTP_REQUEST_HANDLE, new Subscriber() {
 
-					@Override
-					public Object dispatch(Object... params) {
-						RestMethod method = (RestMethod) params[0];
-						HttpServletRequest request = (HttpServletRequest) params[1];
-						HttpServletResponse response = (HttpServletResponse) params[2];
+          @Override
+          public Object dispatch(Object... params) {
+            var method = (RestMethod) params[0];
+            var request = (HttpServletRequest) params[1];
+            var response = (HttpServletResponse) params[2];
 
-						event.handle(method, request, response);
+            event.handle(method, request, response);
 
-						return null;
-					}
-				});
-			}
-		});
-	}
-
+            return null;
+          }
+        });
+      }
+    });
+  }
 }

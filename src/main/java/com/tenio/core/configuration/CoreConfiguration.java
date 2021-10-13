@@ -21,157 +21,159 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.configuration;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-
 import com.tenio.common.configuration.CommonConfiguration;
-import com.tenio.common.utilities.XMLUtility;
-import com.tenio.core.configuration.defines.CoreConfigurationType;
+import com.tenio.common.utility.XmlUtility;
+import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.network.defines.RestMethod;
 import com.tenio.core.network.defines.TransportType;
 import com.tenio.core.network.defines.data.HttpConfig;
 import com.tenio.core.network.defines.data.PathConfig;
 import com.tenio.core.network.defines.data.SocketConfig;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 /**
  * This server needs some basic configuration to start running. The
  * configuration file can be defined as an XML file. See an example in
- * TenIOConfig.example.xml. You can also extend this file to create your own
+ * <b>configuration.example.xml</b>. You can also extend this file to create your own
  * configuration values.
  */
 public abstract class CoreConfiguration extends CommonConfiguration {
 
-	/**
-	 * All ports in sockets zone
-	 */
-	private final List<SocketConfig> __socketPorts;
+  /**
+   * All ports in sockets zone.
+   */
+  private final List<SocketConfig> socketConfigs;
 
-	/**
-	 * All ports in HTTPs zone
-	 */
-	private final List<HttpConfig> __httpPorts;
+  /**
+   * All ports in HTTPs zone.
+   */
+  private final List<HttpConfig> httpConfigs;
 
-	/**
-	 * The constructor
-	 * 
-	 * @param file The name of your configuration file and this file needs to be put
-	 *             in same folder with your application
-	 */
-	public CoreConfiguration() {
-		__socketPorts = new ArrayList<SocketConfig>();
-		__httpPorts = new ArrayList<HttpConfig>();
-	}
+  /**
+   * The constructor.
+   */
+  public CoreConfiguration() {
+    socketConfigs = new ArrayList<SocketConfig>();
+    httpConfigs = new ArrayList<HttpConfig>();
+  }
 
-	/**
-	 * Read file content and convert it to configuration values.
-	 * 
-	 * @param file The name of your configuration file and this file needs to be put
-	 *             in same folder with your application
-	 * @throws Exception some exceptions, which can be occurred in reading or
-	 *                   parsing the file
-	 */
-	@Override
-	public void load(String file) throws Exception {
+  /**
+   * Read file content and convert it to configuration values.
+   *
+   * @param file The name of your configuration file and this file needs to be put
+   *             in same folder with your application
+   * @throws Exception some exceptions, which can be occurred in reading or
+   *                   parsing the file
+   */
+  @Override
+  public void load(String file) throws Exception {
 
-		Document xDoc = XMLUtility.parseFile(new File(file));
-		Node root = xDoc.getFirstChild();
+    Document document = XmlUtility.parseFile(new File(file));
+    Node root = document.getFirstChild();
 
-		// Server Properties
-		var attrServerProperties = XMLUtility.getNodeList(root, "//Server/Properties/Property");
-		for (int j = 0; j < attrServerProperties.getLength(); j++) {
-			var dataNode = attrServerProperties.item(j);
-			var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
-			__push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
-		}
+    // Server Properties
+    var attrServerProperties = XmlUtility.getNodeList(root, "//Server/Properties/Property");
+    for (int j = 0; j < attrServerProperties.getLength(); j++) {
+      var dataNode = attrServerProperties.item(j);
+      var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
+      push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
+    }
 
-		// Network Properties
-		var attrNetworkProperties = XMLUtility.getNodeList(root, "//Server/Network/Properties/Property");
-		for (int j = 0; j < attrNetworkProperties.getLength(); j++) {
-			var dataNode = attrNetworkProperties.item(j);
-			var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
-			__push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
-		}
-		// Network Sockets
-		var attrNetworkSockets = XMLUtility.getNodeList(root, "//Server/Network/Sockets/Port");
-		for (int j = 0; j < attrNetworkSockets.getLength(); j++) {
-			var dataNode = attrNetworkSockets.item(j);
-			var port = new SocketConfig(dataNode.getAttributes().getNamedItem("name").getTextContent(),
-					TransportType.getByValue(dataNode.getAttributes().getNamedItem("type").getTextContent()),
-					Integer.parseInt(dataNode.getTextContent()));
+    // Network Properties
+    var attrNetworkProperties =
+        XmlUtility.getNodeList(root, "//Server/Network/Properties/Property");
+    for (int j = 0; j < attrNetworkProperties.getLength(); j++) {
+      var dataNode = attrNetworkProperties.item(j);
+      var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
+      push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
+    }
+    // Network Sockets
+    var attrNetworkSockets = XmlUtility.getNodeList(root, "//Server/Network/Sockets/Port");
+    for (int j = 0; j < attrNetworkSockets.getLength(); j++) {
+      var dataNode = attrNetworkSockets.item(j);
+      var port = new SocketConfig(dataNode.getAttributes().getNamedItem("name").getTextContent(),
+          TransportType.getByValue(dataNode.getAttributes().getNamedItem("type").getTextContent()),
+          Integer.parseInt(dataNode.getTextContent()));
 
-			__socketPorts.add(port);
-		}
-		__push(CoreConfigurationType.SOCKET_CONFIGS, __socketPorts);
-		// Network HTTPs
-		var attrNetworkHttps = XMLUtility.getNodeList(root, "//Server/Network/Http/Port");
-		for (int i = 0; i < attrNetworkHttps.getLength(); i++) {
-			var pPortNode = attrNetworkHttps.item(i);
-			var port = new HttpConfig(pPortNode.getAttributes().getNamedItem("name").getTextContent(),
-					Integer.parseInt(pPortNode.getAttributes().getNamedItem("value").getTextContent()));
+      socketConfigs.add(port);
+    }
+    push(CoreConfigurationType.SOCKET_CONFIGS, socketConfigs);
+    // Network HTTPs
+    var attrNetworkHttps = XmlUtility.getNodeList(root, "//Server/Network/Http/Port");
+    for (int i = 0; i < attrNetworkHttps.getLength(); i++) {
+      var portNode = attrNetworkHttps.item(i);
+      var port = new HttpConfig(portNode.getAttributes().getNamedItem("name").getTextContent(),
+          Integer.parseInt(portNode.getAttributes().getNamedItem("value").getTextContent()));
 
-			var attrHttpPaths = XMLUtility.getNodeList(attrNetworkHttps.item(i), "//Path");
-			for (int j = 0; j < attrHttpPaths.getLength(); j++) {
-				var pPathNode = attrHttpPaths.item(j);
-				var path = new PathConfig(pPathNode.getAttributes().getNamedItem("name").getTextContent(),
-						RestMethod.getByValue(pPathNode.getAttributes().getNamedItem("method").getTextContent()),
-						pPathNode.getTextContent(), pPathNode.getAttributes().getNamedItem("desc").getTextContent(),
-						Integer.parseInt(pPathNode.getAttributes().getNamedItem("version").getTextContent()));
+      var attrHttpPaths = XmlUtility.getNodeList(attrNetworkHttps.item(i), "//Path");
+      for (int j = 0; j < attrHttpPaths.getLength(); j++) {
+        var pathNode = attrHttpPaths.item(j);
+        var path = new PathConfig(pathNode.getAttributes().getNamedItem("name").getTextContent(),
+            RestMethod.getByValue(
+                pathNode.getAttributes().getNamedItem("method").getTextContent()),
+            pathNode.getTextContent(),
+            pathNode.getAttributes().getNamedItem("desc").getTextContent(),
+            Integer.parseInt(pathNode.getAttributes().getNamedItem("version").getTextContent()));
 
-				port.addPath(path);
-			}
+        port.addPath(path);
+      }
 
-			__httpPorts.add(port);
-		}
-		__push(CoreConfigurationType.HTTP_CONFIGS, __httpPorts);
+      httpConfigs.add(port);
+    }
+    push(CoreConfigurationType.HTTP_CONFIGS, httpConfigs);
 
-		// Implemented Classes
-		var attrImplementedClasses = XMLUtility.getNodeList(root, "//Server/Implements/Class");
-		for (int j = 0; j < attrImplementedClasses.getLength(); j++) {
-			var dataNode = attrImplementedClasses.item(j);
-			var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
-			__push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
-		}
+    // Implemented Classes
+    var attrImplementedClasses = XmlUtility.getNodeList(root, "//Server/Implements/Class");
+    for (int j = 0; j < attrImplementedClasses.getLength(); j++) {
+      var dataNode = attrImplementedClasses.item(j);
+      var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
+      push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
+    }
 
-		// Configured Workers
-		var attrConfigurationWorkers = XMLUtility.getNodeList(root, "//Server/Configuration/Workers/Worker");
-		for (int j = 0; j < attrConfigurationWorkers.getLength(); j++) {
-			var dataNode = attrConfigurationWorkers.item(j);
-			var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
-			__push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
-		}
-		// Configured Schedules
-		var attrConfigurationSchedules = XMLUtility.getNodeList(root, "//Server/Configuration/Schedules/Task");
-		for (int j = 0; j < attrConfigurationSchedules.getLength(); j++) {
-			var dataNode = attrConfigurationSchedules.item(j);
-			var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
-			__push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
-		}
-		// Configured Properties
-		var attrConfigurationProperties = XMLUtility.getNodeList(root, "//Server/Configuration/Properties/Property");
-		for (int j = 0; j < attrConfigurationProperties.getLength(); j++) {
-			var dataNode = attrConfigurationProperties.item(j);
-			var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
-			__push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
-		}
+    // Configured Workers
+    var attrConfigurationWorkers =
+        XmlUtility.getNodeList(root, "//Server/Configuration/Workers/Worker");
+    for (int j = 0; j < attrConfigurationWorkers.getLength(); j++) {
+      var dataNode = attrConfigurationWorkers.item(j);
+      var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
+      push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
+    }
+    // Configured Schedules
+    var attrConfigurationSchedules =
+        XmlUtility.getNodeList(root, "//Server/Configuration/Schedules/Task");
+    for (int j = 0; j < attrConfigurationSchedules.getLength(); j++) {
+      var dataNode = attrConfigurationSchedules.item(j);
+      var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
+      push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
+    }
+    // Configured Properties
+    var attrConfigurationProperties =
+        XmlUtility.getNodeList(root, "//Server/Configuration/Properties/Property");
+    for (int j = 0; j < attrConfigurationProperties.getLength(); j++) {
+      var dataNode = attrConfigurationProperties.item(j);
+      var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
+      push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
+    }
 
-		// Extension Properties
-		var attrExtensionProperties = XMLUtility.getNodeList(root, "//Server/Extension/Properties/Property");
-		var extProperties = new HashMap<String, String>();
-		for (int j = 0; j < attrExtensionProperties.getLength(); j++) {
-			var dataNode = attrExtensionProperties.item(j);
-			var key = dataNode.getAttributes().getNamedItem("name").getTextContent();
-			var value = dataNode.getTextContent();
-			extProperties.put(key, value);
-		}
+    // Extension Properties
+    var attrExtensionProperties =
+        XmlUtility.getNodeList(root, "//Server/Extension/Properties/Property");
+    var extProperties = new HashMap<String, String>();
+    for (int j = 0; j < attrExtensionProperties.getLength(); j++) {
+      var dataNode = attrExtensionProperties.item(j);
+      var key = dataNode.getAttributes().getNamedItem("name").getTextContent();
+      var value = dataNode.getTextContent();
+      extProperties.put(key, value);
+    }
 
-		__extend(extProperties);
-	}
-
+    extend(extProperties);
+  }
 }

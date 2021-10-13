@@ -21,49 +21,62 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.bootstrap;
 
-import com.tenio.common.bootstrap.annotations.Bootstrap;
+import com.tenio.common.bootstrap.annotation.Bootstrap;
 import com.tenio.common.bootstrap.injector.Injector;
-import com.tenio.common.loggers.SystemLogger;
+import com.tenio.common.logger.SystemLogger;
 
+/**
+ * Creation of a boostrap.
+ */
 public final class Bootstrapper extends SystemLogger {
 
-	private final Injector __injector;
-	private BootstrapHandler __bootstrapHandler;
+  private static final Bootstrapper instance = new Bootstrapper();
 
-	public static Bootstrapper newInstance() {
-		return new Bootstrapper();
-	}
+  private final Injector injector;
+  private BootstrapHandler bootstrapHandler;
 
-	private Bootstrapper() {
-		__injector = Injector.newInstance();
-	}
+  private Bootstrapper() {
+    injector = Injector.newInstance();
+  }
 
-	public boolean run(Class<?> entryClazz, String... packages) throws Exception {
-		boolean hasExtApplicationAnnotation = entryClazz.isAnnotationPresent(Bootstrap.class);
+  public static Bootstrapper newInstance() {
+    return instance;
+  }
 
-		if (hasExtApplicationAnnotation) {
-			__start(entryClazz, packages);
-			__bootstrapHandler = __injector.getInstance(BootstrapHandler.class);
-			return true;
-		} else {
-			return false;
-		}
-	}
+  /**
+   * Start the bootstrap.
+   *
+   * @param entryClass the root class
+   * @param packages   the scanning packages
+   * @return <b>true</b> if success, otherwise <b>false</b>>
+   * @throws Exception when any exceptions occurred
+   */
+  public boolean run(Class<?> entryClass, String... packages) throws Exception {
+    boolean hasExtApplicationAnnotation = entryClass.isAnnotationPresent(Bootstrap.class);
 
-	private void __start(Class<?> entryClazz, String... packages) {
-		try {
-			synchronized (Bootstrapper.class) {
-				__injector.scanPackages(entryClazz, packages);
-			}
-		} catch (Exception e) {
-			error(e);
-		}
-	}
+    if (hasExtApplicationAnnotation) {
+      start(entryClass, packages);
+      bootstrapHandler = injector.getBean(BootstrapHandler.class);
+      return true;
+    } else {
+      return false;
+    }
+  }
 
-	public BootstrapHandler getBootstrapHandler() {
-		return __bootstrapHandler;
-	}
+  private void start(Class<?> entryClass, String... packages) {
+    try {
+      synchronized (Bootstrapper.class) {
+        injector.scanPackages(entryClass, packages);
+      }
+    } catch (Exception e) {
+      error(e);
+    }
+  }
 
+  public BootstrapHandler getBootstrapHandler() {
+    return bootstrapHandler;
+  }
 }

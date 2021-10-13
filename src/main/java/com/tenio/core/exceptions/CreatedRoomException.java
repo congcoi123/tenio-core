@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.tenio.core.exceptions;
 
-import com.tenio.core.entities.defines.results.RoomCreatedResult;
+import com.tenio.core.entity.define.result.RoomCreatedResult;
 
 public final class CreatedRoomException extends RuntimeException {
 	/**

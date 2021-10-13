@@ -35,12 +35,12 @@ import com.tenio.core.api.ServerApi;
 import com.tenio.core.api.ServerApiImpl;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.configuration.constant.CoreConstant;
-import com.tenio.core.configuration.defines.CoreConfigurationType;
-import com.tenio.core.configuration.defines.ServerEvent;
-import com.tenio.core.entities.managers.PlayerManager;
-import com.tenio.core.entities.managers.RoomManager;
-import com.tenio.core.entities.managers.implement.PlayerManagerImpl;
-import com.tenio.core.entities.managers.implement.RoomManagerImpl;
+import com.tenio.core.configuration.define.CoreConfigurationType;
+import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.manager.PlayerManager;
+import com.tenio.core.entity.manager.RoomManager;
+import com.tenio.core.entity.manager.implement.PlayerManagerImpl;
+import com.tenio.core.entity.manager.implement.RoomManagerImpl;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.monitoring.system.SystemInfo;
 import com.tenio.core.network.NetworkService;
@@ -111,7 +111,7 @@ public final class ServerImpl extends SystemLogger implements Server {
 		// get the file path
 		var file = params.length == 0 ? null : params[0];
 		if (file == null) {
-			file = CoreConstant.DEFAULT_CONNFIGURATION_FILE;
+			file = CoreConstant.DEFAULT_CONFIGURATION_FILE;
 		}
 
 		// load configuration file

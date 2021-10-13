@@ -21,19 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.bootstrap.event.handlers;
 
-import java.util.Optional;
-import java.util.function.Consumer;
-
-import com.tenio.common.bootstrap.annotations.AutowiredAcceptNull;
-import com.tenio.common.bootstrap.annotations.Component;
-import com.tenio.core.configuration.defines.ServerEvent;
-import com.tenio.core.entities.Player;
-import com.tenio.core.entities.data.ServerMessage;
-import com.tenio.core.entities.defines.modes.ConnectionDisconnectMode;
-import com.tenio.core.entities.defines.results.AttachedConnectionResult;
-import com.tenio.core.entities.defines.results.ConnectionEstablishedResult;
+import com.tenio.common.bootstrap.annotation.AutowiredAcceptNull;
+import com.tenio.common.bootstrap.annotation.Component;
+import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.data.ServerMessage;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.result.AttachedConnectionResult;
+import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.event.Subscriber;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.extension.events.EventAttachConnectionRequestValidation;
@@ -41,109 +39,118 @@ import com.tenio.core.extension.events.EventAttachedConnectionResult;
 import com.tenio.core.extension.events.EventConnectionEstablishedResult;
 import com.tenio.core.extension.events.EventDisconnectConnection;
 import com.tenio.core.network.entities.session.Session;
+import java.util.Optional;
+import java.util.function.Consumer;
 
+/**
+ * Dispatching all events related to connections.
+ */
 @Component
 public final class ConnectionEventHandler {
 
-	@AutowiredAcceptNull
-	private EventConnectionEstablishedResult __eventConnectionEstablishedResult;
+  @AutowiredAcceptNull
+  private EventConnectionEstablishedResult eventConnectionEstablishedResult;
 
-	@AutowiredAcceptNull
-	private EventAttachConnectionRequestValidation __eventAttachConnectionRequestValidation;
+  @AutowiredAcceptNull
+  private EventAttachConnectionRequestValidation eventAttachConnectionRequestValidation;
 
-	@AutowiredAcceptNull
-	private EventAttachedConnectionResult __eventAttachedConnectionResult;
+  @AutowiredAcceptNull
+  private EventAttachedConnectionResult eventAttachedConnectionResult;
 
-	@AutowiredAcceptNull
-	private EventDisconnectConnection __eventDisconnectConnection;
+  @AutowiredAcceptNull
+  private EventDisconnectConnection eventDisconnectConnection;
 
-	public void initialize(EventManager eventManager) {
+  /**
+   * Initialization.
+   *
+   * @param eventManager the event manager
+   */
+  public void initialize(EventManager eventManager) {
 
-		Optional<EventConnectionEstablishedResult> eventConnectionEstablishedResultOp = Optional
-				.ofNullable(__eventConnectionEstablishedResult);
+    final var eventConnectionEstablishedResultOp =
+        Optional.ofNullable(eventConnectionEstablishedResult);
 
-		Optional<EventAttachConnectionRequestValidation> eventAttachConnectionRequestValidationOp = Optional
-				.ofNullable(__eventAttachConnectionRequestValidation);
-		Optional<EventAttachedConnectionResult> eventAttachedConnectionResultOp = Optional
-				.ofNullable(__eventAttachedConnectionResult);
+    final var eventAttachConnectionRequestValidationOp =
+        Optional.ofNullable(eventAttachConnectionRequestValidation);
+    final var eventAttachedConnectionResultOp =
+        Optional.ofNullable(eventAttachedConnectionResult);
 
-		Optional<EventDisconnectConnection> eventDisconnectConnectionOp = Optional
-				.ofNullable(__eventDisconnectConnection);
+    final var eventDisconnectConnectionOp =
+        Optional.ofNullable(eventDisconnectConnection);
 
-		eventConnectionEstablishedResultOp.ifPresent(new Consumer<EventConnectionEstablishedResult>() {
+    eventConnectionEstablishedResultOp.ifPresent(new Consumer<EventConnectionEstablishedResult>() {
 
-			@Override
-			public void accept(EventConnectionEstablishedResult event) {
-				eventManager.on(ServerEvent.CONNECTION_ESTABLISHED_RESULT, new Subscriber() {
+      @Override
+      public void accept(EventConnectionEstablishedResult event) {
+        eventManager.on(ServerEvent.CONNECTION_ESTABLISHED_RESULT, new Subscriber() {
 
-					@Override
-					public Object dispatch(Object... params) {
-						Session session = (Session) params[0];
-						ServerMessage message = (ServerMessage) params[1];
-						ConnectionEstablishedResult result = (ConnectionEstablishedResult) params[2];
+          @Override
+          public Object dispatch(Object... params) {
+            var session = (Session) params[0];
+            var message = (ServerMessage) params[1];
+            var result = (ConnectionEstablishedResult) params[2];
 
-						event.handle(session, message, result);
+            event.handle(session, message, result);
 
-						return null;
-					}
-				});
-			}
-		});
+            return null;
+          }
+        });
+      }
+    });
 
-		eventAttachConnectionRequestValidationOp.ifPresent(new Consumer<EventAttachConnectionRequestValidation>() {
+    eventAttachConnectionRequestValidationOp.ifPresent(
+        new Consumer<EventAttachConnectionRequestValidation>() {
 
-			@Override
-			public void accept(EventAttachConnectionRequestValidation event) {
-				eventManager.on(ServerEvent.ATTACH_CONNECTION_REQUEST_VALIDATION, new Subscriber() {
+          @Override
+          public void accept(EventAttachConnectionRequestValidation event) {
+            eventManager.on(ServerEvent.ATTACH_CONNECTION_REQUEST_VALIDATION, new Subscriber() {
 
-					@Override
-					public Object dispatch(Object... params) {
-						ServerMessage message = (ServerMessage) params[0];
+              @Override
+              public Object dispatch(Object... params) {
+                var message = (ServerMessage) params[0];
 
-						return event.handle(message);
-					}
-				});
-			}
-		});
+                return event.handle(message);
+              }
+            });
+          }
+        });
 
-		eventAttachedConnectionResultOp.ifPresent(new Consumer<EventAttachedConnectionResult>() {
+    eventAttachedConnectionResultOp.ifPresent(new Consumer<EventAttachedConnectionResult>() {
 
-			@Override
-			public void accept(EventAttachedConnectionResult event) {
-				eventManager.on(ServerEvent.ATTACHED_CONNECTION_RESULT, new Subscriber() {
+      @Override
+      public void accept(EventAttachedConnectionResult event) {
+        eventManager.on(ServerEvent.ATTACHED_CONNECTION_RESULT, new Subscriber() {
 
-					@Override
-					public Object dispatch(Object... params) {
-						Player player = (Player) params[0];
-						AttachedConnectionResult result = (AttachedConnectionResult) params[1];
+          @Override
+          public Object dispatch(Object... params) {
+            var player = (Player) params[0];
+            var result = (AttachedConnectionResult) params[1];
 
-						event.handle(player, result);
+            event.handle(player, result);
 
-						return null;
-					}
-				});
-			}
-		});
+            return null;
+          }
+        });
+      }
+    });
 
-		eventDisconnectConnectionOp.ifPresent(new Consumer<EventDisconnectConnection>() {
+    eventDisconnectConnectionOp.ifPresent(new Consumer<EventDisconnectConnection>() {
 
-			@Override
-			public void accept(EventDisconnectConnection event) {
-				eventManager.on(ServerEvent.DISCONNECT_CONNECTION, new Subscriber() {
+      @Override
+      public void accept(EventDisconnectConnection event) {
+        eventManager.on(ServerEvent.DISCONNECT_CONNECTION, new Subscriber() {
 
-					@Override
-					public Object dispatch(Object... params) {
-						Session session = (Session) params[0];
-						ConnectionDisconnectMode mode = (ConnectionDisconnectMode) params[1];
+          @Override
+          public Object dispatch(Object... params) {
+            var session = (Session) params[0];
+            var mode = (ConnectionDisconnectMode) params[1];
 
-						event.handle(session, mode);
+            event.handle(session, mode);
 
-						return null;
-					}
-				});
-			}
-		});
-
-	}
-
+            return null;
+          }
+        });
+      }
+    });
+  }
 }

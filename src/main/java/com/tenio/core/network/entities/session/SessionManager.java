@@ -29,7 +29,7 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
-import com.tenio.core.configuration.defines.ServerEvent;
+import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.manager.Manager;
 import com.tenio.core.network.entities.packet.policy.PacketQueuePolicy;
 

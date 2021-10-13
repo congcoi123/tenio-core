@@ -27,8 +27,8 @@ import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 
 import com.tenio.common.data.utilities.ZeroDataSerializerUtility;
-import com.tenio.core.configuration.defines.ServerEvent;
-import com.tenio.core.entities.data.ServerMessage;
+import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entities.session.Session;
 import com.tenio.core.network.zero.handlers.DatagramIOHandler;
@@ -47,14 +47,14 @@ public final class DatagramIOHandlerImpl extends AbstractIOHandler implements Da
 	public void channelRead(DatagramChannel datagramChannel, SocketAddress remoteAddress, byte[] binary) {
 		var data = ZeroDataSerializerUtility.binaryToElement(binary);
 		var message = ServerMessage.newInstance().setData(data);
-		__eventManager.emit(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE, datagramChannel, remoteAddress, message);
+		eventManager.emit(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE, datagramChannel, remoteAddress, message);
 	}
 
 	@Override
 	public void sessionRead(Session session, byte[] binary) {
 		var data = ZeroDataSerializerUtility.binaryToElement(binary);
 		var message = ServerMessage.newInstance().setData(data);
-		__eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
+		eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
 	}
 
 	@Override
@@ -64,7 +64,7 @@ public final class DatagramIOHandlerImpl extends AbstractIOHandler implements Da
 
 	@Override
 	public void sessionException(Session session, Exception exception) {
-		__eventManager.emit(ServerEvent.SESSION_OCCURED_EXCEPTION, session, exception);
+		eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
 	}
 
 }

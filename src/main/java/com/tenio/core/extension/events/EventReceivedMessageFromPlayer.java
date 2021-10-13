@@ -23,8 +23,8 @@ THE SOFTWARE.
 */
 package com.tenio.core.extension.events;
 
-import com.tenio.core.entities.Player;
-import com.tenio.core.entities.data.ServerMessage;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.data.ServerMessage;
 
 public interface EventReceivedMessageFromPlayer {
 

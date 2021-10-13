@@ -23,9 +23,9 @@ THE SOFTWARE.
 */
 package com.tenio.core.extension.events;
 
-import com.tenio.core.entities.Room;
-import com.tenio.core.entities.defines.results.RoomCreatedResult;
-import com.tenio.core.entities.settings.InitialRoomSetting;
+import com.tenio.core.entity.Room;
+import com.tenio.core.entity.define.result.RoomCreatedResult;
+import com.tenio.core.entity.setting.InitialRoomSetting;
 
 public interface EventRoomCreatedResult {
 

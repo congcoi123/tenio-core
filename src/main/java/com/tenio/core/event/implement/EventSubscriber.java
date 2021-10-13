@@ -21,12 +21,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.event.implement;
 
-import javax.annotation.concurrent.ThreadSafe;
-
-import com.tenio.core.configuration.defines.ServerEvent;
+import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.Subscriber;
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * An object which creates a mapping between an event type with a subscriber.
@@ -34,36 +34,24 @@ import com.tenio.core.event.Subscriber;
 @ThreadSafe
 public final class EventSubscriber {
 
-	/**
-	 * @see ServerEvent
-	 */
-	private final ServerEvent __event;
-	/**
-	 * @see Subscriber
-	 */
-	private final Subscriber __subscriber;
+  private final ServerEvent serverEvent;
 
-	public static EventSubscriber newInstance(ServerEvent event, Subscriber subscriber) {
-		return new EventSubscriber(event, subscriber);
-	}
+  private final Subscriber subscriber;
 
-	private EventSubscriber(ServerEvent event, Subscriber subscriber) {
-		__event = event;
-		__subscriber = subscriber;
-	}
+  private EventSubscriber(ServerEvent serverEvent, Subscriber subscriber) {
+    this.serverEvent = serverEvent;
+    this.subscriber = subscriber;
+  }
 
-	/**
-	 * @return see {@link ServerEvent}
-	 */
-	public ServerEvent getEvent() {
-		return __event;
-	}
+  public static EventSubscriber newInstance(ServerEvent event, Subscriber subscriber) {
+    return new EventSubscriber(event, subscriber);
+  }
 
-	/**
-	 * @return see {@link Subscriber}
-	 */
-	public Subscriber getSubscriber() {
-		return __subscriber;
-	}
+  public ServerEvent getEvent() {
+    return serverEvent;
+  }
 
+  public Subscriber getSubscriber() {
+    return subscriber;
+  }
 }

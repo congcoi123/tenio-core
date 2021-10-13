@@ -35,7 +35,7 @@ import org.json.JSONObject;
 
 import com.tenio.common.data.elements.CommonObject;
 import com.tenio.common.loggers.SystemLogger;
-import com.tenio.core.configuration.defines.ServerEvent;
+import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.defines.RestMethod;
 import com.tenio.core.network.defines.data.PathConfig;

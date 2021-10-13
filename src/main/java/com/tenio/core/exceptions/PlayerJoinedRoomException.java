@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.tenio.core.exceptions;
 
-import com.tenio.core.entities.defines.results.PlayerJoinedRoomResult;
+import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 
 public final class PlayerJoinedRoomException extends RuntimeException {
 	/**

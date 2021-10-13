@@ -26,7 +26,7 @@ package com.tenio.core.network.entities.protocols.implement;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.tenio.core.entities.Player;
+import com.tenio.core.entity.Player;
 import com.tenio.core.network.defines.ResponsePriority;
 import com.tenio.core.network.entities.protocols.Response;
 import com.tenio.core.network.entities.session.Session;

@@ -23,11 +23,11 @@ THE SOFTWARE.
 */
 package com.tenio.core.extension.events;
 
-import com.tenio.core.entities.Player;
-import com.tenio.core.entities.defines.results.PlayerLoggedinResult;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.define.result.PlayerLoggedInResult;
 
 public interface EventPlayerLoggedinResult {
 
-	void handle(Player player, PlayerLoggedinResult result);
+	void handle(Player player, PlayerLoggedInResult result);
 
 }

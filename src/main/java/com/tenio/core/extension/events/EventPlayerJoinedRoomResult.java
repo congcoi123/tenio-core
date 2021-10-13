@@ -23,9 +23,9 @@ THE SOFTWARE.
 */
 package com.tenio.core.extension.events;
 
-import com.tenio.core.entities.Player;
-import com.tenio.core.entities.Room;
-import com.tenio.core.entities.defines.results.PlayerJoinedRoomResult;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.Room;
+import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 
 public interface EventPlayerJoinedRoomResult {
 

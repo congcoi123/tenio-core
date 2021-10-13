@@ -21,15 +21,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.bootstrap.event.handlers;
 
-import java.util.Optional;
-import java.util.function.Consumer;
-
-import com.tenio.common.bootstrap.annotations.AutowiredAcceptNull;
-import com.tenio.common.bootstrap.annotations.Component;
+import com.tenio.common.bootstrap.annotation.AutowiredAcceptNull;
+import com.tenio.common.bootstrap.annotation.Component;
 import com.tenio.common.configuration.Configuration;
-import com.tenio.core.configuration.defines.ServerEvent;
+import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.Subscriber;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.extension.events.EventFetchedBandwidthInfo;
@@ -38,159 +36,172 @@ import com.tenio.core.extension.events.EventServerException;
 import com.tenio.core.extension.events.EventServerInitialization;
 import com.tenio.core.extension.events.EventServerTeardown;
 import com.tenio.core.extension.events.EventSystemMonitoring;
+import java.util.Optional;
+import java.util.function.Consumer;
 
+/**
+ * Dispatching all events related to mixins.
+ */
 @Component
 public final class MixinsEventHandler {
 
-	@AutowiredAcceptNull
-	private EventServerInitialization __eventServerInitialization;
+  @AutowiredAcceptNull
+  private EventServerInitialization eventServerInitialization;
 
-	@AutowiredAcceptNull
-	private EventServerException __eventServerException;
+  @AutowiredAcceptNull
+  private EventServerException eventServerException;
 
-	@AutowiredAcceptNull
-	private EventServerTeardown __eventServerTeardown;
+  @AutowiredAcceptNull
+  private EventServerTeardown eventServerTeardown;
 
-	@AutowiredAcceptNull
-	private EventFetchedBandwidthInfo __eventFetchedBandwidthInfo;
+  @AutowiredAcceptNull
+  private EventFetchedBandwidthInfo eventFetchedBandwidthInfo;
 
-	@AutowiredAcceptNull
-	private EventFetchedCcuInfo __eventFetchedCcuInfo;
+  @AutowiredAcceptNull
+  private EventFetchedCcuInfo eventFetchedCcuInfo;
 
-	@AutowiredAcceptNull
-	private EventSystemMonitoring __eventSystemMonitoring;
+  @AutowiredAcceptNull
+  private EventSystemMonitoring eventSystemMonitoring;
 
-	public void initialize(EventManager eventManager) {
+  /**
+   * Initialization.
+   *
+   * @param eventManager the event manager
+   */
+  public void initialize(EventManager eventManager) {
 
-		Optional<EventServerInitialization> eventServerInitializationOp = Optional
-				.ofNullable(__eventServerInitialization);
-		Optional<EventServerException> eventServerExceptionOp = Optional.ofNullable(__eventServerException);
-		Optional<EventServerTeardown> eventServerTeardownOp = Optional.ofNullable(__eventServerTeardown);
+    final var eventServerInitializationOp =
+        Optional.ofNullable(eventServerInitialization);
+    final var eventServerExceptionOp =
+        Optional.ofNullable(eventServerException);
+    final var eventServerTeardownOp =
+        Optional.ofNullable(eventServerTeardown);
 
-		Optional<EventFetchedBandwidthInfo> eventFetchedBandwidthInfoOp = Optional
-				.ofNullable(__eventFetchedBandwidthInfo);
-		Optional<EventFetchedCcuInfo> eventFetchedCcuInfoOp = Optional.ofNullable(__eventFetchedCcuInfo);
-		Optional<EventSystemMonitoring> eventSystemMonitoringOp = Optional.ofNullable(__eventSystemMonitoring);
+    final var eventFetchedBandwidthInfoOp =
+        Optional.ofNullable(eventFetchedBandwidthInfo);
+    final var eventFetchedCcuInfoOp =
+        Optional.ofNullable(eventFetchedCcuInfo);
+    final var eventSystemMonitoringOp =
+        Optional.ofNullable(eventSystemMonitoring);
 
-		eventServerInitializationOp.ifPresent(new Consumer<EventServerInitialization>() {
+    eventServerInitializationOp.ifPresent(new Consumer<EventServerInitialization>() {
 
-			@Override
-			public void accept(EventServerInitialization event) {
-				eventManager.on(ServerEvent.SERVER_INITIALIZATION, new Subscriber() {
+      @Override
+      public void accept(EventServerInitialization event) {
+        eventManager.on(ServerEvent.SERVER_INITIALIZATION, new Subscriber() {
 
-					@Override
-					public Object dispatch(Object... params) {
-						String serverName = (String) params[0];
-						Configuration configuration = (Configuration) params[1];
+          @Override
+          public Object dispatch(Object... params) {
+            var serverName = (String) params[0];
+            var configuration = (Configuration) params[1];
 
-						event.handle(serverName, configuration);
+            event.handle(serverName, configuration);
 
-						return null;
-					}
-				});
-			}
-		});
+            return null;
+          }
+        });
+      }
+    });
 
-		eventServerExceptionOp.ifPresent(new Consumer<EventServerException>() {
+    eventServerExceptionOp.ifPresent(new Consumer<EventServerException>() {
 
-			@Override
-			public void accept(EventServerException event) {
-				eventManager.on(ServerEvent.SERVER_EXCEPTION, new Subscriber() {
+      @Override
+      public void accept(EventServerException event) {
+        eventManager.on(ServerEvent.SERVER_EXCEPTION, new Subscriber() {
 
-					@Override
-					public Object dispatch(Object... params) {
-						Throwable throwable = (Throwable) params[0];
+          @Override
+          public Object dispatch(Object... params) {
+            var throwable = (Throwable) params[0];
 
-						event.handle(throwable);
+            event.handle(throwable);
 
-						return null;
-					}
-				});
-			}
-		});
+            return null;
+          }
+        });
+      }
+    });
 
-		eventServerTeardownOp.ifPresent(new Consumer<EventServerTeardown>() {
+    eventServerTeardownOp.ifPresent(new Consumer<EventServerTeardown>() {
 
-			@Override
-			public void accept(EventServerTeardown event) {
-				eventManager.on(ServerEvent.SERVER_TEARDOWN, new Subscriber() {
+      @Override
+      public void accept(EventServerTeardown event) {
+        eventManager.on(ServerEvent.SERVER_TEARDOWN, new Subscriber() {
 
-					@Override
-					public Object dispatch(Object... params) {
-						String serverName = (String) params[0];
+          @Override
+          public Object dispatch(Object... params) {
+            var serverName = (String) params[0];
 
-						event.handle(serverName);
+            event.handle(serverName);
 
-						return null;
-					}
-				});
-			}
-		});
+            return null;
+          }
+        });
+      }
+    });
 
-		eventFetchedBandwidthInfoOp.ifPresent(new Consumer<EventFetchedBandwidthInfo>() {
+    eventFetchedBandwidthInfoOp.ifPresent(new Consumer<EventFetchedBandwidthInfo>() {
 
-			@Override
-			public void accept(EventFetchedBandwidthInfo event) {
-				eventManager.on(ServerEvent.FETCHED_BANDWIDTH_INFO, new Subscriber() {
+      @Override
+      public void accept(EventFetchedBandwidthInfo event) {
+        eventManager.on(ServerEvent.FETCHED_BANDWIDTH_INFO, new Subscriber() {
 
-					@Override
-					public Object dispatch(Object... params) {
-						long readBytes = (long) params[0];
-						long readPackets = (long) params[1];
-						long readDroppedPackets = (long) params[2];
-						long writtenBytes = (long) params[3];
-						long writtenPackets = (long) params[4];
-						long writtenDroppedPacketsByPolicy = (long) params[5];
-						long writtenDroppedPacketsByFull = (long) params[6];
+          @Override
+          public Object dispatch(Object... params) {
+            long readBytes = (long) params[0];
+            long readPackets = (long) params[1];
+            long readDroppedPackets = (long) params[2];
+            long writtenBytes = (long) params[3];
+            long writtenPackets = (long) params[4];
+            long writtenDroppedPacketsByPolicy = (long) params[5];
+            long writtenDroppedPacketsByFull = (long) params[6];
 
-						event.handle(readBytes, readPackets, readDroppedPackets, writtenBytes, writtenPackets,
-								writtenDroppedPacketsByPolicy, writtenDroppedPacketsByFull);
+            event.handle(readBytes, readPackets, readDroppedPackets, writtenBytes, writtenPackets,
+                writtenDroppedPacketsByPolicy, writtenDroppedPacketsByFull);
 
-						return null;
-					}
-				});
-			}
-		});
+            return null;
+          }
+        });
+      }
+    });
 
-		eventFetchedCcuInfoOp.ifPresent(new Consumer<EventFetchedCcuInfo>() {
+    eventFetchedCcuInfoOp.ifPresent(new Consumer<EventFetchedCcuInfo>() {
 
-			@Override
-			public void accept(EventFetchedCcuInfo event) {
-				eventManager.on(ServerEvent.FETCHED_CCU_INFO, new Subscriber() {
+      @Override
+      public void accept(EventFetchedCcuInfo event) {
+        eventManager.on(ServerEvent.FETCHED_CCU_INFO, new Subscriber() {
 
-					@Override
-					public Object dispatch(Object... params) {
-						int numberPlayers = (int) params[0];
+          @Override
+          public Object dispatch(Object... params) {
+            int numberPlayers = (int) params[0];
 
-						event.handle(numberPlayers);
+            event.handle(numberPlayers);
 
-						return null;
-					}
-				});
-			}
-		});
+            return null;
+          }
+        });
+      }
+    });
 
-		eventSystemMonitoringOp.ifPresent(new Consumer<EventSystemMonitoring>() {
+    eventSystemMonitoringOp.ifPresent(new Consumer<EventSystemMonitoring>() {
 
-			@Override
-			public void accept(EventSystemMonitoring event) {
-				eventManager.on(ServerEvent.SYSTEM_MONITORING, new Subscriber() {
+      @Override
+      public void accept(EventSystemMonitoring event) {
+        eventManager.on(ServerEvent.SYSTEM_MONITORING, new Subscriber() {
 
-					@Override
-					public Object dispatch(Object... params) {
-						double cpuUsage = (double) params[0];
-						long totalMemory = (long) params[1];
-						long usedMemory = (long) params[2];
-						long freeMemory = (long) params[3];
-						int countRunningThreads = (int) params[4];
+          @Override
+          public Object dispatch(Object... params) {
+            double cpuUsage = (double) params[0];
+            long totalMemory = (long) params[1];
+            long usedMemory = (long) params[2];
+            long freeMemory = (long) params[3];
+            int countRunningThreads = (int) params[4];
 
-						event.handle(cpuUsage, totalMemory, usedMemory, freeMemory, countRunningThreads);
+            event.handle(cpuUsage, totalMemory, usedMemory, freeMemory, countRunningThreads);
 
-						return null;
-					}
-				});
-			}
-		});
-	}
-
+            return null;
+          }
+        });
+      }
+    });
+  }
 }

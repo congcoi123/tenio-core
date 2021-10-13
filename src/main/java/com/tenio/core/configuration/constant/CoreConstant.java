@@ -21,37 +21,35 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.configuration.constant;
 
+/**
+ * This class holds constant values.
+ */
 public final class CoreConstant {
 
-	private CoreConstant() {
+  /**
+   * The HTTP response with UTF-8 encoding.
+   */
+  public static final String UTF_8 = "UTF-8";
+  /**
+   * The HTTP response with content type in JSON.
+   */
+  public static final String CONTENT_TYPE_JSON = "application/json";
+  /**
+   * The HTTP response with content type in text.
+   */
+  public static final String CONTENT_TYPE_TEXT = "text/html";
+  /**
+   * The default URI path when a HTTP server was started (To confirm if the server
+   * was started or not).
+   */
+  public static final String PING_PATH = "/ping";
+  public static final String LOCAL_HOST = "localhost";
+  public static final String DEFAULT_CONFIGURATION_FILE = "configuration.xml";
 
-	}
-
-	/**
-	 * The HTTP response with UTF-8 encoding
-	 */
-	public static final String UTF_8 = "UTF-8";
-
-	/**
-	 * The HTTP response with content type in JSON
-	 */
-	public static final String CONTENT_TYPE_JSON = "application/json";
-
-	/**
-	 * The HTTP response with content type in text
-	 */
-	public static final String CONTENT_TYPE_TEXT = "text/html";
-
-	/**
-	 * The default URI path when a HTTP server was started (To confirm if the server
-	 * was started or not)
-	 */
-	public static final String PING_PATH = "/ping";
-
-	public static final String LOCAL_HOST = "localhost";
-
-	public static final String DEFAULT_CONNFIGURATION_FILE = "configuration.xml";
-
+  private CoreConstant() {
+    throw new UnsupportedOperationException("This class does not support to create a new instance");
+  }
 }

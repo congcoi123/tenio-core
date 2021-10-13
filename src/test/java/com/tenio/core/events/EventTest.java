@@ -32,10 +32,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.tenio.core.configuration.defines.ServerEvent;
-import com.tenio.core.entities.implement.PlayerImpl;
-import com.tenio.core.entities.managers.PlayerManager;
-import com.tenio.core.entities.managers.implement.PlayerManagerImpl;
+import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.implement.PlayerImpl;
+import com.tenio.core.entity.manager.PlayerManager;
+import com.tenio.core.entity.manager.implement.PlayerManagerImpl;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exceptions.AddedDuplicatedPlayerException;
 
