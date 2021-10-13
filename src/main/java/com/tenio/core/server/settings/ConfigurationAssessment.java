@@ -37,9 +37,9 @@ import com.tenio.core.extension.events.EventHttpRequestHandle;
 import com.tenio.core.extension.events.EventHttpRequestValidation;
 import com.tenio.core.extension.events.EventPlayerReconnectRequestHandle;
 import com.tenio.core.extension.events.EventPlayerReconnectedResult;
-import com.tenio.core.network.defines.TransportType;
-import com.tenio.core.network.defines.data.HttpConfig;
-import com.tenio.core.network.defines.data.SocketConfig;
+import com.tenio.core.network.define.TransportType;
+import com.tenio.core.network.define.data.HttpConfig;
+import com.tenio.core.network.define.data.SocketConfig;
 
 public final class ConfigurationAssessment {
 

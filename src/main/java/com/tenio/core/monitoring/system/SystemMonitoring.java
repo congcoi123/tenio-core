@@ -21,18 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.monitoring.system;
 
+import com.sun.management.OperatingSystemMXBean;
 import java.lang.management.ManagementFactory;
-
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
 
-import com.sun.management.OperatingSystemMXBean;
-
 /**
- * For showing the system information
- * 
+ * For showing the system information.
+ *
  * <h1>CPU</h1>
  * <ul>
  * <li>Usage</li>
@@ -43,70 +42,79 @@ import com.sun.management.OperatingSystemMXBean;
  * <li>Used</li>
  * <li>Free</li>
  * </ul>
- * 
+ *
  * @see <a href="https://i.stack.imgur.com/GjuwM.png">Explained Image</a>
  */
 @ThreadSafe
 public final class SystemMonitoring {
 
-	@GuardedBy("this")
-	private final OperatingSystemMXBean __osMxBean;
-	@GuardedBy("this")
-	private long __lastSystemTime;
-	@GuardedBy("this")
-	private long __lastProcessCpuTime;
+  @GuardedBy("this")
+  private final OperatingSystemMXBean operatingSystemMxBean;
+  @GuardedBy("this")
+  private long lastSystemTime;
+  @GuardedBy("this")
+  private long lastProcessCpuTime;
 
-	public static SystemMonitoring newInstance() {
-		return new SystemMonitoring();
-	}
-	
-	private SystemMonitoring() {
-		__osMxBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-		__lastSystemTime = 0L;
-		__lastProcessCpuTime = 0L;
-	}
+  private SystemMonitoring() {
+    operatingSystemMxBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+    lastSystemTime = 0L;
+    lastProcessCpuTime = 0L;
+  }
 
-	public synchronized double getCpuUsage() {
-		if (__lastSystemTime == 0L) {
-			__updateBaselineCounters();
-			return 0.0D;
-		} else {
-			long systemTime = System.nanoTime();
-			long processCpuTime = __osMxBean.getProcessCpuTime();
-			double cpuUsage = (double) (processCpuTime - __lastProcessCpuTime)
-					/ (double) (systemTime - __lastSystemTime);
-			__lastSystemTime = systemTime;
-			__lastProcessCpuTime = processCpuTime;
+  public static SystemMonitoring newInstance() {
+    return new SystemMonitoring();
+  }
 
-			return cpuUsage / (double) __osMxBean.getAvailableProcessors();
-		}
-	}
+  /**
+   * Retrieves the CPU usage.
+   *
+   * @return the CPU usage in percentage
+   */
+  public synchronized double getCpuUsage() {
+    if (lastSystemTime == 0L) {
+      updateBaselineCounters();
+      return 0.0D;
+    } else {
+      long systemTime = System.nanoTime();
+      long processCpuTime = operatingSystemMxBean.getProcessCpuTime();
+      double cpuUsage = (double) (processCpuTime - lastProcessCpuTime)
+          / (double) (systemTime - lastSystemTime);
+      lastSystemTime = systemTime;
+      lastProcessCpuTime = processCpuTime;
 
-	private void __updateBaselineCounters() {
-		__lastSystemTime = System.nanoTime();
-		__lastProcessCpuTime = __osMxBean.getProcessCpuTime();
-	}
+      return cpuUsage / (double) operatingSystemMxBean.getAvailableProcessors();
+    }
+  }
 
-	public int countRunningThreads() {
-		int countRunning = 0;
-		for (Thread thread : Thread.getAllStackTraces().keySet()) {
-			if (thread.getState() == Thread.State.RUNNABLE) {
-				countRunning++;
-			}
-		}
-		return countRunning;
-	}
+  private void updateBaselineCounters() {
+    lastSystemTime = System.nanoTime();
+    lastProcessCpuTime = operatingSystemMxBean.getProcessCpuTime();
+  }
 
-	public long getTotalMemory() {
-		return Runtime.getRuntime().totalMemory();
-	}
+  /**
+   * Retrieves the number of running threads.
+   *
+   * @return the number of running threads
+   */
+  public int countRunningThreads() {
+    int countRunning = 0;
+    for (var thread : Thread.getAllStackTraces().keySet()) {
+      if (thread.getState() == Thread.State.RUNNABLE) {
+        countRunning++;
+      }
+    }
+    return countRunning;
+  }
 
-	public long getFreeMemory() {
-		return Runtime.getRuntime().maxMemory() - getUsedMemory();
-	}
+  public long getTotalMemory() {
+    return Runtime.getRuntime().totalMemory();
+  }
 
-	public long getUsedMemory() {
-		return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-	}
+  public long getFreeMemory() {
+    return Runtime.getRuntime().maxMemory() - getUsedMemory();
+  }
 
+  public long getUsedMemory() {
+    return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+  }
 }

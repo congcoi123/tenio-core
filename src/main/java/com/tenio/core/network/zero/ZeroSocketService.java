@@ -25,7 +25,7 @@ package com.tenio.core.network.zero;
 
 import java.util.List;
 
-import com.tenio.core.network.defines.data.SocketConfig;
+import com.tenio.core.network.define.data.SocketConfig;
 import com.tenio.core.network.entities.packet.Packet;
 import com.tenio.core.network.entities.session.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;

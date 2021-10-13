@@ -21,49 +21,49 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.defines.data;
+package com.tenio.core.network.define;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-import javax.annotation.concurrent.ThreadSafe;
+public enum TransportType {
 
-@ThreadSafe
-public final class HttpConfig {
+	UNKNOWN("unknown"),
 
-	private final String __name;
-	private final int __port;
-	private final List<PathConfig> __paths;
+	TCP("tcp"),
 
-	public HttpConfig(String name, int port) {
-		__paths = new ArrayList<PathConfig>();
-		__name = name;
-		__port = port;
-	}
+	UDP("udp"),
 
-	public String getName() {
-		return __name;
-	}
+	WEB_SOCKET("websocket"),
 
-	public List<PathConfig> getPaths() {
-		synchronized (__paths) {
-			return __paths;
+	HTTP("http");
+
+	// Reverse-lookup map for getting a type from a value
+	private static final Map<String, TransportType> lookup = new HashMap<String, TransportType>();
+
+	static {
+		for (var type : TransportType.values()) {
+			lookup.put(type.getValue(), type);
 		}
 	}
 
-	public void addPath(PathConfig path) {
-		synchronized (__paths) {
-			__paths.add(path);
-		}
+	private final String __value;
+
+	private TransportType(final String value) {
+		__value = value;
 	}
 
-	public int getPort() {
-		return __port;
+	public final String getValue() {
+		return __value;
 	}
 
 	@Override
-	public String toString() {
-		return String.format("{ paths:%s, name:%s, port:%d}", __paths.toString(), __name, __port);
+	public final String toString() {
+		return name();
+	}
+
+	public static TransportType getByValue(String value) {
+		return lookup.get(value);
 	}
 
 }

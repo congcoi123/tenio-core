@@ -24,8 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.exceptions;
 
-import com.tenio.core.network.defines.RestMethod;
-import com.tenio.core.network.defines.data.PathConfig;
+import com.tenio.core.network.define.RestMethod;
+import com.tenio.core.network.define.data.PathConfig;
 import java.util.List;
 
 /**

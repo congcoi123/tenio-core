@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.tenio.common.utilities.TimeUtility;
 import com.tenio.core.configuration.define.ServerEvent;
-import com.tenio.core.network.defines.RequestPriority;
+import com.tenio.core.network.define.RequestPriority;
 import com.tenio.core.network.entities.protocols.Request;
 import com.tenio.core.network.entities.session.Session;
 

@@ -21,25 +21,45 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.defines;
+package com.tenio.core.network.define;
 
-public enum ResponsePriority {
+import java.util.HashMap;
+import java.util.Map;
 
-	NON_GUARANTEED(1),
+public enum RestMethod {
+	/**
+	 * Create
+	 */
+	POST("post"),
+	/**
+	 * Update
+	 */
+	PUT("put"),
+	/**
+	 * Retrieve
+	 */
+	GET("get"),
+	/**
+	 * Delete
+	 */
+	DELETE("delete");
 
-	NORMAL(2),
+	// Reverse-lookup map for getting a type from a value
+	private static final Map<String, RestMethod> lookup = new HashMap<String, RestMethod>();
 
-	GUARANTEED(3),
+	static {
+		for (var method : RestMethod.values()) {
+			lookup.put(method.getValue(), method);
+		}
+	}
 
-	GUARANTEED_QUICKEST(4);
+	private final String __value;
 
-	private final int __value;
-
-	private ResponsePriority(final int value) {
+	private RestMethod(final String value) {
 		__value = value;
 	}
 
-	public final int getValue() {
+	public final String getValue() {
 		return __value;
 	}
 
@@ -48,4 +68,7 @@ public enum ResponsePriority {
 		return name();
 	}
 
+	public static RestMethod getByValue(String value) {
+		return lookup.get(value);
+	}
 }

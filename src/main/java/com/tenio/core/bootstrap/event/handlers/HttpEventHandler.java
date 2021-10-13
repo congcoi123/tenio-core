@@ -31,7 +31,7 @@ import com.tenio.core.event.Subscriber;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.extension.events.EventHttpRequestHandle;
 import com.tenio.core.extension.events.EventHttpRequestValidation;
-import com.tenio.core.network.defines.RestMethod;
+import com.tenio.core.network.define.RestMethod;
 import java.util.Optional;
 import java.util.function.Consumer;
 import javax.servlet.http.HttpServletRequest;

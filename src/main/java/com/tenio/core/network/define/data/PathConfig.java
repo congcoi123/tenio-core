@@ -21,9 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.defines.data;
+package com.tenio.core.network.define.data;
 
-import com.tenio.core.network.defines.RestMethod;
+import com.tenio.core.network.define.RestMethod;
 
 public final class PathConfig {
 

@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.extension.events;
 
-import com.tenio.core.network.defines.RestMethod;
+import com.tenio.core.network.define.RestMethod;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 

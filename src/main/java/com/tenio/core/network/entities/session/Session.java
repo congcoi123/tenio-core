@@ -31,7 +31,7 @@ import java.nio.channels.SocketChannel;
 
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
-import com.tenio.core.network.defines.TransportType;
+import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entities.packet.PacketQueue;
 import com.tenio.core.network.zero.codec.packet.PacketReadState;
 import com.tenio.core.network.zero.codec.packet.PendingPacket;

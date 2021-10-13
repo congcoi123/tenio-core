@@ -21,35 +21,31 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.monitoring.defines;
+package com.tenio.core.network.define;
 
-public enum SytemInfoType {
+public enum RequestPriority {
 
-	OS_NAME("os.name"),
-	OS_ARCH("os.arch"),
-	OS_VERSION("os.version"),
-	JAVA_VERSION("java.version"),
-	JAVA_VENDOR("java.vendor"),
-	JAVA_VENDOR_URL("java.vendor.url"),
-	JAVA_VM_SPEC_VERSION("java.vm.specification.version"),
-	JAVA_VM_VERSION("java.vm.version"),
-	JAVA_VM_VENDOR("java.vm.vendor"),
-	JAVA_VM_NAME("java.vm.name"),
-	JAVA_IO_TMPDIR("java.io.tmpdir");
-	
-	private final String value;
-	
-	private SytemInfoType(final String value) {
-		this.value = value;
+	LOWEST(1),
+
+	LOW(2),
+
+	NORMAL(3),
+
+	QUICKEST(4);
+
+	private final int __value;
+
+	private RequestPriority(final int value) {
+		__value = value;
 	}
-	
-	public final String getValue() {
-		return this.value;
+
+	public final int getValue() {
+		return __value;
 	}
-	
+
 	@Override
-	public String toString() {
-		return this.name();
+	public final String toString() {
+		return name();
 	}
-	
+
 }

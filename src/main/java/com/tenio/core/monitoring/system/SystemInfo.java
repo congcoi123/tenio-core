@@ -21,20 +21,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.monitoring.system;
 
+import com.tenio.common.logger.SystemLogger;
+import com.tenio.core.monitoring.define.SystemInfoType;
 import java.io.File;
-import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.nio.charset.Charset;
 
-import com.tenio.common.loggers.SystemLogger;
-import com.tenio.core.monitoring.defines.SytemInfoType;
-
 /**
- * For logging the system information
- * 
+ * For logging the OS system information.
+ *
  * <h1>Operation System</h1>
  * <ul>
  * <li>Name</li>
@@ -50,63 +49,76 @@ import com.tenio.core.monitoring.defines.SytemInfoType;
  */
 public final class SystemInfo extends SystemLogger {
 
-	public void logSystemInfo() {
-		var logger = buildgen("\n");
-		var runtime = Runtime.getRuntime();
+  /**
+   * Logging the system information.
+   */
+  public void logSystemInfo() {
+    var logger = buildgen("\n");
+    var runtime = Runtime.getRuntime();
 
-		logger.append("\t").append("Processor(s): ").append(runtime.availableProcessors()).append("\n");
-		logger.append("\t").append("VM Max. memory: ").append(runtime.maxMemory() / 1000000L).append(" MB")
-				.append("\n");
+    logger.append("\t").append("Processor(s): ").append(runtime.availableProcessors()).append("\n");
+    logger.append("\t").append("VM Max. memory: ").append(runtime.maxMemory() / 1000000L)
+        .append(" MB")
+        .append("\n");
 
-		for (var prop : SytemInfoType.values()) {
-			logger.append("\t").append(prop.toString()).append(": ").append(System.getProperty(prop.getValue()))
-					.append("\n");
-		}
+    for (var prop : SystemInfoType.values()) {
+      logger.append("\t").append(prop.toString()).append(": ")
+          .append(System.getProperty(prop.getValue()))
+          .append("\n");
+    }
 
-		logger.append("\t").append("Default charset: " + Charset.defaultCharset()).append("\n");
+    logger.append("\t").append("Default charset: " + Charset.defaultCharset()).append("\n");
 
-		info("SYSTEM INFORMATION", logger);
-	}
+    info("SYSTEM INFORMATION", logger);
+  }
 
-	public void logNetCardsInfo() {
-		var logger = buildgen("\n");
+  /**
+   * Logging the net card information.
+   */
+  public void logNetCardsInfo() {
+    var logger = buildgen("\n");
 
-		try {
-			var list = NetworkInterface.getNetworkInterfaces();
+    try {
+      var list = NetworkInterface.getNetworkInterfaces();
 
-			while (list.hasMoreElements()) {
-				NetworkInterface iFace = (NetworkInterface) list.nextElement();
-				logger.append("\t").append("Card: ").append(iFace.getDisplayName()).append("\n");
+      while (list.hasMoreElements()) {
+        var networkInterface = list.nextElement();
+        logger.append("\t").append("Card: ").append(networkInterface.getDisplayName()).append("\n");
 
-				var addresses = iFace.getInetAddresses();
+        var addresses = networkInterface.getInetAddresses();
 
-				while (addresses.hasMoreElements()) {
-					InetAddress adr = (InetAddress) addresses.nextElement();
-					logger.append("\t").append("\t").append(" ->").append(adr.getHostAddress()).append("\n");
-				}
-			}
+        while (addresses.hasMoreElements()) {
+          var inetAddress = addresses.nextElement();
+          logger.append("\t").append("\t").append(" ->").append(inetAddress.getHostAddress())
+              .append("\n");
+        }
+      }
 
-			info("NETWORK INFORMATION", logger);
+      info("NETWORK INFORMATION", logger);
 
-		} catch (SocketException e) {
-			error(e, "Exception while discovering network cards");
-		}
-	}
+    } catch (SocketException e) {
+      error(e, "Exception while discovering network cards");
+    }
+  }
 
-	public void logDiskInfo() {
-		var logger = buildgen("\n");
+  /**
+   * Logging the disk information.
+   */
+  public void logDiskInfo() {
+    var logger = buildgen("\n");
 
-		/* Get a list of all file system roots on this system */
-		File[] roots = File.listRoots();
+    /* Get a list of all file system roots on this system */
+    var roots = File.listRoots();
 
-		/* For each file system root, print some info */
-		for (File root : roots) {
-			logger.append("\t").append("File system root: ").append(root.getAbsolutePath()).append("\n");
-			logger.append("\t").append("Total space (bytes): ").append(root.getTotalSpace()).append("\n");
-			logger.append("\t").append("Free space (bytes): ").append(root.getFreeSpace()).append("\n");
-			logger.append("\t").append("Usable space (bytes): ").append(root.getUsableSpace()).append("\n");
-		}
+    /* For each file system root, print some info */
+    for (File root : roots) {
+      logger.append("\t").append("File system root: ").append(root.getAbsolutePath()).append("\n");
+      logger.append("\t").append("Total space (bytes): ").append(root.getTotalSpace()).append("\n");
+      logger.append("\t").append("Free space (bytes): ").append(root.getFreeSpace()).append("\n");
+      logger.append("\t").append("Usable space (bytes): ").append(root.getUsableSpace())
+          .append("\n");
+    }
 
-		info("DISK INFORMATION", logger);
-	}
+    info("DISK INFORMATION", logger);
+  }
 }

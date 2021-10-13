@@ -21,19 +21,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.defines.data;
+package com.tenio.core.network.define.data;
 
-import com.tenio.core.network.defines.TransportType;
+import java.util.ArrayList;
+import java.util.List;
 
-public final class SocketConfig {
+import javax.annotation.concurrent.ThreadSafe;
+
+@ThreadSafe
+public final class HttpConfig {
 
 	private final String __name;
-	private final TransportType __type;
 	private final int __port;
+	private final List<PathConfig> __paths;
 
-	public SocketConfig(String name, TransportType type, int port) {
+	public HttpConfig(String name, int port) {
+		__paths = new ArrayList<PathConfig>();
 		__name = name;
-		__type = type;
 		__port = port;
 	}
 
@@ -41,8 +45,16 @@ public final class SocketConfig {
 		return __name;
 	}
 
-	public TransportType getType() {
-		return __type;
+	public List<PathConfig> getPaths() {
+		synchronized (__paths) {
+			return __paths;
+		}
+	}
+
+	public void addPath(PathConfig path) {
+		synchronized (__paths) {
+			__paths.add(path);
+		}
 	}
 
 	public int getPort() {
@@ -51,7 +63,7 @@ public final class SocketConfig {
 
 	@Override
 	public String toString() {
-		return String.format("{ name:%s, type:%s, port:%d }", __name, __type.name(), __port);
+		return String.format("{ paths:%s, name:%s, port:%d}", __paths.toString(), __name, __port);
 	}
 
 }

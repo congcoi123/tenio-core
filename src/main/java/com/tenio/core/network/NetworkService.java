@@ -26,8 +26,8 @@ package com.tenio.core.network;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-import com.tenio.core.network.defines.data.PathConfig;
-import com.tenio.core.network.defines.data.SocketConfig;
+import com.tenio.core.network.define.data.PathConfig;
+import com.tenio.core.network.define.data.SocketConfig;
 import com.tenio.core.network.entities.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entities.protocols.Response;
 import com.tenio.core.network.security.filter.ConnectionFilter;

@@ -24,7 +24,7 @@ THE SOFTWARE.
 package com.tenio.core.network.entities.protocols;
 
 import com.tenio.core.configuration.define.ServerEvent;
-import com.tenio.core.network.defines.RequestPriority;
+import com.tenio.core.network.define.RequestPriority;
 import com.tenio.core.network.entities.session.Session;
 
 public interface Request {

@@ -26,7 +26,7 @@ package com.tenio.core.network.entities.protocols;
 import java.util.Collection;
 
 import com.tenio.core.entity.Player;
-import com.tenio.core.network.defines.ResponsePriority;
+import com.tenio.core.network.define.ResponsePriority;
 import com.tenio.core.network.entities.session.Session;
 
 public interface Response {

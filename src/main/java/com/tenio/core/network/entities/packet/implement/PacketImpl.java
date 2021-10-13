@@ -27,8 +27,8 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.tenio.common.utilities.TimeUtility;
-import com.tenio.core.network.defines.ResponsePriority;
-import com.tenio.core.network.defines.TransportType;
+import com.tenio.core.network.define.ResponsePriority;
+import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entities.packet.Packet;
 import com.tenio.core.network.entities.session.Session;
 

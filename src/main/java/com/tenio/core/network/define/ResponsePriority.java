@@ -21,21 +21,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.defines;
+package com.tenio.core.network.define;
 
-public enum RequestPriority {
+public enum ResponsePriority {
 
-	LOWEST(1),
+	NON_GUARANTEED(1),
 
-	LOW(2),
+	NORMAL(2),
 
-	NORMAL(3),
+	GUARANTEED(3),
 
-	QUICKEST(4);
+	GUARANTEED_QUICKEST(4);
 
 	private final int __value;
 
-	private RequestPriority(final int value) {
+	private ResponsePriority(final int value) {
 		__value = value;
 	}
 

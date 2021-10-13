@@ -21,49 +21,37 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.defines;
+package com.tenio.core.network.define.data;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.tenio.core.network.define.TransportType;
 
-public enum TransportType {
+public final class SocketConfig {
 
-	UNKNOWN("unknown"),
+	private final String __name;
+	private final TransportType __type;
+	private final int __port;
 
-	TCP("tcp"),
-
-	UDP("udp"),
-
-	WEB_SOCKET("websocket"),
-
-	HTTP("http");
-
-	// Reverse-lookup map for getting a type from a value
-	private static final Map<String, TransportType> lookup = new HashMap<String, TransportType>();
-
-	static {
-		for (var type : TransportType.values()) {
-			lookup.put(type.getValue(), type);
-		}
+	public SocketConfig(String name, TransportType type, int port) {
+		__name = name;
+		__type = type;
+		__port = port;
 	}
 
-	private final String __value;
-
-	private TransportType(final String value) {
-		__value = value;
+	public String getName() {
+		return __name;
 	}
 
-	public final String getValue() {
-		return __value;
+	public TransportType getType() {
+		return __type;
+	}
+
+	public int getPort() {
+		return __port;
 	}
 
 	@Override
-	public final String toString() {
-		return name();
-	}
-
-	public static TransportType getByValue(String value) {
-		return lookup.get(value);
+	public String toString() {
+		return String.format("{ name:%s, type:%s, port:%d }", __name, __type.name(), __port);
 	}
 
 }

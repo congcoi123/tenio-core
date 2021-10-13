@@ -21,54 +21,38 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.defines;
 
-import java.util.HashMap;
-import java.util.Map;
+package com.tenio.core.monitoring.define;
 
-public enum RestMethod {
-	/**
-	 * Create
-	 */
-	POST("post"),
-	/**
-	 * Update
-	 */
-	PUT("put"),
-	/**
-	 * Retrieve
-	 */
-	GET("get"),
-	/**
-	 * Delete
-	 */
-	DELETE("delete");
+/**
+ * All the OS system information types.
+ */
+public enum SystemInfoType {
 
-	// Reverse-lookup map for getting a type from a value
-	private static final Map<String, RestMethod> lookup = new HashMap<String, RestMethod>();
+  OS_NAME("os.name"),
+  OS_ARCH("os.arch"),
+  OS_VERSION("os.version"),
+  JAVA_VERSION("java.version"),
+  JAVA_VENDOR("java.vendor"),
+  JAVA_VENDOR_URL("java.vendor.url"),
+  JAVA_VM_SPEC_VERSION("java.vm.specification.version"),
+  JAVA_VM_VERSION("java.vm.version"),
+  JAVA_VM_VENDOR("java.vm.vendor"),
+  JAVA_VM_NAME("java.vm.name"),
+  JAVA_IO_TMPDIR("java.io.tmpdir");
 
-	static {
-		for (var method : RestMethod.values()) {
-			lookup.put(method.getValue(), method);
-		}
-	}
+  private final String value;
 
-	private final String __value;
+  SystemInfoType(final String value) {
+    this.value = value;
+  }
 
-	private RestMethod(final String value) {
-		__value = value;
-	}
+  public final String getValue() {
+    return this.value;
+  }
 
-	public final String getValue() {
-		return __value;
-	}
-
-	@Override
-	public final String toString() {
-		return name();
-	}
-
-	public static RestMethod getByValue(String value) {
-		return lookup.get(value);
-	}
+  @Override
+  public String toString() {
+    return this.name();
+  }
 }
