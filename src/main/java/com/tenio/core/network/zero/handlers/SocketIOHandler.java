@@ -26,7 +26,7 @@ package com.tenio.core.network.zero.handlers;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 
 public interface SocketIOHandler extends BaseIOHandler {

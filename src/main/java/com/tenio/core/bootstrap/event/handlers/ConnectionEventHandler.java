@@ -38,7 +38,7 @@ import com.tenio.core.extension.events.EventAttachConnectionRequestValidation;
 import com.tenio.core.extension.events.EventAttachedConnectionResult;
 import com.tenio.core.extension.events.EventConnectionEstablishedResult;
 import com.tenio.core.extension.events.EventDisconnectConnection;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import java.util.Optional;
 import java.util.function.Consumer;
 

@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.entity;
 
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 
 /**
  * The abstract player object used in the server.

@@ -28,7 +28,7 @@ import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.PlayerState;
 import com.tenio.core.entity.Room;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

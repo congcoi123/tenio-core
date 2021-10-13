@@ -28,7 +28,7 @@ import com.tenio.common.utility.StringUtility;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exceptions.RequestQueueFullException;
 import com.tenio.core.manager.AbstractManager;
-import com.tenio.core.network.entities.protocols.Request;
+import com.tenio.core.network.entity.protocol.Request;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

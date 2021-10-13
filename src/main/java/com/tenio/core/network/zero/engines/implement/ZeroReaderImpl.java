@@ -39,7 +39,7 @@ import java.util.Set;
 
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exceptions.ServiceRuntimeException;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistics.NetworkReaderStatistic;
 import com.tenio.core.network.zero.engines.ZeroReader;
 import com.tenio.core.network.zero.engines.listeners.ZeroAcceptorListener;

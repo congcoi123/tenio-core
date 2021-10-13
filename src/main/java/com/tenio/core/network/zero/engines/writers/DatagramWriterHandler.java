@@ -27,9 +27,9 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 
-import com.tenio.core.network.entities.packet.Packet;
-import com.tenio.core.network.entities.packet.PacketQueue;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.packet.Packet;
+import com.tenio.core.network.entity.packet.PacketQueue;
+import com.tenio.core.network.entity.session.Session;
 
 public final class DatagramWriterHandler extends AbstractWriterHandler {
 

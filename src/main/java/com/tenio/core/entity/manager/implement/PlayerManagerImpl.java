@@ -32,7 +32,7 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exceptions.AddedDuplicatedPlayerToRoomException;
 import com.tenio.core.exceptions.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.manager.AbstractManager;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;

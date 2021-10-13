@@ -35,7 +35,7 @@ import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
 import com.tenio.core.exceptions.PlayerJoinedRoomException;
 import com.tenio.core.exceptions.SwitchedPlayerSpectatorException;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

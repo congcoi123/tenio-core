@@ -21,51 +21,64 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.define.data;
 
 import com.tenio.core.network.define.RestMethod;
 
+/**
+ * Forms a configuration for the HTTP's REST method.
+ */
 public final class PathConfig {
 
-	private final String __name;
-	private final String __description;
-	private final int __version;
-	private final RestMethod __method;
-	private final String __uri;
+  private final String name;
+  private final String description;
+  private final int version;
+  private final RestMethod method;
+  private final String uri;
 
-	public PathConfig(String name, RestMethod method, String uri, String description,
-			int version) {
-		__name = name;
-		__method = method;
-		__uri = uri;
-		__description = description;
-		__version = version;
-	}
+  /**
+   * Initialization.
+   *
+   * @param name        the configuration name
+   * @param method      the REST method
+   * @param uri         the URI
+   * @param description the description
+   * @param version     the current API version
+   */
+  public PathConfig(String name, RestMethod method, String uri, String description,
+                    int version) {
+    this.name = name;
+    this.method = method;
+    this.uri = uri;
+    this.description = description;
+    this.version = version;
+  }
 
-	public String getName() {
-		return __name;
-	}
+  public String getName() {
+    return name;
+  }
 
-	public RestMethod getMethod() {
-		return __method;
-	}
+  public RestMethod getMethod() {
+    return method;
+  }
 
-	public String getUri() {
-		return __uri;
-	}
+  public String getUri() {
+    return uri;
+  }
 
-	public String getDescription() {
-		return __description;
-	}
+  public String getDescription() {
+    return description;
+  }
 
-	public int getVersion() {
-		return __version;
-	}
+  public int getVersion() {
+    return version;
+  }
 
-	@Override
-	public String toString() {
-		return String.format("{ name:%s, method:%s, uri:%s, description:%s, version:%d}", __name, __method.name(),
-				__uri, __description, __version);
-	}
-
+  @Override
+  public String toString() {
+    return String.format("{ name:%s, method:%s, uri:%s, description:%s, version:%d}", name,
+        method.name(),
+        uri, description, version);
+  }
 }

@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.tenio.core.network.zero.engines;
 
-import com.tenio.core.network.entities.packet.Packet;
+import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.statistics.NetworkWriterStatistic;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 

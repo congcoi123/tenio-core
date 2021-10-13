@@ -26,9 +26,9 @@ package com.tenio.core.network.zero.engines.writers;
 import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 
-import com.tenio.core.network.entities.packet.Packet;
-import com.tenio.core.network.entities.packet.PacketQueue;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.packet.Packet;
+import com.tenio.core.network.entity.packet.PacketQueue;
+import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistics.NetworkWriterStatistic;
 
 public interface WriterHandler {

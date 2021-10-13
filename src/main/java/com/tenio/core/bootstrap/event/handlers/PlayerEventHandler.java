@@ -40,7 +40,7 @@ import com.tenio.core.extension.events.EventPlayerReconnectRequestHandle;
 import com.tenio.core.extension.events.EventPlayerReconnectedResult;
 import com.tenio.core.extension.events.EventReceivedMessageFromPlayer;
 import com.tenio.core.extension.events.EventSendMessageToPlayer;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import java.util.Optional;
 import java.util.function.Consumer;
 

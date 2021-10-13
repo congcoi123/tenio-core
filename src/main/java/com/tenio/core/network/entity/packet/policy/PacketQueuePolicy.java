@@ -21,32 +21,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.entities.protocols;
 
-import com.tenio.core.configuration.define.ServerEvent;
-import com.tenio.core.network.define.RequestPriority;
-import com.tenio.core.network.entities.session.Session;
+package com.tenio.core.network.entity.packet.policy;
 
-public interface Request {
+import com.tenio.core.exceptions.PacketQueuePolicyViolationException;
+import com.tenio.core.network.entity.packet.Packet;
+import com.tenio.core.network.entity.packet.PacketQueue;
 
-	long getId();
-	
-	Object getAttribute(String key);
+/**
+ * The packet queue policy.
+ */
+public interface PacketQueuePolicy {
 
-	Request setAttribute(String key, Object value);
-
-	ServerEvent getEvent();
-
-	Request setEvent(ServerEvent event);
-
-	Session getSender();
-
-	Request setSender(Session session);
-
-	RequestPriority getPriority();
-
-	Request setPriority(RequestPriority priority);
-
-	long getTimestamp();
-
+  void applyPolicy(PacketQueue packetQueue, Packet packet)
+      throws PacketQueuePolicyViolationException;
 }

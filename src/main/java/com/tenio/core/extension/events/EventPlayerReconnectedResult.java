@@ -26,7 +26,7 @@ package com.tenio.core.extension.events;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.result.PlayerReconnectedResult;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 
 /**
  * Returns the result when a player tried to reconnect to the server.

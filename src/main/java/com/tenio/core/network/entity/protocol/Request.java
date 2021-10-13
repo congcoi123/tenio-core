@@ -21,32 +21,35 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.entities.packet.policy;
 
-import com.tenio.core.exceptions.PacketQueuePolicyViolationException;
-import com.tenio.core.network.define.ResponsePriority;
-import com.tenio.core.network.entities.packet.Packet;
-import com.tenio.core.network.entities.packet.PacketQueue;
+package com.tenio.core.network.entity.protocol;
 
-public final class DefaultPacketQueuePolicy implements PacketQueuePolicy {
+import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.network.define.RequestPriority;
+import com.tenio.core.network.entity.session.Session;
 
-	private static final float THREE_QUARTERS_FULL = 75.0f;
-	private static final float NINETY_PERCENT_FULL = 90.0f;
+/**
+ * The request which server formed when it had received a message from a client.
+ */
+public interface Request {
 
-	@Override
-	public void applyPolicy(PacketQueue packetQueue, Packet packet) {
-		float percentageUsed = packetQueue.getPercentageUsed();
+  long getId();
 
-		if (percentageUsed >= THREE_QUARTERS_FULL && percentageUsed < NINETY_PERCENT_FULL) {
-			if (packet.getPriority().getValue() < ResponsePriority.NORMAL.getValue()) {
-				throw new PacketQueuePolicyViolationException(packet, percentageUsed);
-			}
-		} else if (percentageUsed >= NINETY_PERCENT_FULL) {
-			if (packet.getPriority().getValue() < ResponsePriority.GUARANTEED.getValue()) {
-				throw new PacketQueuePolicyViolationException(packet, percentageUsed);
-			}
-		}
+  Object getAttribute(String key);
 
-	}
+  Request setAttribute(String key, Object value);
 
+  ServerEvent getEvent();
+
+  Request setEvent(ServerEvent event);
+
+  Session getSender();
+
+  Request setSender(Session session);
+
+  RequestPriority getPriority();
+
+  Request setPriority(RequestPriority priority);
+
+  long getTimestamp();
 }

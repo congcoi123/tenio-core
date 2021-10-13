@@ -21,54 +21,56 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.entities.packet;
 
-import java.util.Collection;
+package com.tenio.core.network.entity.packet;
 
 import com.tenio.core.network.define.ResponsePriority;
 import com.tenio.core.network.define.TransportType;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
+import java.util.Collection;
 
+/**
+ * The smallest unit to hold and transfer data from the server to clients.
+ */
 public interface Packet {
 
-	long getId();
+  long getId();
 
-	byte[] getData();
+  byte[] getData();
 
-	void setData(byte[] binary);
+  void setData(byte[] binary);
 
-	TransportType getTransportType();
+  TransportType getTransportType();
 
-	void setTransportType(TransportType type);
+  void setTransportType(TransportType type);
 
-	ResponsePriority getPriority();
+  ResponsePriority getPriority();
 
-	void setPriority(ResponsePriority priority);
+  void setPriority(ResponsePriority priority);
 
-	boolean isEncrypted();
+  boolean isEncrypted();
 
-	void setEncrypted(boolean encrypted);
+  void setEncrypted(boolean encrypted);
 
-	Collection<Session> getRecipients();
+  Collection<Session> getRecipients();
 
-	void setRecipients(Collection<Session> recipients);
+  void setRecipients(Collection<Session> recipients);
 
-	long getCreatedTime();
+  long getCreatedTime();
 
-	int getOriginalSize();
+  int getOriginalSize();
 
-	boolean isTcp();
+  boolean isTcp();
 
-	boolean isUdp();
+  boolean isUdp();
 
-	boolean isWebSocket();
+  boolean isWebSocket();
 
-	byte[] getFragmentBuffer();
+  byte[] getFragmentBuffer();
 
-	void setFragmentBuffer(byte[] binary);
+  void setFragmentBuffer(byte[] binary);
 
-	boolean isFragmented();
+  boolean isFragmented();
 
-	Packet clone();
-
+  Packet clone();
 }

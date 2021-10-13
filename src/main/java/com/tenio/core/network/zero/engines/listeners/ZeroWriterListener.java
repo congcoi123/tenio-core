@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.tenio.core.network.zero.engines.listeners;
 
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 
 public interface ZeroWriterListener {
 

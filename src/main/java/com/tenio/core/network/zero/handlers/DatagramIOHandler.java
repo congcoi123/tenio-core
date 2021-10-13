@@ -26,7 +26,7 @@ package com.tenio.core.network.zero.handlers;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 
 public interface DatagramIOHandler extends BaseIOHandler {
 

@@ -21,49 +21,67 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.define.data;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.concurrent.ThreadSafe;
 
+/**
+ * Holds configuration for HTTP setup.
+ */
 @ThreadSafe
 public final class HttpConfig {
 
-	private final String __name;
-	private final int __port;
-	private final List<PathConfig> __paths;
+  private final String name;
+  private final int port;
+  private final List<PathConfig> paths;
 
-	public HttpConfig(String name, int port) {
-		__paths = new ArrayList<PathConfig>();
-		__name = name;
-		__port = port;
-	}
+  /**
+   * Initialization.
+   *
+   * @param name the configuration name
+   * @param port the associated port
+   */
+  public HttpConfig(String name, int port) {
+    paths = new ArrayList<PathConfig>();
+    this.name = name;
+    this.port = port;
+  }
 
-	public String getName() {
-		return __name;
-	}
+  public String getName() {
+    return name;
+  }
 
-	public List<PathConfig> getPaths() {
-		synchronized (__paths) {
-			return __paths;
-		}
-	}
+  /**
+   * Retrieves paths associated with the configuration.
+   *
+   * @return list of paths
+   */
+  public List<PathConfig> getPaths() {
+    synchronized (paths) {
+      return paths;
+    }
+  }
 
-	public void addPath(PathConfig path) {
-		synchronized (__paths) {
-			__paths.add(path);
-		}
-	}
+  /**
+   * Add a new path to the paths' list.
+   *
+   * @param path the new {@link PathConfig}
+   */
+  public void addPath(PathConfig path) {
+    synchronized (paths) {
+      paths.add(path);
+    }
+  }
 
-	public int getPort() {
-		return __port;
-	}
+  public int getPort() {
+    return port;
+  }
 
-	@Override
-	public String toString() {
-		return String.format("{ paths:%s, name:%s, port:%d}", __paths.toString(), __name, __port);
-	}
-
+  @Override
+  public String toString() {
+    return String.format("{ paths:%s, name:%s, port:%d}", paths, name, port);
+  }
 }

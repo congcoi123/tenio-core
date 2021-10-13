@@ -28,8 +28,8 @@ import java.util.List;
 
 import com.tenio.core.network.define.data.PathConfig;
 import com.tenio.core.network.define.data.SocketConfig;
-import com.tenio.core.network.entities.packet.policy.PacketQueuePolicy;
-import com.tenio.core.network.entities.protocols.Response;
+import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
+import com.tenio.core.network.entity.protocol.Response;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistics.NetworkReaderStatistic;
 import com.tenio.core.network.statistics.NetworkWriterStatistic;

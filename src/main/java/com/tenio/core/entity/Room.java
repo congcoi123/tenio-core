@@ -33,7 +33,7 @@ import com.tenio.core.exceptions.AddedDuplicatedPlayerToRoomException;
 import com.tenio.core.exceptions.PlayerJoinedRoomException;
 import com.tenio.core.exceptions.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.exceptions.SwitchedPlayerSpectatorException;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
 import java.util.List;
 

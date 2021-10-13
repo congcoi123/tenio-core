@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.tenio.core.network.zero.engines;
 
-import com.tenio.core.network.entities.session.SessionManager;
+import com.tenio.core.network.entity.session.SessionManager;
 import com.tenio.core.network.zero.handlers.DatagramIOHandler;
 import com.tenio.core.network.zero.handlers.SocketIOHandler;
 import com.tenio.core.service.Service;

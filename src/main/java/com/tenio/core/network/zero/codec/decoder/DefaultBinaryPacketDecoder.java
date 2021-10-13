@@ -26,7 +26,7 @@ package com.tenio.core.network.zero.codec.decoder;
 import java.nio.ByteBuffer;
 
 import com.tenio.common.utilities.ByteUtility;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.codec.CodecUtility;
 import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
 import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncrypter;

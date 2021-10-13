@@ -27,7 +27,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 
 import com.tenio.common.loggers.SystemLogger;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistics.NetworkWriterStatistic;
 
 public abstract class AbstractWriterHandler extends SystemLogger implements WriterHandler {

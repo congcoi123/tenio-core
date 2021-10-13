@@ -29,7 +29,7 @@ import com.tenio.core.entity.Room;
 import com.tenio.core.exceptions.AddedDuplicatedPlayerToRoomException;
 import com.tenio.core.exceptions.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.manager.Manager;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
 
 /**

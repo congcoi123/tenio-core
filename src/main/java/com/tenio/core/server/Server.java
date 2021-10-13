@@ -28,7 +28,7 @@ import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.network.entities.protocols.Response;
+import com.tenio.core.network.entity.protocol.Response;
 
 /**
  * This class manages the workflow of the current server. The instruction's

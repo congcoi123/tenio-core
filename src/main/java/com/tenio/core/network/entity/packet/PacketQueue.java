@@ -21,34 +21,37 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.entities.packet;
+
+package com.tenio.core.network.entity.packet;
 
 import com.tenio.core.exceptions.PacketQueueFullException;
 import com.tenio.core.exceptions.PacketQueuePolicyViolationException;
-import com.tenio.core.network.entities.packet.policy.PacketQueuePolicy;
+import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 
+/**
+ * The queue using for holding packets.
+ */
 public interface PacketQueue {
 
-	Packet peek();
+  Packet peek();
 
-	Packet take();
+  Packet take();
 
-	boolean isEmpty();
+  boolean isEmpty();
 
-	boolean isFull();
+  boolean isFull();
 
-	int getSize();
+  int getSize();
 
-	int getMaxSize();
+  int getMaxSize();
 
-	void setMaxSize(int maxSize);
+  void setMaxSize(int maxSize);
 
-	void setPacketQueuePolicy(PacketQueuePolicy packetQueuePolicy);
+  void setPacketQueuePolicy(PacketQueuePolicy packetQueuePolicy);
 
-	float getPercentageUsed();
+  float getPercentageUsed();
 
-	void put(Packet packet) throws PacketQueueFullException, PacketQueuePolicyViolationException;
+  void put(Packet packet) throws PacketQueueFullException, PacketQueuePolicyViolationException;
 
-	void clear();
-
+  void clear();
 }

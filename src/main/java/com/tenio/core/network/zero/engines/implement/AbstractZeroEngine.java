@@ -30,7 +30,7 @@ import com.tenio.common.utilities.StringUtility;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exceptions.ServiceRuntimeException;
 import com.tenio.core.manager.AbstractManager;
-import com.tenio.core.network.entities.session.SessionManager;
+import com.tenio.core.network.entity.session.SessionManager;
 import com.tenio.core.network.zero.engines.ZeroEngine;
 import com.tenio.core.network.zero.handlers.DatagramIOHandler;
 import com.tenio.core.network.zero.handlers.SocketIOHandler;

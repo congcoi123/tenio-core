@@ -32,7 +32,7 @@ import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.implement.RoomImpl;
 import com.tenio.core.entity.setting.InitialRoomSetting;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
 
 /**

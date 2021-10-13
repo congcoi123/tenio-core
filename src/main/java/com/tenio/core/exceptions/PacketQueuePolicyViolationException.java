@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.exceptions;
 
-import com.tenio.core.network.entities.packet.Packet;
+import com.tenio.core.network.entity.packet.Packet;
 
 /**
  * When the packet queue policy is violated.

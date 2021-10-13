@@ -25,7 +25,7 @@ package com.tenio.core.network.zero.handlers.implement;
 
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
-import com.tenio.core.network.entities.session.SessionManager;
+import com.tenio.core.network.entity.session.SessionManager;
 import com.tenio.core.network.statistics.NetworkReaderStatistic;
 
 public abstract class AbstractIOHandler extends AbstractManager {

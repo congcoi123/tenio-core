@@ -26,7 +26,7 @@ package com.tenio.core.extension.events;
 
 import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 
 /**
  * When a connection request to establish itself in the server, and it returns a result.

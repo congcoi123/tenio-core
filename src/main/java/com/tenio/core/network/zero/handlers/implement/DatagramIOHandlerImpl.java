@@ -30,7 +30,7 @@ import com.tenio.common.data.utilities.ZeroDataSerializerUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.handlers.DatagramIOHandler;
 
 public final class DatagramIOHandlerImpl extends AbstractIOHandler implements DatagramIOHandler {

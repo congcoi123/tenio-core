@@ -21,49 +21,48 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.define;
 
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Definition for all supported transportation types.
+ */
 public enum TransportType {
 
-	UNKNOWN("unknown"),
+  UNKNOWN("unknown"),
+  TCP("tcp"),
+  UDP("udp"),
+  WEB_SOCKET("websocket"),
+  HTTP("http");
 
-	TCP("tcp"),
+  // Reverse-lookup map for getting a type from a value
+  private static final Map<String, TransportType> lookup = new HashMap<String, TransportType>();
 
-	UDP("udp"),
+  static {
+    for (var type : TransportType.values()) {
+      lookup.put(type.getValue(), type);
+    }
+  }
 
-	WEB_SOCKET("websocket"),
+  private final String value;
 
-	HTTP("http");
+  TransportType(final String value) {
+    this.value = value;
+  }
 
-	// Reverse-lookup map for getting a type from a value
-	private static final Map<String, TransportType> lookup = new HashMap<String, TransportType>();
+  public static TransportType getByValue(String value) {
+    return lookup.get(value);
+  }
 
-	static {
-		for (var type : TransportType.values()) {
-			lookup.put(type.getValue(), type);
-		}
-	}
+  public final String getValue() {
+    return value;
+  }
 
-	private final String __value;
-
-	private TransportType(final String value) {
-		__value = value;
-	}
-
-	public final String getValue() {
-		return __value;
-	}
-
-	@Override
-	public final String toString() {
-		return name();
-	}
-
-	public static TransportType getByValue(String value) {
-		return lookup.get(value);
-	}
-
+  @Override
+  public final String toString() {
+    return name();
+  }
 }

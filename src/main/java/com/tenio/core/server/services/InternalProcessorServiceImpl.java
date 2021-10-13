@@ -37,9 +37,9 @@ import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.entity.define.result.PlayerReconnectedResult;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.network.entities.protocols.Request;
-import com.tenio.core.network.entities.protocols.implement.RequestImpl;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.protocol.Request;
+import com.tenio.core.network.entity.protocol.implement.RequestImpl;
+import com.tenio.core.network.entity.session.Session;
 
 public final class InternalProcessorServiceImpl extends AbstractController implements InternalProcessorService {
 

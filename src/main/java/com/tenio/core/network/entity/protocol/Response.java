@@ -21,14 +21,50 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.entities.packet.policy;
 
-import com.tenio.core.exceptions.PacketQueuePolicyViolationException;
-import com.tenio.core.network.entities.packet.Packet;
-import com.tenio.core.network.entities.packet.PacketQueue;
+package com.tenio.core.network.entity.protocol;
 
-public interface PacketQueuePolicy {
+import com.tenio.core.entity.Player;
+import com.tenio.core.network.define.ResponsePriority;
+import com.tenio.core.network.entity.session.Session;
+import java.util.Collection;
 
-	void applyPolicy(PacketQueue packetQueue, Packet packet) throws PacketQueuePolicyViolationException;
+/**
+ * The response was formed when the server wants to send a message to clients.
+ */
+public interface Response {
 
+  byte[] getContent();
+
+  Response setContent(byte[] content);
+
+  Collection<Player> getPlayers();
+
+  Collection<Player> getNonSessionPlayers();
+
+  Collection<Session> getRecipientSocketSessions();
+
+  Collection<Session> getRecipientDatagramSessions();
+
+  Collection<Session> getRecipientWebSocketSessions();
+
+  Response setRecipients(Collection<Player> players);
+
+  Response setRecipient(Player player);
+
+  Response prioritizedUdp();
+
+  Response encrypted();
+
+  Response priority(ResponsePriority priority);
+
+  boolean isEncrypted();
+
+  ResponsePriority getPriority();
+
+  void write();
+
+  default void writeInDelay(int delayInSeconds) {
+    throw new UnsupportedOperationException();
+  }
 }

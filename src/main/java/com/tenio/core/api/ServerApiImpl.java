@@ -44,7 +44,7 @@ import com.tenio.core.exceptions.AddedDuplicatedPlayerToRoomException;
 import com.tenio.core.exceptions.CreatedRoomException;
 import com.tenio.core.exceptions.PlayerJoinedRoomException;
 import com.tenio.core.exceptions.RemovedNonExistentPlayerFromRoomException;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.server.Server;
 import java.io.IOException;
 import java.util.Collection;

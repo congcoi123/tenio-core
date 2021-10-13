@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 package com.tenio.core.network.zero.handlers;
 
-import com.tenio.core.network.entities.session.SessionManager;
+import com.tenio.core.network.entity.session.SessionManager;
 import com.tenio.core.network.statistics.NetworkReaderStatistic;
 
 public interface BaseIOHandler {

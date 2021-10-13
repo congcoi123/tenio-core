@@ -21,54 +21,58 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.define;
 
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Definition for all supported REST methods.
+ */
 public enum RestMethod {
-	/**
-	 * Create
-	 */
-	POST("post"),
-	/**
-	 * Update
-	 */
-	PUT("put"),
-	/**
-	 * Retrieve
-	 */
-	GET("get"),
-	/**
-	 * Delete
-	 */
-	DELETE("delete");
+  /**
+   * Create
+   */
+  POST("post"),
+  /**
+   * Update
+   */
+  PUT("put"),
+  /**
+   * Retrieve
+   */
+  GET("get"),
+  /**
+   * Delete
+   */
+  DELETE("delete");
 
-	// Reverse-lookup map for getting a type from a value
-	private static final Map<String, RestMethod> lookup = new HashMap<String, RestMethod>();
+  // Reverse-lookup map for getting a type from a value
+  private static final Map<String, RestMethod> lookup = new HashMap<String, RestMethod>();
 
-	static {
-		for (var method : RestMethod.values()) {
-			lookup.put(method.getValue(), method);
-		}
-	}
+  static {
+    for (var method : RestMethod.values()) {
+      lookup.put(method.getValue(), method);
+    }
+  }
 
-	private final String __value;
+  private final String value;
 
-	private RestMethod(final String value) {
-		__value = value;
-	}
+  RestMethod(final String value) {
+    this.value = value;
+  }
 
-	public final String getValue() {
-		return __value;
-	}
+  public static RestMethod getByValue(String value) {
+    return lookup.get(value);
+  }
 
-	@Override
-	public final String toString() {
-		return name();
-	}
+  public final String getValue() {
+    return value;
+  }
 
-	public static RestMethod getByValue(String value) {
-		return lookup.get(value);
-	}
+  @Override
+  public final String toString() {
+    return name();
+  }
 }

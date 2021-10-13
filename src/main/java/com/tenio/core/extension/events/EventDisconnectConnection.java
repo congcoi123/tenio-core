@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.extension.events;
 
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
-import com.tenio.core.network.entities.session.Session;
+import com.tenio.core.network.entity.session.Session;
 
 /**
  * When a connection is disconnected.
