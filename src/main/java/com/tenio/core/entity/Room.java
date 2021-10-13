@@ -29,9 +29,9 @@ import com.tenio.core.entity.implement.RoomImpl;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
-import com.tenio.core.exceptions.AddedDuplicatedPlayerException;
+import com.tenio.core.exceptions.AddedDuplicatedPlayerToRoomException;
 import com.tenio.core.exceptions.PlayerJoinedRoomException;
-import com.tenio.core.exceptions.RemovedNonExistentPlayerException;
+import com.tenio.core.exceptions.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.exceptions.SwitchedPlayerSpectatorException;
 import com.tenio.core.network.entities.session.Session;
 import java.util.Collection;
@@ -113,19 +113,19 @@ public interface Room {
   Collection<Session> getAllSessionList();
 
   void addPlayer(Player player, boolean asSpectator, int targetSlot)
-      throws PlayerJoinedRoomException, AddedDuplicatedPlayerException;
+      throws PlayerJoinedRoomException, AddedDuplicatedPlayerToRoomException;
 
   default void addPlayer(Player player, boolean asSpectator)
-      throws PlayerJoinedRoomException, AddedDuplicatedPlayerException {
+      throws PlayerJoinedRoomException, AddedDuplicatedPlayerToRoomException {
     addPlayer(player, asSpectator, RoomImpl.DEFAULT_SLOT);
   }
 
   default void addPlayer(Player player)
-      throws PlayerJoinedRoomException, AddedDuplicatedPlayerException {
+      throws PlayerJoinedRoomException, AddedDuplicatedPlayerToRoomException {
     addPlayer(player, false);
   }
 
-  void removePlayer(Player player) throws RemovedNonExistentPlayerException;
+  void removePlayer(Player player) throws RemovedNonExistentPlayerFromRoomException;
 
   void switchPlayerToSpectator(Player player) throws SwitchedPlayerSpectatorException;
 

@@ -21,14 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.extension.events;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
 
+/**
+ * The event occurs before a player leave its current room.
+ */
 public interface EventPlayerBeforeLeaveRoom {
 
-	void handle(Player player, Room room, PlayerLeaveRoomMode mode);
-
+  void handle(Player player, Room room, PlayerLeaveRoomMode mode);
 }

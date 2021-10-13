@@ -21,25 +21,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
 import com.tenio.core.entity.define.result.SwitchedPlayerSpectatorResult;
 
+/**
+ * When a player try to change its role to a spectator and vice versa.
+ */
 public final class SwitchedPlayerSpectatorException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 8858056991799548907L;
 
-	private SwitchedPlayerSpectatorResult __result;
+  private static final long serialVersionUID = 8858056991799548907L;
 
-	public SwitchedPlayerSpectatorException(String message, SwitchedPlayerSpectatorResult result) {
-		super(message);
-		__result = result;
-	}
+  private final SwitchedPlayerSpectatorResult result;
 
-	public SwitchedPlayerSpectatorResult getResult() {
-		return __result;
-	}
+  public SwitchedPlayerSpectatorException(String message, SwitchedPlayerSpectatorResult result) {
+    super(message);
+    this.result = result;
+  }
 
+  public SwitchedPlayerSpectatorResult getResult() {
+    return result;
+  }
 }

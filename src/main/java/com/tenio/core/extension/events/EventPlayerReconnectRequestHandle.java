@@ -21,13 +21,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.extension.events;
 
 import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.network.entities.session.Session;
 
+/**
+ * When a player sends a request to reconnect to the server.
+ */
 public interface EventPlayerReconnectRequestHandle {
 
-	void handle(Session session, ServerMessage message);
-
+  void handle(Session session, ServerMessage message);
 }

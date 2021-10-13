@@ -21,13 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.extension.events;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.data.ServerMessage;
 
+/**
+ * When a connection wants to attach itself to a player, they need to send a request and this
+ * event is for delegating that.
+ */
 public interface EventAttachConnectionRequestValidation {
 
-	Player handle(ServerMessage message);
-
+  Player handle(ServerMessage message);
 }

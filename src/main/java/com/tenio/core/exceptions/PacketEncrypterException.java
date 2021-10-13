@@ -21,16 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
+/**
+ * When something went wrong with the packet encryption.
+ */
 public final class PacketEncrypterException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -4260223574425695248L;
 
-	public PacketEncrypterException(String message) {
-		super(message);
-	}
+  private static final long serialVersionUID = -4260223574425695248L;
 
+  public PacketEncrypterException(String message) {
+    super(message);
+  }
 }

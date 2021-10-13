@@ -21,19 +21,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
 import com.tenio.core.network.entities.packet.Packet;
 
+/**
+ * When the packet queue policy is violated.
+ */
 public final class PacketQueuePolicyViolationException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1620230030870946508L;
 
-	public PacketQueuePolicyViolationException(Packet packet, float percentageUsed) {
-		super(String.format("Dropped packet: [%s], current packet queue usage: %f%%", packet.toString(),
-				percentageUsed));
-	}
+  private static final long serialVersionUID = -1620230030870946508L;
 
+  public PacketQueuePolicyViolationException(Packet packet, float percentageUsed) {
+    super(String.format("Dropped packet: [%s], current packet queue usage: %f%%", packet.toString(),
+        percentageUsed));
+  }
 }

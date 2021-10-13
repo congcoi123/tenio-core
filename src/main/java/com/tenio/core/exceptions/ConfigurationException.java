@@ -21,16 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
+/**
+ * When something went wrong with your configured file.
+ */
 public final class ConfigurationException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -713303423920650936L;
 
-	public ConfigurationException(String message) {
-		super(message);
-	}
+  private static final long serialVersionUID = -713303423920650936L;
 
+  public ConfigurationException(String message) {
+    super(message);
+  }
 }

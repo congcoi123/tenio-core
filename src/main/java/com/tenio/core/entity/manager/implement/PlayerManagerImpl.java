@@ -29,8 +29,8 @@ import com.tenio.core.entity.Room;
 import com.tenio.core.entity.implement.PlayerImpl;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exceptions.AddedDuplicatedPlayerException;
-import com.tenio.core.exceptions.RemovedNonExistentPlayerException;
+import com.tenio.core.exceptions.AddedDuplicatedPlayerToRoomException;
+import com.tenio.core.exceptions.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entities.session.Session;
 import java.util.Collection;
@@ -70,7 +70,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public void addPlayer(Player player) {
     if (containsPlayerName(player.getName())) {
-      throw new AddedDuplicatedPlayerException(player, ownerRoom);
+      throw new AddedDuplicatedPlayerToRoomException(player, ownerRoom);
     }
 
     synchronized (this) {
@@ -140,7 +140,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   public void removePlayerByName(String playerName) {
     var player = getPlayerByName(playerName);
     if (player == null) {
-      throw new RemovedNonExistentPlayerException(playerName, ownerRoom);
+      throw new RemovedNonExistentPlayerFromRoomException(playerName, ownerRoom);
     }
 
     removePlayer(player);
@@ -150,7 +150,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   public void removePlayerBySession(Session session) {
     var player = getPlayerBySession(session);
     if (player == null) {
-      throw new RemovedNonExistentPlayerException(session.toString(), ownerRoom);
+      throw new RemovedNonExistentPlayerFromRoomException(session.toString(), ownerRoom);
     }
 
     removePlayer(player);

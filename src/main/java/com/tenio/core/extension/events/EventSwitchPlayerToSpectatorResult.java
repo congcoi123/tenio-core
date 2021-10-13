@@ -21,14 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.extension.events;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.result.SwitchedPlayerSpectatorResult;
 
+/**
+ * Returns the result when a player tries to change its role to be a spectator.
+ */
 public interface EventSwitchPlayerToSpectatorResult {
 
-	void handle(Player player, Room room, SwitchedPlayerSpectatorResult result);
-
+  void handle(Player player, Room room, SwitchedPlayerSpectatorResult result);
 }

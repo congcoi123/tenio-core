@@ -21,14 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.extension.events;
 
 import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.network.entities.session.Session;
 
+/**
+ * When a connection request to establish itself in the server, and it returns a result.
+ */
 public interface EventConnectionEstablishedResult {
 
-	void handle(Session session, ServerMessage message, ConnectionEstablishedResult result);
-
+  void handle(Session session, ServerMessage message, ConnectionEstablishedResult result);
 }

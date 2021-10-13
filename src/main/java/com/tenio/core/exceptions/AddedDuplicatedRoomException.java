@@ -21,18 +21,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
 import com.tenio.core.entity.Room;
 
+/**
+ * When you try to add a room which existed in the server.
+ */
 public final class AddedDuplicatedRoomException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -5330961754908231570L;
 
-	public AddedDuplicatedRoomException(Room room) {
-		super(String.format("Unable to add room: %s, it already exists", room.toString()));
-	}
+  private static final long serialVersionUID = -5330961754908231570L;
 
+  public AddedDuplicatedRoomException(Room room) {
+    super(String.format("Unable to add room: %s, it already exists", room.toString()));
+  }
 }

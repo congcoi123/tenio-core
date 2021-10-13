@@ -21,26 +21,40 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
 import com.tenio.core.entity.Room;
 
-public final class RemovedNonExistentPlayerException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -7604852583321561090L;
+/**
+ * When you try to eliminate a non-existing player from a room.
+ */
+public final class RemovedNonExistentPlayerFromRoomException extends RuntimeException {
 
-	public RemovedNonExistentPlayerException(Object playerIdentity, Room room) {
-		super(room == null
-				? String.format("Unable to remove player: %s, the player did not exist", playerIdentity.toString())
-				: String.format("Unable to remove player: %s, the player did not exist in room: %s",
-						String.valueOf(playerIdentity), room.getName()));
-	}
+  private static final long serialVersionUID = -7604852583321561090L;
 
-	public RemovedNonExistentPlayerException(Room room) {
-		super(room == null ? "Unable to remove player, the player did not exist"
-				: String.format("Unable to remove player, the player did not exist in room: %s", room.getName()));
-	}
+  /**
+   * Initialization.
+   *
+   * @param playerIdentity the player's identity
+   * @param room           the room
+   */
+  public RemovedNonExistentPlayerFromRoomException(Object playerIdentity, Room room) {
+    super(room == null
+        ? String.format("Unable to remove player: %s, the player did not exist",
+        playerIdentity.toString())
+        : String.format("Unable to remove player: %s, the player did not exist in room: %s",
+        playerIdentity, room.getName()));
+  }
 
+  /**
+   * Initialization.
+   *
+   * @param room the room
+   */
+  public RemovedNonExistentPlayerFromRoomException(Room room) {
+    super(room == null ? "Unable to remove player, the player did not exist"
+        : String.format("Unable to remove player, the player did not exist in room: %s",
+        room.getName()));
+  }
 }

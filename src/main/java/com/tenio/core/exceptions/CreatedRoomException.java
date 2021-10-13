@@ -21,25 +21,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
 import com.tenio.core.entity.define.result.RoomCreatedResult;
 
+/**
+ * When you try to create a room and something went wrong.
+ */
 public final class CreatedRoomException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1641350947646134751L;
 
-	private RoomCreatedResult __result;
+  private static final long serialVersionUID = 1641350947646134751L;
 
-	public CreatedRoomException(String message, RoomCreatedResult result) {
-		super(message);
-		__result = result;
-	}
+  private final RoomCreatedResult result;
 
-	public RoomCreatedResult getResult() {
-		return __result;
-	}
+  public CreatedRoomException(String message, RoomCreatedResult result) {
+    super(message);
+    this.result = result;
+  }
 
+  public RoomCreatedResult getResult() {
+    return result;
+  }
 }

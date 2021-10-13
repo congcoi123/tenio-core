@@ -40,10 +40,10 @@ import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.setting.InitialRoomSetting;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exceptions.AddedDuplicatedPlayerException;
+import com.tenio.core.exceptions.AddedDuplicatedPlayerToRoomException;
 import com.tenio.core.exceptions.CreatedRoomException;
 import com.tenio.core.exceptions.PlayerJoinedRoomException;
-import com.tenio.core.exceptions.RemovedNonExistentPlayerException;
+import com.tenio.core.exceptions.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.network.entities.session.Session;
 import com.tenio.core.server.Server;
 import java.io.IOException;
@@ -73,7 +73,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,
           PlayerLoggedInResult.SUCCESS);
-    } catch (AddedDuplicatedPlayerException e) {
+    } catch (AddedDuplicatedPlayerToRoomException e) {
       error(e, "Logged in with same player name: ", playerName);
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, null,
           PlayerLoggedInResult.DUPLICATED_PLAYER);
@@ -94,7 +94,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       error(e, "Unable to find session when logged in with the player name: ", playerName);
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, null,
           PlayerLoggedInResult.SESSION_NOT_FOUND);
-    } catch (AddedDuplicatedPlayerException e) {
+    } catch (AddedDuplicatedPlayerToRoomException e) {
       error(e, "Logged in with same player name: ", playerName);
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, null,
           PlayerLoggedInResult.DUPLICATED_PLAYER);
@@ -116,7 +116,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       disconnectPlayer(player);
 
       player = null;
-    } catch (RemovedNonExistentPlayerException e) {
+    } catch (RemovedNonExistentPlayerFromRoomException e) {
       error(e, "Removed player: ", player.getName(), " with issue");
     } catch (IOException e) {
       error(e, "Removed player: ", player.getName(), " with issue");
@@ -201,7 +201,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
           PlayerJoinedRoomResult.SUCCESS);
     } catch (PlayerJoinedRoomException e) {
       getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room, e.getResult());
-    } catch (AddedDuplicatedPlayerException e) {
+    } catch (AddedDuplicatedPlayerToRoomException e) {
       error(e, e.getMessage());
       getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
           PlayerJoinedRoomResult.DUPLICATED_PLAYER);
@@ -224,7 +224,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       room.removePlayer(player);
       getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,
           PlayerLeftRoomResult.SUCCESS);
-    } catch (RemovedNonExistentPlayerException e) {
+    } catch (RemovedNonExistentPlayerFromRoomException e) {
       getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,
           PlayerLeftRoomResult.PLAYER_ALREADY_LEFT_ROOM);
     }

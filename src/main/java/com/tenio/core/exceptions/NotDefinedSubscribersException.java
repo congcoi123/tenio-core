@@ -21,30 +21,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
 /**
- * @author kong
+ * When you miss defining the subscriber for a declared event.
  */
 public final class NotDefinedSubscribersException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 4569867192216119437L;
 
-	public NotDefinedSubscribersException(Class<?>... clazzes) {
-		super(__getMessage(clazzes));
-	}
+  private static final long serialVersionUID = 4569867192216119437L;
 
-	private static String __getMessage(Class<?>... clazzes) {
-		StringBuilder builder = new StringBuilder();
-		builder.append("Need to implement interfaces: ");
-		for (var clazz : clazzes) {
-			builder.append(clazz.getName());
-			builder.append(", ");
-		}
-		builder.setLength(builder.length() - 2);
-		return builder.toString();
-	}
+  public NotDefinedSubscribersException(Class<?>... classes) {
+    super(getMessage(classes));
+  }
 
+  private static String getMessage(Class<?>... classes) {
+    var builder = new StringBuilder();
+    builder.append("Need to implement interfaces: ");
+    for (var clazz : classes) {
+      builder.append(clazz.getName());
+      builder.append(", ");
+    }
+    builder.setLength(builder.length() - 2);
+    return builder.toString();
+  }
 }

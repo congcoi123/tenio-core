@@ -21,15 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.extension.events;
 
+import com.tenio.core.network.defines.RestMethod;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.tenio.core.network.defines.RestMethod;
-
+/**
+ * Handling the HTTP request.
+ */
 public interface EventHttpRequestHandle {
 
-	void handle(RestMethod method, HttpServletRequest request, HttpServletResponse response);
-
+  void handle(RestMethod method, HttpServletRequest request, HttpServletResponse response);
 }

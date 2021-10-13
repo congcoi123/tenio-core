@@ -21,16 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
+/**
+ * When something went wrong with the packet compression.
+ */
 public final class PacketCompressorException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 4134024704906630426L;
 
-	public PacketCompressorException(String message) {
-		super(message);
-	}
+  private static final long serialVersionUID = 4134024704906630426L;
 
+  public PacketCompressorException(String message) {
+    super(message);
+  }
 }

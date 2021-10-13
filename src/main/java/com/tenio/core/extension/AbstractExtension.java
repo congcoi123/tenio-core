@@ -21,13 +21,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.extension;
 
 import com.tenio.common.data.ZeroArray;
 import com.tenio.common.data.ZeroObject;
 import com.tenio.common.data.implement.ZeroArrayImpl;
 import com.tenio.common.data.implement.ZeroObjectImpl;
-import com.tenio.common.loggers.AbstractLogger;
+import com.tenio.common.logger.AbstractLogger;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.entity.setting.InitialRoomSetting;
 import com.tenio.core.network.entities.protocols.Response;
@@ -41,26 +42,25 @@ import com.tenio.core.server.ServerImpl;
  */
 public abstract class AbstractExtension extends AbstractLogger {
 
-	private final Server __server = ServerImpl.getInstance();
+  private final Server server = ServerImpl.getInstance();
 
-	public final ServerApi api() {
-		return __server.getApi();
-	}
+  public final ServerApi api() {
+    return server.getApi();
+  }
 
-	public final Response response() {
-		return ResponseImpl.newInstance();
-	}
+  public final Response response() {
+    return ResponseImpl.newInstance();
+  }
 
-	public final ZeroArray array() {
-		return ZeroArrayImpl.newInstance();
-	}
+  public final ZeroArray array() {
+    return ZeroArrayImpl.newInstance();
+  }
 
-	public final ZeroObject object() {
-		return ZeroObjectImpl.newInstance();
-	}
+  public final ZeroObject object() {
+    return ZeroObjectImpl.newInstance();
+  }
 
-	public InitialRoomSetting.Builder roomSetting() {
-		return InitialRoomSetting.Builder.newInstance();
-	}
-
+  public InitialRoomSetting.Builder roomSetting() {
+    return InitialRoomSetting.Builder.newInstance();
+  }
 }

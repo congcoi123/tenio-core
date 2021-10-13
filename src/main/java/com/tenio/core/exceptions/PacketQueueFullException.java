@@ -21,16 +21,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
+/**
+ * When the packet queue is full.
+ */
 public final class PacketQueueFullException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -2526342485508899328L;
 
-	public PacketQueueFullException(int currentSize) {
-		super(String.format("Reached max queue size, the packet was dropped. The current size: %d", currentSize));
-	}
+  private static final long serialVersionUID = -2526342485508899328L;
 
+  public PacketQueueFullException(int currentSize) {
+    super(String.format("Reached max queue size, the packet was dropped. The current size: %d",
+        currentSize));
+  }
 }

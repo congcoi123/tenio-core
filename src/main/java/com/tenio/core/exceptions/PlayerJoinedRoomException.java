@@ -21,25 +21,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
 import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 
+/**
+ * Something went wrong when a player try to join a room.
+ */
 public final class PlayerJoinedRoomException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3173662815856707842L;
 
-	private PlayerJoinedRoomResult __result;
+  private static final long serialVersionUID = 3173662815856707842L;
 
-	public PlayerJoinedRoomException(String message, PlayerJoinedRoomResult result) {
-		super(message);
-		__result = result;
-	}
+  private final PlayerJoinedRoomResult result;
 
-	public PlayerJoinedRoomResult getResult() {
-		return __result;
-	}
+  public PlayerJoinedRoomException(String message, PlayerJoinedRoomResult result) {
+    super(message);
+    this.result = result;
+  }
 
+  public PlayerJoinedRoomResult getResult() {
+    return result;
+  }
 }

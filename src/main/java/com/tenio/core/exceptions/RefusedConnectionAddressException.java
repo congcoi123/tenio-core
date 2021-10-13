@@ -21,16 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
+/**
+ * When a refused connection try to connect to the server.
+ */
 public final class RefusedConnectionAddressException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1063120976899708365L;
 
-	public RefusedConnectionAddressException(String reason, String address) {
-		super(String.format("%s : %s", reason, address));
-	}
+  private static final long serialVersionUID = -1063120976899708365L;
 
+  public RefusedConnectionAddressException(String reason, String address) {
+    super(String.format("%s : %s", reason, address));
+  }
 }

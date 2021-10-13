@@ -21,16 +21,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
+/**
+ * When the request queue is full.
+ */
 public final class RequestQueueFullException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 6981972099759381035L;
 
-	public RequestQueueFullException(int currentSize) {
-		super(String.format("Reached max queue size, the request was dropped. The current size: %d", currentSize));
-	}
+  private static final long serialVersionUID = 6981972099759381035L;
 
+  public RequestQueueFullException(int currentSize) {
+    super(String.format("Reached max queue size, the request was dropped. The current size: %d",
+        currentSize));
+  }
 }

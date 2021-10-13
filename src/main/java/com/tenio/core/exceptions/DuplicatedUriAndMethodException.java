@@ -21,22 +21,29 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.exceptions;
 
-import java.util.List;
+package com.tenio.core.exceptions;
 
 import com.tenio.core.network.defines.RestMethod;
 import com.tenio.core.network.defines.data.PathConfig;
+import java.util.List;
 
+/**
+ * When you try to define an existing Uri method in the HTTP server.
+ */
 public final class DuplicatedUriAndMethodException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -5226506274080400540L;
 
-	public DuplicatedUriAndMethodException(RestMethod method, List<PathConfig> configs) {
-		super(String.format("Duplicated REST method: %s, with the list of configurations: %s", method.toString(),
-				configs.toString()));
-	}
+  private static final long serialVersionUID = -5226506274080400540L;
 
+  /**
+   * Initialization.
+   *
+   * @param method      the rest method
+   * @param pathConfigs the path configuration
+   */
+  public DuplicatedUriAndMethodException(RestMethod method, List<PathConfig> pathConfigs) {
+    super(String.format("Duplicated REST method: %s, with the list of configurations: %s",
+        method.toString(),
+        pathConfigs.toString()));
+  }
 }

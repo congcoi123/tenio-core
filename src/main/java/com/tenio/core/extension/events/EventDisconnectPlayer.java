@@ -21,13 +21,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.extension.events;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 
+/**
+ * When a player is disconnected.
+ */
 public interface EventDisconnectPlayer {
 
-	void handle(Player player, PlayerDisconnectMode mode);
-
+  void handle(Player player, PlayerDisconnectMode mode);
 }

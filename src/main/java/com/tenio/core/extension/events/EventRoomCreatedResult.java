@@ -21,14 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.extension.events;
 
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.result.RoomCreatedResult;
 import com.tenio.core.entity.setting.InitialRoomSetting;
 
+/**
+ * Returns the result when you try to create a new room.
+ */
 public interface EventRoomCreatedResult {
 
-	void handle(Room room, InitialRoomSetting setting, RoomCreatedResult result);
-
+  void handle(Room room, InitialRoomSetting setting, RoomCreatedResult result);
 }

@@ -21,11 +21,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.extension.events;
 
+/**
+ * Returns the fetched bandwitch information.
+ */
 public interface EventFetchedBandwidthInfo {
 
-	void handle(long readBytes, long readPackets, long readDroppedPackets, long writtenBytes, long writtenPackets,
-			long writtenDroppedPacketsByPolicy, long writtenDroppedPacketsByFull);
-
+  void handle(long readBytes, long readPackets, long readDroppedPackets, long writtenBytes,
+              long writtenPackets,
+              long writtenDroppedPacketsByPolicy, long writtenDroppedPacketsByFull);
 }

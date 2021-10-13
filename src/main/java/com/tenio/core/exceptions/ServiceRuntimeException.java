@@ -21,16 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.exceptions;
 
+/**
+ * Something went wrong with the running service.
+ */
 public final class ServiceRuntimeException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 998770370227398281L;
 
-	public ServiceRuntimeException(String message) {
-		super(message);
-	}
+  private static final long serialVersionUID = 998770370227398281L;
 
+  public ServiceRuntimeException(String message) {
+    super(message);
+  }
 }
