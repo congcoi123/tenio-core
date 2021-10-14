@@ -29,7 +29,7 @@ import com.tenio.core.entity.implement.RoomImpl;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
-import com.tenio.core.exceptions.AddedDuplicatedPlayerToRoomException;
+import com.tenio.core.exceptions.AddedDuplicatedPlayerException;
 import com.tenio.core.exceptions.PlayerJoinedRoomException;
 import com.tenio.core.exceptions.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.exceptions.SwitchedPlayerSpectatorException;
@@ -113,15 +113,15 @@ public interface Room {
   Collection<Session> getAllSessionList();
 
   void addPlayer(Player player, boolean asSpectator, int targetSlot)
-      throws PlayerJoinedRoomException, AddedDuplicatedPlayerToRoomException;
+      throws PlayerJoinedRoomException, AddedDuplicatedPlayerException;
 
   default void addPlayer(Player player, boolean asSpectator)
-      throws PlayerJoinedRoomException, AddedDuplicatedPlayerToRoomException {
+      throws PlayerJoinedRoomException, AddedDuplicatedPlayerException {
     addPlayer(player, asSpectator, RoomImpl.DEFAULT_SLOT);
   }
 
   default void addPlayer(Player player)
-      throws PlayerJoinedRoomException, AddedDuplicatedPlayerToRoomException {
+      throws PlayerJoinedRoomException, AddedDuplicatedPlayerException {
     addPlayer(player, false);
   }
 

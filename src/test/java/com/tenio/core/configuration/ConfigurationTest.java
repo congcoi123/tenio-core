@@ -21,62 +21,62 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.configuration;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.tenio.core.configuration.define.CoreConfigurationType;
+import com.tenio.core.network.define.TransportType;
+import com.tenio.core.network.define.data.SocketConfig;
 import java.util.List;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.tenio.core.configuration.define.CoreConfigurationType;
-import com.tenio.core.network.define.TransportType;
-import com.tenio.core.network.define.data.SocketConfig;
-
 public final class ConfigurationTest {
 
-	private Configuration __configuration;
+  private Configuration configuration;
 
-	@BeforeEach
-	public void initialize() throws Exception {
-		__configuration = new Configuration();
-		__configuration.load("configuration.example.xml");
-	}
+  @BeforeEach
+  public void initialize() throws Exception {
+    configuration = new Configuration();
+    configuration.load("configuration.example.xml");
+  }
 
-	@Test
-	public void getConfigurationExtensionShouldReturnTrueValue() {
-		assertAll("getExtensionConfiguration",
-				() -> assertEquals("String", __configuration.getString(TestConfigurationType.CUSTOM_VALUE_1)),
-				() -> assertEquals(1, __configuration.getInt(TestConfigurationType.CUSTOM_VALUE_2)),
-				() -> assertEquals(1.5, __configuration.getFloat(TestConfigurationType.CUSTOM_VALUE_3)),
-				() -> assertEquals(true, __configuration.getBoolean(TestConfigurationType.CUSTOM_VALUE_4)));
-	}
+  @Test
+  public void getConfigurationExtensionShouldReturnTrueValue() {
+    assertAll("getExtensionConfiguration",
+        () -> assertEquals("String", configuration.getString(TestConfigurationType.CUSTOM_VALUE_1)),
+        () -> assertEquals(1, configuration.getInt(TestConfigurationType.CUSTOM_VALUE_2)),
+        () -> assertEquals(1.5, configuration.getFloat(TestConfigurationType.CUSTOM_VALUE_3)),
+        () -> assertEquals(true, configuration.getBoolean(TestConfigurationType.CUSTOM_VALUE_4)));
+  }
 
-	@SuppressWarnings("unchecked")
-	@Test
-	public void getConfigurationSocketPortsShouldReturnTrueValue() {
-		var listSockets = (List<SocketConfig>) (__configuration.get(CoreConfigurationType.SOCKET_CONFIGS));
-		assertAll("getSocketPortsConfiguration", () -> assertEquals(8032, listSockets.get(0).getPort()),
-				() -> assertEquals(8033, listSockets.get(1).getPort()),
-				() -> assertEquals(8034, listSockets.get(2).getPort()));
-	}
+  @SuppressWarnings("unchecked")
+  @Test
+  public void getConfigurationSocketPortsShouldReturnTrueValue() {
+    var listSockets =
+        (List<SocketConfig>) (configuration.get(CoreConfigurationType.SOCKET_CONFIGS));
+    assertAll("getSocketPortsConfiguration", () -> assertEquals(8032, listSockets.get(0).getPort()),
+        () -> assertEquals(8033, listSockets.get(1).getPort()),
+        () -> assertEquals(8034, listSockets.get(2).getPort()));
+  }
 
-	@SuppressWarnings("unchecked")
-	@Test
-	public void getConfigurationSocketPortsTypeShouldReturnTrueType() {
-		var listSockets = (List<SocketConfig>) (__configuration.get(CoreConfigurationType.SOCKET_CONFIGS));
-		assertAll("getSocketPortsTypeConfiguration",
-				() -> assertEquals(TransportType.TCP, listSockets.get(0).getType()),
-				() -> assertEquals(TransportType.WEB_SOCKET, listSockets.get(1).getType()),
-				() -> assertEquals(TransportType.UDP, listSockets.get(2).getType()));
-	}
+  @SuppressWarnings("unchecked")
+  @Test
+  public void getConfigurationSocketPortsTypeShouldReturnTrueType() {
+    var listSockets =
+        (List<SocketConfig>) (configuration.get(CoreConfigurationType.SOCKET_CONFIGS));
+    assertAll("getSocketPortsTypeConfiguration",
+        () -> assertEquals(TransportType.TCP, listSockets.get(0).getType()),
+        () -> assertEquals(TransportType.WEB_SOCKET, listSockets.get(1).getType()),
+        () -> assertEquals(TransportType.UDP, listSockets.get(2).getType()));
+  }
 
-	@AfterEach
-	public void tearDown() {
-		// do nothing
-	}
-
+  @AfterEach
+  public void tearDown() {
+    // do nothing
+  }
 }

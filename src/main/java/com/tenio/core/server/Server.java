@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.server;
 
 import com.tenio.core.api.ServerApi;
@@ -37,24 +38,23 @@ import com.tenio.core.network.entity.protocol.Response;
  */
 public interface Server {
 
-	/**
-	 * Start the server base on your own configurations
-	 */
-	void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception;
+  /**
+   * Start the server base on your own configurations.
+   */
+  void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception;
 
-	/**
-	 * Shut down the server and close all services
-	 */
-	void shutdown();
+  /**
+   * Shut down the server and close all services.
+   */
+  void shutdown();
 
-	ServerApi getApi();
+  ServerApi getApi();
 
-	EventManager getEventManager();
+  EventManager getEventManager();
 
-	PlayerManager getPlayerManager();
+  PlayerManager getPlayerManager();
 
-	RoomManager getRoomManager();
+  RoomManager getRoomManager();
 
-	void write(Response response);
-
+  void write(Response response);
 }

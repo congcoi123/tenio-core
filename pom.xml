@@ -39,10 +39,10 @@
     </scm>
 
     <properties>
-        <io.netty.version>4.1.63.Final</io.netty.version>
+        <io.netty.version>4.1.68.Final</io.netty.version>
         <org.eclipse.jetty.version>9.4.38.v20210224</org.eclipse.jetty.version>
         <javax.servlet.version>2.5</javax.servlet.version>
-        <org.json.version>20180130</org.json.version>
+        <org.json.version>20210307</org.json.version>
 
         <logging.log4j.version>2.14.1</logging.log4j.version>
 

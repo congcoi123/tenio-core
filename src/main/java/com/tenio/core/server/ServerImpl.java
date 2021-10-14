@@ -21,16 +21,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.server;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
-
-import javax.annotation.concurrent.ThreadSafe;
 
 import com.tenio.common.configuration.Configuration;
 import com.tenio.common.configuration.constant.Trademark;
-import com.tenio.common.loggers.SystemLogger;
+import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.api.ServerApiImpl;
 import com.tenio.core.bootstrap.BootstrapHandler;
@@ -56,9 +52,12 @@ import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncrypter;
 import com.tenio.core.schedule.ScheduleService;
 import com.tenio.core.schedule.ScheduleServiceImpl;
-import com.tenio.core.server.services.InternalProcessorService;
-import com.tenio.core.server.services.InternalProcessorServiceImpl;
-import com.tenio.core.server.settings.ConfigurationAssessment;
+import com.tenio.core.server.service.InternalProcessorService;
+import com.tenio.core.server.service.InternalProcessorServiceImpl;
+import com.tenio.core.server.setting.ConfigurationAssessment;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * This class manages the workflow of the current server. The instruction's
@@ -68,243 +67,265 @@ import com.tenio.core.server.settings.ConfigurationAssessment;
 @ThreadSafe
 public final class ServerImpl extends SystemLogger implements Server {
 
-	private static Server __instance;
+  private static Server instance;
+  private final EventManager eventManager;
+  private final RoomManager roomManager;
+  private final PlayerManager playerManager;
+  private final InternalProcessorService internalProcessorService;
+  private final ScheduleService scheduleService;
+  private final NetworkService networkService;
+  private final ServerApi serverApi;
+  private String serverName;
 
-	private ServerImpl() {
+  private ServerImpl() {
+    eventManager = EventManager.newInstance();
+    roomManager = RoomManagerImpl.newInstance(eventManager);
+    playerManager = PlayerManagerImpl.newInstance(eventManager);
+    networkService = NetworkServiceImpl.newInstance(eventManager);
+    internalProcessorService = InternalProcessorServiceImpl.newInstance(eventManager);
+    scheduleService = ScheduleServiceImpl.newInstance(eventManager);
+    serverApi = ServerApiImpl.newInstance(this);
 
-		__eventManager = EventManager.newInstance();
-		__roomManager = RoomManagerImpl.newInstance(__eventManager);
-		__playerManager = PlayerManagerImpl.newInstance(__eventManager);
-		__networkService = NetworkServiceImpl.newInstance(__eventManager);
-		__internalProcessorService = InternalProcessorServiceImpl.newInstance(__eventManager);
-		__scheduleService = ScheduleServiceImpl.newInstance(__eventManager);
-		__serverApi = ServerApiImpl.newInstance(this);
+    // print out the framework's preface
+    for (var line : Trademark.CONTENT) {
+      info("", "", line);
+    }
+  } // prevent creation manually
 
-		// print out the framework's preface
-		for (var line : Trademark.CONTENT) {
-			info("", "", line);
-		}
-	} // prevent creation manually
+  /**
+   * Preventing Singleton object instantiation from outside and creates multiple instance if two
+   * thread access this method simultaneously.
+   *
+   * @return a new instance
+   */
+  public static Server getInstance() {
+    if (instance == null) {
+      instance = new ServerImpl();
+    }
+    return instance;
+  }
 
-	// preventing Singleton object instantiation from outside
-	// creates multiple instance if two thread access this method simultaneously
-	public static Server getInstance() {
-		if (__instance == null) {
-			__instance = new ServerImpl();
-		}
-		return __instance;
-	}
+  @Override
+  public void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception {
 
-	private final EventManager __eventManager;
-	private final RoomManager __roomManager;
-	private final PlayerManager __playerManager;
-	private final InternalProcessorService __internalProcessorService;
-	private final ScheduleService __scheduleService;
-	private final NetworkService __networkService;
-	private final ServerApi __serverApi;
+    // get the file path
+    var file = params.length == 0 ? null : params[0];
+    if (file == null) {
+      file = CoreConstant.DEFAULT_CONFIGURATION_FILE;
+    }
 
-	private String __serverName;
+    // load configuration file
+    var configuration = bootstrapHandler.getConfigurationHandler().getConfiguration();
+    configuration.load(file);
 
-	@Override
-	public void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception {
+    serverName = configuration.getString(CoreConfigurationType.SERVER_NAME);
 
-		// get the file path
-		var file = params.length == 0 ? null : params[0];
-		if (file == null) {
-			file = CoreConstant.DEFAULT_CONFIGURATION_FILE;
-		}
+    // show system information
+    var systemInfo = new SystemInfo();
+    systemInfo.logSystemInfo();
+    systemInfo.logNetCardsInfo();
+    systemInfo.logDiskInfo();
 
-		// load configuration file
-		var configuration = bootstrapHandler.getConfigurationHandler().getConfiguration();
-		configuration.load(file);
+    info("SERVER", serverName, "Starting ...");
 
-		__serverName = configuration.getString(CoreConfigurationType.SERVER_NAME);
+    // subscribing for processes and handlers
+    internalProcessorService.subscribe();
 
-		// show system information
-		var systemInfo = new SystemInfo();
-		systemInfo.logSystemInfo();
-		systemInfo.logNetCardsInfo();
-		systemInfo.logDiskInfo();
+    bootstrapHandler.getEventHandler().initialize(eventManager);
 
-		info("SERVER", __serverName, "Starting ...");
+    // collect all subscribers, listen all the events
+    eventManager.subscribe();
 
-		// subscribing for processes and handlers
-		__internalProcessorService.subscribe();
+    var assessment = ConfigurationAssessment.newInstance(eventManager, configuration);
+    assessment.assess();
 
-		bootstrapHandler.getEventHandler().initialize(__eventManager);
+    // Put the current configurations to the logger
+    info("CONFIGURATION", configuration.toString());
 
-		// collect all subscribers, listen all the events
-		__eventManager.subscribe();
+    setupNetworkService(configuration);
+    setupInternalProcessorService(configuration);
+    setupScheduleService(configuration);
 
-		var assessment = ConfigurationAssessment.newInstance(__eventManager, configuration);
-		assessment.assess();
+    initializeServices();
+    startServices();
 
-		// Put the current configurations to the logger
-		info("CONFIGURATION", configuration.toString());
+    // emit "server started" event
+    eventManager.emit(ServerEvent.SERVER_INITIALIZATION, serverName, configuration);
 
-		__setupNetworkService(configuration);
-		__setupInternalProcessorService(configuration);
-		__setupScheduleService(configuration);
+    info("SERVER", serverName, "Started");
+  }
 
-		__initializeServices();
-		__startServices();
+  private void initializeServices() {
+    networkService.initialize();
+    internalProcessorService.initialize();
+    scheduleService.initialize();
+  }
 
-		// emit "server started" event
-		__eventManager.emit(ServerEvent.SERVER_INITIALIZATION, __serverName, configuration);
+  private void startServices() {
+    networkService.start();
+    internalProcessorService.start();
+    scheduleService.start();
+  }
 
-		info("SERVER", __serverName, "Started");
-	}
+  private void setupScheduleService(Configuration configuration) {
+    scheduleService.setCcuReportInterval(
+        configuration.getInt(CoreConfigurationType.INTERVAL_CCU_SCAN));
+    scheduleService.setDeadlockScanInterval(
+        configuration.getInt(CoreConfigurationType.INTERVAL_DEADLOCK_SCAN));
+    scheduleService.setDisconnectedPlayerScanInterval(
+        configuration.getInt(CoreConfigurationType.INTERVAL_DISCONNECTED_PLAYER_SCAN));
+    scheduleService
+        .setRemovedRoomScanInterval(
+            configuration.getInt(CoreConfigurationType.INTERVAL_REMOVED_ROOM_SCAN));
+    scheduleService
+        .setSystemMonitoringInterval(
+            configuration.getInt(CoreConfigurationType.INTERVAL_SYSTEM_MONITORING));
+    scheduleService
+        .setTrafficCounterInterval(
+            configuration.getInt(CoreConfigurationType.INTERVAL_TRAFFIC_COUNTER));
 
-	private void __initializeServices() {
-		__networkService.initialize();
-		__internalProcessorService.initialize();
-		__scheduleService.initialize();
-	}
+    scheduleService.setPlayerManager(playerManager);
+    scheduleService.setRoomManager(roomManager);
+    scheduleService.setNetworkReaderStatistic(networkService.getNetworkReaderStatistic());
+    scheduleService.setNetworkWriterStatistic(networkService.getNetworkWriterStatistic());
+  }
 
-	private void __startServices() {
-		__networkService.start();
-		__internalProcessorService.start();
-		__scheduleService.start();
-	}
+  @SuppressWarnings("unchecked")
+  private void setupNetworkService(Configuration configuration)
+      throws ClassNotFoundException, InstantiationException, IllegalAccessException,
+      IllegalArgumentException,
+      InvocationTargetException, NoSuchMethodException, SecurityException {
 
-	private void __setupScheduleService(Configuration configuration) {
-		__scheduleService.setCcuReportInterval(configuration.getInt(CoreConfigurationType.INTERVAL_CCU_SCAN));
-		__scheduleService.setDeadlockScanInterval(configuration.getInt(CoreConfigurationType.INTERVAL_DEADLOCK_SCAN));
-		__scheduleService.setDisconnectedPlayerScanInterval(
-				configuration.getInt(CoreConfigurationType.INTERVAL_DISCONNECTED_PLAYER_SCAN));
-		__scheduleService
-				.setRemovedRoomScanInterval(configuration.getInt(CoreConfigurationType.INTERVAL_REMOVED_ROOM_SCAN));
-		__scheduleService
-				.setSystemMonitoringInterval(configuration.getInt(CoreConfigurationType.INTERVAL_SYSTEM_MONITORING));
-		__scheduleService
-				.setTrafficCounterInterval(configuration.getInt(CoreConfigurationType.INTERVAL_TRAFFIC_COUNTER));
+    final var connectionFilterClazz = Class
+        .forName(configuration.getString(CoreConfigurationType.CLASS_CONNECTION_FILTER).strip());
+    networkService.setConnectionFilterClass(
+        (Class<? extends ConnectionFilter>) connectionFilterClazz,
+        configuration.getInt(CoreConfigurationType.NETWORK_PROP_MAX_CONNECTIONS_PER_IP));
 
-		__scheduleService.setPlayerManager(__playerManager);
-		__scheduleService.setRoomManager(__roomManager);
-		__scheduleService.setNetworkReaderStatistic(__networkService.getNetworkReaderStatistic());
-		__scheduleService.setNetworkWriterStatistic(__networkService.getNetworkWriterStatistic());
-	}
+    final var httpConfig = (List<HttpConfig>) configuration.get(CoreConfigurationType.HTTP_CONFIGS);
+    networkService.setHttpPort(!httpConfig.isEmpty() ? httpConfig.get(0).getPort() : 0);
+    networkService.setHttpPathConfigs(!httpConfig.isEmpty() ? httpConfig.get(0).getPaths() : null);
 
-	@SuppressWarnings("unchecked")
-	private void __setupNetworkService(Configuration configuration)
-			throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException, NoSuchMethodException, SecurityException {
+    networkService.setSocketAcceptorBufferSize(
+        configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE));
+    networkService.setSocketAcceptorWorkers(
+        configuration.getInt(CoreConfigurationType.THREADS_SOCKET_ACCEPTOR));
 
-		var connectionFilterClazz = Class
-				.forName(configuration.getString(CoreConfigurationType.CLASS_CONNECTION_FILTER).strip());
-		__networkService.setConnectionFilterClass((Class<? extends ConnectionFilter>) connectionFilterClazz,
-				configuration.getInt(CoreConfigurationType.NETWORK_PROP_MAX_CONNECTIONS_PER_IP));
+    networkService.setSocketConfigs(
+        (List<SocketConfig>) configuration.get(CoreConfigurationType.SOCKET_CONFIGS));
 
-		var httpConfig = (List<HttpConfig>) configuration.get(CoreConfigurationType.HTTP_CONFIGS);
-		__networkService.setHttpPort(!httpConfig.isEmpty() ? httpConfig.get(0).getPort() : 0);
-		__networkService.setHttpPathConfigs(!httpConfig.isEmpty() ? httpConfig.get(0).getPaths() : null);
+    networkService.setSocketReaderBufferSize(
+        configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_READER_BUFFER_SIZE));
+    networkService.setSocketReaderWorkers(
+        configuration.getInt(CoreConfigurationType.THREADS_SOCKET_READER));
 
-		__networkService.setSocketAcceptorBufferSize(
-				configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE));
-		__networkService.setSocketAcceptorWorkers(configuration.getInt(CoreConfigurationType.THREADS_SOCKET_ACCEPTOR));
+    networkService.setSocketWriterBufferSize(
+        configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_WRITER_BUFFER_SIZE));
+    networkService.setSocketWriterWorkers(
+        configuration.getInt(CoreConfigurationType.THREADS_SOCKET_WRITER));
 
-		__networkService.setSocketConfigs((List<SocketConfig>) configuration.get(CoreConfigurationType.SOCKET_CONFIGS));
+    networkService
+        .setWebSocketConsumerWorkers(
+            configuration.getInt(CoreConfigurationType.THREADS_WEBSOCKET_CONSUMER));
+    networkService
+        .setWebSocketProducerWorkers(
+            configuration.getInt(CoreConfigurationType.THREADS_WEBSOCKET_PRODUCER));
 
-		__networkService.setSocketReaderBufferSize(
-				configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_READER_BUFFER_SIZE));
-		__networkService.setSocketReaderWorkers(configuration.getInt(CoreConfigurationType.THREADS_SOCKET_READER));
+    networkService.setWebSocketReceiverBufferSize(
+        configuration.getInt(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_RECEIVER_BUFFER_SIZE));
+    networkService.setWebSocketSenderBufferSize(
+        configuration.getInt(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_SENDER_BUFFER_SIZE));
+    networkService
+        .setWebSocketUsingSsl(
+            configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_USING_SSL));
 
-		__networkService.setSocketWriterBufferSize(
-				configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_WRITER_BUFFER_SIZE));
-		__networkService.setSocketWriterWorkers(configuration.getInt(CoreConfigurationType.THREADS_SOCKET_WRITER));
+    final var packetQueuePolicyClazz = Class
+        .forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_QUEUE_POLICY).strip());
+    networkService.setPacketQueuePolicy(
+        (Class<? extends PacketQueuePolicy>) packetQueuePolicyClazz);
+    networkService.setPacketQueueSize(
+        configuration.getInt(CoreConfigurationType.PROP_MAX_PACKET_QUEUE_SIZE));
 
-		__networkService
-				.setWebsocketConsumerWorkers(configuration.getInt(CoreConfigurationType.THREADS_WEBSOCKET_CONSUMER));
-		__networkService
-				.setWebsocketProducerWorkers(configuration.getInt(CoreConfigurationType.THREADS_WEBSOCKET_PRODUCER));
+    final var binaryPacketCompressorClazz = Class
+        .forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_COMPRESSOR).strip());
+    final var binaryPacketCompressor =
+        (BinaryPacketCompressor) binaryPacketCompressorClazz.getDeclaredConstructor()
+            .newInstance();
+    final var binaryPacketEncrypterClazz = Class
+        .forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_ENCRYPTER).strip());
+    final var binaryPacketEncrypter =
+        (BinaryPacketEncrypter) binaryPacketEncrypterClazz.getDeclaredConstructor()
+            .newInstance();
+    final var binaryPacketEncoderClazz = Class
+        .forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_ENCODER).strip());
+    final var binaryPacketEncoder =
+        (BinaryPacketEncoder) binaryPacketEncoderClazz.getDeclaredConstructor().newInstance();
+    final var binaryPacketDecoderClazz = Class
+        .forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_DECODER).strip());
+    final var binaryPacketDecoder =
+        (BinaryPacketDecoder) binaryPacketDecoderClazz.getDeclaredConstructor().newInstance();
 
-		__networkService.setWebsocketReceiverBufferSize(
-				configuration.getInt(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_RECEIVER_BUFFER_SIZE));
-		__networkService.setWebsocketSenderBufferSize(
-				configuration.getInt(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_SENDER_BUFFER_SIZE));
-		__networkService
-				.setWebsocketUsingSSL(configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_USING_SSL));
+    binaryPacketEncoder.setCompressionThresholdBytes(
+        configuration.getInt(
+            CoreConfigurationType.NETWORK_PROP_PACKET_COMPRESSION_THRESHOLD_BYTES));
+    binaryPacketEncoder.setCompressor(binaryPacketCompressor);
+    binaryPacketEncoder.setEncrypter(binaryPacketEncrypter);
 
-		var packetQueuePolicyClazz = Class
-				.forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_QUEUE_POLICY).strip());
-		__networkService.setPacketQueuePolicy((Class<? extends PacketQueuePolicy>) packetQueuePolicyClazz);
-		__networkService.setPacketQueueSize(configuration.getInt(CoreConfigurationType.PROP_MAX_PACKET_QUEUE_SIZE));
+    binaryPacketDecoder.setCompressor(binaryPacketCompressor);
+    binaryPacketDecoder.setEncrypter(binaryPacketEncrypter);
 
-		var binaryPacketCompressorClazz = Class
-				.forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_COMPRESSOR).strip());
-		var binaryPacketCompressor = (BinaryPacketCompressor) binaryPacketCompressorClazz.getDeclaredConstructor()
-				.newInstance();
-		var binaryPacketEncrypterClazz = Class
-				.forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_ENCRYPTER).strip());
-		var binaryPacketEncrypter = (BinaryPacketEncrypter) binaryPacketEncrypterClazz.getDeclaredConstructor()
-				.newInstance();
-		var binaryPacketEncoderClazz = Class
-				.forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_ENCODER).strip());
-		var binaryPacketEncoder = (BinaryPacketEncoder) binaryPacketEncoderClazz.getDeclaredConstructor().newInstance();
-		var binaryPacketDecoderClazz = Class
-				.forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_DECODER).strip());
-		var binaryPacketDecoder = (BinaryPacketDecoder) binaryPacketDecoderClazz.getDeclaredConstructor().newInstance();
+    networkService.setPacketDecoder(binaryPacketDecoder);
+    networkService.setPacketEncoder(binaryPacketEncoder);
+  }
 
-		binaryPacketEncoder.setCompressionThresholdBytes(
-				configuration.getInt(CoreConfigurationType.NETWORK_PROP_PACKET_COMPRESSION_THRESHOLD_BYTES));
-		binaryPacketEncoder.setCompressor(binaryPacketCompressor);
-		binaryPacketEncoder.setEncrypter(binaryPacketEncrypter);
+  private void setupInternalProcessorService(Configuration configuration) {
+    internalProcessorService
+        .setMaxNumberPlayers(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS));
+    internalProcessorService.setPlayerManager(playerManager);
+    internalProcessorService
+        .setMaxRequestQueueSize(
+            configuration.getInt(CoreConfigurationType.PROP_MAX_REQUEST_QUEUE_SIZE));
+    internalProcessorService
+        .setThreadPoolSize(configuration.getInt(CoreConfigurationType.THREADS_INTERNAL_PROCESSOR));
+  }
 
-		binaryPacketDecoder.setCompressor(binaryPacketCompressor);
-		binaryPacketDecoder.setEncrypter(binaryPacketEncrypter);
+  @Override
+  public void shutdown() {
+    info("SERVER", serverName, "Stopping ...");
+    // emit "server shutdown" event
+    eventManager.emit(ServerEvent.SERVER_TEARDOWN, serverName);
+    shutdownServices();
+    info("SERVER", serverName, "Stopped");
+  }
 
-		__networkService.setPacketDecoder(binaryPacketDecoder);
-		__networkService.setPacketEncoder(binaryPacketEncoder);
-	}
+  private void shutdownServices() {
+    internalProcessorService.shutdown();
+    networkService.shutdown();
+    scheduleService.shutdown();
+  }
 
-	private void __setupInternalProcessorService(Configuration configuration) {
-		__internalProcessorService
-				.setMaxNumberPlayers(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS));
-		__internalProcessorService.setPlayerManager(__playerManager);
-		__internalProcessorService
-				.setMaxRequestQueueSize(configuration.getInt(CoreConfigurationType.PROP_MAX_REQUEST_QUEUE_SIZE));
-		__internalProcessorService
-				.setThreadPoolSize(configuration.getInt(CoreConfigurationType.THREADS_INTERNAL_PROCESSOR));
-	}
+  @Override
+  public ServerApi getApi() {
+    return serverApi;
+  }
 
-	@Override
-	public void shutdown() {
-		info("SERVER", __serverName, "Stopping ...");
-		// emit "server shutdown" event
-		__eventManager.emit(ServerEvent.SERVER_TEARDOWN, __serverName);
-		__shutdownServices();
-		info("SERVER", __serverName, "Stopped");
-	}
+  @Override
+  public EventManager getEventManager() {
+    return eventManager;
+  }
 
-	private void __shutdownServices() {
-		__internalProcessorService.shutdown();
-		__networkService.shutdown();
-		__scheduleService.shutdown();
-	}
+  @Override
+  public PlayerManager getPlayerManager() {
+    return playerManager;
+  }
 
-	@Override
-	public ServerApi getApi() {
-		return __serverApi;
-	}
+  @Override
+  public RoomManager getRoomManager() {
+    return roomManager;
+  }
 
-	@Override
-	public EventManager getEventManager() {
-		return __eventManager;
-	}
-
-	@Override
-	public PlayerManager getPlayerManager() {
-		return __playerManager;
-	}
-
-	@Override
-	public RoomManager getRoomManager() {
-		return __roomManager;
-	}
-
-	@Override
-	public void write(Response response) {
-		__networkService.write(response);
-	}
-
+  @Override
+  public void write(Response response) {
+    networkService.write(response);
+  }
 }

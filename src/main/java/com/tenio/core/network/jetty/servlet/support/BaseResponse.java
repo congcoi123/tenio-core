@@ -21,31 +21,32 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.jetty.servlet.support;
 
+import com.tenio.common.logger.AbstractLogger;
 import java.util.Enumeration;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.json.JSONObject;
 
-import com.tenio.common.loggers.AbstractLogger;
-
+/**
+ * The base response for HTTP request.
+ */
 public abstract class BaseResponse extends AbstractLogger {
 
-	public abstract void process(String requestedAgent, HttpServletRequest request, JSONObject body,
-			HttpServletResponse response);
+  public abstract void process(String requestedAgent, HttpServletRequest request, JSONObject body,
+                               HttpServletResponse response);
 
-	protected boolean __hasHeaderKey(HttpServletRequest request, String key) {
-		Enumeration<String> headerNames = request.getHeaderNames();
-		if (headerNames != null) {
-			while (headerNames.hasMoreElements()) {
-				if (headerNames.nextElement().equals(key))
-					return true;
-			}
-		}
-		return false;
-	}
-
+  protected boolean hasHeaderKey(HttpServletRequest request, String key) {
+    var headerNames = request.getHeaderNames();
+    if (headerNames != null) {
+      while (headerNames.hasMoreElements()) {
+		  if (headerNames.nextElement().equals(key)) {
+			  return true;
+		  }
+      }
+    }
+    return false;
+  }
 }

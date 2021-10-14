@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.schedule;
 
 import com.tenio.common.task.TaskManager;
@@ -29,157 +30,161 @@ import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
-import com.tenio.core.network.statistics.NetworkReaderStatistic;
-import com.tenio.core.network.statistics.NetworkWriterStatistic;
-import com.tenio.core.schedule.tasks.AutoDisconnectPlayerTask;
-import com.tenio.core.schedule.tasks.AutoRemoveRoomTask;
-import com.tenio.core.schedule.tasks.CcuReportTask;
-import com.tenio.core.schedule.tasks.DeadlockScanTask;
-import com.tenio.core.schedule.tasks.SystemMonitoringTask;
-import com.tenio.core.schedule.tasks.TrafficCounterTask;
+import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.schedule.task.AutoDisconnectPlayerTask;
+import com.tenio.core.schedule.task.AutoRemoveRoomTask;
+import com.tenio.core.schedule.task.CcuReportTask;
+import com.tenio.core.schedule.task.DeadlockScanTask;
+import com.tenio.core.schedule.task.SystemMonitoringTask;
+import com.tenio.core.schedule.task.TrafficCounterTask;
 
+/**
+ * The implementation for the schedule service.
+ *
+ * @see ScheduleService
+ */
 public final class ScheduleServiceImpl extends AbstractManager implements ScheduleService {
 
-	private TaskManager __taskManager;
+  private TaskManager taskManager;
 
-	private AutoDisconnectPlayerTask __autoDisconnectPlayerTask;
-	private AutoRemoveRoomTask __autoRemoveRoomTask;
-	private CcuReportTask __ccuReportTask;
-	private DeadlockScanTask __deadlockScanTask;
-	private SystemMonitoringTask __systemMonitoringTask;
-	private TrafficCounterTask __trafficCounterTask;
+  private AutoDisconnectPlayerTask autoDisconnectPlayerTask;
+  private AutoRemoveRoomTask autoRemoveRoomTask;
+  private CcuReportTask ccuReportTask;
+  private DeadlockScanTask deadlockScanTask;
+  private SystemMonitoringTask systemMonitoringTask;
+  private TrafficCounterTask trafficCounterTask;
 
-	private boolean __initialized;
+  private boolean initialized;
 
-	public static ScheduleService newInstance(EventManager eventManager) {
-		return new ScheduleServiceImpl(eventManager);
-	}
+  private ScheduleServiceImpl(EventManager eventManager) {
+    super(eventManager);
 
-	private ScheduleServiceImpl(EventManager eventManager) {
-		super(eventManager);
+    autoDisconnectPlayerTask = AutoDisconnectPlayerTask.newInstance(this.eventManager);
+    autoRemoveRoomTask = AutoRemoveRoomTask.newInstance(this.eventManager);
+    ccuReportTask = CcuReportTask.newInstance(this.eventManager);
+    deadlockScanTask = DeadlockScanTask.newInstance(this.eventManager);
+    systemMonitoringTask = SystemMonitoringTask.newInstance(this.eventManager);
+    trafficCounterTask = TrafficCounterTask.newInstance(this.eventManager);
 
-		__autoDisconnectPlayerTask = AutoDisconnectPlayerTask.newInstance(this.eventManager);
-		__autoRemoveRoomTask = AutoRemoveRoomTask.newInstance(this.eventManager);
-		__ccuReportTask = CcuReportTask.newInstance(this.eventManager);
-		__deadlockScanTask = DeadlockScanTask.newInstance(this.eventManager);
-		__systemMonitoringTask = SystemMonitoringTask.newInstance(this.eventManager);
-		__trafficCounterTask = TrafficCounterTask.newInstance(this.eventManager);
+    initialized = false;
+  }
 
-		__initialized = false;
-	}
+  public static ScheduleService newInstance(EventManager eventManager) {
+    return new ScheduleServiceImpl(eventManager);
+  }
 
-	@Override
-	public void initialize() {
-		__initializeTasks();
-		__initialized = true;
-	}
+  @Override
+  public void initialize() {
+    initializeTasks();
+    initialized = true;
+  }
 
-	private void __initializeTasks() {
-		__taskManager = TaskManagerImpl.newInstance();
-	}
+  private void initializeTasks() {
+    taskManager = TaskManagerImpl.newInstance();
+  }
 
-	@Override
-	public void start() {
-		info("START SERVICE", buildgen(getName(), " (", 1, ")"));
+  @Override
+  public void start() {
+    info("START SERVICE", buildgen(getName(), " (", 1, ")"));
 
-		// __taskManager.create("auto-disconnect-player",
-		// __autoDisconnectPlayerTask.run());
-		// __taskManager.create("auto-remove-room", __autoRemoveRoomTask.run());
-		__taskManager.create("ccu-report", __ccuReportTask.run());
-		__taskManager.create("dead-lock", __deadlockScanTask.run());
-		__taskManager.create("system-monitoring", __systemMonitoringTask.run());
-		__taskManager.create("traffic-counter", __trafficCounterTask.run());
-	}
+    // __taskManager.create("auto-disconnect-player",
+    // __autoDisconnectPlayerTask.run());
+    // __taskManager.create("auto-remove-room", __autoRemoveRoomTask.run());
+    taskManager.create("ccu-report", ccuReportTask.run());
+    taskManager.create("dead-lock", deadlockScanTask.run());
+    taskManager.create("system-monitoring", systemMonitoringTask.run());
+    taskManager.create("traffic-counter", trafficCounterTask.run());
+  }
 
-	@Override
-	public void shutdown() {
-		if (!__initialized) {
-			return;
-		}
-		__shutdown();
-	}
+  @Override
+  public void shutdown() {
+    if (!initialized) {
+      return;
+    }
+    attemptToShutdown();
+  }
 
-	private void __shutdown() {
-		__taskManager.clear();
+  private void attemptToShutdown() {
+    taskManager.clear();
 
-		info("STOPPED SERVICE", buildgen(getName(), " (", 1, ")"));
-		__cleanup();
-		info("DESTROYED SERVICE", buildgen(getName(), " (", 1, ")"));
-	}
+    info("STOPPED SERVICE", buildgen(getName(), " (", 1, ")"));
+    cleanup();
+    info("DESTROYED SERVICE", buildgen(getName(), " (", 1, ")"));
+  }
 
-	private void __cleanup() {
-		__autoDisconnectPlayerTask = null;
-		__autoRemoveRoomTask = null;
-		__ccuReportTask = null;
-		__deadlockScanTask = null;
-		__systemMonitoringTask = null;
-		__trafficCounterTask = null;
-	}
+  private void cleanup() {
+    autoDisconnectPlayerTask = null;
+    autoRemoveRoomTask = null;
+    ccuReportTask = null;
+    deadlockScanTask = null;
+    systemMonitoringTask = null;
+    trafficCounterTask = null;
+  }
 
-	@Override
-	public boolean isActivated() {
-		throw new UnsupportedOperationException();
-	}
+  @Override
+  public boolean isActivated() {
+    throw new UnsupportedOperationException();
+  }
 
-	@Override
-	public String getName() {
-		return "schedule-tasks";
-	}
+  @Override
+  public String getName() {
+    return "schedule-tasks";
+  }
 
-	@Override
-	public void setName(String name) {
-		throw new UnsupportedOperationException();
-	}
+  @Override
+  public void setName(String name) {
+    throw new UnsupportedOperationException();
+  }
 
-	@Override
-	public void setRemovedRoomScanInterval(int interval) {
-		__autoRemoveRoomTask.setInterval(interval);
-	}
+  @Override
+  public void setRemovedRoomScanInterval(int interval) {
+    autoRemoveRoomTask.setInterval(interval);
+  }
 
-	@Override
-	public void setDisconnectedPlayerScanInterval(int interval) {
-		__autoDisconnectPlayerTask.setInterval(interval);
-	}
+  @Override
+  public void setDisconnectedPlayerScanInterval(int interval) {
+    autoDisconnectPlayerTask.setInterval(interval);
+  }
 
-	@Override
-	public void setCcuReportInterval(int interval) {
-		__ccuReportTask.setInterval(interval);
-	}
+  @Override
+  public void setCcuReportInterval(int interval) {
+    ccuReportTask.setInterval(interval);
+  }
 
-	@Override
-	public void setDeadlockScanInterval(int interval) {
-		__deadlockScanTask.setInterval(interval);
-	}
+  @Override
+  public void setDeadlockScanInterval(int interval) {
+    deadlockScanTask.setInterval(interval);
+  }
 
-	@Override
-	public void setTrafficCounterInterval(int interval) {
-		__trafficCounterTask.setInterval(interval);
-	}
+  @Override
+  public void setTrafficCounterInterval(int interval) {
+    trafficCounterTask.setInterval(interval);
+  }
 
-	@Override
-	public void setSystemMonitoringInterval(int interval) {
-		__systemMonitoringTask.setInterval(interval);
-	}
+  @Override
+  public void setSystemMonitoringInterval(int interval) {
+    systemMonitoringTask.setInterval(interval);
+  }
 
-	@Override
-	public void setPlayerManager(PlayerManager playerManager) {
-		__autoDisconnectPlayerTask.setPlayerManager(playerManager);
-		__ccuReportTask.setPlayerManager(playerManager);
-	}
+  @Override
+  public void setPlayerManager(PlayerManager playerManager) {
+    autoDisconnectPlayerTask.setPlayerManager(playerManager);
+    ccuReportTask.setPlayerManager(playerManager);
+  }
 
-	@Override
-	public void setRoomManager(RoomManager roomManager) {
-		__autoRemoveRoomTask.setRoomManager(roomManager);
-	}
+  @Override
+  public void setRoomManager(RoomManager roomManager) {
+    autoRemoveRoomTask.setRoomManager(roomManager);
+  }
 
-	@Override
-	public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
-		__trafficCounterTask.setNetworkReaderStatistic(networkReaderStatistic);
-	}
+  @Override
+  public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
+    trafficCounterTask.setNetworkReaderStatistic(networkReaderStatistic);
+  }
 
-	@Override
-	public void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic) {
-		__trafficCounterTask.setNetworkWriterStatistic(networkWriterStatistic);
-	}
-
+  @Override
+  public void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic) {
+    trafficCounterTask.setNetworkWriterStatistic(networkWriterStatistic);
+  }
 }

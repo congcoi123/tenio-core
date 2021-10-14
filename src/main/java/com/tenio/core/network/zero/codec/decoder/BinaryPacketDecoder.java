@@ -21,20 +21,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.zero.codec.decoder;
 
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
 import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncrypter;
 
+/**
+ * The APIs designed for decoding binary packets.
+ */
 public interface BinaryPacketDecoder {
 
-	void decode(Session session, byte[] data) throws RuntimeException;
+  void decode(Session session, byte[] data) throws RuntimeException;
 
-	void setResultListener(PacketDecoderResultListener resultListener);
+  void setResultListener(PacketDecoderResultListener resultListener);
 
-	void setCompressor(BinaryPacketCompressor compressor);
+  void setCompressor(BinaryPacketCompressor compressor);
 
-	void setEncrypter(BinaryPacketEncrypter encrypter);
-
+  void setEncrypter(BinaryPacketEncrypter encrypter);
 }

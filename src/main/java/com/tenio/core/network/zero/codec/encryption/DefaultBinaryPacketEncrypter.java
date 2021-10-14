@@ -21,18 +21,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.zero.codec.encryption;
 
+/**
+ * The default implementation for the binary packet encryption.
+ *
+ * @see BinaryPacketEncrypter
+ */
 public final class DefaultBinaryPacketEncrypter implements BinaryPacketEncrypter {
 
-	@Override
-	public byte[] decrypt(byte[] binary) {
-		return binary;
-	}
+  @Override
+  public byte[] decrypt(byte[] binary) {
+    return binary;
+  }
 
-	@Override
-	public byte[] encrypt(byte[] binary) {
-		return binary;
-	}
-
+  @Override
+  public byte[] encrypt(byte[] binary) {
+    return binary;
+  }
 }

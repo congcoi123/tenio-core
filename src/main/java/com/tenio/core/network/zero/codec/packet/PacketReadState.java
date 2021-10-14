@@ -21,21 +21,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.zero.codec.packet;
 
+/**
+ * The definition of all reading packet states.
+ */
 public enum PacketReadState {
 
-	WAIT_NEW_PACKET,
+  WAIT_NEW_PACKET,
+  WAIT_DATA_SIZE,
+  WAIT_DATA_SIZE_FRAGMENT,
+  WAIT_DATA;
 
-	WAIT_DATA_SIZE,
-
-	WAIT_DATA_SIZE_FRAGMENT,
-
-	WAIT_DATA;
-
-	@Override
-	public String toString() {
-		return name();
-	}
-
+  @Override
+  public String toString() {
+    return name();
+  }
 }

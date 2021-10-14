@@ -21,9 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.zero;
 
-import java.util.List;
+package com.tenio.core.network.zero;
 
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
@@ -31,207 +30,212 @@ import com.tenio.core.network.define.data.SocketConfig;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
-import com.tenio.core.network.statistics.NetworkReaderStatistic;
-import com.tenio.core.network.statistics.NetworkWriterStatistic;
+import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
-import com.tenio.core.network.zero.engines.ZeroAcceptor;
-import com.tenio.core.network.zero.engines.ZeroReader;
-import com.tenio.core.network.zero.engines.ZeroWriter;
-import com.tenio.core.network.zero.engines.implement.ZeroAcceptorImpl;
-import com.tenio.core.network.zero.engines.implement.ZeroReaderImpl;
-import com.tenio.core.network.zero.engines.implement.ZeroWriterImpl;
-import com.tenio.core.network.zero.engines.listeners.ZeroAcceptorListener;
-import com.tenio.core.network.zero.engines.listeners.ZeroReaderListener;
-import com.tenio.core.network.zero.engines.listeners.ZeroWriterListener;
-import com.tenio.core.network.zero.handlers.DatagramIOHandler;
-import com.tenio.core.network.zero.handlers.SocketIOHandler;
-import com.tenio.core.network.zero.handlers.implement.DatagramIOHandlerImpl;
-import com.tenio.core.network.zero.handlers.implement.SocketIOHandlerImpl;
+import com.tenio.core.network.zero.engine.ZeroAcceptor;
+import com.tenio.core.network.zero.engine.ZeroReader;
+import com.tenio.core.network.zero.engine.ZeroWriter;
+import com.tenio.core.network.zero.engine.implement.ZeroAcceptorImpl;
+import com.tenio.core.network.zero.engine.implement.ZeroReaderImpl;
+import com.tenio.core.network.zero.engine.implement.ZeroWriterImpl;
+import com.tenio.core.network.zero.engine.listener.ZeroAcceptorListener;
+import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
+import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
+import com.tenio.core.network.zero.handler.DatagramIoHandler;
+import com.tenio.core.network.zero.handler.SocketIoHandler;
+import com.tenio.core.network.zero.handler.implement.DatagramIoHandlerImpl;
+import com.tenio.core.network.zero.handler.implement.SocketIoHandlerImpl;
+import java.util.List;
 
+/**
+ * The implementation for the socket service manager.
+ *
+ * @see ZeroSocketService
+ */
 public final class ZeroSocketServiceImpl extends AbstractManager implements ZeroSocketService {
 
-	private ZeroAcceptor __acceptorEngine;
-	private ZeroReader __readerEngine;
-	private ZeroWriter __writerEngine;
+  private ZeroAcceptor acceptorEngine;
+  private ZeroReader readerEngine;
+  private ZeroWriter writerEngine;
 
-	private DatagramIOHandler __datagramIOHandler;
-	private SocketIOHandler __socketIOHandler;
-	
-	private boolean __initialized;
+  private DatagramIoHandler datagramIoHandler;
+  private SocketIoHandler socketIoHandler;
 
-	public static ZeroSocketService newInstance(EventManager eventManager) {
-		return new ZeroSocketServiceImpl(eventManager);
-	}
+  private boolean initialized;
 
-	private ZeroSocketServiceImpl(EventManager eventManager) {
-		super(eventManager);
+  private ZeroSocketServiceImpl(EventManager eventManager) {
+    super(eventManager);
 
-		__acceptorEngine = ZeroAcceptorImpl.newInstance(eventManager);
-		__readerEngine = ZeroReaderImpl.newInstance(eventManager);
-		__writerEngine = ZeroWriterImpl.newInstance(eventManager);
+    acceptorEngine = ZeroAcceptorImpl.newInstance(eventManager);
+    readerEngine = ZeroReaderImpl.newInstance(eventManager);
+    writerEngine = ZeroWriterImpl.newInstance(eventManager);
 
-		__datagramIOHandler = DatagramIOHandlerImpl.newInstance(eventManager);
-		__socketIOHandler = SocketIOHandlerImpl.newInstance(eventManager);
-		
-		__initialized = false;
-	}
+    datagramIoHandler = DatagramIoHandlerImpl.newInstance(eventManager);
+    socketIoHandler = SocketIoHandlerImpl.newInstance(eventManager);
 
-	private void __setupAcceptor() {
-		__acceptorEngine.setDatagramIOHandler(__datagramIOHandler);
-		__acceptorEngine.setSocketIOHandler(__socketIOHandler);
-		__acceptorEngine.setZeroReaderListener((ZeroReaderListener) __readerEngine);
-	}
+    initialized = false;
+  }
 
-	private void __setupReader() {
-		__readerEngine.setDatagramIOHandler(__datagramIOHandler);
-		__readerEngine.setSocketIOHandler(__socketIOHandler);
-		__readerEngine.setZeroAcceptorListener((ZeroAcceptorListener) __acceptorEngine);
-		__readerEngine.setZeroWriterListener((ZeroWriterListener) __writerEngine);
-	}
+  public static ZeroSocketService newInstance(EventManager eventManager) {
+    return new ZeroSocketServiceImpl(eventManager);
+  }
 
-	private void __setupWriter() {
-		__writerEngine.setDatagramIOHandler(__datagramIOHandler);
-		__writerEngine.setSocketIOHandler(__socketIOHandler);
-	}
+  private void setupAcceptor() {
+    acceptorEngine.setDatagramIoHandler(datagramIoHandler);
+    acceptorEngine.setSocketIoHandler(socketIoHandler);
+    acceptorEngine.setZeroReaderListener((ZeroReaderListener) readerEngine);
+  }
 
-	@Override
-	public void initialize() {
-		__setupAcceptor();
-		__setupReader();
-		__setupWriter();
+  private void setupReader() {
+    readerEngine.setDatagramIoHandler(datagramIoHandler);
+    readerEngine.setSocketIoHandler(socketIoHandler);
+    readerEngine.setZeroAcceptorListener((ZeroAcceptorListener) acceptorEngine);
+    readerEngine.setZeroWriterListener((ZeroWriterListener) writerEngine);
+  }
 
-		__readerEngine.initialize();
-		__writerEngine.initialize();
-		__acceptorEngine.initialize();
-		
-		__initialized = true;
-	}
+  private void setupWriter() {
+    writerEngine.setDatagramIoHandler(datagramIoHandler);
+    writerEngine.setSocketIoHandler(socketIoHandler);
+  }
 
-	@Override
-	public void start() {
-		if (!__initialized) {
-			return;
-		}
-		
-		__acceptorEngine.start();
-		__readerEngine.start();
-		__writerEngine.start();
-	}
+  @Override
+  public void initialize() {
+    setupAcceptor();
+    setupReader();
+    setupWriter();
 
-	@Override
-	public void shutdown() {
-		if (!__initialized) {
-			return;
-		}
-		
-		__acceptorEngine.shutdown();
-		__readerEngine.shutdown();
-		__writerEngine.shutdown();
+    readerEngine.initialize();
+    writerEngine.initialize();
+    acceptorEngine.initialize();
 
-		__destroy();
-	}
+    initialized = true;
+  }
 
-	private void __destroy() {
-		__datagramIOHandler = null;
-		__socketIOHandler = null;
+  @Override
+  public void start() {
+    if (!initialized) {
+      return;
+    }
 
-		__acceptorEngine = null;
-		__readerEngine = null;
-		__writerEngine = null;
-	}
+    acceptorEngine.start();
+    readerEngine.start();
+    writerEngine.start();
+  }
 
-	@Override
-	public boolean isActivated() {
-		throw new UnsupportedOperationException();
-	}
+  @Override
+  public void shutdown() {
+    if (!initialized) {
+      return;
+    }
 
-	@Override
-	public String getName() {
-		return "zero-socket";
-	}
+    acceptorEngine.shutdown();
+    readerEngine.shutdown();
+    writerEngine.shutdown();
 
-	@Override
-	public void setName(String name) {
-		throw new UnsupportedOperationException();
-	}
+    destroy();
+  }
 
-	@Override
-	public void setAcceptorBufferSize(int bufferSize) {
-		__acceptorEngine.setMaxBufferSize(bufferSize);
-	}
+  private void destroy() {
+    datagramIoHandler = null;
+    socketIoHandler = null;
 
-	@Override
-	public void setAcceptorWorkerSize(int workerSize) {
-		__acceptorEngine.setThreadPoolSize(workerSize);
-	}
+    acceptorEngine = null;
+    readerEngine = null;
+    writerEngine = null;
+  }
 
-	@Override
-	public void setReaderBufferSize(int bufferSize) {
-		__readerEngine.setMaxBufferSize(bufferSize);
-	}
+  @Override
+  public boolean isActivated() {
+    throw new UnsupportedOperationException();
+  }
 
-	@Override
-	public void setReaderWorkerSize(int workerSize) {
-		__readerEngine.setThreadPoolSize(workerSize);
-	}
+  @Override
+  public String getName() {
+    return "zero-socket";
+  }
 
-	@Override
-	public void setWriterBufferSize(int bufferSize) {
-		__writerEngine.setMaxBufferSize(bufferSize);
-	}
+  @Override
+  public void setName(String name) {
+    throw new UnsupportedOperationException();
+  }
 
-	@Override
-	public void setWriterWorkerSize(int workerSize) {
-		__writerEngine.setThreadPoolSize(workerSize);
-	}
+  @Override
+  public void setAcceptorBufferSize(int bufferSize) {
+    acceptorEngine.setMaxBufferSize(bufferSize);
+  }
 
-	@Override
-	public void setConnectionFilter(ConnectionFilter connectionFilter) {
-		__acceptorEngine.setConnectionFilter(connectionFilter);
-	}
+  @Override
+  public void setAcceptorWorkerSize(int workerSize) {
+    acceptorEngine.setThreadPoolSize(workerSize);
+  }
 
-	@Override
-	public void setSessionManager(SessionManager sessionManager) {
-		__acceptorEngine.setSessionManager(sessionManager);
-		__readerEngine.setSessionManager(sessionManager);
-		__writerEngine.setSessionManager(sessionManager);
+  @Override
+  public void setReaderBufferSize(int bufferSize) {
+    readerEngine.setMaxBufferSize(bufferSize);
+  }
 
-		__datagramIOHandler.setSessionManager(sessionManager);
-		__socketIOHandler.setSessionManager(sessionManager);
-	}
+  @Override
+  public void setReaderWorkerSize(int workerSize) {
+    readerEngine.setThreadPoolSize(workerSize);
+  }
 
-	@Override
-	public void setNetworkReaderStatistic(NetworkReaderStatistic readerStatistic) {
-		__readerEngine.setNetworkReaderStatistic(readerStatistic);
+  @Override
+  public void setWriterBufferSize(int bufferSize) {
+    writerEngine.setMaxBufferSize(bufferSize);
+  }
 
-		__datagramIOHandler.setNetworkReaderStatistic(readerStatistic);
-		__socketIOHandler.setNetworkReaderStatistic(readerStatistic);
-	}
+  @Override
+  public void setWriterWorkerSize(int workerSize) {
+    writerEngine.setThreadPoolSize(workerSize);
+  }
 
-	@Override
-	public void setNetworkWriterStatistic(NetworkWriterStatistic writerStatistic) {
-		__writerEngine.setNetworkWriterStatistic(writerStatistic);
-	}
+  @Override
+  public void setConnectionFilter(ConnectionFilter connectionFilter) {
+    acceptorEngine.setConnectionFilter(connectionFilter);
+  }
 
-	@Override
-	public void setSocketConfigs(List<SocketConfig> socketConfigs) {
-		__acceptorEngine.setSocketConfigs(socketConfigs);
-	}
+  @Override
+  public void setSessionManager(SessionManager sessionManager) {
+    acceptorEngine.setSessionManager(sessionManager);
+    readerEngine.setSessionManager(sessionManager);
+    writerEngine.setSessionManager(sessionManager);
 
-	@Override
-	public void setPacketEncoder(BinaryPacketEncoder packetEncoder) {
-		__writerEngine.setPacketEncoder(packetEncoder);
-	}
+    datagramIoHandler.setSessionManager(sessionManager);
+    socketIoHandler.setSessionManager(sessionManager);
+  }
 
-	@Override
-	public void setPacketDecoder(BinaryPacketDecoder packetDecoder) {
-		__socketIOHandler.setPacketDecoder(packetDecoder);
-	}
+  @Override
+  public void setNetworkReaderStatistic(NetworkReaderStatistic readerStatistic) {
+    readerEngine.setNetworkReaderStatistic(readerStatistic);
 
-	@Override
-	public void write(Packet packet) {
-		__writerEngine.enqueuePacket(packet);
-	}
+    datagramIoHandler.setNetworkReaderStatistic(readerStatistic);
+    socketIoHandler.setNetworkReaderStatistic(readerStatistic);
+  }
 
+  @Override
+  public void setNetworkWriterStatistic(NetworkWriterStatistic writerStatistic) {
+    writerEngine.setNetworkWriterStatistic(writerStatistic);
+  }
+
+  @Override
+  public void setSocketConfigs(List<SocketConfig> socketConfigs) {
+    acceptorEngine.setSocketConfigs(socketConfigs);
+  }
+
+  @Override
+  public void setPacketEncoder(BinaryPacketEncoder packetEncoder) {
+    writerEngine.setPacketEncoder(packetEncoder);
+  }
+
+  @Override
+  public void setPacketDecoder(BinaryPacketDecoder packetDecoder) {
+    socketIoHandler.setPacketDecoder(packetDecoder);
+  }
+
+  @Override
+  public void write(Packet packet) {
+    writerEngine.enqueuePacket(packet);
+  }
 }

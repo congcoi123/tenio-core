@@ -21,38 +21,41 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.netty;
 
 import com.tenio.core.network.define.data.SocketConfig;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
-import com.tenio.core.network.statistics.NetworkReaderStatistic;
-import com.tenio.core.network.statistics.NetworkWriterStatistic;
+import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.service.Service;
 
+/**
+ * The websockets handler is provided by the netty library.
+ */
 public interface NettyWebSocketService extends Service {
-	
-	void setSenderBufferSize(int bufferSize);
-	
-	void setReceiverBufferSize(int bufferSize);
 
-	void setProducerWorkerSize(int workerSize);
+  void setSenderBufferSize(int bufferSize);
 
-	void setConsumerWorkerSize(int workerSize);
+  void setReceiverBufferSize(int bufferSize);
 
-	void setConnectionFilter(ConnectionFilter connectionFilter);
+  void setProducerWorkerSize(int workerSize);
 
-	void setSessionManager(SessionManager sessionManager);
+  void setConsumerWorkerSize(int workerSize);
 
-	void setNetworkReaderStatistic(NetworkReaderStatistic readerStatistic);
+  void setConnectionFilter(ConnectionFilter connectionFilter);
 
-	void setNetworkWriterStatistic(NetworkWriterStatistic writerStatistic);
+  void setSessionManager(SessionManager sessionManager);
 
-	void setWebSocketConfig(SocketConfig socketConfig);
+  void setNetworkReaderStatistic(NetworkReaderStatistic readerStatistic);
 
-	void setUsingSSL(boolean usingSSL);
+  void setNetworkWriterStatistic(NetworkWriterStatistic writerStatistic);
 
-	void write(Packet packet);
+  void setWebSocketConfig(SocketConfig socketConfig);
 
+  void setUsingSsl(boolean usingSsl);
+
+  void write(Packet packet);
 }

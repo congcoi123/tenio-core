@@ -21,70 +21,74 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
+package com.tenio.core.network;
 
 import com.tenio.core.network.define.data.PathConfig;
 import com.tenio.core.network.define.data.SocketConfig;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.protocol.Response;
 import com.tenio.core.network.security.filter.ConnectionFilter;
-import com.tenio.core.network.statistics.NetworkReaderStatistic;
-import com.tenio.core.network.statistics.NetworkWriterStatistic;
+import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.service.Service;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
+/**
+ * All designed APIs for network service.
+ */
 public interface NetworkService extends Service {
 
-	void setHttpPort(int port);
+  void setHttpPort(int port);
 
-	void setHttpPathConfigs(List<PathConfig> pathConfigs);
+  void setHttpPathConfigs(List<PathConfig> pathConfigs);
 
-	void setConnectionFilterClass(Class<? extends ConnectionFilter> clazz, int maxConnectionsPerIp)
-			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
-			NoSuchMethodException, SecurityException;
+  void setConnectionFilterClass(Class<? extends ConnectionFilter> clazz, int maxConnectionsPerIp)
+      throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+      InvocationTargetException,
+      NoSuchMethodException, SecurityException;
 
-	void setWebsocketConsumerWorkers(int workerSize);
+  void setWebSocketConsumerWorkers(int workerSize);
 
-	void setWebsocketProducerWorkers(int workerSize);
+  void setWebSocketProducerWorkers(int workerSize);
 
-	void setWebsocketSenderBufferSize(int bufferSize);
+  void setWebSocketSenderBufferSize(int bufferSize);
 
-	void setWebsocketReceiverBufferSize(int bufferSize);
+  void setWebSocketReceiverBufferSize(int bufferSize);
 
-	void setWebsocketUsingSSL(boolean usingSSL);
+  void setWebSocketUsingSsl(boolean usingSSL);
 
-	void setSocketAcceptorWorkers(int workerSize);
+  void setSocketAcceptorWorkers(int workerSize);
 
-	void setSocketReaderWorkers(int workerSize);
+  void setSocketReaderWorkers(int workerSize);
 
-	void setSocketWriterWorkers(int workerSize);
+  void setSocketWriterWorkers(int workerSize);
 
-	void setSocketAcceptorBufferSize(int bufferSize);
+  void setSocketAcceptorBufferSize(int bufferSize);
 
-	void setSocketReaderBufferSize(int bufferSize);
+  void setSocketReaderBufferSize(int bufferSize);
 
-	void setSocketWriterBufferSize(int bufferSize);
+  void setSocketWriterBufferSize(int bufferSize);
 
-	void setSocketConfigs(List<SocketConfig> socketConfigs);
+  void setSocketConfigs(List<SocketConfig> socketConfigs);
 
-	void setPacketQueuePolicy(Class<? extends PacketQueuePolicy> clazz)
-			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
-			NoSuchMethodException, SecurityException;
+  void setPacketQueuePolicy(Class<? extends PacketQueuePolicy> clazz)
+      throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+      InvocationTargetException,
+      NoSuchMethodException, SecurityException;
 
-	void setPacketQueueSize(int queueSize);
+  void setPacketQueueSize(int queueSize);
 
-	void setPacketEncoder(BinaryPacketEncoder packetEncoder);
+  void setPacketEncoder(BinaryPacketEncoder packetEncoder);
 
-	void setPacketDecoder(BinaryPacketDecoder packetDecoder);
+  void setPacketDecoder(BinaryPacketDecoder packetDecoder);
 
-	NetworkReaderStatistic getNetworkReaderStatistic();
+  NetworkReaderStatistic getNetworkReaderStatistic();
 
-	NetworkWriterStatistic getNetworkWriterStatistic();
+  NetworkWriterStatistic getNetworkWriterStatistic();
 
-	void write(Response response);
-
+  void write(Response response);
 }

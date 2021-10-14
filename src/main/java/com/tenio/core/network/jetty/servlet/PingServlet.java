@@ -21,53 +21,54 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.jetty.servlet;
 
+import com.tenio.common.data.element.CommonObject;
+import com.tenio.core.network.jetty.servlet.support.BaseProcessServlet;
 import java.io.IOException;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.json.JSONObject;
 
-import com.tenio.common.data.elements.CommonObject;
-import com.tenio.core.network.jetty.servlet.support.BaseProcessServlet;
-
+/**
+ * The default servlet to let client checks if the HTTP server is available or not.
+ */
 public final class PingServlet extends HttpServlet {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 5999711002391728401L;
 
-	private Process __process = new Process();
+  private static final long serialVersionUID = 5999711002391728401L;
 
-	@Override
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException {
-		doPost(request, response);
-	}
+  private final Process process = new Process();
 
-	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException {
-		__process.handle(request, response);
-	}
+  @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException {
+    doPost(request, response);
+  }
 
-	private final class Process extends BaseProcessServlet {
+  @Override
+  protected void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException {
+    process.handle(request, response);
+  }
 
-		@Override
-		protected void __handleImpl(HttpServletRequest request, HttpServletResponse response) {
-			response.setStatus(HttpServletResponse.SC_OK);
-			try {
-				var json = new JSONObject();
-				CommonObject.newInstance().add("status", "ok").add("message", "PING PONG").forEach((key, value) -> {
-					json.put(key, value);
-				});
-				response.getWriter().println(json.toString());
-			} catch (IOException e) {
-				error(e);
-			}
-		}
-	}
+  private final class Process extends BaseProcessServlet {
 
+    @Override
+    protected void handleImpl(HttpServletRequest request, HttpServletResponse response) {
+      response.setStatus(HttpServletResponse.SC_OK);
+      try {
+        var json = new JSONObject();
+        CommonObject.newInstance().add("status", "ok").add("message", "PING PONG")
+            .forEach((key, value) -> {
+              json.put(key, value);
+            });
+        response.getWriter().println(json);
+      } catch (IOException e) {
+        error(e);
+      }
+    }
+  }
 }

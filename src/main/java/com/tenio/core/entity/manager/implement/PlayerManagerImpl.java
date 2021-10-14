@@ -29,10 +29,11 @@ import com.tenio.core.entity.Room;
 import com.tenio.core.entity.implement.PlayerImpl;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exceptions.AddedDuplicatedPlayerToRoomException;
+import com.tenio.core.exceptions.AddedDuplicatedPlayerException;
 import com.tenio.core.exceptions.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entity.session.Session;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,7 +71,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public void addPlayer(Player player) {
     if (containsPlayerName(player.getName())) {
-      throw new AddedDuplicatedPlayerToRoomException(player, ownerRoom);
+      throw new AddedDuplicatedPlayerException(player, ownerRoom);
     }
 
     synchronized (this) {
@@ -198,7 +199,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public void clear() {
     synchronized (this) {
-      var iterator = playerByNames.values().iterator();
+      var iterator = new ArrayList<Player>(playerByNames.values()).iterator();
       while (iterator.hasNext()) {
         var player = iterator.next();
         removePlayer(player);

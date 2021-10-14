@@ -21,48 +21,50 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package com.tenio.core.network.zero;
 
-import java.util.List;
+package com.tenio.core.network.zero;
 
 import com.tenio.core.network.define.data.SocketConfig;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
-import com.tenio.core.network.statistics.NetworkReaderStatistic;
-import com.tenio.core.network.statistics.NetworkWriterStatistic;
+import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.service.Service;
+import java.util.List;
 
+/**
+ * The APIs designed for working with sockets.
+ */
 public interface ZeroSocketService extends Service {
 
-	void setAcceptorBufferSize(int bufferSize);
+  void setAcceptorBufferSize(int bufferSize);
 
-	void setAcceptorWorkerSize(int workerSize);
+  void setAcceptorWorkerSize(int workerSize);
 
-	void setReaderBufferSize(int bufferSize);
+  void setReaderBufferSize(int bufferSize);
 
-	void setReaderWorkerSize(int workerSize);
+  void setReaderWorkerSize(int workerSize);
 
-	void setWriterBufferSize(int bufferSize);
+  void setWriterBufferSize(int bufferSize);
 
-	void setWriterWorkerSize(int workerSize);
+  void setWriterWorkerSize(int workerSize);
 
-	void setConnectionFilter(ConnectionFilter connectionFilter);
+  void setConnectionFilter(ConnectionFilter connectionFilter);
 
-	void setSessionManager(SessionManager sessionManager);
+  void setSessionManager(SessionManager sessionManager);
 
-	void setNetworkReaderStatistic(NetworkReaderStatistic readerStatistic);
+  void setNetworkReaderStatistic(NetworkReaderStatistic readerStatistic);
 
-	void setNetworkWriterStatistic(NetworkWriterStatistic writerStatistic);
+  void setNetworkWriterStatistic(NetworkWriterStatistic writerStatistic);
 
-	void setSocketConfigs(List<SocketConfig> socketConfigs);
-	
-	void setPacketEncoder(BinaryPacketEncoder packetEncoder);
-	
-	void setPacketDecoder(BinaryPacketDecoder packetDecoder);
+  void setSocketConfigs(List<SocketConfig> socketConfigs);
 
-	void write(Packet packet);
+  void setPacketEncoder(BinaryPacketEncoder packetEncoder);
 
+  void setPacketDecoder(BinaryPacketDecoder packetDecoder);
+
+  void write(Packet packet);
 }

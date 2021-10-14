@@ -21,25 +21,27 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.jetty.servlet.support;
 
+import com.tenio.common.logger.AbstractLogger;
+import com.tenio.core.configuration.constant.CoreConstant;
+import com.tenio.core.network.jetty.servlet.ServletHandler;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.tenio.common.loggers.AbstractLogger;
-import com.tenio.core.configuration.constant.CoreConstant;
-import com.tenio.core.network.jetty.servlet.ServletHandler;
-
+/**
+ * The base process servlet.
+ */
 public abstract class BaseProcessServlet extends AbstractLogger implements ServletHandler {
 
-	@Override
-	public void handle(HttpServletRequest request, HttpServletResponse response) {
-		response.setContentType(CoreConstant.CONTENT_TYPE_JSON);
-		response.setContentType(CoreConstant.CONTENT_TYPE_TEXT);
-		response.setCharacterEncoding(CoreConstant.UTF_8);
-		__handleImpl(request, response);
-	}
+  @Override
+  public void handle(HttpServletRequest request, HttpServletResponse response) {
+    response.setContentType(CoreConstant.CONTENT_TYPE_JSON);
+    response.setContentType(CoreConstant.CONTENT_TYPE_TEXT);
+    response.setCharacterEncoding(CoreConstant.UTF_8);
+    handleImpl(request, response);
+  }
 
-	protected abstract void __handleImpl(HttpServletRequest request, HttpServletResponse response);
-
+  protected abstract void handleImpl(HttpServletRequest request, HttpServletResponse response);
 }

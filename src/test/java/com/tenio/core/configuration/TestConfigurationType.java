@@ -21,54 +21,46 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.configuration;
 
+import com.tenio.common.configuration.ConfigurationType;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.tenio.common.configuration.ConfigurationType;
-
-/**
- * Create your own configurations.
- * 
- * @see CoreConfiguration
- */
 public enum TestConfigurationType implements ConfigurationType {
 
-	CUSTOM_VALUE_1("custom-value-1"),
+  CUSTOM_VALUE_1("custom-value-1"),
+  CUSTOM_VALUE_2("custom-value-2"),
+  CUSTOM_VALUE_3("custom-value-3"),
+  CUSTOM_VALUE_4("custom-value-4");
 
-	CUSTOM_VALUE_2("custom-value-2"),
+  // Reverse-lookup map for getting a type from a value
+  private static final Map<String, TestConfigurationType> lookup =
+      new HashMap<String, TestConfigurationType>();
 
-	CUSTOM_VALUE_3("custom-value-3"),
+  static {
+    for (var configurationType : TestConfigurationType.values()) {
+      lookup.put(configurationType.getValue(), configurationType);
+    }
+  }
 
-	CUSTOM_VALUE_4("custom-value-4");
+  private final String value;
 
-	// Reverse-lookup map for getting a type from a value
-	private static final Map<String, TestConfigurationType> lookup = new HashMap<String, TestConfigurationType>();
+  TestConfigurationType(final String value) {
+    this.value = value;
+  }
 
-	static {
-		for (var configurationType : TestConfigurationType.values()) {
-			lookup.put(configurationType.getValue(), configurationType);
-		}
-	}
+  public static TestConfigurationType getByValue(String value) {
+    return lookup.get(value);
+  }
 
-	private final String __value;
+  public final String getValue() {
+    return value;
+  }
 
-	private TestConfigurationType(final String value) {
-		__value = value;
-	}
-
-	public final String getValue() {
-		return __value;
-	}
-
-	@Override
-	public final String toString() {
-		return name();
-	}
-
-	public static TestConfigurationType getByValue(String value) {
-		return lookup.get(value);
-	}
-
+  @Override
+  public final String toString() {
+    return name();
+  }
 }

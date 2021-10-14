@@ -26,7 +26,7 @@ package com.tenio.core.entity.manager;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
-import com.tenio.core.exceptions.AddedDuplicatedPlayerToRoomException;
+import com.tenio.core.exceptions.AddedDuplicatedPlayerException;
 import com.tenio.core.exceptions.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.manager.Manager;
 import com.tenio.core.network.entity.session.Session;
@@ -37,12 +37,12 @@ import java.util.Collection;
  */
 public interface PlayerManager extends Manager {
 
-  void addPlayer(Player player) throws AddedDuplicatedPlayerToRoomException;
+  void addPlayer(Player player) throws AddedDuplicatedPlayerException;
 
-  Player createPlayer(String name) throws AddedDuplicatedPlayerToRoomException;
+  Player createPlayer(String name) throws AddedDuplicatedPlayerException;
 
   Player createPlayerWithSession(String name, Session session)
-      throws AddedDuplicatedPlayerToRoomException, NullPointerException;
+      throws AddedDuplicatedPlayerException, NullPointerException;
 
   Player getPlayerByName(String playerName);
 

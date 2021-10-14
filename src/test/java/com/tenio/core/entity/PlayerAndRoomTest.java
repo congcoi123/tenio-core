@@ -21,209 +21,114 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.entity;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.tenio.core.configuration.Configuration;
+import com.tenio.core.entity.implement.PlayerImpl;
+import com.tenio.core.entity.implement.RoomImpl;
+import com.tenio.core.entity.manager.PlayerManager;
+import com.tenio.core.entity.manager.RoomManager;
+import com.tenio.core.entity.manager.implement.PlayerManagerImpl;
+import com.tenio.core.entity.manager.implement.RoomManagerImpl;
+import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.exceptions.AddedDuplicatedPlayerException;
+import com.tenio.core.exceptions.AddedDuplicatedRoomException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public final class PlayerAndRoomTest {
 
-//	private EventManager __eventManager;
-//
-//	private PlayerManager __playerManager;
-//	private RoomManager __roomManager;
-//
-//	private String __testPlayerName;
-//	private String __testRoomId;
-//
-//	@BeforeEach
-//	public void initialize() {
-//		var configuration = new Configuration("TenIOConfig.example.xml");
-//
-//		__eventManager = new EventManagerImpl();
-//		__playerManager = new PlayerManagerImpl(__eventManager);
-//		__playerManager.initialize(configuration);
-//		__roomManager = new RoomManagerImpl(__eventManager);
-//		__roomManager.initialize(configuration);
-//		__playerApi = new PlayerApi(__playerManager, __roomManager);
-//		__roomApi = new RoomApi(__roomManager);
-//		__testPlayerName = "kong";
-//		__testRoomId = UUID.randomUUID().toString();
-//	}
-//
-//	@AfterEach
-//	public void tearDown() {
-//		__playerManager.clear();
-//		__roomManager.clear();
-//		__eventManager.clear();
-//	}
-//
-//	@Test
-//	public void addNewPlayerShouldReturnSuccess() {
-//		var player = new PlayerModel(__testPlayerName);
-//		__playerApi.login(player);
-//		var result = __playerApi.get(__testPlayerName);
-//
-//		assertEquals(player, result);
-//	}
-//
-//	@Test
-//	public void addDupplicatedPlayerShouldCauseException() {
-//		assertThrows(AddedDuplicatedPlayerException.class, () -> {
-//			var player = new PlayerModel(__testPlayerName);
-//			__playerManager.add(player);
-//			__playerManager.add(player);
-//		});
-//	}
-//
-//	@Test
-//	public void addNullPlayerNameShouldCauseException() {
-//		assertThrows(NullPlayerNameException.class, () -> {
-//			var player = new PlayerModel(null);
-//			__playerManager.add(player, null);
-//		});
-//	}
-//
-//	@Test
-//	public void checkContainPlayerShouldReturnSuccess() {
-//		var player = new PlayerModel(__testPlayerName);
-//		__playerApi.login(player);
-//
-//		assertTrue(__playerApi.contain(__testPlayerName));
-//	}
-//
-//	@Test
-//	public void countPlayersShouldReturnTrueValue() {
-//		for (int i = 0; i < 10; i++) {
-//			var player = new PlayerModel(UUID.randomUUID().toString());
-//			__playerApi.login(player);
-//		}
-//
-//		assertEquals(10, __playerApi.count());
-//	}
-//
-//	@Test
-//	public void countRealPlayersShouldReturnTrueValue() {
-//		for (int i = 0; i < 10; i++) {
-//			var player = new PlayerModel(UUID.randomUUID().toString());
-//			__playerApi.login(player);
-//		}
-//
-//		assertEquals(0, __playerApi.countPlayers());
-//	}
-//
-//	@Test
-//	public void removePlayerShouldReturnSuccess() {
-//		var player = new PlayerModel(__testPlayerName);
-//		__playerApi.login(player);
-//		__playerApi.logOut(__testPlayerName);
-//
-//		assertEquals(0, __playerApi.count());
-//	}
-//
-//	@Test
-//	public void createNewRoomShouldReturnSuccess() {
-//		var room = new RoomModel(__testRoomId, "Test Room", 3);
-//		__roomApi.add(room);
-//
-//		assertTrue(__roomApi.contain(__testRoomId));
-//	}
-//
-//	@Test
-//	public void createDuplicatedRoomShouldCauseException() {
-//		assertThrows(DuplicatedRoomIdException.class, () -> {
-//			var room = new RoomModel(__testRoomId, "Test Room", 3);
-//			__roomManager.add(room);
-//			__roomManager.add(room);
-//		});
-//	}
-//
-//	@Test
-//	public void playerJoinRoomShouldReturnSuccess() {
-//		var player = new PlayerModel(__testPlayerName);
-//		__playerApi.login(player);
-//		var room = new RoomModel(__testRoomId, "Test Room", 3);
-//		__roomApi.add(room);
-//
-//		assertEquals(null,
-//				__playerApi.makePlayerJoinRoom(__roomApi.get(__testRoomId), __playerApi.get(__testPlayerName)));
-//	}
-//
-//	@Test
-//	public void addDuplicatedPlayerToRoomShouldReturnErrorMessage() {
-//		var player = new PlayerModel(__testPlayerName);
-//		__playerApi.login(player);
-//		var room = new RoomModel(__testRoomId, "Test Room", 3);
-//		__roomApi.add(room);
-//
-//		__playerApi.makePlayerJoinRoom(__roomApi.get(__testRoomId), __playerApi.get(__testPlayerName));
-//
-//		assertEquals(CoreMessageCode.PLAYER_WAS_IN_ROOM,
-//				__playerApi.makePlayerJoinRoom(__roomApi.get(__testRoomId), __playerApi.get(__testPlayerName)));
-//	}
-//
-//	@Test
-//	public void playerLeaveRoomShouldReturnSuccess() {
-//		var player = new PlayerModel(__testPlayerName);
-//		__playerApi.login(player);
-//		var room = new RoomModel(__testRoomId, "Test Room", 3);
-//		__roomApi.add(room);
-//
-//		__playerApi.makePlayerJoinRoom(__roomApi.get(__testRoomId), __playerApi.get(__testPlayerName));
-//		__playerApi.makePlayerLeaveRoom(__playerApi.get(__testPlayerName), true);
-//
-//		assertAll("playerLeaveRoom", () -> assertFalse(__roomApi.get(__testRoomId).containPlayerName(__testPlayerName)),
-//				() -> assertEquals(null, __playerApi.get(__testPlayerName).getCurrentRoom()));
-//	}
-//
-//	@Test
-//	public void addNumberPlayersExceedsRoomCapacityShouldReturnErrorMessage() {
-//		for (int i = 0; i < 10; i++) {
-//			var player = new PlayerModel(UUID.randomUUID().toString());
-//			__playerApi.login(player);
-//		}
-//
-//		var room = new RoomModel(__testRoomId, "Test Room", 3);
-//		__roomApi.add(room);
-//
-//		int capacity = __roomApi.get(__testRoomId).getCapacity();
-//		PlayerModel[] players = new PlayerModel[capacity + 1];
-//		int counter = 0;
-//		for (var player : __playerApi.gets().values()) {
-//			if (counter > capacity) {
-//				break;
-//			}
-//			players[counter] = (PlayerModel) player;
-//			counter++;
-//		}
-//
-//		assertAll("playerJoinRoom", () -> assertEquals(3, capacity),
-//				() -> assertEquals(null, __playerApi.makePlayerJoinRoom(__roomApi.get(__testRoomId), players[0])),
-//				() -> assertEquals(null, __playerApi.makePlayerJoinRoom(__roomApi.get(__testRoomId), players[1])),
-//				() -> assertEquals(null, __playerApi.makePlayerJoinRoom(__roomApi.get(__testRoomId), players[2])),
-//				() -> assertEquals(CoreMessageCode.ROOM_IS_FULL,
-//						__playerApi.makePlayerJoinRoom(__roomApi.get(__testRoomId), players[3])));
-//	}
-//
-//	@Test
-//	public void removeRoomShouldReturnSuccess() {
-//		var room = new RoomModel(__testRoomId, "Test Room", 3);
-//		__roomApi.add(room);
-//
-//		for (int i = 0; i < 3; i++) {
-//			var player = new PlayerModel(UUID.randomUUID().toString());
-//			__playerApi.login(player);
-//			__playerApi.makePlayerJoinRoom(__roomApi.get(__testRoomId), player);
-//		}
-//
-//		__roomApi.remove(__roomApi.get(__testRoomId));
-//		boolean allRemoved = true;
-//		for (var player : __playerApi.gets().values()) {
-//			if (player.getCurrentRoom() != null) {
-//				allRemoved = false;
-//				break;
-//			}
-//		}
-//		final boolean removedResult = allRemoved;
-//
-//		assertAll("removeRoom", () -> assertFalse(__roomApi.contain(__testRoomId)), () -> assertTrue(removedResult));
-//	}
+  private EventManager eventManager;
 
+  private PlayerManager playerManager;
+  private RoomManager roomManager;
+
+  private String testPlayerName;
+  private String testRoomId;
+
+  @BeforeEach
+  public void initialize() throws Exception {
+    var configuration = new Configuration();
+    configuration.load("configuration.example.xml");
+
+    eventManager = EventManager.newInstance();
+    playerManager = PlayerManagerImpl.newInstance(eventManager);
+    roomManager = RoomManagerImpl.newInstance(eventManager);
+    testPlayerName = "kong";
+    testRoomId = "test-room-id";
+  }
+
+  @AfterEach
+  public void tearDown() {
+    eventManager.clear();
+    playerManager.clear();
+  }
+
+  @Test
+  public void addNewPlayerShouldReturnSuccess() {
+    var player = PlayerImpl.newInstance(testPlayerName);
+    playerManager.addPlayer(player);
+    var result = playerManager.getPlayerByName(testPlayerName);
+
+    assertEquals(player, result);
+  }
+
+  @Test
+  public void addDuplicatedPlayerShouldCauseException() {
+    assertThrows(AddedDuplicatedPlayerException.class, () -> {
+      var player = PlayerImpl.newInstance(testPlayerName);
+      playerManager.addPlayer(player);
+      playerManager.addPlayer(player);
+    });
+  }
+
+  @Test
+  public void checkContainPlayerShouldReturnSuccess() {
+    var player = PlayerImpl.newInstance(testPlayerName);
+    playerManager.addPlayer(player);
+
+    assertTrue(playerManager.containsPlayerName(testPlayerName));
+  }
+
+  @Test
+  public void countPlayersShouldReturnTrueValue() {
+    for (int i = 0; i < 10; i++) {
+      var player = PlayerImpl.newInstance(testPlayerName + i);
+      playerManager.addPlayer(player);
+    }
+
+    assertEquals(10, playerManager.getPlayerCount());
+  }
+
+  @Test
+  public void removePlayerShouldReturnSuccess() {
+    var player = PlayerImpl.newInstance(testPlayerName);
+    playerManager.addPlayer(player);
+    playerManager.removePlayerByName(testPlayerName);
+
+    assertEquals(0, playerManager.getPlayerCount());
+  }
+
+  @Test
+  public void createNewRoomShouldReturnSuccess() {
+    var room = RoomImpl.newInstance();
+    roomManager.addRoom(room);
+
+    assertTrue(roomManager.containsRoomId(0));
+  }
+
+  @Test
+  public void createDuplicatedRoomShouldCauseException() {
+    assertThrows(AddedDuplicatedRoomException.class, () -> {
+      var room = RoomImpl.newInstance();
+      roomManager.addRoom(room);
+      roomManager.addRoom(room);
+    });
+  }
 }

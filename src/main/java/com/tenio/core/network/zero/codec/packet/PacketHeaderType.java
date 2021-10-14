@@ -21,47 +21,48 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.zero.codec.packet;
 
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The definition of all packet header types.
+ */
 public enum PacketHeaderType {
 
-	BINARY(1),
+  BINARY(1),
+  BIG_SIZE(4),
+  COMPRESSION(8),
+  ENCRYPTION(16);
 
-	BIG_SIZE(4),
+  // Reverse-lookup map for getting a type from a value
+  private static final Map<Integer, PacketHeaderType> lookup =
+      new HashMap<Integer, PacketHeaderType>();
 
-	COMPRESSION(8),
+  static {
+    for (var type : PacketHeaderType.values()) {
+      lookup.put(type.getValue(), type);
+    }
+  }
 
-	ENCRYPTION(16);
+  private final int value;
 
-	// Reverse-lookup map for getting a type from a value
-	private static final Map<Integer, PacketHeaderType> lookup = new HashMap<Integer, PacketHeaderType>();
+  PacketHeaderType(final int value) {
+    this.value = value;
+  }
 
-	static {
-		for (var type : PacketHeaderType.values()) {
-			lookup.put(type.getValue(), type);
-		}
-	}
+  public static PacketHeaderType getByValue(int value) {
+    return lookup.get(value);
+  }
 
-	private final int __value;
+  public final int getValue() {
+    return value;
+  }
 
-	private PacketHeaderType(final int value) {
-		__value = value;
-	}
-
-	public final int getValue() {
-		return __value;
-	}
-
-	@Override
-	public final String toString() {
-		return name();
-	}
-
-	public static PacketHeaderType getByValue(int value) {
-		return lookup.get(value);
-	}
-
+  @Override
+  public final String toString() {
+    return name();
+  }
 }

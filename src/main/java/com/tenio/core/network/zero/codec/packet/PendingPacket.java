@@ -21,51 +21,54 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.zero.codec.packet;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Holding the pending packet state for the next steps.
+ */
 public final class PendingPacket {
 
-	private PacketHeader __packetHeader;
-	private ByteBuffer __buffer;
-	private int __expectedLength;
+  private PacketHeader packetHeader;
+  private ByteBuffer byteBuffer;
+  private int expectedLength;
 
-	public static PendingPacket newInstance() {
-		return new PendingPacket();
-	}
+  private PendingPacket() {
+  }
 
-	private PendingPacket() {
+  public static PendingPacket newInstance() {
+    return new PendingPacket();
+  }
 
-	}
+  public PacketHeader getPacketHeader() {
+    return packetHeader;
+  }
 
-	public PacketHeader getPacketHeader() {
-		return __packetHeader;
-	}
+  public void setPacketHeader(PacketHeader header) {
+    packetHeader = header;
+  }
 
-	public void setPacketHeader(PacketHeader header) {
-		__packetHeader = header;
-	}
+  public ByteBuffer getBuffer() {
+    return byteBuffer;
+  }
 
-	public ByteBuffer getBuffer() {
-		return __buffer;
-	}
+  public void setBuffer(ByteBuffer buffer) {
+    byteBuffer = buffer;
+  }
 
-	public void setBuffer(ByteBuffer buffer) {
-		__buffer = buffer;
-	}
+  public int getExpectedLength() {
+    return expectedLength;
+  }
 
-	public int getExpectedLength() {
-		return __expectedLength;
-	}
+  public void setExpectedLength(int expectedLength) {
+    this.expectedLength = expectedLength;
+  }
 
-	public void setExpectedLength(int expectedLength) {
-		__expectedLength = expectedLength;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("{ packetHeader: %s, expectedLength: %d }", __packetHeader.toString(), __expectedLength);
-	}
-
+  @Override
+  public String toString() {
+    return String.format("{ packetHeader: %s, expectedLength: %d }", packetHeader.toString(),
+        expectedLength);
+  }
 }

@@ -21,14 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.zero.codec.encryption;
 
 import com.tenio.core.exceptions.PacketEncrypterException;
 
+/**
+ * The APIs designed for encrypting and decrypting packets.
+ */
 public interface BinaryPacketEncrypter {
 
-	byte[] encrypt(byte[] binary) throws PacketEncrypterException;
+  byte[] encrypt(byte[] binary) throws PacketEncrypterException;
 
-	byte[] decrypt(byte[] binary) throws PacketEncrypterException;
-
+  byte[] decrypt(byte[] binary) throws PacketEncrypterException;
 }

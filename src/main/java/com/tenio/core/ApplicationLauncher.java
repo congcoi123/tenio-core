@@ -28,14 +28,19 @@ import com.tenio.common.configuration.constant.CommonConstant;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.Bootstrapper;
 import com.tenio.core.server.ServerImpl;
+import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 
 /**
  * Your application will start from here.
  */
 public final class ApplicationLauncher extends SystemLogger {
 
+  private static final ApplicationLauncher instance = new ApplicationLauncher();
+
   private ApplicationLauncher() {
-    throw new UnsupportedOperationException("This class does not support to create a new instance");
+    if (instance != null) {
+      throw new CommandLine.InitializationException("Could not recreate this class instance");
+    }
   }
 
   public static void run(Class<?> entryClass, String[] params) {
@@ -44,7 +49,7 @@ public final class ApplicationLauncher extends SystemLogger {
   }
 
   private static ApplicationLauncher newInstance() {
-    return new ApplicationLauncher();
+    return instance;
   }
 
   /**

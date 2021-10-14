@@ -21,40 +21,43 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.zero.codec.packet;
 
+/**
+ * Holding the processed packet state for the next steps.
+ */
 public final class ProcessedPacket {
 
-	private PacketReadState __packetReadState;
-	private byte[] __data;
+  private PacketReadState packetReadState;
+  private byte[] binary;
 
-	public static ProcessedPacket newInstance() {
-		return new ProcessedPacket();
-	}
+  private ProcessedPacket() {
+  }
 
-	private ProcessedPacket() {
+  public static ProcessedPacket newInstance() {
+    return new ProcessedPacket();
+  }
 
-	}
+  public byte[] getData() {
+    return binary;
+  }
 
-	public byte[] getData() {
-		return __data;
-	}
+  public void setData(byte[] binary) {
+    this.binary = binary;
+  }
 
-	public void setData(byte[] data) {
-		__data = data;
-	}
+  public PacketReadState getPacketReadState() {
+    return packetReadState;
+  }
 
-	public PacketReadState getPacketReadState() {
-		return __packetReadState;
-	}
+  public void setPacketReadState(PacketReadState packetReadState) {
+    this.packetReadState = packetReadState;
+  }
 
-	public void setPacketReadState(PacketReadState packetReadState) {
-		__packetReadState = packetReadState;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("{ packetReadState: %s, data: bytes[%d] }", __packetReadState.toString(), __data.length);
-	}
-
+  @Override
+  public String toString() {
+    return String.format("{ packetReadState: %s, data: bytes[%d] }", packetReadState.toString(),
+        binary.length);
+  }
 }

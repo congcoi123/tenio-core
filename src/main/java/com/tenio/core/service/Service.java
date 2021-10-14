@@ -21,22 +21,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.service;
 
 import com.tenio.core.exceptions.ServiceRuntimeException;
 
+/**
+ * All supported APIs that is necessary to form a service.
+ */
 public interface Service {
 
-	void initialize() throws ServiceRuntimeException;
+  void initialize() throws ServiceRuntimeException;
 
-	void start() throws ServiceRuntimeException;
+  void start() throws ServiceRuntimeException;
 
-	void shutdown();
+  void shutdown();
 
-	boolean isActivated();
+  boolean isActivated();
 
-	String getName();
+  String getName();
 
-	void setName(String name);
-
+  void setName(String name);
 }

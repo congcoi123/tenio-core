@@ -21,18 +21,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.zero.codec.compression;
 
+/**
+ * The default implementation of the binary packet compressor.
+ *
+ * @see BinaryPacketCompressor
+ */
 public final class DefaultBinaryPacketCompressor implements BinaryPacketCompressor {
 
-	@Override
-	public byte[] compress(byte[] binary) {
-		return binary;
-	}
+  @Override
+  public byte[] compress(byte[] binary) {
+    return binary;
+  }
 
-	@Override
-	public byte[] uncompress(byte[] binary) {
-		return binary;
-	}
-
+  @Override
+  public byte[] uncompress(byte[] binary) {
+    return binary;
+  }
 }

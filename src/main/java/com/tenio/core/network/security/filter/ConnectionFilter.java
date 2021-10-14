@@ -21,24 +21,27 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.security.filter;
 
 import com.tenio.core.exceptions.RefusedConnectionAddressException;
 
+/**
+ * Provides APIs for working with the connection filter.
+ */
 public interface ConnectionFilter {
 
-	void addBannedAddress(String addressIp);
+  void addBannedAddress(String addressIp);
 
-	void removeBannedAddress(String addressIp);
+  void removeBannedAddress(String addressIp);
 
-	String[] getBannedAddresses();
+  String[] getBannedAddresses();
 
-	void validateAndAddAddress(String addressIp) throws RefusedConnectionAddressException;
+  void validateAndAddAddress(String addressIp) throws RefusedConnectionAddressException;
 
-	void removeAddress(String addressIp);
+  void removeAddress(String addressIp);
 
-	int getMaxConnectionsPerIp();
+  int getMaxConnectionsPerIp();
 
-	void setMaxConnectionsPerIp(int maxConnections);
-
+  void setMaxConnectionsPerIp(int maxConnections);
 }

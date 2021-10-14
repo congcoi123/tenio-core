@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core;
 
 import org.junit.platform.runner.JUnitPlatform;
@@ -28,12 +29,8 @@ import org.junit.platform.suite.api.SelectPackages;
 import org.junit.platform.suite.api.SuiteDisplayName;
 import org.junit.runner.RunWith;
 
-/**
- * @author kong
- */
 @RunWith(JUnitPlatform.class)
 @SuiteDisplayName("Test all unit test cases for tenio-core module")
 @SelectPackages("com.tenio")
 public final class TenIOCoreTest {
-
 }

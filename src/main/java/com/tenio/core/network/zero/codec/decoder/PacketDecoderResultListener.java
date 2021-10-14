@@ -21,16 +21,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.zero.codec.decoder;
 
 import com.tenio.core.network.entity.session.Session;
 
+/**
+ * The listener for receives data from the packet decoder.
+ */
 public interface PacketDecoderResultListener {
 
-	void resultFrame(Session session, byte[] binary);
+  void resultFrame(Session session, byte[] binary);
 
-	void updateDroppedPackets(long numberPackets);
+  void updateDroppedPackets(long numberPackets);
 
-	void updateReadPackets(long numberPackets);
-
+  void updateReadPackets(long numberPackets);
 }

@@ -21,64 +21,69 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.network.jetty.servlet.support;
 
+import com.tenio.common.logger.SystemLogger;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Enumeration;
-
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
-
 import org.json.JSONObject;
 
+/**
+ * The base HTTP servlet.
+ */
 public abstract class BaseServlet extends HttpServlet {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -5030886807666928581L;
 
-	protected boolean __hasHeaderKey(HttpServletRequest request, String key) {
-		Enumeration<String> headerNames = request.getHeaderNames();
-		if (headerNames != null) {
-			while (headerNames.hasMoreElements()) {
-				if (headerNames.nextElement().equals(key))
-					return true;
-			}
-		}
-		return false;
-	}
+  private static final long serialVersionUID = -5030886807666928581L;
 
-	protected JSONObject __getBody(HttpServletRequest request) {
-		String body = "{}";
-		if (request.getMethod().equals("POST") || request.getMethod().equals("PUT")
-				|| request.getMethod().equals("DELETE")) {
-			StringBuilder sb = new StringBuilder();
-			BufferedReader bufferedReader = null;
+  private final PrivateLogger logger = new PrivateLogger();
 
-			try {
-				bufferedReader = request.getReader();
-				char[] charBuffer = new char[1024];
-				int bytesRead;
-				while ((bytesRead = bufferedReader.read(charBuffer)) != -1) {
-					sb.append(charBuffer, 0, bytesRead);
-				}
-			} catch (IOException e) {
-				// swallow silently -- can't get body, won't
-				e.printStackTrace();
-			} finally {
-				if (bufferedReader != null) {
-					try {
-						bufferedReader.close();
-					} catch (IOException e) {
-						// swallow silently -- can't get body, won't
-						e.printStackTrace();
-					}
-				}
-			}
-			body = sb.toString();
-		}
-		return new JSONObject(body);
-	}
+  protected boolean hasHeaderKey(HttpServletRequest request, String key) {
+    var headerNames = request.getHeaderNames();
+    if (headerNames != null) {
+      while (headerNames.hasMoreElements()) {
+        if (headerNames.nextElement().equals(key)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 
+  protected JSONObject getBody(HttpServletRequest request) {
+    var body = "{}";
+    if (request.getMethod().equals("POST") || request.getMethod().equals("PUT")
+        || request.getMethod().equals("DELETE")) {
+      var builder = new StringBuilder();
+      BufferedReader bufferedReader = null;
+
+      try {
+        bufferedReader = request.getReader();
+        char[] charBuffer = new char[1024];
+        int bytesRead;
+        while ((bytesRead = bufferedReader.read(charBuffer)) != -1) {
+          builder.append(charBuffer, 0, bytesRead);
+        }
+      } catch (IOException e) {
+        // swallow silently -- can't get body, won't
+        logger.error(e);
+      } finally {
+        if (bufferedReader != null) {
+          try {
+            bufferedReader.close();
+          } catch (IOException e) {
+            // swallow silently -- can't get body, won't
+            logger.error(e);
+          }
+        }
+      }
+      body = builder.toString();
+    }
+    return new JSONObject(body);
+  }
+
+  private final class PrivateLogger extends SystemLogger {
+  }
 }

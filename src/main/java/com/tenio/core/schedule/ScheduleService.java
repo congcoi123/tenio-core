@@ -21,34 +21,37 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 package com.tenio.core.schedule;
 
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
-import com.tenio.core.network.statistics.NetworkReaderStatistic;
-import com.tenio.core.network.statistics.NetworkWriterStatistic;
+import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.service.Service;
 
+/**
+ * All APIs designed to schedule tasks.
+ */
 public interface ScheduleService extends Service {
 
-	void setRemovedRoomScanInterval(int interval);
+  void setRemovedRoomScanInterval(int interval);
 
-	void setDisconnectedPlayerScanInterval(int interval);
+  void setDisconnectedPlayerScanInterval(int interval);
 
-	void setCcuReportInterval(int interval);
+  void setCcuReportInterval(int interval);
 
-	void setDeadlockScanInterval(int interval);
+  void setDeadlockScanInterval(int interval);
 
-	void setTrafficCounterInterval(int interval);
+  void setTrafficCounterInterval(int interval);
 
-	void setSystemMonitoringInterval(int interval);
-	
-	void setPlayerManager(PlayerManager playerManager);
+  void setSystemMonitoringInterval(int interval);
 
-	void setRoomManager(RoomManager roomManager);
+  void setPlayerManager(PlayerManager playerManager);
 
-	void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic);
+  void setRoomManager(RoomManager roomManager);
 
-	void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic);
+  void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic);
 
+  void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic);
 }
