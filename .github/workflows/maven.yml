@@ -23,7 +23,7 @@ jobs:
         distribution: 'adopt'
         cache: maven
     - name: Run all unit test cases and verify the GPG key
-      run: mvn clean verify -Dgpg.skip=true
+      run: mvn clean verify -Dgpg.skip=true -Dmaven.javadoc.skip=true
     - name: Generate the test report
       run: mvn jacoco:report
     - name: Get the token decrypted by travis, and call coveralls-plugin to upload the report
