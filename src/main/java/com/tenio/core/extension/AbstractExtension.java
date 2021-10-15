@@ -44,22 +44,47 @@ public abstract class AbstractExtension extends AbstractLogger {
 
   private final Server server = ServerImpl.getInstance();
 
+  /**
+   * Retrieves the api object.
+   *
+   * @return the api object.
+   */
   public final ServerApi api() {
     return server.getApi();
   }
 
+  /**
+   * Retrieves the response object.
+   *
+   * @return the response object
+   */
   public final Response response() {
     return ResponseImpl.newInstance();
   }
 
+  /**
+   * Retrieves the zero array.
+   *
+   * @return the zero array
+   */
   public final ZeroArray array() {
     return ZeroArrayImpl.newInstance();
   }
 
+  /**
+   * Retrieves the zero object.
+   *
+   * @return the zero object
+   */
   public final ZeroObject object() {
     return ZeroObjectImpl.newInstance();
   }
 
+  /**
+   * Retrieves the initialized room setting.
+   *
+   * @return the initialized room setting
+   */
   public InitialRoomSetting.Builder roomSetting() {
     return InitialRoomSetting.Builder.newInstance();
   }

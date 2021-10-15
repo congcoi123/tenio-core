@@ -36,17 +36,55 @@ import java.util.concurrent.BlockingQueue;
  */
 public interface WriterHandler {
 
+  /**
+   * Send a packet to a session.
+   *
+   * @param packetQueue the packet queue
+   * @param session     the session
+   * @param packet      the packet
+   */
   void send(PacketQueue packetQueue, Session session, Packet packet);
 
+  /**
+   * Retrieves the blocking queue of sessions.
+   *
+   * @return the blocking queue
+   */
   BlockingQueue<Session> getSessionTicketsQueue();
 
+  /**
+   * Set the blocking queue of sessions.
+   *
+   * @param sessionTicketsQueue the blocking queue
+   */
   void setSessionTicketsQueue(BlockingQueue<Session> sessionTicketsQueue);
 
+  /**
+   * Retrieves the network writer statistic.
+   *
+   * @return the network writer statistic object
+   */
   NetworkWriterStatistic getNetworkWriterStatistic();
 
+  /**
+   * Set the network writer statistic object.
+   *
+   * @param networkWriterStatistic the network writer statistic object
+   */
   void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic);
 
+  /**
+   * Retrieves the byte buffer.
+   *
+   * @return the byte buffer
+   */
   ByteBuffer getBuffer();
 
+  /**
+   * a
+   * Allocates a byte buffer.
+   *
+   * @param capacity the capacity
+   */
   void allocateBuffer(int capacity);
 }

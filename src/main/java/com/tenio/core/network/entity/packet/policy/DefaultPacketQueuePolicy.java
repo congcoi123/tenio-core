@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.packet.policy;
 
-import com.tenio.core.exceptions.PacketQueuePolicyViolationException;
+import com.tenio.core.exception.PacketQueuePolicyViolationException;
 import com.tenio.core.network.define.ResponsePriority;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;

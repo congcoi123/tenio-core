@@ -43,6 +43,12 @@ public final class ApplicationLauncher extends SystemLogger {
     }
   }
 
+  /**
+   * Run the application.
+   *
+   * @param entryClass the root class
+   * @param params     the parameters
+   */
   public static void run(Class<?> entryClass, String[] params) {
     var application = ApplicationLauncher.newInstance();
     application.start(entryClass, params);
@@ -54,6 +60,9 @@ public final class ApplicationLauncher extends SystemLogger {
 
   /**
    * Start The Game Server With DI.
+   *
+   * @param entryClass the root class
+   * @param params     the parameters
    */
   public void start(Class<?> entryClass, String[] params) {
     Bootstrapper bootstrap = null;

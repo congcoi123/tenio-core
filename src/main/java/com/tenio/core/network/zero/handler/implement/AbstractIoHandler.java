@@ -34,17 +34,33 @@ import com.tenio.core.network.statistic.NetworkReaderStatistic;
  */
 public abstract class AbstractIoHandler extends AbstractManager {
 
+  /**
+   * The session manager.
+   */
   protected SessionManager sessionManager;
+  /**
+   * The network reader statistic.
+   */
   protected NetworkReaderStatistic networkReaderStatistic;
 
   protected AbstractIoHandler(EventManager eventManager) {
     super(eventManager);
   }
 
+  /**
+   * Set the session manager.
+   *
+   * @param sessionManager the session manager
+   */
   public void setSessionManager(SessionManager sessionManager) {
     this.sessionManager = sessionManager;
   }
 
+  /**
+   * Set the network reader statistic.
+   *
+   * @param networkReaderStatistic the network reader statistic
+   */
   public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
     this.networkReaderStatistic = networkReaderStatistic;
   }

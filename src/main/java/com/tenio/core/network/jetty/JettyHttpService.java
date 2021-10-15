@@ -26,8 +26,8 @@ package com.tenio.core.network.jetty;
 
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exceptions.DuplicatedUriAndMethodException;
-import com.tenio.core.exceptions.ServiceRuntimeException;
+import com.tenio.core.exception.DuplicatedUriAndMethodException;
+import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.define.RestMethod;
 import com.tenio.core.network.define.data.PathConfig;

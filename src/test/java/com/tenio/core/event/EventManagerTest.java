@@ -34,7 +34,7 @@ import com.tenio.core.entity.implement.PlayerImpl;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.implement.PlayerManagerImpl;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exceptions.AddedDuplicatedPlayerException;
+import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

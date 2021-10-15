@@ -59,7 +59,7 @@ public interface NetworkService extends Service {
 
   void setWebSocketReceiverBufferSize(int bufferSize);
 
-  void setWebSocketUsingSsl(boolean usingSSL);
+  void setWebSocketUsingSsl(boolean usingSsl);
 
   void setSocketAcceptorWorkers(int workerSize);
 

@@ -29,9 +29,21 @@ package com.tenio.core.entity.define.result;
  */
 public enum AttachedConnectionResult {
 
+  /**
+   * Success.
+   */
   SUCCESS,
+  /**
+   * When the player was not found.
+   */
   PLAYER_NOT_FOUND,
+  /**
+   * When the session was not found.
+   */
   SESSION_NOT_FOUND,
+  /**
+   * When the session protocol is invalid.
+   */
   INVALID_SESSION_PROTOCOL;
 
   @Override

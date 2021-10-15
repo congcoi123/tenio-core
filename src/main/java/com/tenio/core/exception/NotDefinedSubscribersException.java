@@ -22,18 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
-
-import com.tenio.core.entity.Room;
+package com.tenio.core.exception;
 
 /**
- * When you try to add a room which existed in the server.
+ * When you miss defining the subscriber for a declared event.
  */
-public final class AddedDuplicatedRoomException extends RuntimeException {
+public final class NotDefinedSubscribersException extends RuntimeException {
 
-  private static final long serialVersionUID = -5330961754908231570L;
+  private static final long serialVersionUID = 4569867192216119437L;
 
-  public AddedDuplicatedRoomException(Room room) {
-    super(String.format("Unable to add room: %s, it already exists", room.toString()));
+  public NotDefinedSubscribersException(Class<?>... classes) {
+    super(getMessage(classes));
+  }
+
+  private static String getMessage(Class<?>... classes) {
+    var builder = new StringBuilder();
+    builder.append("Need to implement interfaces: ");
+    for (var clazz : classes) {
+      builder.append(clazz.getName());
+      builder.append(", ");
+    }
+    builder.setLength(builder.length() - 2);
+    return builder.toString();
   }
 }

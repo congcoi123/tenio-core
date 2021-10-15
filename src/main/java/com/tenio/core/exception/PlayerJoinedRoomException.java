@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
+package com.tenio.core.exception;
 
 import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 

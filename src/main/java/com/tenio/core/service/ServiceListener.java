@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.service;
 
-import com.tenio.core.exceptions.ServiceRuntimeException;
+import com.tenio.core.exception.ServiceRuntimeException;
 
 /**
  * The service listener.

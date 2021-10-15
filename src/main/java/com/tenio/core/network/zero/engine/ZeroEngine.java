@@ -35,23 +35,73 @@ import com.tenio.core.service.ServiceListener;
  */
 public interface ZeroEngine extends Service, ServiceListener {
 
+  /**
+   * Retrieves the socket IO handler.
+   *
+   * @return the socket IO handler
+   */
   SocketIoHandler getSocketIoHandler();
 
+  /**
+   * Set the socket IO handler.
+   *
+   * @param socketIoHandler the socket IO handler
+   */
   void setSocketIoHandler(SocketIoHandler socketIoHandler);
 
+  /**
+   * Retrieves the datagram IO handler.
+   *
+   * @return the datagram IO handler
+   */
   DatagramIoHandler getDatagramIoHandler();
 
+  /**
+   * Set the datagram IO handler.
+   *
+   * @param datagramIoHandler the datagram IO handler
+   */
   void setDatagramIoHandler(DatagramIoHandler datagramIoHandler);
 
+  /**
+   * Retrieves the session manager.
+   *
+   * @return the session manager
+   */
   SessionManager getSessionManager();
 
+  /**
+   * Set the session manager.
+   *
+   * @param sessionManager the session manager
+   */
   void setSessionManager(SessionManager sessionManager);
 
+  /**
+   * Retrieves the thread pool size.
+   *
+   * @return the thread pool size
+   */
   int getThreadPoolSize();
 
+  /**
+   * Set the thread pool size.
+   *
+   * @param maxSize the thread pool size
+   */
   void setThreadPoolSize(int maxSize);
 
+  /**
+   * Retrieves the max buffer size.
+   *
+   * @return the max buffer size
+   */
   int getMaxBufferSize();
 
+  /**
+   * Set the max buffer size.
+   *
+   * @param maxSize the max buffer size
+   */
   void setMaxBufferSize(int maxSize);
 }

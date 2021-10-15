@@ -49,6 +49,11 @@ public final class AutoDisconnectPlayerTask extends AbstractTask {
     return null;
   }
 
+  /**
+   * Set the player manager.
+   *
+   * @param playerManager the player manager
+   */
   public void setPlayerManager(PlayerManager playerManager) {
   }
 }

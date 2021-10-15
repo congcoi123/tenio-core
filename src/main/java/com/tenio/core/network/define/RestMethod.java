@@ -31,21 +31,10 @@ import java.util.Map;
  * Definition for all supported REST methods.
  */
 public enum RestMethod {
-  /**
-   * Create
-   */
+
   POST("post"),
-  /**
-   * Update
-   */
   PUT("put"),
-  /**
-   * Retrieve
-   */
   GET("get"),
-  /**
-   * Delete
-   */
   DELETE("delete");
 
   // Reverse-lookup map for getting a type from a value

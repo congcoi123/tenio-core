@@ -22,28 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
-
-import com.tenio.core.network.define.RestMethod;
-import com.tenio.core.network.define.data.PathConfig;
-import java.util.List;
+package com.tenio.core.exception;
 
 /**
- * When you try to define an existing Uri method in the HTTP server.
+ * Something went wrong with the running service.
  */
-public final class DuplicatedUriAndMethodException extends RuntimeException {
+public final class ServiceRuntimeException extends RuntimeException {
 
-  private static final long serialVersionUID = -5226506274080400540L;
+  private static final long serialVersionUID = 998770370227398281L;
 
-  /**
-   * Initialization.
-   *
-   * @param method      the rest method
-   * @param pathConfigs the path configuration
-   */
-  public DuplicatedUriAndMethodException(RestMethod method, List<PathConfig> pathConfigs) {
-    super(String.format("Duplicated REST method: %s, with the list of configurations: %s",
-        method.toString(),
-        pathConfigs.toString()));
+  public ServiceRuntimeException(String message) {
+    super(message);
   }
 }

@@ -22,16 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
+package com.tenio.core.exception;
 
 /**
- * When a refused connection try to connect to the server.
+ * When something went wrong with the packet encryption.
  */
-public final class RefusedConnectionAddressException extends RuntimeException {
+public final class PacketEncrypterException extends RuntimeException {
 
-  private static final long serialVersionUID = -1063120976899708365L;
+  private static final long serialVersionUID = -4260223574425695248L;
 
-  public RefusedConnectionAddressException(String reason, String address) {
-    super(String.format("%s : %s", reason, address));
+  public PacketEncrypterException(String message) {
+    super(message);
   }
 }

@@ -33,19 +33,6 @@ import java.nio.charset.Charset;
 
 /**
  * For logging the OS system information.
- *
- * <h1>Operation System</h1>
- * <ul>
- * <li>Name</li>
- * <li>Version</li>
- * <li>Architecture</li>
- * </ul>
- * <h1>Disk</h1>
- * <ul>
- * <li>Total Space</li>
- * <li>Usable Space</li>
- * <li>Free Space</li>
- * </ul>
  */
 public final class SystemInfo extends SystemLogger {
 

@@ -35,14 +35,30 @@ public abstract class AbstractTask extends SystemLogger implements Task {
 
   private static final int DEFAULT_INTERVAL_IN_SECONDS = 60;
 
+  /**
+   * The event manager.
+   */
   protected EventManager eventManager;
+  /**
+   * The interval value.
+   */
   protected int interval;
 
+  /**
+   * Initialization.
+   *
+   * @param eventManager the event manager
+   */
   protected AbstractTask(EventManager eventManager) {
     this.eventManager = eventManager;
     interval = DEFAULT_INTERVAL_IN_SECONDS;
   }
 
+  /**
+   * Set the interval.
+   *
+   * @param interval the value
+   */
   public void setInterval(int interval) {
     this.interval = interval;
   }

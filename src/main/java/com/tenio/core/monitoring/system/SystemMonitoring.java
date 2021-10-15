@@ -32,17 +32,6 @@ import javax.annotation.concurrent.ThreadSafe;
 /**
  * For showing the system information.
  *
- * <h1>CPU</h1>
- * <ul>
- * <li>Usage</li>
- * </ul>
- * <h1>Memory</h1>
- * <ul>
- * <li>Total</li>
- * <li>Used</li>
- * <li>Free</li>
- * </ul>
- *
  * @see <a href="https://i.stack.imgur.com/GjuwM.png">Explained Image</a>
  */
 @ThreadSafe

@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.codec.compression;
 
-import com.tenio.core.exceptions.PacketCompressorException;
+import com.tenio.core.exception.PacketCompressorException;
 
 /**
  * The APIs designed for compressing binary packets.

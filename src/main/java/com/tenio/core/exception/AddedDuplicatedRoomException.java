@@ -22,39 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
+package com.tenio.core.exception;
 
 import com.tenio.core.entity.Room;
 
 /**
- * When you try to eliminate a non-existing player from a room.
+ * When you try to add a room which existed in the server.
  */
-public final class RemovedNonExistentPlayerFromRoomException extends RuntimeException {
+public final class AddedDuplicatedRoomException extends RuntimeException {
 
-  private static final long serialVersionUID = -7604852583321561090L;
-
-  /**
-   * Initialization.
-   *
-   * @param playerIdentity the player's identity
-   * @param room           the room
-   */
-  public RemovedNonExistentPlayerFromRoomException(Object playerIdentity, Room room) {
-    super(room == null
-        ? String.format("Unable to remove player: %s, the player did not exist",
-        playerIdentity.toString())
-        : String.format("Unable to remove player: %s, the player did not exist in room: %s",
-        playerIdentity, room.getName()));
-  }
+  private static final long serialVersionUID = -5330961754908231570L;
 
   /**
-   * Initialization.
+   * When you try to add a room which existed in the server.
    *
-   * @param room the room
+   * @param room the target room
    */
-  public RemovedNonExistentPlayerFromRoomException(Room room) {
-    super(room == null ? "Unable to remove player, the player did not exist"
-        : String.format("Unable to remove player, the player did not exist in room: %s",
-        room.getName()));
+  public AddedDuplicatedRoomException(Room room) {
+    super(String.format("Unable to add room: %s, it already exists", room.toString()));
   }
 }

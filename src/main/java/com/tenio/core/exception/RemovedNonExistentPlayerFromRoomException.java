@@ -22,25 +22,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
+package com.tenio.core.exception;
 
-import com.tenio.core.entity.define.result.SwitchedPlayerSpectatorResult;
+import com.tenio.core.entity.Room;
 
 /**
- * When a player try to change its role to a spectator and vice versa.
+ * When you try to eliminate a non-existing player from a room.
  */
-public final class SwitchedPlayerSpectatorException extends RuntimeException {
+public final class RemovedNonExistentPlayerFromRoomException extends RuntimeException {
 
-  private static final long serialVersionUID = 8858056991799548907L;
+  private static final long serialVersionUID = -7604852583321561090L;
 
-  private final SwitchedPlayerSpectatorResult result;
-
-  public SwitchedPlayerSpectatorException(String message, SwitchedPlayerSpectatorResult result) {
-    super(message);
-    this.result = result;
+  /**
+   * Initialization.
+   *
+   * @param playerIdentity the player's identity
+   * @param room           the room
+   */
+  public RemovedNonExistentPlayerFromRoomException(Object playerIdentity, Room room) {
+    super(room == null
+        ? String.format("Unable to remove player: %s, the player did not exist",
+        playerIdentity.toString())
+        : String.format("Unable to remove player: %s, the player did not exist in room: %s",
+        playerIdentity, room.getName()));
   }
 
-  public SwitchedPlayerSpectatorResult getResult() {
-    return result;
+  /**
+   * Initialization.
+   *
+   * @param room the room
+   */
+  public RemovedNonExistentPlayerFromRoomException(Room room) {
+    super(room == null ? "Unable to remove player, the player did not exist"
+        : String.format("Unable to remove player, the player did not exist in room: %s",
+        room.getName()));
   }
 }

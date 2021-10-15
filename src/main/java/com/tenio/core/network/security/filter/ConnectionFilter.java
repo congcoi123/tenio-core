@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.security.filter;
 
-import com.tenio.core.exceptions.RefusedConnectionAddressException;
+import com.tenio.core.exception.RefusedConnectionAddressException;
 
 /**
  * Provides APIs for working with the connection filter.

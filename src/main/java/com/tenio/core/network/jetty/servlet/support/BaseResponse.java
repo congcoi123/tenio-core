@@ -25,7 +25,6 @@ THE SOFTWARE.
 package com.tenio.core.network.jetty.servlet.support;
 
 import com.tenio.common.logger.AbstractLogger;
-import java.util.Enumeration;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
@@ -42,9 +41,9 @@ public abstract class BaseResponse extends AbstractLogger {
     var headerNames = request.getHeaderNames();
     if (headerNames != null) {
       while (headerNames.hasMoreElements()) {
-		  if (headerNames.nextElement().equals(key)) {
-			  return true;
-		  }
+        if (headerNames.nextElement().equals(key)) {
+          return true;
+        }
       }
     }
     return false;

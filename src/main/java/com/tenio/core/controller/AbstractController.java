@@ -26,7 +26,7 @@ package com.tenio.core.controller;
 
 import com.tenio.common.utility.StringUtility;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exceptions.RequestQueueFullException;
+import com.tenio.core.exception.RequestQueueFullException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entity.protocol.Request;
 import java.util.concurrent.BlockingQueue;
@@ -56,6 +56,11 @@ public abstract class AbstractController extends AbstractManager implements Cont
   private boolean initialized;
   private volatile boolean activated;
 
+  /**
+   * Initialization.
+   *
+   * @param eventManager the event manager
+   */
   protected AbstractController(EventManager eventManager) {
     super(eventManager);
 
@@ -218,7 +223,15 @@ public abstract class AbstractController extends AbstractManager implements Cont
         (float) (requestQueue.size() * 100) / (float) maxQueueSize;
   }
 
+  /**
+   * Subscribe.
+   */
   public abstract void subscribe();
 
+  /**
+   * Processes a request.
+   *
+   * @param request the processing request
+   */
   public abstract void processRequest(Request request);
 }

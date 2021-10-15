@@ -22,16 +22,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
+package com.tenio.core.exception;
+
+import com.tenio.core.entity.define.result.RoomCreatedResult;
 
 /**
- * When something went wrong with your configured file.
+ * When you try to create a room and something went wrong.
  */
-public final class ConfigurationException extends RuntimeException {
+public final class CreatedRoomException extends RuntimeException {
 
-  private static final long serialVersionUID = -713303423920650936L;
+  private static final long serialVersionUID = 1641350947646134751L;
 
-  public ConfigurationException(String message) {
+  private final RoomCreatedResult result;
+
+  public CreatedRoomException(String message, RoomCreatedResult result) {
     super(message);
+    this.result = result;
+  }
+
+  public RoomCreatedResult getResult() {
+    return result;
   }
 }

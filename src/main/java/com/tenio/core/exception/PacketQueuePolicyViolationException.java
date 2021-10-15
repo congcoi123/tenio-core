@@ -22,28 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
+package com.tenio.core.exception;
 
-import com.tenio.core.entity.Player;
-import com.tenio.core.entity.Room;
+import com.tenio.core.network.entity.packet.Packet;
 
 /**
- * When you try to add a player who existed into the room.
+ * When the packet queue policy is violated.
  */
-public final class AddedDuplicatedPlayerException extends RuntimeException {
+public final class PacketQueuePolicyViolationException extends RuntimeException {
 
-  private static final long serialVersionUID = 1303721781114060707L;
+  private static final long serialVersionUID = -1620230030870946508L;
 
-  /**
-   * Initialization.
-   *
-   * @param player the player try to join the room
-   * @param room   the target room
-   */
-  public AddedDuplicatedPlayerException(Player player, Room room) {
-    super(room == null
-        ? String.format("Unable to add player: %s, it already exists", player.getName())
-        : String.format("Unable to add player: %s, it already exists in room: %s", player.getName(),
-        room.getName()));
+  public PacketQueuePolicyViolationException(Packet packet, float percentageUsed) {
+    super(String.format("Dropped packet: [%s], current packet queue usage: %f%%", packet.toString(),
+        percentageUsed));
   }
 }

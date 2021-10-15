@@ -22,25 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
+package com.tenio.core.exception;
 
-import com.tenio.core.entity.define.result.RoomCreatedResult;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.Room;
 
 /**
- * When you try to create a room and something went wrong.
+ * When you try to add a player who existed into the room.
  */
-public final class CreatedRoomException extends RuntimeException {
+public final class AddedDuplicatedPlayerException extends RuntimeException {
 
-  private static final long serialVersionUID = 1641350947646134751L;
+  private static final long serialVersionUID = 1303721781114060707L;
 
-  private final RoomCreatedResult result;
-
-  public CreatedRoomException(String message, RoomCreatedResult result) {
-    super(message);
-    this.result = result;
-  }
-
-  public RoomCreatedResult getResult() {
-    return result;
+  /**
+   * Initialization.
+   *
+   * @param player the player try to join the room
+   * @param room   the target room
+   */
+  public AddedDuplicatedPlayerException(Player player, Room room) {
+    super(room == null
+        ? String.format("Unable to add player: %s, it already exists", player.getName())
+        : String.format("Unable to add player: %s, it already exists in room: %s", player.getName(),
+        room.getName()));
   }
 }

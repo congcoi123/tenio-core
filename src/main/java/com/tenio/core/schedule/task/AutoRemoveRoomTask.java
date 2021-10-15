@@ -48,6 +48,11 @@ public final class AutoRemoveRoomTask extends AbstractTask {
     return null;
   }
 
+  /**
+   * Set the room manager.
+   *
+   * @param roomManager the room manager
+   */
   public void setRoomManager(RoomManager roomManager) {
   }
 }

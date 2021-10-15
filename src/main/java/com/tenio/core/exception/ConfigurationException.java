@@ -22,17 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
+package com.tenio.core.exception;
 
 /**
- * When the request queue is full.
+ * When something went wrong with your configured file.
  */
-public final class RequestQueueFullException extends RuntimeException {
+public final class ConfigurationException extends RuntimeException {
 
-  private static final long serialVersionUID = 6981972099759381035L;
+  private static final long serialVersionUID = -713303423920650936L;
 
-  public RequestQueueFullException(int currentSize) {
-    super(String.format("Reached max queue size, the request was dropped. The current size: %d",
-        currentSize));
+  public ConfigurationException(String message) {
+    super(message);
   }
 }

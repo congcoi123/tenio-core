@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.security.filter;
 
-import com.tenio.core.exceptions.RefusedConnectionAddressException;
+import com.tenio.core.exception.RefusedConnectionAddressException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

@@ -43,5 +43,11 @@ public abstract class BaseProcessServlet extends AbstractLogger implements Servl
     handleImpl(request, response);
   }
 
+  /**
+   * Implements handling.
+   *
+   * @param request  the request
+   * @param response the response
+   */
   protected abstract void handleImpl(HttpServletRequest request, HttpServletResponse response);
 }

@@ -22,17 +22,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
+package com.tenio.core.exception;
+
+import com.tenio.core.entity.define.result.SwitchedPlayerSpectatorResult;
 
 /**
- * When the packet queue is full.
+ * When a player try to change its role to a spectator and vice versa.
  */
-public final class PacketQueueFullException extends RuntimeException {
+public final class SwitchedPlayerSpectatorException extends RuntimeException {
 
-  private static final long serialVersionUID = -2526342485508899328L;
+  private static final long serialVersionUID = 8858056991799548907L;
 
-  public PacketQueueFullException(int currentSize) {
-    super(String.format("Reached max queue size, the packet was dropped. The current size: %d",
-        currentSize));
+  private final SwitchedPlayerSpectatorResult result;
+
+  public SwitchedPlayerSpectatorException(String message, SwitchedPlayerSpectatorResult result) {
+    super(message);
+    this.result = result;
+  }
+
+  public SwitchedPlayerSpectatorResult getResult() {
+    return result;
   }
 }

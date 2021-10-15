@@ -25,8 +25,8 @@ THE SOFTWARE.
 package com.tenio.core.network.zero.engine.implement;
 
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exceptions.PacketQueueFullException;
-import com.tenio.core.exceptions.PacketQueuePolicyViolationException;
+import com.tenio.core.exception.PacketQueueFullException;
+import com.tenio.core.exception.PacketQueuePolicyViolationException;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;

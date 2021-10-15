@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.codec.encryption;
 
-import com.tenio.core.exceptions.PacketEncrypterException;
+import com.tenio.core.exception.PacketEncrypterException;
 
 /**
  * The APIs designed for encrypting and decrypting packets.

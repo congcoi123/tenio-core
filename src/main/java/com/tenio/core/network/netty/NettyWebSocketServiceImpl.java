@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.network.netty;
 
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exceptions.ServiceRuntimeException;
+import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.define.data.SocketConfig;
 import com.tenio.core.network.entity.packet.Packet;

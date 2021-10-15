@@ -32,7 +32,17 @@ import com.tenio.core.network.statistic.NetworkReaderStatistic;
  */
 public interface BaseIoHandler {
 
+  /**
+   * Set session manager.
+   *
+   * @param sessionManager the session manager
+   */
   void setSessionManager(SessionManager sessionManager);
 
+  /**
+   * Set the network reader statistic object.
+   *
+   * @param networkReaderStatistic the network reader statistic object
+   */
   void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic);
 }

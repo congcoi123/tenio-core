@@ -22,16 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
+package com.tenio.core.exception;
 
 /**
- * When something went wrong with the packet encryption.
+ * When something went wrong with the packet compression.
  */
-public final class PacketEncrypterException extends RuntimeException {
+public final class PacketCompressorException extends RuntimeException {
 
-  private static final long serialVersionUID = -4260223574425695248L;
+  private static final long serialVersionUID = 4134024704906630426L;
 
-  public PacketEncrypterException(String message) {
+  public PacketCompressorException(String message) {
     super(message);
   }
 }

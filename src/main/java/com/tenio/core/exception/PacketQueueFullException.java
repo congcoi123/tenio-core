@@ -22,19 +22,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exceptions;
-
-import com.tenio.core.network.entity.packet.Packet;
+package com.tenio.core.exception;
 
 /**
- * When the packet queue policy is violated.
+ * When the packet queue is full.
  */
-public final class PacketQueuePolicyViolationException extends RuntimeException {
+public final class PacketQueueFullException extends RuntimeException {
 
-  private static final long serialVersionUID = -1620230030870946508L;
+  private static final long serialVersionUID = -2526342485508899328L;
 
-  public PacketQueuePolicyViolationException(Packet packet, float percentageUsed) {
-    super(String.format("Dropped packet: [%s], current packet queue usage: %f%%", packet.toString(),
-        percentageUsed));
+  public PacketQueueFullException(int currentSize) {
+    super(String.format("Reached max queue size, the packet was dropped. The current size: %d",
+        currentSize));
   }
 }

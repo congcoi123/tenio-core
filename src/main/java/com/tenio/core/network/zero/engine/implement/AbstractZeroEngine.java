@@ -26,7 +26,7 @@ package com.tenio.core.network.zero.engine.implement;
 
 import com.tenio.common.utility.StringUtility;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exceptions.ServiceRuntimeException;
+import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entity.session.SessionManager;
 import com.tenio.core.network.zero.engine.ZeroEngine;
@@ -57,6 +57,11 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
 
   private volatile boolean activated;
 
+  /**
+   * Initialization.
+   *
+   * @param eventManager the event manger
+   */
   protected AbstractZeroEngine(EventManager eventManager) {
     super(eventManager);
 

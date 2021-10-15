@@ -24,22 +24,50 @@ THE SOFTWARE.
 
 package com.tenio.core.service;
 
-import com.tenio.core.exceptions.ServiceRuntimeException;
+import com.tenio.core.exception.ServiceRuntimeException;
 
 /**
  * All supported APIs that is necessary to form a service.
  */
 public interface Service {
 
+  /**
+   * Initializes a new service.
+   *
+   * @throws ServiceRuntimeException when something went wrong
+   */
   void initialize() throws ServiceRuntimeException;
 
+  /**
+   * Start the service.
+   *
+   * @throws ServiceRuntimeException when something went wrong
+   */
   void start() throws ServiceRuntimeException;
 
+  /**
+   * Shutdown the service.
+   */
   void shutdown();
 
+  /**
+   * Determines whether the service is activated.
+   *
+   * @return <b>true</b> if the service is activated, <b>false</b> otherwise
+   */
   boolean isActivated();
 
+  /**
+   * Retrieves the service's name.
+   *
+   * @return the service's name
+   */
   String getName();
 
+  /**
+   * Set the service's name.
+   *
+   * @param name the service's name
+   */
   void setName(String name);
 }
