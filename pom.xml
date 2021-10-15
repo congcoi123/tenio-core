@@ -223,6 +223,7 @@
                 <!-- for java 11 compatible -->
                 <configuration>
                     <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+                    <doclint>all,-missing</doclint>
                 </configuration>
             </plugin>
             <!-- Sign artifacts for uploading to maven central -->
