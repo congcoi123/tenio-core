@@ -45,6 +45,7 @@ This module provides all the main features for the framework to operate. It cont
 - jetty 9.4.38.v20210224
 - servlet 2.5
 - org.json 20210307
+- tenio-common 0.0.1
 ```
 
 ## Requirements

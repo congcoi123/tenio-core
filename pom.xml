@@ -212,8 +212,14 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>${maven.javadoc.plugin.version}</version>
                 <!-- for java 8 compatible -->
-                <!-- <executions> <execution> <id>attach-javadocs</id> <goals> <goal>jar</goal>
-                    </goals> </execution> </executions> -->
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <!-- for java 11 compatible -->
                 <configuration>
                     <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
