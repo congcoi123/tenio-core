@@ -36,6 +36,9 @@ import com.tenio.core.network.zero.engine.listener.ZeroAcceptorListener;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketOption;
+import java.net.SocketOptions;
+import java.net.StandardSocketOptions;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
@@ -103,8 +106,8 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     try {
       var serverSocketChannel = ServerSocketChannel.open();
       serverSocketChannel.configureBlocking(false);
+      serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
       serverSocketChannel.socket().bind(new InetSocketAddress(serverAddress, port));
-      serverSocketChannel.socket().setReuseAddress(true);
       // only server socket should interest in this key OP_ACCEPT
       serverSocketChannel.register(acceptableSelector, SelectionKey.OP_ACCEPT);
       synchronized (boundSockets) {
@@ -120,9 +123,10 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   private void bindUdpSocket(int port) throws ServiceRuntimeException {
     try {
       var datagramChannel = DatagramChannel.open();
-      datagramChannel.socket().bind(new InetSocketAddress(serverAddress, port));
-      datagramChannel.socket().setReuseAddress(true);
       datagramChannel.configureBlocking(false);
+      datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
+      datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
+      datagramChannel.socket().bind(new InetSocketAddress(serverAddress, port));
       // udp datagram is a connectionless protocol, we don't need to create
       // bi-direction connection, that why it's not necessary to register it to
       // acceptable selector. Just leave it to the reader selector later
