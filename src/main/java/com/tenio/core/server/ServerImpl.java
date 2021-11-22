@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.server;
 
 import com.tenio.common.configuration.Configuration;
-import com.tenio.common.configuration.constant.Trademark;
+import com.tenio.common.constant.Trademark;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.api.ServerApiImpl;

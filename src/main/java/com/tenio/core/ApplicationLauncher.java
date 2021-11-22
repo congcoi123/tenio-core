@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core;
 
-import com.tenio.common.configuration.constant.CommonConstant;
+import com.tenio.common.constant.CommonConstant;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.Bootstrapper;
 import com.tenio.core.server.ServerImpl;
