@@ -37,7 +37,6 @@ import java.util.Collection;
 
 /**
  * This class provides all supported APIs from the server.
- * To use these methods, please use the singleton type instance of this interface.
  *
  * @see ServerApiImpl
  */
@@ -47,16 +46,17 @@ public interface ServerApi {
 
   void login(String playerName, Session session);
 
+// TODO: Escapse references - ReadonlyPlayer?
   void logout(Player player);
 
   default void kickPlayer(Player player, String message, int delayInSeconds) {
-    throw new UnsupportedOperationException("Not support at the moment");
+    throw new UnsupportedOperationException("Unsupported at the moment");
   }
 
   default void banPlayer(Player player, String message, PlayerBanMode banMode,
                          int durationInMinutes,
                          int delayInSeconds) {
-    throw new UnsupportedOperationException("Not support at the moment");
+    throw new UnsupportedOperationException("Unsupported at the moment");
   }
 
   default Room createRoom(InitialRoomSetting setting) {
@@ -82,11 +82,11 @@ public interface ServerApi {
   }
 
   default void switchPlayerToSpectator(Player player, Room room) {
-    throw new UnsupportedOperationException("Not support at the moment");
+    throw new UnsupportedOperationException("Unsupported at the moment");
   }
 
   default void switchSpectatorToPlayer(Player player, Room room, int targetSlot) {
-    throw new UnsupportedOperationException("Not support at the moment");
+    throw new UnsupportedOperationException("Unsupported at the moment");
   }
 
   void leaveRoom(Player player, PlayerLeaveRoomMode leaveRoomMode);
@@ -94,10 +94,10 @@ public interface ServerApi {
   void removeRoom(Room room, RoomRemoveMode removeRoomMode);
 
   default void sendPublicMessage(Player sender, Room room, ServerMessage message) {
-    throw new UnsupportedOperationException("Not support at the moment");
+    throw new UnsupportedOperationException("Unsupported at the moment");
   }
 
   default void sendPrivateMessage(Player sender, Player recipient, ServerMessage message) {
-    throw new UnsupportedOperationException("Not support at the moment");
+    throw new UnsupportedOperationException("Unsupported at the moment");
   }
 }
