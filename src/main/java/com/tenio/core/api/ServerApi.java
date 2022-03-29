@@ -176,22 +176,65 @@ public interface ServerApi {
     joinRoom(player, room, null, RoomImpl.DEFAULT_SLOT, false);
   }
 
+/**
+* Changes the role of a player in its room, from player to spectator.
+*
+* @param player the working {@link Player}
+* @param room the player's {@link Room}
+* @throws UnsupportedOperationException this method is not supported at the moment
+*/
   default void switchPlayerToSpectator(Player player, Room room) {
     throw new UnsupportedOperationException("Unsupported at the moment");
   }
 
+/**
+* Changes the role of a player in its room, from spectator to player.
+*
+* @param player the working spectator ({@link Player})
+* @param room the spectator's {@link Room}
+* @param targetSlot the new position of transformed player in its room
+* @throws UnsupportedOperationException this method is not supported at the moment
+*/
   default void switchSpectatorToPlayer(Player player, Room room, int targetSlot) {
     throw new UnsupportedOperationException("Unsupported at the moment");
   }
 
+/**
+* Makes a player to leave its current room.
+*
+* @param player the leaving {@link Player}
+* @param leaveRoomMode the rule {@link PlayerLeaveRoomMode} applied for leaving player
+*/
   void leaveRoom(Player player, PlayerLeaveRoomMode leaveRoomMode);
 
+/**
+* Removes a room from the server.
+*
+* @param room the removing {@link Room}
+* @param removeRoomMode the rule {@link RoomRemoveMode} applied for removing room
+*/
   void removeRoom(Room room, RoomRemoveMode removeRoomMode);
 
+/**
+* Sends a message from a player to all receipients in a room.
+*
+* @param sender the sender {@link Player}
+* @param room the received {@link Room}
+* @param message the sending {@link ServerMessage}
+* @throws UnsupportedOperationException the method is not supported at the moment
+*/
   default void sendPublicMessage(Player sender, Room room, ServerMessage message) {
     throw new UnsupportedOperationException("Unsupported at the moment");
   }
 
+/**
+* Sends a message from a player to a receipient.
+*
+* @param sender the sender {@link Player}
+* @param receipient the received {@link Player}
+* @param message the sending {@link ServerMessage}
+* @throws UnsupportedOperationException the method is not supported at the moment
+*/
   default void sendPrivateMessage(Player sender, Player recipient, ServerMessage message) {
     throw new UnsupportedOperationException("Unsupported at the moment");
   }

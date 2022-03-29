@@ -41,10 +41,20 @@ public final class BootstrapHandler {
   @Autowired
   private ConfigurationHandler configurationHandler;
 
+/**
+* Retrieves an event handler.
+*
+* @return an {@link EventHandler}
+*/
   public EventHandler getEventHandler() {
     return eventHandler;
   }
 
+/**
+* Retrieves a configuration handler.
+*
+* @return a {@link ConfigurationHandler}
+*/
   public ConfigurationHandler getConfigurationHandler() {
     return configurationHandler;
   }

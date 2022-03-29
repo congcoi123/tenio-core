@@ -46,6 +46,11 @@ public final class Bootstrapper extends SystemLogger {
     injector = Injector.newInstance();
   }
 
+/**
+* Creates a new instance.
+*
+* @return a new instance of {@link Bootstrapper}
+*/
   public static Bootstrapper newInstance() {
     return instance;
   }
@@ -80,6 +85,11 @@ public final class Bootstrapper extends SystemLogger {
     }
   }
 
+/**
+* Retrieves an instance for bootstrap handler.
+*
+* @return a {@link BootstrapHandler}
+*/
   public BootstrapHandler getBootstrapHandler() {
     return bootstrapHandler;
   }

@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.configuration.define;
 
 /**
- * All events could be emitted in the server.
+ * All events could be emitted on the server.
  */
 public enum ServerEvent {
 
@@ -72,7 +72,6 @@ public enum ServerEvent {
   DISCONNECT_PLAYER,
 
   DISCONNECT_CONNECTION,
-
   ATTACH_CONNECTION_REQUEST_VALIDATION,
 
   ATTACHED_CONNECTION_RESULT,

@@ -62,6 +62,12 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     this.server = server;
   }
 
+/**
+* Creates a new instance.
+*
+* @param server the instance of {@link Server}
+* @return an instance of {@link ServerApi}
+*/
   public static ServerApi newInstance(Server server) {
     return new ServerApiImpl(server);
   }

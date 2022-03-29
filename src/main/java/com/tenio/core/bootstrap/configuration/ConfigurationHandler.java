@@ -37,6 +37,11 @@ public final class ConfigurationHandler {
   @Autowired
   private Configuration configuration;
 
+/**
+* Retrieves a configuration for the server.
+*
+* @return the server's {@link Configuration}
+*/
   public Configuration getConfiguration() {
     return configuration;
   }
