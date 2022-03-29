@@ -42,41 +42,136 @@ import java.util.Collection;
  */
 public interface ServerApi {
 
+// add @see event interfaces for all methods docs
+
+/**
+* Allows creating an instance of player in the server.
+* <p>
+* The player does not contain session, it should act like a server bot.
+*
+* @param playerName an unique player's name in the server
+* @see Session
+*/
   void login(String playerName);
 
+/**
+* Allows creating an instance of player in the server.
+*
+* @param playerName an unique player's name in the server
+* @param session a {@link Session} attached to the player
+*/
   void login(String playerName, Session session);
 
-// TODO: Escapse references - ReadonlyPlayer?
+/**
+* Removes a player from the server.
+*
+* @param player the current {@link Player} in the server
+*/
   void logout(Player player);
 
+/**
+* Removes a player manually from the server.
+*
+* @param player the player needs to be removed
+* @param message a text deliveried to the player before he leave
+* @param delayInSeconds the count down time in seconds for removing the player. In case the player has to be out immediately, this value should be <code>0</code>
+* @throws UnsupportedOperationException this method is not supported at the moment
+*/
   default void kickPlayer(Player player, String message, int delayInSeconds) {
     throw new UnsupportedOperationException("Unsupported at the moment");
   }
 
+/**
+* Prevents a player from logging in the server.
+*
+* @param player the player needs to be banned
+* @param message a text deliveried to the player before he is banned
+* @param banMode the rule applied for the player
+* @param durationInMinutes how long the player take punishment calculated in minutes
+* @param delayInSeconds the count down time in seconds for banning the player. In case the player has to be banned immediately, this value should be <code>0</code>
+* @throws UnsupportedOperationException this method is not supported at the moment
+* @see PlayerBanMode
+*/
   default void banPlayer(Player player, String message, PlayerBanMode banMode,
                          int durationInMinutes,
                          int delayInSeconds) {
     throw new UnsupportedOperationException("Unsupported at the moment");
   }
 
+/**
+* Creates a new room on the server without owner.
+*
+* @param setting all room settings at the time its created
+* @return a new instance of {@link Room}
+* @see InitialRoomSetting
+*/
   default Room createRoom(InitialRoomSetting setting) {
     return createRoom(setting, null);
   }
 
+/**
+* Creates a new room on the server.
+*
+* @param setting all room settings at the time its created
+* @param owner the owner of this room, owner can also be declared by <code>null</code> value
+* @return a new instance of {@link Room}
+* @see InitialRoomSetting
+* @see Player
+*/
   Room createRoom(InitialRoomSetting setting, Player owner);
 
+/**
+* Retrieves a player activating on the server by using its name.
+*
+* @param playerName the unique value for player's name
+* @return a corresponding instance of {@link Player}
+*/
   Player getPlayerByName(String playerName);
 
+// consider remove
   Player getPlayerBySession(Session session);
 
+/**
+* Fetches the current number of players activating on the server.
+*
+* @return the current number of players
+*/
   int getPlayerCount();
 
+// change to using iterator
   Collection<Player> getAllPlayers();
 
+// getReadonlyListPlayers
+
+/**
+* Retrieves a room instance by its id.
+*
+* @param roomId the room's id
+* @return a {@link Room} instance
+*/
   Room getRoomById(long roomId);
 
+// get iterator for rooms
+
+// getReadonlyListRooms
+
+/**
+* Allows a player to join a particular room.
+*
+* @param player the joining {@link Player}
+* @param room the current {@link Room}
+* @param roomPassword a credential using for joining room. In case of free join, this value would be set by <code>null</code>
+* @param slotInRoom the position of player located in the room
+* @param asSpectator set by <code>true</code> if the player operating in room as a spectator, otherwise <code>false</code>
+*/
   void joinRoom(Player player, Room room, String roomPassword, int slotInRoom, boolean asSpectator);
 
+/**
+* Allows a player to join a particular room.
+*
+* @param player the joining {@link Player}
+* @param room the current {@link Room}
+*/
   default void joinRoom(Player player, Room room) {
     joinRoom(player, room, null, RoomImpl.DEFAULT_SLOT, false);
   }
