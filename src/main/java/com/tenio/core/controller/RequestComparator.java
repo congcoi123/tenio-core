@@ -42,6 +42,11 @@ public final class RequestComparator implements Comparator<Request> {
     }
   }
 
+/**
+* Creates a new instance.
+*
+* @return a {@link RequestComparator} instance
+*/
   public static RequestComparator newInstance() {
     return instance;
   }

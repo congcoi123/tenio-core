@@ -33,6 +33,7 @@ import com.tenio.common.utility.TimeUtility;
 public final class ServerMessage {
 
   private final long createdTimestamp;
+  // refactor the name
   private ZeroElement data;
 
   private ServerMessage() {

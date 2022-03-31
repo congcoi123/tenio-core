@@ -29,11 +29,29 @@ package com.tenio.core.entity.define.mode;
  */
 public enum PlayerDisconnectMode {
 
+/**
+* When a player manually disconnect from the server.
+*/
   DEFAULT,
+  /**
+  * When a player's connection is lost. The reason comes from the client side.
+  */
   CONNECTION_LOST,
+  /**
+  * When a player falls in IDLE state for a long time enough to be disconnected.
+  */
   IDLE,
+    /**
+  * When a player is removed from the server in purpose.
+  */
   KICK,
+    /**
+  * When a player is removed from the server in purpose and its IP address is also listed in black list.
+  */
   BAN,
+  /**
+  * Disconnected by other reasons.
+  */
   UNKNOWN;
 
   @Override

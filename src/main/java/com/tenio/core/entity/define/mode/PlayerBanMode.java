@@ -29,7 +29,13 @@ package com.tenio.core.entity.define.mode;
  */
 public enum PlayerBanMode {
 
+/**
+* Bans a player by using its IP address.
+*/
   BY_ADDRESS,
+  /**
+  * Bans a player by using its unique user name.
+  */
   BY_NAME;
 
   @Override

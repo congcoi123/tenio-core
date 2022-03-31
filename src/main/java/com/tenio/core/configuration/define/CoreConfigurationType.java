@@ -40,84 +40,196 @@ public enum CoreConfigurationType implements ConfigurationType {
    * The server name.
    */
   SERVER_NAME("server-name"),
+  
   /**
    * The server id (module name).
    */
   SERVER_ID("server-id"),
+  
   /**
    * This current version code of your server in integer type (can be compared).
    */
   SERVER_VERSION_CODE("version-code"),
+  
   /**
    * This current version name of your server in string type.
    */
   SERVER_VERSION_NAME("version-name"),
 
+/**
+* Class: Declares a class for packet encryption handling. The packet will be encrypted or decrypted before sending or after receiving from client side.
+*
+* @see PacketEncrypter
+* @see DefaultPacketEncrypter
+*/
   CLASS_PACKET_ENCRYPTER("packet-encrypter"),
 
+/**
+* Class: Declares a class for packet compression handling. The packet will be compressed or uncompressed before sending or after receiving from client side.
+*
+* @see PacketCompressor
+* @see DefaultPacketCompressor
+*/
   CLASS_PACKET_COMPRESSOR("packet-compressor"),
 
+/**
+* Class: Declares a class for packet encoder handling. The packet will be encoded before sending to client side.
+*
+* @see PacketEncoder
+* @see DefaultPacketEncoder
+*/
   CLASS_PACKET_ENCODER("packet-encoder"),
 
+/**
+* Class: Declares a class for packet decoded handling. The packet will be decoded after receiving from client side.
+*
+* @see PacketDecoder
+* @see DefaultPacketDecoder
+*/
   CLASS_PACKET_DECODER("packet-decoder"),
 
+/**
+* Class: Declares conditions for connection filter handling. The up comming connection will be applied some rules to check whether it can join the server or not.
+*
+* @see ConnectionFilter
+* @see DefaultComnectionFilter
+*/
   CLASS_CONNECTION_FILTER("connection-filter"),
 
+/**
+* Class: Declares a set of rules for packet queue handling. The packet will be appended to a queue for handing later. Therefore, in some cases, some packets need to be dropped based on their priority or the queue size issues.
+*
+* @see PacketQueuePolicy
+* @see DefaultPacketQueuePolicy
+*/
   CLASS_PACKET_QUEUE_POLICY("packet-queue-policy"),
 
+/**
+* The number of threads using for handlers to accept new incoming client socket on the server.
+*/
   THREADS_SOCKET_ACCEPTOR("socket-acceptor"),
 
+/**
+* The number of threads using for handlers to read new messages from client sockets on the server.
+*/
   THREADS_SOCKET_READER("socket-reader"),
 
+/**
+* The number of threads using for handlers to write new messages to client sockets on the server.
+*/
   THREADS_SOCKET_WRITER("socket-writer"),
 
-  THREADS_WEBSOCKET_PRODUCER("websocket-producer"),
+/**
+* The number of threads using for handlers of websocket producers on the server.
+*/
+THREADS_WEBSOCKET_PRODUCER("websocket-producer"),
 
-  THREADS_WEBSOCKET_CONSUMER("websocket-consumer"),
+/**
+* The number of threads using for handlers of websocket consumers on the server.
+*/
+THREADS_WEBSOCKET_CONSUMER("websocket-consumer"),
 
-  THREADS_INTERNAL_PROCESSOR("internal-processor"),
+  /**
+* The number of threads using for handlers to manage internal processes on the server.
+*/THREADS_INTERNAL_PROCESSOR("internal-processor"),
 
+  /**
+* Sets an interval to frequently check removable rooms for removing them.
+*/
   INTERVAL_REMOVED_ROOM_SCAN("removed-room-scan-interval"),
 
-  INTERVAL_DISCONNECTED_PLAYER_SCAN("disconnected-player-scan-interval"),
+  /**
+  * Sets an interval to frequently check disconnected players. In case a disconnected time of a player excess the allowed time then that player will be logged out from the server.
+  */ INTERVAL_DISCONNECTED_PLAYER_SCAN("disconnected-player-scan-interval"),
 
+/**
+* Sets an interval to frequently check the concurrent users activating on the server.
+*/
   INTERVAL_CCU_SCAN("ccu-scan-interval"),
 
+/**
+* Sets an interval to frequently check whether a deadlock occured.
+*/
   INTERVAL_DEADLOCK_SCAN("deadlock-scan-interval"),
 
+/**
+* Sets an interval to frequently report the current readed and written number of packets on the server.
+*/
   INTERVAL_TRAFFIC_COUNTER("traffic-counter-interval"),
 
+/**
+* Sets an interval to frequently monitoring the server information.
+*/
   INTERVAL_SYSTEM_MONITORING("system-monitoring-interval"),
 
+/**
+* Sets the maximum size of a packet queue. Notes that every {@link Session} has its own queue, and this setting applies for all of them.
+*/
   PROP_MAX_PACKET_QUEUE_SIZE("max-packet-queue-size"),
 
+/**
+* Sets the maximum number of requesting packets in queue. In case there are more packets than expected, some of them should be removed.
+*/
   PROP_MAX_REQUEST_QUEUE_SIZE("max-request-queue-size"),
 
-  PROP_KEEP_PLAYER_ON_DISCONNECTION("keep-player-on-disconnection"),
+/**
+* Determines whether a disconnected connection could be held a while or be removed immediately.
+*/
+PROP_KEEP_PLAYER_ON_DISCONNECTION("keep-player-on-disconnection"),
 
+/**
+* Sets the maximum number of players allowed to join the server.
+*/
   PROP_MAX_NUMBER_PLAYERS("max-number-players"),
 
+  /**
+  * Sets the maximum number of rooms could be created on the server.
+  */
   PROP_MAX_NUMBER_ROOMS("max-number-rooms"),
 
+  /**
+  * Sets the maximum time in seconds a player can be in IDLE state (Without sending or receiving packets). Excessed this time then the player will be removed from the server.
+  */
   PROP_MAX_PLAYER_IDLE_TIME("max-player-idle-time"),
 
-  NETWORK_PROP_WEBSOCKET_USING_SSL("websocket-using-ssl"),
+  /**
+  * Determines whether the websocket connection could use SSL configuration.
+  */ NETWORK_PROP_WEBSOCKET_USING_SSL("websocket-using-ssl"),
 
-  NETWORK_PROP_WEBSOCKET_SENDER_BUFFER_SIZE("websocket-sender-buffer-size"),
+/**
+* Sets packet handling buffer size in bytes for the websocket sender.
+*/
+NETWORK_PROP_WEBSOCKET_SENDER_BUFFER_SIZE("websocket-sender-buffer-size"),
 
-  NETWORK_PROP_WEBSOCKET_RECEIVER_BUFFER_SIZE("websocket-receiver-buffer-size"),
+  /**
+* Sets packet handling buffer size in bytes for the websocket receiver.
+*/NETWORK_PROP_WEBSOCKET_RECEIVER_BUFFER_SIZE("websocket-receiver-buffer-size"),
 
-  NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE("socket-acceptor-buffer-size"),
+  /**
+* Sets packet handling buffer size in bytes for the socket acceptor (Accepting new incoming client sockets).
+*/NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE("socket-acceptor-buffer-size"),
 
-  NETWORK_PROP_SOCKET_READER_BUFFER_SIZE("socket-reader-buffer-size"),
+  /**
+* Sets packet handling buffer size in bytes for the socket receiver.
+*/NETWORK_PROP_SOCKET_READER_BUFFER_SIZE("socket-reader-buffer-size"),
 
-  NETWORK_PROP_SOCKET_WRITER_BUFFER_SIZE("socket-writer-buffer-size"),
+  /**
+* Sets packet handling buffer size in bytes for the socket sender.
+*/NETWORK_PROP_SOCKET_WRITER_BUFFER_SIZE("socket-writer-buffer-size"),
 
-  NETWORK_PROP_PACKET_COMPRESSION_THRESHOLD_BYTES("packet-compression-threshold-bytes"),
+  /**
+* Sets packet compression threshold in bytes at that the packet will be compressed.
+*/NETWORK_PROP_PACKET_COMPRESSION_THRESHOLD_BYTES("packet-compression-threshold-bytes"),
 
-  NETWORK_PROP_MAX_CONNECTIONS_PER_IP("max-connections-per-ip"),
+/**
+* Sets maximum number of connections each IP address can have.
+*/
+NETWORK_PROP_MAX_CONNECTIONS_PER_IP("max-connections-per-ip"),
 
-  NETWORK_PROP_ALLOW_CHANGE_SESSION("allow-change-session"),
+/**
+* Allows a player can log in a different session then the new session will replace the old one.
+*/
+NETWORK_PROP_ALLOW_CHANGE_SESSION("allow-change-session"),
 
   /**
    * The list of socket configuration in configuration.
@@ -144,10 +256,21 @@ public enum CoreConfigurationType implements ConfigurationType {
     this.value = value;
   }
 
+/**
+* Retrives a configuration type by using its value.
+*
+* @param value the configuration's {@link String} value
+* @return a corresponding {@link CoreConfigurationType} instance
+*/
   public static CoreConfigurationType getByValue(String value) {
     return lookup.get(value);
   }
 
+/**
+* Retrieves a configuration type's value.
+*
+* @return a {@link String} value
+*/
   public final String getValue() {
     return value;
   }
