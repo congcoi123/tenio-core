@@ -34,15 +34,15 @@ public enum AttachedConnectionResult {
    */
   SUCCESS,
   /**
-   * When the player was not found.
+   * Attached connection is failed cause the player was not found.
    */
   PLAYER_NOT_FOUND,
   /**
-   * When the session was not found.
+   * Attached connection is failed cause the session was not found.
    */
   SESSION_NOT_FOUND,
   /**
-   * When the session protocol is invalid.
+   * Attached connection is failed cause the session protocol is invalid.
    */
   INVALID_SESSION_PROTOCOL;
 

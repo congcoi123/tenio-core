@@ -71,10 +71,25 @@ public final class PlayerImpl implements Player {
     setSpectator(true);
   }
 
+/**
+* Create a new instance without session.
+*
+* @param name a unique name for player on the server
+* @return a new instance
+*/
+// Delete this.
   public static Player newInstance(String name) {
     return new PlayerImpl(name);
   }
 
+/**
+* Create a new instance.
+*
+* @param name a unique name for player on the server
+* @param session a session associated to the player
+* @return a new instance
+*/
+// Delete this.
   public static Player newInstance(String name, Session session) {
     return new PlayerImpl(name, session);
   }

@@ -37,8 +37,21 @@ import java.util.Collection;
  */
 public interface PlayerManager extends Manager {
 
+/**
+* Adds a new player in to the management list.
+*
+* @param player a created {@link Player}
+* @throws AddedDuplicatedPlayerException when a same player is aready available in the management list
+*/
   void addPlayer(Player player) throws AddedDuplicatedPlayerException;
 
+/**
+* Creates a new player and adds it in to the management list.
+*
+* @param name a unique player's name on the server
+* @return a new instance of {@link Player}
+* @throws AddedDuplicatedPlayerException when a same player is aready available in the management list
+*/
   Player createPlayer(String name) throws AddedDuplicatedPlayerException;
 
   Player createPlayerWithSession(String name, Session session)
@@ -48,8 +61,10 @@ public interface PlayerManager extends Manager {
 
   Player getPlayerBySession(Session session);
 
+  // Retrieves readonly list of players, add iterator
   Collection<Player> getAllPlayers();
 
+  // Retrieves readonly list of sessions, add iterator
   Collection<Session> getAllSessions();
 
   void removePlayerByName(String playerName) throws RemovedNonExistentPlayerFromRoomException;

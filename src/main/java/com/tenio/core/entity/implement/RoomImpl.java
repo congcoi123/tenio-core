@@ -93,6 +93,12 @@ public final class RoomImpl implements Room {
     setRoomRemoveMode(RoomRemoveMode.DEFAULT);
   }
 
+/**
+* Create a new instance.
+*
+* @return a new instance
+*/
+// Delete this.
   public static Room newInstance() {
     return new RoomImpl();
   }
