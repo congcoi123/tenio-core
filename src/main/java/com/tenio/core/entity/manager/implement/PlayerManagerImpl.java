@@ -64,6 +64,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     playerCount = 0;
   }
 
+// Delete it.
   public static PlayerManager newInstance(EventManager eventManager) {
     return new PlayerManagerImpl(eventManager);
   }

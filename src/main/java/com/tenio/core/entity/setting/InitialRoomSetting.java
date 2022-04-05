@@ -115,46 +115,102 @@ public final class InitialRoomSetting {
       playerSlotGeneratedStrategy = null;
     }
 
+/**
+* Creates a new instance.
+*
+* @return a new instance
+*/
     public static Builder newInstance() {
       return new Builder();
     }
 
+/**
+* Sets room's name.
+*
+* @param name the {@link String} room's name
+* @return the pointer of builder
+*/
     public Builder setName(String name) {
       this.name = name;
       return this;
     }
 
+/**
+* Sets room's password.
+*
+* @param password the {@link String} room's password
+* @return the pointer of builder
+*/
     public Builder setPassword(String password) {
       this.password = password;
       return this;
     }
 
+/**
+* Sets room's maximum number of players.
+*
+* @param maxPlayers the maximum number of players allowed be in the room
+* @return the pointer of builder
+*/
     public Builder setMaxPlayers(int maxPlayers) {
       this.maxPlayers = maxPlayers;
       return this;
     }
 
+/**
+* Sets room's maximum number of spectators.
+*
+* @param maxSpectators the maximum number of spectators allowed be in the room
+* @return the pointer of builder
+*/
     public Builder setMaxSpectators(int maxSpectators) {
       this.maxSpectators = maxSpectators;
       return this;
     }
 
+/**
+* Allows a room to be activated or not.
+*
+* @param activated set the flag's value to be <code>true</code> when the room is active, otherwise <code>false</code>
+* @return the pointer of builder
+*/
     public Builder setActivated(boolean activated) {
       this.activated = activated;
       return this;
     }
 
+/**
+* Sets removed mode for the room.
+*
+* @param roomRemoveMode the {@link RoomRemoveMode} decides rules applied to remove the room
+* @return the pointer of builder
+*/
+// Check the scheduled tasks
     public Builder setRoomRemoveMode(RoomRemoveMode roomRemoveMode) {
       removeMode = roomRemoveMode;
       return this;
     }
 
+/**
+* Sets a strategy for validating credentials using for get in the room.
+*
+* @param clazz a class extends {@link RoomCredentialValidatedStrategy} 
+* @return the pointer of builder
+*/
+// Check the default strategy
     public Builder setRoomCredentialValidatedStrategy(
         Class<? extends RoomCredentialValidatedStrategy> clazz) {
       credentialValidatedStrategy = (RoomCredentialValidatedStrategy) createNewInstance(clazz);
       return this;
     }
 
+/**
+* Sets a strategy for generating player's slots in the room.
+*
+* @param clazz a class extends {@link RoomPlayerSlotGeneratedStrategy} 
+* @return the pointer of builder
+*/
+// Check the default strategy
     public Builder setRoomPlayerSlotGeneratedStrategy(
         Class<? extends RoomPlayerSlotGeneratedStrategy> clazz) {
       playerSlotGeneratedStrategy = (RoomPlayerSlotGeneratedStrategy) createNewInstance(clazz);
