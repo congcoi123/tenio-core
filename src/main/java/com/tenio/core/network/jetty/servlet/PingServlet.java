@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.jetty.servlet;
 
-import com.tenio.common.data.element.CommonObject;
+import com.tenio.common.data.common.CommonMap;
 import com.tenio.core.network.jetty.servlet.support.BaseProcessServlet;
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -61,7 +61,7 @@ public final class PingServlet extends HttpServlet {
       response.setStatus(HttpServletResponse.SC_OK);
       try {
         var json = new JSONObject();
-        CommonObject.newInstance().add("status", "ok").add("message", "PING PONG")
+        CommonMap.newInstance().add("status", "ok").add("message", "PING PONG")
             .forEach((key, value) -> {
               json.put(key, value);
             });

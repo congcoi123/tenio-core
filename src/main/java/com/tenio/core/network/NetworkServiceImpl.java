@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network;
 
-import com.tenio.common.data.implement.ZeroObjectImpl;
+import com.tenio.common.data.implement.ZeroMapImpl;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.event.implement.EventManager;
@@ -311,7 +311,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
 
   @Override
   public void write(Response response) {
-    var data = ZeroObjectImpl.newInstance(response.getContent());
+    var data = ZeroMapImpl.newInstance(response.getContent());
     var message = ServerMessage.newInstance().setData(data);
 
     var playerIterator = response.getPlayers().iterator();

@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.netty.websocket;
 
-import com.tenio.common.data.utility.ZeroDataSerializerUtility;
+import com.tenio.common.data.utility.ZeroUtility;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.data.ServerMessage;
@@ -123,7 +123,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       networkReaderStatistic.updateReadBytes(binary.length);
       networkReaderStatistic.updateReadPackets(1);
 
-      var data = ZeroDataSerializerUtility.binaryToElement(binary);
+      var data = ZeroUtility.binaryToCollection(binary);
       var message = ServerMessage.newInstance().setData(data);
 
       if (!session.isConnected()) {
