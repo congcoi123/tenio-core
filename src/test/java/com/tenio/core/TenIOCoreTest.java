@@ -30,7 +30,10 @@ import org.junit.platform.suite.api.SuiteDisplayName;
 import org.junit.runner.RunWith;
 
 @RunWith(JUnitPlatform.class)
+// @Suite
 @SuiteDisplayName("Test all unit test cases for tenio-core module")
-@SelectPackages("com.tenio")
+@SelectPackages({
+    "com.tenio.core"
+})
 public final class TenIOCoreTest {
 }
