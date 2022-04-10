@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2021 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,27 +24,15 @@ THE SOFTWARE.
 
 package com.tenio.core.extension.events;
 
-import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.data.ServerMessage;
-import java.util.Optional;
+import com.tenio.core.network.entity.packet.Packet;
+import com.tenio.core.network.entity.session.Session;
 
 /**
- * When a player attempts to connect to UDP channel to send and receive messages.
+ * When a server sends a message to a player.
  */
-@FunctionalInterface
-public interface EventAttachConnectionRequestValidation {
+public interface EventWriteMessageToConnection {
 
-  /**
-   * When a player attempts to connect to UDP channel to send and receive messages.
-   *
-   * @param message an instance of {@link ServerMessage} sent by client to identify its
-   *                corresponding player on the server
-   * @return an optional of {@link Player} is present if it qualifies identified conditions,
-   * otherwise is empty
-   * @see ServerEvent#ATTACH_CONNECTION_REQUEST_VALIDATION
-   * @see EventAttachedConnectionResult
-   * @see Optional
-   */
-  Optional<Player> handle(ServerMessage message);
+  void handle(Session session, Packet packet);
 }

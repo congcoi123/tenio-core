@@ -31,6 +31,7 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.server.ServerImpl;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * The implementation for response.
@@ -157,6 +158,29 @@ public final class ResponseImpl implements Response {
     }
 
     construct();
+    ServerImpl.getInstance().write(this);
+  }
+
+  @Override
+  public void write(List<Session> sessions) {
+    if (sessions.isEmpty()) {
+      return;
+    }
+
+    sessions.stream().forEach(session -> {
+      if (session.isTcp()) {
+        if (socketSessions == null) {
+          socketSessions = new ArrayList<Session>();
+        }
+        socketSessions.add(session);
+      } else if (session.isWebSocket()) {
+        if (webSocketSessions == null) {
+          webSocketSessions = new ArrayList<Session>();
+        }
+        webSocketSessions.add(session);
+      }
+    });
+
     ServerImpl.getInstance().write(this);
   }
 

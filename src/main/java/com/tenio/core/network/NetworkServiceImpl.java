@@ -266,14 +266,14 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   private boolean containsSocketPort(List<SocketConfig> socketConfigs) {
-    return socketConfigs.stream().filter(socketConfig -> socketConfig.getType() == TransportType.TCP
-        || socketConfig.getType() == TransportType.UDP).findFirst().isPresent();
+    return socketConfigs.stream()
+        .anyMatch(socketConfig -> socketConfig.getType() == TransportType.TCP
+            || socketConfig.getType() == TransportType.UDP);
   }
 
   private boolean containsWebSocketPort(List<SocketConfig> socketConfigs) {
     return socketConfigs.stream()
-        .filter(socketConfig -> socketConfig.getType() == TransportType.WEB_SOCKET)
-        .findFirst().isPresent();
+        .anyMatch(socketConfig -> socketConfig.getType() == TransportType.WEB_SOCKET);
   }
 
   @Override
@@ -336,16 +336,23 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
     if (socketSessions != null) {
       var packet = createPacket(response, socketSessions, TransportType.TCP);
       socketService.write(packet);
+      socketSessions.stream().forEach(
+          session -> eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet));
     }
 
     if (datagramSessions != null) {
       var packet = createPacket(response, datagramSessions, TransportType.UDP);
       socketService.write(packet);
+      datagramSessions.stream().forEach(
+          session -> eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet));
     }
 
     if (webSocketSessions != null) {
       var packet = createPacket(response, webSocketSessions, TransportType.WEB_SOCKET);
       webSocketService.write(packet);
+      webSocketSessions.stream().forEach(session -> {
+        eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet);
+      });
     }
   }
 
