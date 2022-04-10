@@ -31,6 +31,12 @@ public final class PacketEncrypterException extends RuntimeException {
 
   private static final long serialVersionUID = -4260223574425695248L;
 
+/**
+* Creates a new exception.
+*
+* @param a warning {@link String} message
+* @see PacketEncrypter
+*/
   public PacketEncrypterException(String message) {
     super(message);
   }

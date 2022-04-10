@@ -35,11 +35,22 @@ public final class PlayerJoinedRoomException extends RuntimeException {
 
   private final PlayerJoinedRoomResult result;
 
+/**
+* Creats a new exception.
+*
+* @param message a warning {@link String} message
+* @param result a {@link PlayerJoinedRoomResult} singleton value indicates the result when player tries to get in a room
+*/
   public PlayerJoinedRoomException(String message, PlayerJoinedRoomResult result) {
     super(message);
     this.result = result;
   }
 
+/**
+* Retrieves a result when a player tried to get in a room.
+*
+* @param result a {@link PlayerJoinedRoomResult} singleton value indicates the result when player tries to get in a room
+*/
   public PlayerJoinedRoomResult getResult() {
     return result;
   }

@@ -33,6 +33,14 @@ public final class PacketQueuePolicyViolationException extends RuntimeException 
 
   private static final long serialVersionUID = -1620230030870946508L;
 
+/**
+* Creates a new exception.
+*
+* @param packet the dropping {@link Packet}
+* @param percentageUsed the <code>float</code> current usage of queue in percent
+* @see PacketQueue
+* @see PacketQueuePolicy
+*/
   public PacketQueuePolicyViolationException(Packet packet, float percentageUsed) {
     super(String.format("Dropped packet: [%s], current packet queue usage: %f%%", packet.toString(),
         percentageUsed));

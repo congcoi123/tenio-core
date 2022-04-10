@@ -37,8 +37,8 @@ public final class AddedDuplicatedPlayerException extends RuntimeException {
   /**
    * Initialization.
    *
-   * @param player the player try to join the room
-   * @param room   the target room
+   * @param player the {@Player} try to join the room
+   * @param room   the target {@link Room}
    */
   public AddedDuplicatedPlayerException(Player player, Room room) {
     super(room == null

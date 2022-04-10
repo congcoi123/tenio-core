@@ -31,6 +31,12 @@ public final class PacketCompressorException extends RuntimeException {
 
   private static final long serialVersionUID = 4134024704906630426L;
 
+/**
+* Creates a new exception.
+*
+* @param a warning {@link String} message
+* @see PacketCompressor
+*/
   public PacketCompressorException(String message) {
     super(message);
   }

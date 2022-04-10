@@ -35,11 +35,22 @@ public final class CreatedRoomException extends RuntimeException {
 
   private final RoomCreatedResult result;
 
+/**
+* Creats a new exception.
+*
+* @param message a warning {@link String} message
+* @param result a {@link RoomCreatedResult} singleton value indicates the room creation result
+*/
   public CreatedRoomException(String message, RoomCreatedResult result) {
     super(message);
     this.result = result;
   }
 
+/**
+* Retrieves the room creation result.
+*
+* @return a {@link RoomCreatedResult} singleton value indicates the room creation result
+*/
   public RoomCreatedResult getResult() {
     return result;
   }

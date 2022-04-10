@@ -36,7 +36,7 @@ public final class AddedDuplicatedRoomException extends RuntimeException {
   /**
    * When you try to add a room which existed in the server.
    *
-   * @param room the target room
+   * @param room the target {@link Room}
    */
   public AddedDuplicatedRoomException(Room room) {
     super(String.format("Unable to add room: %s, it already exists", room.toString()));

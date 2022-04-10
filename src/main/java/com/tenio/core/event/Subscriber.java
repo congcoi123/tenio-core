@@ -35,7 +35,7 @@ public interface Subscriber {
    * To dispatch results from one event.
    *
    * @param params all the results in an array
-   * @return an object or <b>null</b>
+   * @return an {@link Object} or <b>null</b>
    */
   Object dispatch(Object... params);
 }

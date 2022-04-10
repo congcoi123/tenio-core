@@ -31,6 +31,11 @@ public final class NotDefinedSubscribersException extends RuntimeException {
 
   private static final long serialVersionUID = 4569867192216119437L;
 
+/**
+* Creates a new exception.
+*
+* @param classes an array of {@link Class} that are missing in declaration
+*/
   public NotDefinedSubscribersException(Class<?>... classes) {
     super(getMessage(classes));
   }

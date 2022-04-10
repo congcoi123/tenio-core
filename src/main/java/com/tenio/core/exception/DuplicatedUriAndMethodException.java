@@ -38,8 +38,9 @@ public final class DuplicatedUriAndMethodException extends RuntimeException {
   /**
    * Initialization.
    *
-   * @param method      the rest method
-   * @param pathConfigs the path configuration
+   * @param method      a {@link RestMethod}
+   * @param pathConfigs a list of {@link PathConfig}
+   * @see List 
    */
   public DuplicatedUriAndMethodException(RestMethod method, List<PathConfig> pathConfigs) {
     super(String.format("Duplicated REST method: %s, with the list of configurations: %s",

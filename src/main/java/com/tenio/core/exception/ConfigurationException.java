@@ -31,6 +31,11 @@ public final class ConfigurationException extends RuntimeException {
 
   private static final long serialVersionUID = -713303423920650936L;
 
+/**
+* Creates a new exception.
+*
+* @param message the warning {@link String} message
+*/
   public ConfigurationException(String message) {
     super(message);
   }

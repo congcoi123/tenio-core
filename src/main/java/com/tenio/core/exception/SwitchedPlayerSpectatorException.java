@@ -35,11 +35,22 @@ public final class SwitchedPlayerSpectatorException extends RuntimeException {
 
   private final SwitchedPlayerSpectatorResult result;
 
+/**
+* Creats a new exception.
+*
+* @param message a warning {@link String} message
+* @param result a {@link SwitchedPlayerSpectatorResult} singleton value indicates result of switching
+*/
   public SwitchedPlayerSpectatorException(String message, SwitchedPlayerSpectatorResult result) {
     super(message);
     this.result = result;
   }
 
+/**
+* Retrieves the switching result.
+*
+* @return result a {@link SwitchedPlayerSpectatorResult} singleton value indicates result of switching
+*/
   public SwitchedPlayerSpectatorResult getResult() {
     return result;
   }
