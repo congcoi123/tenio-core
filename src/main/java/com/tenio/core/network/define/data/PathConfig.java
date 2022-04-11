@@ -55,22 +55,47 @@ public final class PathConfig {
     this.version = version;
   }
 
+/**
+* Retrieves the endpoint's name.
+*
+* @return the {@link String} endpoint's name
+*/
   public String getName() {
     return name;
   }
 
+/**
+* Retrieves the REST method of the endpoint.
+*
+* @return the {@link RestMethod} in use
+*/
   public RestMethod getMethod() {
     return method;
   }
 
+/**
+* Retrieves the endpoint's URI.
+*
+* @return the {@link String} endpoint's URI
+*/
   public String getUri() {
     return uri;
   }
 
+/**
+* Retrieves the endpoint's description.
+*
+* @return the {@link String} endpoint's description
+*/
   public String getDescription() {
     return description;
   }
 
+/**
+* Retrieves the endpoint's version.
+*
+* @return the {@link String} endpoint's version
+*/
   public int getVersion() {
     return version;
   }

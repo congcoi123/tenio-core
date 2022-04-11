@@ -26,12 +26,34 @@ package com.tenio.core.network.define;
 
 /**
  * Definition the priority for responses from server.
+ * @see PacketQueue
+ * @see PacketQueuePolicy
  */
 public enum ResponsePriority {
 
+/**
+* The response may not be responded bases on the implementation logic.
+* 
+* @see DefaultPacketQueuePolicy
+*/
   NON_GUARANTEED(1),
+  /**
+* The response is processed bases on the implementation logic.
+* 
+* @see DefaultPacketQueuePolicy
+*/
   NORMAL(2),
+  /**
+* The response should be guaranteed to be responded bases on the implementation logic.
+* 
+* @see DefaultPacketQueuePolicy
+*/
   GUARANTEED(3),
+  /**
+* The response should be guaranteed to be responded in highest priority bases on the implementation logic.
+* 
+* @see DefaultPacketQueuePolicy
+*/
   GUARANTEED_QUICKEST(4);
 
   private final int value;
@@ -40,6 +62,11 @@ public enum ResponsePriority {
     this.value = value;
   }
 
+/**
+* Retrieves the response's priority in numeric value.
+*
+* @return the response's priority in <code>integer</code> numeric value
+*/
   public final int getValue() {
     return value;
   }

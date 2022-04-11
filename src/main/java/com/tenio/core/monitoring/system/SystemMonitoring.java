@@ -44,14 +44,13 @@ public final class SystemMonitoring {
   @GuardedBy("this")
   private long lastProcessCpuTime;
 
-  private SystemMonitoring() {
+/**
+* Initialization.
+*/
+  public SystemMonitoring() {
     operatingSystemMxBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
     lastSystemTime = 0L;
     lastProcessCpuTime = 0L;
-  }
-
-  public static SystemMonitoring newInstance() {
-    return new SystemMonitoring();
   }
 
   /**
@@ -95,14 +94,29 @@ public final class SystemMonitoring {
     return countRunning;
   }
 
+/**
+   * Retrieves the total memory that the JVM allowed to use.
+   *
+   * @return the total memory that the JVM allowed to use
+   */
   public long getTotalMemory() {
     return Runtime.getRuntime().totalMemory();
   }
 
+/**
+   * Retrieves the rest of free memory that the JVM allowed to use.
+   *
+   * @return the rest of free memory that the JVM allowed to use
+   */
   public long getFreeMemory() {
     return Runtime.getRuntime().maxMemory() - getUsedMemory();
   }
 
+/**
+   * Retrieves the currently using memory that the JVM allowed to use.
+   *
+   * @return the currently using memory that the JVM allowed to use
+   */
   public long getUsedMemory() {
     return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
   }

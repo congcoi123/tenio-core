@@ -48,14 +48,29 @@ public final class SocketConfig {
     this.port = port;
   }
 
+/**
+* Retrieves the socket's name.
+*
+* @return the {@link String} socket's name
+*/
   public String getName() {
     return name;
   }
 
+/**
+* Retrieves the socket's transportation type.
+*
+* @return the {@link TransportType} of the socket
+*/
   public TransportType getType() {
     return type;
   }
 
+/**
+* Retrieves the socket's port number.
+*
+* @return the <code>integer</code> value of socket's port number
+*/
   public int getPort() {
     return port;
   }

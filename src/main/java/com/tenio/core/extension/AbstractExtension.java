@@ -37,7 +37,7 @@ import com.tenio.core.server.Server;
 import com.tenio.core.server.ServerImpl;
 
 /**
- * This class provides you all the necessary APIs for your own logic game
+ * This class provides you all the necessary APIs for an own logic game
  * handling.
  */
 public abstract class AbstractExtension extends AbstractLogger {

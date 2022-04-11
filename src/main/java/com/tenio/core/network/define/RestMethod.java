@@ -28,13 +28,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Definition for all supported REST methods.
+ * Definition for some supported REST methods on the server. 
  */
 public enum RestMethod {
 
+/**
+* POST.
+*/
   POST("post"),
+  /**
+* PUT.
+*/
   PUT("put"),
+  /**
+* GET.
+*/
   GET("get"),
+  /**
+* DELETE.
+*/
   DELETE("delete");
 
   // Reverse-lookup map for getting a type from a value
@@ -52,10 +64,21 @@ public enum RestMethod {
     this.value = value;
   }
 
+/**
+* Retrieves the REST method by looking at its value.
+*
+* @param value the corresponding {@link String} value of REST method
+* @return the corresponding {@link RestMethod} if it is available, otherwise <code>null</code>
+*/
   public static RestMethod getByValue(String value) {
     return lookup.get(value);
   }
 
+/**
+* Retrieves the REST method in text value.
+*
+* @return the REST method in {@link String} value
+*/
   public final String getValue() {
     return value;
   }
