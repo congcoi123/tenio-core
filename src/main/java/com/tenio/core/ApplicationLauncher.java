@@ -24,9 +24,9 @@ THE SOFTWARE.
 
 package com.tenio.core;
 
-import com.tenio.common.constant.CommonConstant;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.Bootstrapper;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.server.ServerImpl;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 
@@ -69,10 +69,8 @@ public final class ApplicationLauncher extends SystemLogger {
     if (entryClass != null) {
       bootstrap = Bootstrapper.newInstance();
       try {
-        bootstrap.run(entryClass, CommonConstant.DEFAULT_CONFIGURATION_PACKAGE,
-            CommonConstant.DEFAULT_BOOTSTRAP_PACKAGE,
-            CommonConstant.DEFAULT_EXTENSION_EVENT_PACKAGE,
-            CommonConstant.DEFAULT_ENGINE_HEARTBEAT_PACKAGE);
+        bootstrap.run(entryClass, CoreConstant.DEFAULT_BOOTSTRAP_PACKAGE,
+            CoreConstant.DEFAULT_EXTENSION_EVENT_PACKAGE);
       } catch (Exception e) {
         error(e, "The application started with exceptions occurred: ", e.getMessage());
         System.exit(1);

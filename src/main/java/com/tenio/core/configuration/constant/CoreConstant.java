@@ -48,6 +48,8 @@ public final class CoreConstant {
   public static final String PING_PATH = "/ping";
   public static final String LOCAL_HOST = "localhost";
   public static final String DEFAULT_CONFIGURATION_FILE = "configuration.xml";
+  public static final String DEFAULT_BOOTSTRAP_PACKAGE = "com.tenio.core.bootstrap";
+  public static final String DEFAULT_EXTENSION_EVENT_PACKAGE = "com.tenio.core.extension.events";
 
   private CoreConstant() {
     throw new UnsupportedOperationException("This class does not support to create a new instance");

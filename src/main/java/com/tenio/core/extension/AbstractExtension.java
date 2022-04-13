@@ -25,9 +25,8 @@ THE SOFTWARE.
 package com.tenio.core.extension;
 
 import com.tenio.common.data.ZeroArray;
-import com.tenio.common.data.ZeroObject;
-import com.tenio.common.data.implement.ZeroArrayImpl;
-import com.tenio.common.data.implement.ZeroObjectImpl;
+import com.tenio.common.data.ZeroMap;
+import com.tenio.common.data.utility.ZeroUtility;
 import com.tenio.common.logger.AbstractLogger;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.entity.setting.InitialRoomSetting;
@@ -68,7 +67,7 @@ public abstract class AbstractExtension extends AbstractLogger {
    * @return the zero array
    */
   public final ZeroArray array() {
-    return ZeroArrayImpl.newInstance();
+    return ZeroUtility.newZeroArray();
   }
 
   /**
@@ -76,8 +75,8 @@ public abstract class AbstractExtension extends AbstractLogger {
    *
    * @return the zero object
    */
-  public final ZeroObject object() {
-    return ZeroObjectImpl.newInstance();
+  public final ZeroMap object() {
+    return ZeroUtility.newZeroMap();
   }
 
   /**

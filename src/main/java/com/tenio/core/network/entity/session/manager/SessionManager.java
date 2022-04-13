@@ -22,13 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.entity.session;
+package com.tenio.core.network.entity.session.manager;
 
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.manager.Manager;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
+import com.tenio.core.network.entity.session.Session;
 import io.netty.channel.Channel;
 import java.lang.reflect.InvocationTargetException;
 import java.net.SocketAddress;

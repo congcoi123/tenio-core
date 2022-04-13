@@ -25,14 +25,13 @@ THE SOFTWARE.
 package com.tenio.core.network.netty.websocket;
 
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.network.entity.session.SessionManager;
+import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
-import java.net.URISyntaxException;
 
 /**
  * <a href="https://en.wikipedia.org/wiki/WebSocket">WebSocket</a> is distinct
@@ -69,7 +68,7 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void channelRead(ChannelHandlerContext ctx, Object msgRaw) throws Exception {
+  public void channelRead(ChannelHandlerContext ctx, Object msgRaw) {
 
     // check the request for handshake
     if (msgRaw instanceof HttpRequest) {
@@ -98,10 +97,8 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
    *
    * @param ctx the channel, see {@link ChannelHandlerContext}
    * @param req the request, see {@link HttpRequest}
-   * @throws URISyntaxException the exception
    */
-  private void handleHandshake(ChannelHandlerContext ctx, HttpRequest req)
-      throws URISyntaxException {
+  private void handleHandshake(ChannelHandlerContext ctx, HttpRequest req) {
     var wsFactory = new WebSocketServerHandshakerFactory(getWebSocketUrl(req), null, true);
     /*
      The handshake starts with an HTTP request/response, allowing servers to
@@ -118,9 +115,6 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
   }
 
   private String getWebSocketUrl(HttpRequest req) {
-    var url =
-        new StringBuilder().append("ws://").append(req.headers().get("Host")).append(req.uri())
-            .toString();
-    return url;
+    return "ws://" + req.headers().get("Host") + req.uri();
   }
 }
