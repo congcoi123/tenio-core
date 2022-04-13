@@ -31,46 +31,144 @@ import java.util.Collection;
 
 /**
  * The smallest unit to hold and transfer data from the server to clients.
+ * @see PacketQueue
  */
 public interface Packet {
 
+/**
+* Retrieves the unique Id of packet.
+*
+* @return the unique <code>long</code> Id of packet
+*/
   long getId();
 
+/**
+* Retrieves data of binaries conveyed by the packet.
+*
+* @return data of <code>byte</code> array conveyed by the packet
+*/
   byte[] getData();
 
+/**
+* Puts data of binaries into the packet.
+*
+* @param binary data of <code>byte</code> array conveyed by the packet
+*/
   void setData(byte[] binary);
 
+/**
+* Retrieves the transportation type of packet.
+*
+* @return the {@link TransportType} using by the packet
+*/
   TransportType getTransportType();
 
-  void setTransportType(TransportType type);
+/**
+* Sets transportation type of the packet.
+*
+* @param transportType the {@link TransportType} using by the packet
+*/
+  void setTransportType(TransportType transportType);
 
+/**
+* Retrieves the priority of packet.
+*
+* @return the {@link ResponsePriority} set for the packet
+*/
   ResponsePriority getPriority();
 
+/**
+* Sets priority of the packet.
+*
+* @param priority the {@link ResponsePriority} set for the packet
+*/
   void setPriority(ResponsePriority priority);
 
+    /**
+    * Determines whether the packet data is encrypted.
+    *
+    * @return <code>true</code> if the packet data is encrypted, otherwise <code>false</code>
+    */
   boolean isEncrypted();
 
+/**
+* Marks the packet data is encrypted or not.
+*
+* @param encrypted is set to <code>true</code> if the packet data is encrypted, otherwise <code>false</code>
+*/
   void setEncrypted(boolean encrypted);
 
+/**
+* Retrieves a collection of sessions which play roles as recipients.
+*
+* @return an unmodifiable collection of {@link Session}s and this can be empty
+* @see Collection
+*/
   Collection<Session> getRecipients();
 
+// should be an unmodifiable collection
   void setRecipients(Collection<Session> recipients);
 
+/**
+* Retrieves the creation time of packet in miliseconds.
+*
+* @return the creation time in <code>long</code> value miliseconds
+*/
   long getCreatedTime();
 
+/**
+* Retrieves the real size of packet's data in bytes.
+*
+* @return the real packet's data size in <code>integer</code> value of bytes
+*/
   int getOriginalSize();
 
+/**
+* Determines whether the packet's transportation type is TCP.
+*
+* @return <code>true</code> if the packet's transportation type is TCP, otherwise <code>false</code>
+*/
   boolean isTcp();
 
+/**
+* Determines whether the packet's transportation type is UDP.
+*
+* @return <code>true</code> if the packet's transportation type is UDP, otherwise <code>false</code>
+*/
   boolean isUdp();
 
+/**
+* Determines whether the packet's transportation type is WebSocket.
+*
+* @return <code>true</code> if the packet's transportation type is WebSocket, otherwise <code>false</code>
+*/
   boolean isWebSocket();
 
+/**
+* Retrieves the rest of sending binaries from the packet's data.
+*
+* @return the rest of sending <code>byte</code> array from the packet's data
+*/
   byte[] getFragmentBuffer();
 
+/**
+* Updates the rest of sending binaries from the packet's data. The data may not be sent at once but it is splitted to some parts according to the sending process.
+*
+* @param binary the rest of sending <code>byte</code> array from the packet's data
+*/
   void setFragmentBuffer(byte[] binary);
 
+/**
+* Determines whether the packet's data is fragmented.
+*
+* @return <code>true</code> if there is fragmented binaries data waiting to send (In case, the packet's data could not be sent at once), otherwise <code>false</code>
+*/
   boolean isFragmented();
 
+/**
+* Retrieves the Packet's clone instance.
+*
+* @return the {@link Packet}'s clone instance
+*/
   Packet clone();
 }

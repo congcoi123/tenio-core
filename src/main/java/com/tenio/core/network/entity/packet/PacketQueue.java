@@ -30,28 +30,86 @@ import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 
 /**
  * The queue using for holding packets.
+ * @see Packet
  */
 public interface PacketQueue {
 
+/**
+* Retrieves the last-in packet in the queue.
+*
+* @return the last-in {@link Packet} in the queue
+*/
   Packet peek();
-
+  
+/**
+* Retrieves the last-in packet in the queue and remove it as well.
+*
+* @return the last-in {@link Packet} in the queue
+*/
   Packet take();
 
+/**
+* Determines whether the queue is empty.
+*
+* @return <code>true</code> if the queue is empty, otherwise <code>false</code>
+*/
   boolean isEmpty();
 
+/**
+* Determines whether the queue is full.
+*
+* @return <code>true</code> if the queue is full, otherwise <code>false</code>
+*/
   boolean isFull();
 
+/**
+* Retrieves the current size of queue.
+*
+* @return the current <code>integer</code> size of queue
+*/
   int getSize();
 
+/**
+* Retrieves the maximum allowed size of queue.
+*
+* @return the maximum <code>integer</code> allowed size of queue
+*/
   int getMaxSize();
 
+/**
+* Sets the maximum allowed size of queue.
+*
+* @param maxSize the maximum <code>integer</code> allowed size of queue
+*/
   void setMaxSize(int maxSize);
 
+/**
+* Sets a set of rules for managing packets in queue.
+*
+* @param PacketQueuePolicy packetQueuePolicy the implementation of {@link PacketQueuePolicy} used to manage packets in queue
+* @see DefaultPacketQueuePolicy
+*/
   void setPacketQueuePolicy(PacketQueuePolicy packetQueuePolicy);
 
+/**
+* Retrieves the current usage of queue.
+*
+* @return the current <code>float</code> usage of queue. Its range is between 0 and 1
+*/
   float getPercentageUsed();
 
+/**
+* Puts a new packet into queue.
+*
+* @param packet an appended {@link Packet}
+* @throws PacketQueueFullException when the queue is full and not be able to hold more packets
+* @throws PacketQueuePolicyViolationException when a new appended packet violates the queue policies
+* @see DefaultPacketQueuePolicy
+*/
   void put(Packet packet) throws PacketQueueFullException, PacketQueuePolicyViolationException;
 
+/**
+* Clears all packets from the queue.
+*/
   void clear();
 }

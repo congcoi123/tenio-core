@@ -33,6 +33,13 @@ import com.tenio.core.network.entity.packet.PacketQueue;
  */
 public interface PacketQueuePolicy {
 
+/**
+* Applies policies on a queue whenever a new packet is added into it.
+*
+* @param packetQueue the checking {@link PacketQueue}
+* @param packet a new appended {@link Packet}
+* @throws PacketQueuePolicyViolationException whenever a new added packet violates the queue's policies
+*/
   void applyPolicy(PacketQueue packetQueue, Packet packet)
       throws PacketQueuePolicyViolationException;
 }
