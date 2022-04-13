@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.handler;
 
-import com.tenio.core.network.entity.session.SessionManager;
+import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 
 /**

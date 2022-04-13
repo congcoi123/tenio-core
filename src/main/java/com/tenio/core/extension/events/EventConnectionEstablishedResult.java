@@ -29,7 +29,6 @@ import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.network.entity.protocol.Response;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.entity.session.SessionManager;
 import java.util.List;
 
 /**
@@ -53,7 +52,7 @@ public interface EventConnectionEstablishedResult {
    *                session could be used to send responses to the client side.
    * @see ServerEvent#CONNECTION_ESTABLISHED_RESULT
    * @see Response#write(List)
-   * @see Session#cl
+   * @see Session#close()
    */
   void handle(Session session, ServerMessage message, ConnectionEstablishedResult result);
 }

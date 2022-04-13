@@ -24,4 +24,5 @@ open module tenio.core {
   exports com.tenio.core.entity.define.result;
   exports com.tenio.core.entity.data;
   exports com.tenio.core.entity;
+  exports com.tenio.core.network.entity.session.manager;
 }

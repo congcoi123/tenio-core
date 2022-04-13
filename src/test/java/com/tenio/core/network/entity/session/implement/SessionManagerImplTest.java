@@ -1,6 +1,7 @@
 package com.tenio.core.network.entity.session.implement;
 
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.network.entity.session.manager.SessionManagerImpl;
 import org.junit.jupiter.api.Test;
 
 class SessionManagerImplTest {

@@ -32,7 +32,7 @@ import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RefusedConnectionAddressException;
-import com.tenio.core.network.entity.session.SessionManager;
+import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import io.netty.channel.ChannelHandlerContext;

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.entity.session.implement;
+package com.tenio.core.network.entity.session.manager;
 
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
@@ -31,7 +31,7 @@ import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.packet.implement.PacketQueueImpl;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.entity.session.SessionManager;
+import com.tenio.core.network.entity.session.implement.SessionImpl;
 import io.netty.channel.Channel;
 import java.lang.reflect.InvocationTargetException;
 import java.net.SocketAddress;

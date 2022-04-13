@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.network.netty.websocket;
 
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.network.entity.session.SessionManager;
+import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.ssl.WebSocketSslContext;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;

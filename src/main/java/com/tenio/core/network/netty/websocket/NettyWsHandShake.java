@@ -25,14 +25,13 @@ THE SOFTWARE.
 package com.tenio.core.network.netty.websocket;
 
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.network.entity.session.SessionManager;
+import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
-import java.net.URISyntaxException;
 
 /**
  * <a href="https://en.wikipedia.org/wiki/WebSocket">WebSocket</a> is distinct
