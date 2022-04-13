@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.schedule;
 
 import com.tenio.common.task.TaskManager;
-import com.tenio.common.task.TaskManagerImpl;
+import com.tenio.common.task.implement.TaskManagerImpl;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;

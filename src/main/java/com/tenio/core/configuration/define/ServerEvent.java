@@ -48,7 +48,7 @@ public enum ServerEvent {
 */
   SESSION_REQUEST_CONNECTION,
 /**
-* When there is any issue occurs to the session.
+* When there is any issue occurs to a session.
 *
 * @see Event
 * @see Mode
@@ -66,7 +66,7 @@ public enum ServerEvent {
 */
   SESSION_WILL_BE_CLOSED,
 /**
-* When a message from client side sent to the session.
+* When a message from client side sent to a session.
 *
 * @see Event
 * @see Mode
@@ -74,14 +74,23 @@ public enum ServerEvent {
 * @see Exception
 */
   SESSION_READ_MESSAGE,
-/**
-* When a message sent to the sever from client side via datagram channel.
-*
-* @see Event
-* @see Mode
-* @see Result
-* @see Exception
-*/
+  /**
+   * When a message sent to a session.
+   *
+   * @see Event
+   * @see Mode
+   * @see Result
+   * @see Exception
+   */
+  SESSION_WRITE_MESSAGE,
+  /**
+   * When a message sent to the sever from client side via datagram channel.
+   *
+   * @see Event
+   * @see Mode
+   * @see Result
+   * @see Exception
+   */
   DATAGRAM_CHANNEL_READ_MESSAGE,
 /**
 * When the server finished initialization and is ready.

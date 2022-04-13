@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.entity.data;
 
-import com.tenio.common.data.ZeroElement;
+import com.tenio.common.data.ZeroCollection;
 import com.tenio.common.utility.TimeUtility;
 
 /**
@@ -33,8 +33,7 @@ import com.tenio.common.utility.TimeUtility;
 public final class ServerMessage {
 
   private final long createdTimestamp;
-  // refactor the name
-  private ZeroElement data;
+  private ZeroCollection data;
 
   private ServerMessage() {
     createdTimestamp = TimeUtility.currentTimeMillis();
@@ -48,11 +47,11 @@ public final class ServerMessage {
     return createdTimestamp;
   }
 
-  public ZeroElement getData() {
+  public ZeroCollection getData() {
     return data;
   }
 
-  public ServerMessage setData(ZeroElement data) {
+  public ServerMessage setData(ZeroCollection data) {
     this.data = data;
     return this;
   }

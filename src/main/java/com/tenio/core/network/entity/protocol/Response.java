@@ -28,6 +28,7 @@ import com.tenio.core.entity.Player;
 import com.tenio.core.network.define.ResponsePriority;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * The response was formed when the server wants to send a message to clients.
@@ -63,6 +64,8 @@ public interface Response {
   ResponsePriority getPriority();
 
   void write();
+
+  void write(List<Session> sessions);
 
   default void writeInDelay(int delayInSeconds) {
     throw new UnsupportedOperationException();

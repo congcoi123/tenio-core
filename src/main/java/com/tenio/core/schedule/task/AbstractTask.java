@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.schedule.task;
 
 import com.tenio.common.logger.SystemLogger;
-import com.tenio.common.task.schedule.Task;
+import com.tenio.common.task.Task;
 import com.tenio.core.event.implement.EventManager;
 
 /**

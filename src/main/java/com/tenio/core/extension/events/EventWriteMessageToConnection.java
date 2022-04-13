@@ -22,27 +22,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.handler;
+package com.tenio.core.extension.events;
 
-import com.tenio.core.network.entity.session.manager.SessionManager;
-import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.data.ServerMessage;
+import com.tenio.core.network.entity.packet.Packet;
+import com.tenio.core.network.entity.session.Session;
 
 /**
- * The base IO handler.
+ * When a server sends a message to a player.
  */
-public interface BaseIoHandler {
+public interface EventWriteMessageToConnection {
 
-  /**
-   * Set session manager.
-   *
-   * @param sessionManager the session manager
-   */
-  void setSessionManager(SessionManager sessionManager);
-
-  /**
-   * Set the network reader statistic object.
-   *
-   * @param networkReaderStatistic the network reader statistic object
-   */
-  void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic);
+  void handle(Session session, Packet packet);
 }

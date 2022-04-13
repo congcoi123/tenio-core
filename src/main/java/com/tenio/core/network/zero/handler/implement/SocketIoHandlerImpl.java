@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.handler.implement;
 
-import com.tenio.common.data.utility.ZeroDataSerializerUtility;
+import com.tenio.common.data.utility.ZeroUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
@@ -56,7 +56,7 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
 
   @Override
   public void resultFrame(Session session, byte[] binary) {
-    var data = ZeroDataSerializerUtility.binaryToElement(binary);
+    var data = ZeroUtility.binaryToCollection(binary);
     var message = ServerMessage.newInstance().setData(data);
 
     if (!session.isConnected()) {

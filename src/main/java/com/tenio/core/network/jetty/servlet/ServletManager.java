@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.jetty.servlet;
 
-import com.tenio.common.data.element.CommonObject;
+import com.tenio.common.data.common.CommonMap;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
@@ -129,7 +129,7 @@ public final class ServletManager extends BaseServlet {
     response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
     try {
       var json = new JSONObject();
-      CommonObject.newInstance().add("status", "failed").add("message", "405 Method Not Allowed")
+      CommonMap.newInstance().add("status", "failed").add("message", "405 Method Not Allowed")
           .forEach((key, value) -> {
             json.put(key, value);
           });

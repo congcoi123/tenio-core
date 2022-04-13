@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network;
 
-import com.tenio.common.data.implement.ZeroObjectImpl;
+import com.tenio.common.data.utility.ZeroUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.event.implement.EventManager;
@@ -37,8 +37,8 @@ import com.tenio.core.network.entity.packet.implement.PacketImpl;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.protocol.Response;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.entity.session.SessionManager;
-import com.tenio.core.network.entity.session.implement.SessionManagerImpl;
+import com.tenio.core.network.entity.session.manager.SessionManager;
+import com.tenio.core.network.entity.session.manager.SessionManagerImpl;
 import com.tenio.core.network.jetty.JettyHttpService;
 import com.tenio.core.network.netty.NettyWebSocketService;
 import com.tenio.core.network.netty.NettyWebSocketServiceImpl;
@@ -266,14 +266,14 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   private boolean containsSocketPort(List<SocketConfig> socketConfigs) {
-    return socketConfigs.stream().filter(socketConfig -> socketConfig.getType() == TransportType.TCP
-        || socketConfig.getType() == TransportType.UDP).findFirst().isPresent();
+    return socketConfigs.stream()
+        .anyMatch(socketConfig -> socketConfig.getType() == TransportType.TCP
+            || socketConfig.getType() == TransportType.UDP);
   }
 
   private boolean containsWebSocketPort(List<SocketConfig> socketConfigs) {
     return socketConfigs.stream()
-        .filter(socketConfig -> socketConfig.getType() == TransportType.WEB_SOCKET)
-        .findFirst().isPresent();
+        .anyMatch(socketConfig -> socketConfig.getType() == TransportType.WEB_SOCKET);
   }
 
   @Override
@@ -311,7 +311,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
 
   @Override
   public void write(Response response) {
-    var data = ZeroObjectImpl.newInstance(response.getContent());
+    var data = ZeroUtility.binaryToMap(response.getContent());
     var message = ServerMessage.newInstance().setData(data);
 
     var playerIterator = response.getPlayers().iterator();
@@ -336,16 +336,23 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
     if (socketSessions != null) {
       var packet = createPacket(response, socketSessions, TransportType.TCP);
       socketService.write(packet);
+      socketSessions.stream().forEach(
+          session -> eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet));
     }
 
     if (datagramSessions != null) {
       var packet = createPacket(response, datagramSessions, TransportType.UDP);
       socketService.write(packet);
+      datagramSessions.stream().forEach(
+          session -> eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet));
     }
 
     if (webSocketSessions != null) {
       var packet = createPacket(response, webSocketSessions, TransportType.WEB_SOCKET);
       webSocketService.write(packet);
+      webSocketSessions.stream().forEach(session -> {
+        eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet);
+      });
     }
   }
 
