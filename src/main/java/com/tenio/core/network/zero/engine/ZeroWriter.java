@@ -33,11 +33,20 @@ import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
  */
 public interface ZeroWriter extends ZeroEngine {
 
+/**
+* Enqueue a packet from packet queue to process.
+*
+* @param packet the processing {@link Packet}
+* @see PacketQueue
+*/
   void enqueuePacket(Packet packet);
 
+// copy
   NetworkWriterStatistic getNetworkWriterStatistic();
 
+// copy
   void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic);
 
+// copy
   void setPacketEncoder(BinaryPacketEncoder packetEncoder);
 }

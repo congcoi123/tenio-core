@@ -34,9 +34,12 @@ import java.nio.channels.SocketChannel;
  */
 public interface ZeroReaderListener {
 
+// copy
   void acceptDatagramChannel(DatagramChannel datagramChannel) throws ClosedChannelException;
 
+// copy
   SelectionKey acceptSocketChannel(SocketChannel socketChannel) throws ClosedChannelException;
 
+// copy
   void wakeup();
 }

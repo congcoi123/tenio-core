@@ -35,23 +35,75 @@ import com.tenio.core.service.Service;
  */
 public interface ScheduleService extends Service {
 
+/**
+* Sets interval time to ask the server frequently checks all rooms for finding out removable ones and remove them from the management list.
+*
+* @param interval <code>integer</code> value, the interval time to ask the sever frequently checks all rooms
+* @see RemoveRoomMode
+*/
   void setRemovedRoomScanInterval(int interval);
 
+/**
+* Sets interval time to ask the server frequently checks all players for finding out removable ones and remove them from the management list.
+*
+* @param interval <code>integer</code> value, the interval time to ask the sever frequently checks all players
+* @see DisconnectedPlayerMode
+*/
   void setDisconnectedPlayerScanInterval(int interval);
 
+/**
+* Sets interval time to ask the server frequently provides CCU information.
+*
+* @param interval <code>integer</code> value, the interval time to ask the sever frequently provides CCU information
+*/
   void setCcuReportInterval(int interval);
 
+/**
+* Sets interval time to ask the server frequently checks all deadlock occuring on it.
+*
+* @param interval <code>integer</code> value, the interval time to ask the sever frequently checks all deadlock occuring on it
+*/
   void setDeadlockScanInterval(int interval);
 
+/**
+* Sets interval time to ask the server frequently provides traffic information.
+*
+* @param interval <code>integer</code> value, the interval time to ask the sever frequently provides traffic information
+*/
   void setTrafficCounterInterval(int interval);
 
+/**
+* Sets interval time to ask the server frequently provides system information.
+*
+* @param interval <code>integer</code> value, the interval time to ask the sever frequently provides system information
+*/
   void setSystemMonitoringInterval(int interval);
 
+/**
+* Sets an instance of player manager to the service.
+*
+* @param playerManager an instance of {@link PlayerManager}
+*/
   void setPlayerManager(PlayerManager playerManager);
 
+/**
+* Sets an instance of room manager to the service.
+*
+* @param roomManager an instance of {@link RoomManager}
+*/
   void setRoomManager(RoomManager roomManager);
 
+/**
+* Sets an object for recording all activities regarding receiving data from client sides.
+*
+* @param networkReaderStatistic an instance of {@link NetworkReaderStatistic}
+*/
   void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic);
 
+/**
+* Sets an object for recording all activities regarding sending data to client sides.
+*
+* @param networkWriterStatistic an instance of {@link NetworkWriterStatistic}
+*/
   void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic);
 }

@@ -34,11 +34,23 @@ import java.util.List;
  */
 public interface ZeroAcceptor extends ZeroEngine {
 
+// copy
   void setConnectionFilter(ConnectionFilter connectionFilter);
 
+/**
+* Sets a listener for the reader engine which is using for communication between two engines.
+*
+* @param zeroReaderListener the {@link ZeroReaderListener} instance
+*/
   void setZeroReaderListener(ZeroReaderListener zeroReaderListener);
 
+/**
+* Declares the server IP address.
+*
+* @param the {@link String} value of server IP address
+*/
   void setServerAddress(String serverAddress);
 
+// copy
   void setSocketConfigs(List<SocketConfig> socketConfigs);
 }

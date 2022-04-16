@@ -40,6 +40,8 @@ import java.util.List;
  */
 public interface ZeroSocketService extends Service {
 
+// copy all
+
   void setAcceptorBufferSize(int bufferSize);
 
   void setAcceptorWorkerSize(int workerSize);

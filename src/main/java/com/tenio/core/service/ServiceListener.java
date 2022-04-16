@@ -31,13 +31,32 @@ import com.tenio.core.exception.ServiceRuntimeException;
  */
 public interface ServiceListener {
 
+/**
+* When the corresponding service is finnally initialized.
+*
+* @throws ServiceRuntimeException whenever any exception occured on the service
+*/
   void onInitialized() throws ServiceRuntimeException;
 
+/**
+* When the corresponding service is finnally started.
+*
+* @throws ServiceRuntimeException whenever any exception occured on the service
+*/
   void onStarted() throws ServiceRuntimeException;
 
+/**
+* When the corresponding service is running.
+*/
   void onRunning();
 
+/**
+* When the corresponding service is finnally shutted down.
+*/
   void onShutdown();
 
+/**
+* When the corresponding service is finnally destroyed.
+*/
   void onDestroyed();
 }
