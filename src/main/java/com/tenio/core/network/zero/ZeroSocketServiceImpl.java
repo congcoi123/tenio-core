@@ -207,16 +207,16 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   }
 
   @Override
-  public void setNetworkReaderStatistic(NetworkReaderStatistic readerStatistic) {
-    readerEngine.setNetworkReaderStatistic(readerStatistic);
+  public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
+    readerEngine.setNetworkReaderStatistic(networkReaderStatistic);
 
-    datagramIoHandler.setNetworkReaderStatistic(readerStatistic);
-    socketIoHandler.setNetworkReaderStatistic(readerStatistic);
+    datagramIoHandler.setNetworkReaderStatistic(networkReaderStatistic);
+    socketIoHandler.setNetworkReaderStatistic(networkReaderStatistic);
   }
 
   @Override
-  public void setNetworkWriterStatistic(NetworkWriterStatistic writerStatistic) {
-    writerEngine.setNetworkWriterStatistic(writerStatistic);
+  public void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic) {
+    writerEngine.setNetworkWriterStatistic(networkWriterStatistic);
   }
 
   @Override

@@ -29,10 +29,9 @@ import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 
 /**
- * For socket writing.
+ * The Socket writing handler.
  */
 public final class SocketWriterHandler extends AbstractWriterHandler {
 

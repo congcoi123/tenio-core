@@ -24,82 +24,85 @@ THE SOFTWARE.
 
 package com.tenio.core.network.statistic;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
- * This class supports creating an instance for holding the network reading data.
+ * This class supports creating an instance for holding the network reading data from clients side.
  */
 public final class NetworkReaderStatistic {
 
-  private volatile long readBytes;
-  private volatile long readPackets;
-  private volatile long readDroppedPackets;
+  private final AtomicLong readBytes;
+  private final AtomicLong readPackets;
+  private final AtomicLong readDroppedPackets;
 
   private NetworkReaderStatistic() {
-    readBytes = 0L;
-    readPackets = 0L;
-    readDroppedPackets = 0L;
+    readBytes = new AtomicLong();
+    readPackets = new AtomicLong();
+    readDroppedPackets = new AtomicLong();
   }
 
-/**
-* Initialization.
-*
-* @return a new instance of {@link NetworkReaderStatistic}
-*/
+  /**
+   * Initialization.
+   *
+   * @return a new instance of {@link NetworkReaderStatistic}
+   */
   public static NetworkReaderStatistic newInstance() {
     return new NetworkReaderStatistic();
   }
 
-/**
-* Updates the current number of received bytes from client sides.
-*
-* @param numberBytes the additional bytes received from client sides in <code>long</code> value 
-*/
+  /**
+   * Updates the current number of received bytes from clients side.
+   *
+   * @param numberBytes the additional bytes received from client sides (<code>long</code> value)
+   */
   public void updateReadBytes(long numberBytes) {
-    readBytes += numberBytes;
+    readBytes.addAndGet(numberBytes);
   }
 
-/**
-* Updates the current number of received packets from client sides.
-*
-* @param numberPackets the additional packets received from client sides in <code>long</code> value 
-*/
+  /**
+   * Updates the current number of received packets from clients side.
+   *
+   * @param numberPackets the additional packets received from client sides (<code>long</code>
+   *                      value)
+   */
   public void updateReadPackets(long numberPackets) {
-    readPackets += numberPackets;
+    readPackets.addAndGet(numberPackets);
   }
 
-/**
-* Updates the current number of refused packets from client sides which violated the policy.
-*
-* @param numberPackets the additional packets refused to handle from client sides in <code>long</code> value
-* @see 
-*/
+  /**
+   * Updates the current number of refused packets from clients side which violated the policies.
+   *
+   * @param numberPackets the additional packets refused to handle from clients side
+   *                      (<code>long</code> value)
+   */
   public void updateReadDroppedPackets(long numberPackets) {
-    readDroppedPackets += numberPackets;
+    readDroppedPackets.addAndGet(numberPackets);
   }
 
-/**
-* Retrieves the current number of received bytes data from client sides.
-*
-* @return the current number of received bytes data in <code>long</code> value
-*/
+  /**
+   * Retrieves the current number of received bytes data from client sides.
+   *
+   * @return the current number of received bytes data (<code>long</code> value)
+   */
   public long getReadBytes() {
-    return readBytes;
+    return readBytes.longValue();
   }
 
-/**
-* Retrieves the current number of received packets from client sides.
-*
-* @return the current number of received packets in <code>long</code> value
-*/
+  /**
+   * Retrieves the current number of received packets from clients side.
+   *
+   * @return the current number of received packets (<code>long</code> value)
+   */
   public long getReadPackets() {
-    return readPackets;
+    return readPackets.longValue();
   }
 
-/**
-* Retrieves the current number of dropped packets which are refused to handle.
-*
-* @return the current number of dropped packets in <code>long</code> value
-*/
+  /**
+   * Retrieves the current number of dropped packets which are refused to handle.
+   *
+   * @return the current number of dropped packets (<code>long</code> value)
+   */
   public long getReadDroppedPackets() {
-    return readDroppedPackets;
+    return readDroppedPackets.longValue();
   }
 }

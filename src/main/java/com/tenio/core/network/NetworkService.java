@@ -26,200 +26,229 @@ package com.tenio.core.network;
 
 import com.tenio.core.network.define.data.PathConfig;
 import com.tenio.core.network.define.data.SocketConfig;
+import com.tenio.core.network.entity.packet.PacketQueue;
+import com.tenio.core.network.entity.packet.policy.DefaultPacketQueuePolicy;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.protocol.Response;
 import com.tenio.core.network.security.filter.ConnectionFilter;
+import com.tenio.core.network.security.filter.DefaultConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.service.Service;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.List;
 
 /**
- * All designed APIs for network service.
+ * All designed APIs for the network services.
  */
 public interface NetworkService extends Service {
 
-/**
-* Assigns a port number for HTTP service.
-*
-* @param port the <code>integer</code> number for HTTP port
-*/
+  /**
+   * Assigns a port number for the HTTP service.
+   *
+   * @param port the number (<code>integer</code> value) for the HTTP service
+   */
   void setHttpPort(int port);
 
-/**
-* Declares a collection of path configurations for HTTP service.
-*
-* @param pathConfigs a collection of {@link PathConfig}
-* @see Collection
-*/
+  /**
+   * Declares a collection of path configurations for the HTTP service.
+   *
+   * @param pathConfigs a collection of {@link PathConfig}
+   * @see Collection
+   */
   void setHttpPathConfigs(List<PathConfig> pathConfigs);
 
-/**
-* Sets an implementation class for connection filter.
-*
-* @param clazz an implementation class of {@link ConnectionFilter}
-* @param maxConnectionsPerIp an <code>integer</code> value, the maximum number of connections allowed in an IP address
-* @throws InstantiationException
-* @throws IllegalAccessException
-* @throws IllegalArgumentException
-* @throws InvocationTargetException
-* @throws NoSuchMethodException
-* @throws SecurityException
-* @see DefaultConnectionFilter
-*/
+  /**
+   * Sets an implementation class for the connection filter.
+   *
+   * @param clazz               an implementation class of {@link ConnectionFilter}
+   * @param maxConnectionsPerIp an <code>integer</code> value, the maximum number of connections
+   *                            allowed in a same IP address
+   * @throws InstantiationException    it is caused by
+   *                                   Class#getDeclaredConstructor(Class[])#newInstance()
+   * @throws IllegalAccessException    it is caused by
+   *                                   Class#getDeclaredConstructor(Class[])#newInstance()
+   * @throws IllegalArgumentException  it is related to the illegal argument exception
+   * @throws InvocationTargetException it is caused by
+   *                                   Class#getDeclaredConstructor(Class[])#newInstance()
+   * @throws NoSuchMethodException     it is caused by
+   *                                   {@link Class#getDeclaredConstructor(Class[])}
+   * @throws SecurityException         it is related to the security exception
+   * @see DefaultConnectionFilter
+   */
   void setConnectionFilterClass(Class<? extends ConnectionFilter> clazz, int maxConnectionsPerIp)
       throws InstantiationException, IllegalAccessException, IllegalArgumentException,
       InvocationTargetException,
       NoSuchMethodException, SecurityException;
 
-/**
-* Sets the number of consumer workers for websocket.
-*
-* @param workerSize the <code>integer</code> number of consumer workers for websocket
-*/
+  /**
+   * Sets the number of consumer workers for the WebSocket.
+   *
+   * @param workerSize the number (<code>integer</code> value) of consumer workers for the WebSocket
+   */
   void setWebSocketConsumerWorkers(int workerSize);
 
-/**
-* Sets the number of producer workers for websocket.
-*
-* @param workerSize the <code>integer</code> number of producer workers for websocket
-*/
+  /**
+   * Sets the number of producer workers for the WebSocket.
+   *
+   * @param workerSize the number (<code>integer</code> value) of producer workers for the WebSocket
+   */
   void setWebSocketProducerWorkers(int workerSize);
 
-/**
-* Sets the size of byte buffer using for websocket channel to write data to  buffer
-*
-* @param bufferSize the <code>integer</code> size of byte buffer for writing data
-*/
+  /**
+   * Sets size of {@link ByteBuffer} using for the WebSocket to write binaries data down.
+   *
+   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for writing
+   *                   binaries data
+   */
   void setWebSocketSenderBufferSize(int bufferSize);
 
-/**
-* Sets the size of byte buffer using for websocket channel to read data from buffer
-*
-* @param bufferSize the <code>integer</code> size of byte buffer for reading data
-*/
+  /**
+   * Sets size of {@link ByteBuffer} using for the WebSocket to read binaries data from.
+   *
+   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for reading
+   *                   binaries data
+   */
   void setWebSocketReceiverBufferSize(int bufferSize);
 
-/**
-* Determines whether the websocket is able to use SSL.
-*
-* @param usingSsl sets to <code>true</code> in case of using SSL, otherwise <code>false</code>
-*/
+  /**
+   * Determines whether the WebSocket is able to use the SSL.
+   *
+   * @param usingSsl sets to <code>true</code> in case of using SSL, otherwise <code>false</code>
+   */
   void setWebSocketUsingSsl(boolean usingSsl);
 
-/**
-* Sets the number of acceptor workers for socket (TCP) which are using to accept new comming clients.
-*
-* @param workerSize the <code>integer</code> number of acceptor workers for socket
-*/
-  void set
+  /**
+   * Sets the number of acceptor workers for the socket (TCP) which are using to accept new coming
+   * clients.
+   *
+   * @param workerSize the number of acceptor workers for the socket (<code>integer</code> value)
+   */
   void setSocketAcceptorWorkers(int workerSize);
 
-/**
-* Sets the number of reader workers for socket (TCP) which are using to read comming packets from clients.
-*
-* @param workerSize the <code>integer</code> number of reader workers for socket
-*/
+  /**
+   * Sets the number of reader workers for the socket (TCP) which are using to read coming packets
+   * from clients side.
+   *
+   * @param workerSize the number of reader workers for the socket (<code>integer</code> value)
+   */
   void setSocketReaderWorkers(int workerSize);
 
-/**
-* Sets the number of writer workers for socket (TCP) which are using to send packets to clients.
-*
-* @param workerSize the <code>integer</code> number of writer workers for socket
-*/
+  /**
+   * Sets the number of writer workers for the socket (TCP) which are using to send packets to
+   * clients side.
+   *
+   * @param workerSize the number of writer workers for the socket (<code>integer</code> value)
+   */
   void setSocketWriterWorkers(int workerSize);
 
-/**
-* Sets the size of byte buffer using for a acceptor worker to read/write data from/to buffer
-*
-* @param bufferSize the <code>integer</code> size of byte buffer for reading/writing data
-*/
+  /**
+   * Sets size of {@link ByteBuffer} using for an acceptor worker to read/write binaries data
+   * from/down.
+   *
+   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for
+   *                   reading/writing binaries data
+   */
   void setSocketAcceptorBufferSize(int bufferSize);
 
-/**
-* Sets the size of byte buffer using for a reader worker to read/write data from/to buffer
-*
-* @param bufferSize the <code>integer</code> size of byte buffer for reading/writing data
-*/
+  /**
+   * Sets size of {@link ByteBuffer} using for a reader worker to read/write binaries data
+   * from/down.
+   *
+   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for
+   *                   reading/writing binaries data
+   */
   void setSocketReaderBufferSize(int bufferSize);
 
-/**
-* Sets the size of byte buffer using for a writer worker to read/write data from/to buffer
-*
-* @param bufferSize the <code>integer</code> size of byte buffer for reading/writing data
-*/
+  /**
+   * Sets size of {@link ByteBuffer} using for a writer worker to read/write binaries data
+   * from/down.
+   *
+   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for
+   *                   reading/writing binaries data
+   */
   void setSocketWriterBufferSize(int bufferSize);
 
-/**
-* Declares a list of socket configurations for the server.
-*
-* @param socketConfigs a collection of {@link SocketConfig}
-* @see Collection
-*/
+  /**
+   * Declares a list of socket configurations for the network.
+   *
+   * @param socketConfigs a list of {@link SocketConfig}
+   * @see List
+   */
   void setSocketConfigs(List<SocketConfig> socketConfigs);
 
-/**
-* Sets a packet queue policy class.
-*
-* @param clazz the implemetation class of {@link PacketQueuePolicy} used to apply rules for the packet queue
-* @throws InstantiationException
-* @throws IllegalAccessException
-* @throws IllegalArgumentException
-* @throws InvocationTargetException
-* @throws NoSuchMethodException
-* @throws SecurityException
-* @see PacketQueue
-* @see DefaultPacketQueuePolicy
-*/
+  /**
+   * Sets a packet queue policy class for the network.
+   *
+   * @param clazz the implementation class of {@link PacketQueuePolicy} used to apply rules for
+   *              the packet queue
+   * @throws InstantiationException    it is caused by
+   *                                   Class#getDeclaredConstructor(Class[])#newInstance()
+   * @throws IllegalAccessException    it is caused by
+   *                                   Class#getDeclaredConstructor(Class[])#newInstance()
+   * @throws IllegalArgumentException  it is related to the illegal argument exception
+   * @throws InvocationTargetException it is caused by
+   *                                   Class#getDeclaredConstructor(Class[])#newInstance()
+   * @throws NoSuchMethodException     it is caused by
+   *                                   {@link Class#getDeclaredConstructor(Class[])}
+   * @throws SecurityException         it is related to the security exception
+   * @see PacketQueue
+   * @see DefaultPacketQueuePolicy
+   */
   void setPacketQueuePolicy(Class<? extends PacketQueuePolicy> clazz)
       throws InstantiationException, IllegalAccessException, IllegalArgumentException,
       InvocationTargetException,
       NoSuchMethodException, SecurityException;
 
-/**
-* Sets the packet queue size.
-*
-* @param queueSize the <code>integer</code> value of new size for the packet queue
-* @see PacketQueue
-* @see PacketQueuePolicy
-*/
+  /**
+   * Sets the packet queue size.
+   *
+   * @param queueSize the new size (<code>integer</code> value) for the packet queue
+   * @see PacketQueue
+   * @see PacketQueuePolicy
+   */
   void setPacketQueueSize(int queueSize);
 
-/**
-* Sets an instance of packet encoder to encode packets for the socket (TCP)
-*
-* @param packetEncoder an instance of {@link BinaryPacketEncoder}
-*/
+  /**
+   * Sets an instance of packet encoder to encode packets for sending to clients side via the
+   * socket (TCP).
+   *
+   * @param packetEncoder an instance of {@link BinaryPacketEncoder}
+   */
   void setPacketEncoder(BinaryPacketEncoder packetEncoder);
 
-/**
-* Sets an instance of packet decoder to decode packets for the socket (TCP)
-*
-* @param packetDecoder an instance of {@link BinaryPacketDecoder}
-*/
+  /**
+   * Sets an instance of packet decoder to decode packets sent from clients side via the socket
+   * (TCP).
+   *
+   * @param packetDecoder an instance of {@link BinaryPacketDecoder}
+   */
   void setPacketDecoder(BinaryPacketDecoder packetDecoder);
 
-/**
-* Retrieves a network reader statistic instance which takes responsibility recording the receiving data from clients.
-*
-* @return a {@link NetworkReaderStatistic} instance
-*/
+  /**
+   * Retrieves a network reader statistic instance which takes responsibility recording the
+   * receiving data from clients.
+   *
+   * @return a {@link NetworkReaderStatistic} instance
+   */
   NetworkReaderStatistic getNetworkReaderStatistic();
 
-/**
-* Retrieves a network writer statistic instance which takes responsibility recording the sending data from the server.
-*
-* @return a {@link NetworkWriterStatistic} instance
-*/
+  /**
+   * Retrieves a network writer statistic instance which takes responsibility recording the
+   * sending data from the network.
+   *
+   * @return a {@link NetworkWriterStatistic} instance
+   */
   NetworkWriterStatistic getNetworkWriterStatistic();
 
-/**
-* Writes down data to socket/channel to send them to client sides.
-*
-* @param response an instance of {@link Response} using to carry conveying information
-*/
+  /**
+   * Writes down (binaries) data to socket/channel in order to send them to clients side.
+   *
+   * @param response an instance of {@link Response} using to carry conveying information
+   */
   void write(Response response);
 }
