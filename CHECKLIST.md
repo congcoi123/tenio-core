@@ -7,6 +7,7 @@
 
 ### Before updating to new version
 - [x] Makes sure the current branch is *develop* branch  
+- [x] All new methods should be annotated by the *@since* annotation  
 - [x] Changes version in *pom.xml* file  
 - [x] Updates the class *TradeMark.java* in the *tenio-common* module  
 - [x] Updates new changes in the *CHANGELOG.md* file  
@@ -16,7 +17,7 @@
 
 ### Creating a new release
 - [x] Makes sure the current branch is *master* branch  
-- [x] Creates new *release* branch using pattern name likes *tenio-core-0.0.2.20211016*  
+- [x] Creates new *release* branch using pattern name likes *tenio-common-0.0.2.20211016*  
 
 ### Deploying a release to mvn repositories center
 - [x] Makes sure the current branch is right *release* branch  
