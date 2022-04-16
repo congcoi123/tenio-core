@@ -39,22 +39,53 @@ import com.tenio.core.network.entity.protocol.Response;
 public interface Server {
 
   /**
-   * Start the server base on your own configurations.
+   * Starts the server bases on your own configurations.
+   *
+   * @param bootstrapHandler a {@link BootstrapHandler} handles all processes concerning the DI mechanism
+   * @param params a list of {@link String} arguments used by the boostrap
+   * @throws Exeption whenever any issue emerged
+   * @see Bootstrap
+   * @see
    */
   void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception;
 
   /**
-   * Shut down the server and close all services.
+   * Shuts down the server and closes all services.
    */
   void shutdown();
 
+/**
+* Retrieves a server APIs object which provides all supporting APIs on the server.
+*
+* @return an instance of {@link ServerApi}
+*/
   ServerApi getApi();
 
+/**
+* Retrieves a event manager object which manages all events supporting on the server.
+*
+* @return an instance of {@link EventManager}
+*/
   EventManager getEventManager();
 
+/**
+* Retrieves a player manager object which manages all players on the server.
+*
+* @return an instance of {@link PlayerManager}
+*/
   PlayerManager getPlayerManager();
 
+/**
+* Retrieves a room manager object which manages all rooms on the server.
+*
+* @return an instance of {@link RoomManager}
+*/
   RoomManager getRoomManager();
 
+/**
+* Writes down data to socket/channel to send them to client sides.
+*
+* @param response an instance of {@link Response} using to carry conveying information
+*/
   void write(Response response);
 }

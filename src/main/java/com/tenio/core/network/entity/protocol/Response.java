@@ -35,38 +35,113 @@ import java.util.List;
  */
 public interface Response {
 
+/**
+* Retrieves an array of binaries data that is carried by the response.
+*
+* @return an array of <code>byte</code> data that is carried by the response
+*/
   byte[] getContent();
 
+/**
+* Sets content for the response.
+*
+* @param content an array of <code>byte</code> data that is carried by the response
+* @return the pointer of response
+*/
   Response setContent(byte[] content);
 
+// getReceipientPlayers
   Collection<Player> getPlayers();
 
+// getNonsessionReceipientPlayers
   Collection<Player> getNonSessionPlayers();
 
+/**
+* Retrieves a list of recipient socket sessions.
+*
+* @return a list of recipient socket {@link Session}s
+* @see Collection
+*/
   Collection<Session> getRecipientSocketSessions();
 
+/**
+* Retrieves a list of recipient socket sessions which recieves packets by datagram channel.
+*
+* @return a list of recipient socket {@link Session}s which recieves packets by datagram channel
+* @see Collection
+*/
   Collection<Session> getRecipientDatagramSessions();
 
+/**
+* Retrieves a list of recipient websocket sessions.
+*
+* @return a list of recipient websocket {@link Session}s
+* @see Collection
+*/
   Collection<Session> getRecipientWebSocketSessions();
 
+// setRecipientPlayers
   Response setRecipients(Collection<Player> players);
 
+// setRecipientPlayer
   Response setRecipient(Player player);
+  
+  // setRecipientSessions
+  
+  // setRecipientSession
 
+/**
+* Sets the higher priority for sending packets via datagram channel. In case the session in use is websocket, then this setting should be ignored.
+*
+* @return the pointer of response
+*/
   Response prioritizedUdp();
 
+/**
+* Allows the sending content to be encrypted.
+*
+* @return the pointer of response
+*/
   Response encrypted();
 
+/**
+* Sets priority for the response.
+*
+* @param priority the {@link ResponsePriority}
+* @return the pointer of response
+* @see Policy
+*/
   Response priority(ResponsePriority priority);
 
+/**
+* Determines whether the response's content is encrypted.
+*
+* @return <code>true</code> if the response's content is encrypted, otherwise <code>false</code>
+*/
   boolean isEncrypted();
 
+/**
+* Retrieves the current priority of response.
+*
+* @return the current {@link ResponsePriority} of response
+* @see Policy
+*/
   ResponsePriority getPriority();
 
+/**
+* Writes down the content data to sessions for sending to client sides.
+*/
   void write();
 
+// Remove it
   void write(List<Session> sessions);
 
+/**
+* Writes down the content data to sessions for sending to client sides.
+*
+* @param delayInSeconds allows delaying in the number of seconds
+* @throws UnsupportedOperationException unsupported operation at the moment
+*/
   default void writeInDelay(int delayInSeconds) {
     throw new UnsupportedOperationException();
   }

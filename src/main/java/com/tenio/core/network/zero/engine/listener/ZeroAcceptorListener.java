@@ -29,5 +29,10 @@ package com.tenio.core.network.zero.engine.listener;
  */
 public interface ZeroAcceptorListener {
 
+/**
+* Handles all comming aceptable channels. The reader engine reads comming message from client side and should invoke this method in appropriate occasions.
+*
+* @see ZeroReaderEngine
+*/
   void handleAcceptableChannels();
 }

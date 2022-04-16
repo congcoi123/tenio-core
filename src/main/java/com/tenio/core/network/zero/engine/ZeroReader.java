@@ -33,11 +33,23 @@ import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
  */
 public interface ZeroReader extends ZeroEngine {
 
+/**
+* Sets a listener for the acceptor engine which is using for communication between two engines.
+*
+* @param zeroAcceptorListener the {@link ZeroAcceptorListener} instance
+*/
   void setZeroAcceptorListener(ZeroAcceptorListener zeroAcceptorListener);
 
+/**
+* Sets a listener for the writer engine which is using for communication between two engines.
+*
+* @param zeroWriterListener the {@link ZeroWriterListener} instance
+*/
   void setZeroWriterListener(ZeroWriterListener zeroWriterListener);
 
+// copy
   NetworkReaderStatistic getNetworkReaderStatistic();
 
+// copy
   void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic);
 }

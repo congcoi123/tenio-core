@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.network.statistic;
 
 /**
- * This class supports creating instance for holding the network read data.
+ * This class supports creating an instance for holding the network reading data.
  */
 public final class NetworkReaderStatistic {
 
@@ -39,30 +39,66 @@ public final class NetworkReaderStatistic {
     readDroppedPackets = 0L;
   }
 
+/**
+* Initialization.
+*
+* @return a new instance of {@link NetworkReaderStatistic}
+*/
   public static NetworkReaderStatistic newInstance() {
     return new NetworkReaderStatistic();
   }
 
+/**
+* Updates the current number of received bytes from client sides.
+*
+* @param numberBytes the additional bytes received from client sides in <code>long</code> value 
+*/
   public void updateReadBytes(long numberBytes) {
     readBytes += numberBytes;
   }
 
+/**
+* Updates the current number of received packets from client sides.
+*
+* @param numberPackets the additional packets received from client sides in <code>long</code> value 
+*/
   public void updateReadPackets(long numberPackets) {
     readPackets += numberPackets;
   }
 
+/**
+* Updates the current number of refused packets from client sides which violated the policy.
+*
+* @param numberPackets the additional packets refused to handle from client sides in <code>long</code> value
+* @see 
+*/
   public void updateReadDroppedPackets(long numberPackets) {
     readDroppedPackets += numberPackets;
   }
 
+/**
+* Retrieves the current number of received bytes data from client sides.
+*
+* @return the current number of received bytes data in <code>long</code> value
+*/
   public long getReadBytes() {
     return readBytes;
   }
 
+/**
+* Retrieves the current number of received packets from client sides.
+*
+* @return the current number of received packets in <code>long</code> value
+*/
   public long getReadPackets() {
     return readPackets;
   }
 
+/**
+* Retrieves the current number of dropped packets which are refused to handle.
+*
+* @return the current number of dropped packets in <code>long</code> value
+*/
   public long getReadDroppedPackets() {
     return readDroppedPackets;
   }

@@ -31,5 +31,7 @@ import com.tenio.core.network.entity.session.Session;
  */
 public interface ZeroWriterListener {
 
+// copy
+// see
   void continueWriteInterestOp(Session session);
 }

@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.network.statistic;
 
 /**
- * This class supports creating instance for holding the network written data.
+ * This class supports creating an instance for holding the network written data.
  */
 public final class NetworkWriterStatistic {
 
@@ -41,42 +41,98 @@ public final class NetworkWriterStatistic {
     writtenDroppedPacketsByFull = 0L;
   }
 
+/**
+* Initialization.
+*
+* @return a new instance of {@link NetworkWriterStatistic}
+*/
   public static NetworkWriterStatistic newInstance() {
     return new NetworkWriterStatistic();
   }
 
+/**
+* Updates the number of sent bytes data to client sides.
+*
+* @param numberBytes <code>long</code> value, the number of sent bytes data to client sides
+*/
   public void updateWrittenBytes(long numberBytes) {
     writtenBytes += numberBytes;
   }
 
+/**
+* Updates the number of sent packets to client sides.
+*
+* @param numberPackets <code>long</code> value, the number of sent packets to client sides
+*/
   public void updateWrittenPackets(long numberPackets) {
     writtenPackets += numberPackets;
   }
-
+  
+/**
+* Updates the number of dropped packets which violated policies and not be able send to client sides.
+*
+* @param numberPackets <code>long</code> value, the number of dropped packets which violated policies
+* @see PacketQueuePolicy
+*/
   public void updateWrittenDroppedPacketsByPolicy(long numberPackets) {
     writtenDroppedPacketsByPolicy += numberPackets;
   }
 
+/**
+* Updates the number of dropped packets which cannot append to the full queue and not be able send to client sides.
+*
+* @param numberPackets <code>long</code> value, the number of dropped packets which cannot append to the full queue
+* @see PacketQueuePolicy
+*/
   public void updateWrittenDroppedPacketsByFull(long numberPackets) {
     writtenDroppedPacketsByFull += numberPackets;
   }
 
+/**
+* Retrieves the current number of sending bytes data to client sides.
+*
+* @return <code>long</code> value, the current number of sending bytes data to client sides
+*/
   public long getWrittenBytes() {
     return writtenBytes;
   }
 
+/**
+* Retrieves the current number of sending packets to client sides.
+*
+* @return <code>long</code> value, the current number of sending packets to client sides
+*/
   public long getWrittenPackets() {
     return writtenPackets;
   }
 
+/**
+* Retrieves the current number of dropped packets which violated policies and not be able send to client sides.
+*
+* @return <code>long</code> value, the number of dropped packets which violated policies
+* @see PacketQueuePolicy
+*/
   public long getWrittenDroppedPacketsByPolicy() {
     return writtenDroppedPacketsByPolicy;
   }
 
+/**
+* Retrieves the current number of dropped packets which cannot append to the full queue and not be able send to client sides.
+*
+* @return <code>long</code> value, the number of dropped packets which cannot append to the full queue
+* @see PacketQueuePolicy
+*/
   public long getWrittenDroppedPacketsByFull() {
     return writtenDroppedPacketsByFull;
   }
 
+/**
+* Retrieves the current number of dropped packets which are not able send to client sides.
+*
+* @return <code>long</code> value, the number of dropped packets which are not able send to client sides
+* @see #getWrittenDroppedPacketsByPolicy
+* @see #getWrittenDroppedPacketsByFull
+*/
   public long getWrittenDroppedPackets() {
     return writtenDroppedPacketsByPolicy + writtenDroppedPacketsByFull;
   }

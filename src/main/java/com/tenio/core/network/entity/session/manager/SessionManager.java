@@ -42,41 +42,124 @@ import java.nio.channels.SocketChannel;
  */
 public interface SessionManager extends Manager {
 
+/**
+* Creates a new socket (TCP) session and adds it to the management list.
+*
+* @param socketChannel the {@link SocketChannel}
+* @param selectionKey the {@link SelectionKey}
+* @return a new instance of {@link Session}
+*/
   Session createSocketSession(SocketChannel socketChannel, SelectionKey selectionKey);
 
+/**
+* Removes a socket (TCP) session from the management list.
+*
+* @param socketChannel the {@link SocketChannel}
+* @throws NullPointerException if the removing session could not be found
+*/
   void removeSessionBySocket(SocketChannel socketChannel) throws NullPointerException;
 
+/**
+* Retrieves a socket (TCP) session from the management list.
+*
+* @param socketChannel the {@link SocketChannel} associating to the session
+* @return a corresponding {@link Session} instance, otherwise <code>null</code>
+*/
   Session getSessionBySocket(SocketChannel socketChannel);
 
+/**
+* Creates a new websocket session and adds it to the management list.
+*
+* @param webSocketChannel the websocket {@link Channel}
+* @return a new instance of {@link Session}
+*/
   Session createWebSocketSession(Channel webSocketChannel);
 
+/**
+* Removes a websocket session from the management list.
+*
+* @param webSocketChannel the websocket {@link Channel}
+* @throws NullPointerException if the removing session could not be found
+*/
   void removeSessionByWebSocket(Channel webSocketChannel) throws NullPointerException;
 
+/**
+* Retrieves a websocket session from the management list.
+*
+* @param webSocketChannel the websocket {@link Channel} associating to the session
+* @return a corresponding {@link Session} instance, otherwise <code>null</code>
+*/
   Session getSessionByWebSocket(Channel webSocketChannel);
 
+/**
+* Allows a session to use datagram (UDP) channel for communication. This should be applied for socket (TCP) sessions only.
+*
+* @param datagramChannel the {@link DatagramChannel} available on the server
+* @param remoteAddress the remote {@link SocketAddress} of client side which is using the session to connect to the server
+* @param session a {@link Session} is in use
+* @throws IllegalArgumentException whenever an invalide value is used
+*/
   void addDatagramForSession(DatagramChannel datagramChannel, SocketAddress remoteAddress,
                              Session session)
       throws IllegalArgumentException;
 
+/**
+* Retrieves a socket (TCP) session from the management list.
+*
+* @param remoteAddress the remote {@link SocketAddress} of client side which is using the session to connect to the server
+* @return a corresponding {@link Session} instance if the session is allowed to use the datagram channel an the remote address is present, otherwise <code>null</code>
+*/
   Session getSessionByDatagram(SocketAddress remoteAddress);
 
+/**
+* Emits an event on the server.
+*
+* @param event the valid {@link ServerEvent} is using on the server
+* @param params a list of {@link Object} parameters
+* @see EventManager
+*/
   void emitEvent(ServerEvent event, Object... params);
 
+/**
+* Sets a packet queue policy class.
+*
+* @param clazz the implemetation class of {@link PacketQueuePolicy} used to apply rules for the packet queue
+* @throws InstantiationException
+* @throws IllegalAccessException
+* @throws IllegalArgumentException
+* @throws InvocationTargetException
+* @throws NoSuchMethodException
+* @throws SecurityException
+* @see PacketQueue
+* @see DefaultPacketQueuePolicy
+*/
   void setPacketQueuePolicy(Class<? extends PacketQueuePolicy> clazz)
       throws InstantiationException, IllegalAccessException, IllegalArgumentException,
       InvocationTargetException,
       NoSuchMethodException, SecurityException;
 
+/**
+* Sets the packet queue size.
+*
+* @param queueSize the <code>integer</code> value of new size for the packet queue
+* @see PacketQueue
+* @see PacketQueuePolicy
+*/
   void setPacketQueueSize(int queueSize);
 
   /**
-   * Remove session from its manager, this method should not be called. Call
+   * Removes a session from its manager, this method should not be invoked directly. Calls
    * instead the method {@link Session#close(ConnectionDisconnectMode, PlayerDisconnectMode)}
    * to completely eliminate the session.
    *
-   * @param session the removing session
+   * @param session the removing {@link Session}
    */
   void removeSession(Session session);
 
+/**
+* Retrieves the current number of sessions in the management list.
+*
+* @return the current <code>integer</code> number of sessions in the management list
+*/
   int getSessionCount();
 }
