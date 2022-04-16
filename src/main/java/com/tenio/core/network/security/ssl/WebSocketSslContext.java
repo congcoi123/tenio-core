@@ -32,7 +32,7 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 
 /**
- * The SSL configuration for the websockets.
+ * The SSL configuration for the WebSocket.
  */
 public final class WebSocketSslContext extends SystemLogger {
 
@@ -76,6 +76,11 @@ public final class WebSocketSslContext extends SystemLogger {
     }
   }
 
+  /**
+   * Retrieves the server context.
+   *
+   * @return a {@link SSLContext} instance
+   */
   public SSLContext getServerContext() {
     return serverContext;
   }

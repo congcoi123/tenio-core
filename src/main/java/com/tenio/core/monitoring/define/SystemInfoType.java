@@ -29,48 +29,49 @@ package com.tenio.core.monitoring.define;
  */
 public enum SystemInfoType {
 
-/**
-* The OS name.
-*/
+  /**
+   * The OS name.
+   */
   OS_NAME("os.name"),
   /**
-  * The OS architecture.
-  */
+   * The OS architecture.
+   */
   OS_ARCH("os.arch"),
   /**
-  * The OS version.
-  */
+   * The OS version.
+   */
   OS_VERSION("os.version"),
   /**
-  * The Java version.
-  */
+   * The Java version.
+   */
   JAVA_VERSION("java.version"),
   /**
-  * The Java vendor.
-  */
+   * The Java vendor.
+   */
   JAVA_VENDOR("java.vendor"),
   /**
-  * The Java vendor URL.
-  */
+   * The Java vendor URL.
+   */
   JAVA_VENDOR_URL("java.vendor.url"),
   /**
-  * The Java Virtual Machine specification version.
-  */JAVA_VM_SPEC_VERSION("java.vm.specification.version"),
+   * The Java Virtual Machine specification version.
+   */
+  JAVA_VM_SPEC_VERSION("java.vm.specification.version"),
   /**
-  * The Java Virtual Machine version.
-  */
+   * The Java Virtual Machine version.
+   */
   JAVA_VM_VERSION("java.vm.version"),
   /**
-  * The Java Virtual Machine vendor.
-  */
+   * The Java Virtual Machine vendor.
+   */
   JAVA_VM_VENDOR("java.vm.vendor"),
   /**
-  * The Java Virtual Machine name.
-  */
+   * The Java Virtual Machine name.
+   */
   JAVA_VM_NAME("java.vm.name"),
   /**
-  * The Java IO temporary directory.
-  */
+   * The Java IO temporary directory.
+   */
   JAVA_IO_TMPDIR("java.io.tmpdir");
 
   private final String value;
@@ -79,11 +80,11 @@ public enum SystemInfoType {
     this.value = value;
   }
 
-/**
-* Retrieves flag's name.
-*
-* @return the {@link String} flag's name
-*/
+  /**
+   * Retrieves flag's name.
+   *
+   * @return the {@link String} flag's name
+   */
   public final String getValue() {
     return this.value;
   }

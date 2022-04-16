@@ -32,25 +32,25 @@ import java.util.Map;
  */
 public enum TransportType {
 
-/**
-* UNKNOWN.
-*/
+  /**
+   * UNKNOWN.
+   */
   UNKNOWN("unknown"),
   /**
-  * SOCKET.
-  */  
+   * SOCKET.
+   */
   TCP("tcp"),
   /**
-  * DATAGRAM.
-  */
+   * DATAGRAM.
+   */
   UDP("udp"),
   /**
-  * WEBSOCKET.
-  */
+   * WEBSOCKET.
+   */
   WEB_SOCKET("websocket"),
   /**
-  * HTTP.
-  */
+   * HTTP.
+   */
   HTTP("http");
 
   // Reverse-lookup map for getting a type from a value
@@ -68,21 +68,21 @@ public enum TransportType {
     this.value = value;
   }
 
-/**
-* Retrieves the transportation type by looking at its value.
-*
-* @param value the corresponding {@link String} value of transportation type
-* @return the corresponding {@link TransportType} if it is available, otherwise <code>null</code>
-*/
+  /**
+   * Retrieves the transportation type by looking at its value.
+   *
+   * @param value the corresponding {@link String} value of transportation type
+   * @return the corresponding {@link TransportType} if it is available, otherwise <code>null</code>
+   */
   public static TransportType getByValue(String value) {
     return lookup.get(value);
   }
 
-/**
-* Retrieves the transportation type in text value.
-*
-* @return the transportation type in {@link String} value
-*/
+  /**
+   * Retrieves the transportation type in text value.
+   *
+   * @return the transportation type in {@link String} value
+   */
   public final String getValue() {
     return value;
   }

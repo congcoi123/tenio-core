@@ -44,9 +44,9 @@ public final class SystemMonitoring {
   @GuardedBy("this")
   private long lastProcessCpuTime;
 
-/**
-* Initialization.
-*/
+  /**
+   * Initialization.
+   */
   public SystemMonitoring() {
     operatingSystemMxBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
     lastSystemTime = 0L;
@@ -56,7 +56,7 @@ public final class SystemMonitoring {
   /**
    * Retrieves the CPU usage.
    *
-   * @return the CPU usage in percentage
+   * @return the CPU usage in percentage (<code>double</code> value)
    */
   public synchronized double getCpuUsage() {
     if (lastSystemTime == 0L) {
@@ -82,7 +82,7 @@ public final class SystemMonitoring {
   /**
    * Retrieves the number of running threads.
    *
-   * @return the number of running threads
+   * @return the number of running threads (<code>integer</code> value)
    */
   public int countRunningThreads() {
     int countRunning = 0;
@@ -94,28 +94,28 @@ public final class SystemMonitoring {
     return countRunning;
   }
 
-/**
-   * Retrieves the total memory that the JVM allowed to use.
+  /**
+   * Retrieves the total memory that the JVM allowed using.
    *
-   * @return the total memory that the JVM allowed to use
+   * @return the total memory that the JVM allowed using (<code>long</code> value)
    */
   public long getTotalMemory() {
     return Runtime.getRuntime().totalMemory();
   }
 
-/**
-   * Retrieves the rest of free memory that the JVM allowed to use.
+  /**
+   * Retrieves the rest of free memory that the JVM allowed using.
    *
-   * @return the rest of free memory that the JVM allowed to use
+   * @return the rest of free memory that the JVM allowed using (<code>long</code> value)
    */
   public long getFreeMemory() {
     return Runtime.getRuntime().maxMemory() - getUsedMemory();
   }
 
-/**
-   * Retrieves the currently using memory that the JVM allowed to use.
+  /**
+   * Retrieves the currently using memory that the JVM allowed using.
    *
-   * @return the currently using memory that the JVM allowed to use
+   * @return the currently using memory that the JVM allowed using (<code>long</code> value)
    */
   public long getUsedMemory() {
     return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
