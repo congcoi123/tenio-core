@@ -28,13 +28,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * The definition of all packet header types.
+ * The definition of all packet header setting flags.
  */
 public enum PacketHeaderType {
 
+/**
+* The data type is binary.
+*/
   BINARY(1),
+  /**
+  * The data size is considered big size.
+  */
   BIG_SIZE(4),
+  /**
+  * The data is compressed.
+  */
   COMPRESSION(8),
+  /**
+  * The data is encrypted.
+  */
   ENCRYPTION(16);
 
   // Reverse-lookup map for getting a type from a value
@@ -53,10 +65,21 @@ public enum PacketHeaderType {
     this.value = value;
   }
 
+/**
+* Retrieves the header type by using its value.
+*
+* @param value the <code>integer</code> value of header type
+* @return the corresponding {@link PacketHeaderType}
+*/
   public static PacketHeaderType getByValue(int value) {
     return lookup.get(value);
   }
 
+/**
+* Retrieves the value of a header type.
+*
+* @return the <code>integer</code> value of header type
+*/
   public final int getValue() {
     return value;
   }
