@@ -31,5 +31,11 @@ import com.tenio.common.configuration.Configuration;
  */
 public interface EventServerInitialization {
 
+  /**
+   * When the server finished initialization process.
+   *
+   * @param serverName    the {@link String} name of the server
+   * @param configuration all server settings in {@link Configuration}
+   */
   void handle(String serverName, Configuration configuration);
 }

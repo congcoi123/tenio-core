@@ -32,5 +32,11 @@ import com.tenio.core.entity.data.ServerMessage;
  */
 public interface EventReceivedMessageFromPlayer {
 
+  /**
+   * When the server receives a message from a player.
+   *
+   * @param player  the {@link Player} which is sending a message to the server
+   * @param message the receiving {@link ServerMessage}
+   */
   void handle(Player player, ServerMessage message);
 }

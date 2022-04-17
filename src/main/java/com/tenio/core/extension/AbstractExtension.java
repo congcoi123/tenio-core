@@ -36,53 +36,52 @@ import com.tenio.core.server.Server;
 import com.tenio.core.server.ServerImpl;
 
 /**
- * This class provides you all the necessary APIs for an own logic game
- * handling.
+ * This class provides all the necessary APIs for a logic game handling.
  */
 public abstract class AbstractExtension extends AbstractLogger {
 
   private final Server server = ServerImpl.getInstance();
 
   /**
-   * Retrieves the api object.
+   * Retrieves the server supported API responsible object.
    *
-   * @return the api object.
+   * @return an instance of {@link ServerApi}.
    */
   public final ServerApi api() {
     return server.getApi();
   }
 
   /**
-   * Retrieves the response object.
+   * Retrieves a response object which is using to send responses to clients side.
    *
-   * @return the response object
+   * @return an instance of {@link Response}
    */
   public final Response response() {
     return ResponseImpl.newInstance();
   }
 
   /**
-   * Retrieves the zero array.
+   * Retrieves a zero array instance.
    *
-   * @return the zero array
+   * @return an instance of {@link ZeroArray}
    */
   public final ZeroArray array() {
     return ZeroUtility.newZeroArray();
   }
 
   /**
-   * Retrieves the zero object.
+   * Retrieves an zero map instance.
    *
-   * @return the zero object
+   * @return an instance of {@link ZeroMap}
    */
   public final ZeroMap object() {
     return ZeroUtility.newZeroMap();
   }
 
   /**
-   * Retrieves the initialized room setting.
+   * Retrieves an initialized room setting.
    *
-   * @return the initialized room setting
+   * @return an instance of {@link InitialRoomSetting.Builder}
    */
   public InitialRoomSetting.Builder roomSetting() {
     return InitialRoomSetting.Builder.newInstance();

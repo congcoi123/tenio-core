@@ -29,9 +29,18 @@ import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 
 /**
- * When a player joined a room.
+ * When a player tried to join a room.
  */
 public interface EventPlayerJoinedRoomResult {
 
+  /**
+   * When a player tried to join a room.
+   *
+   * @param player the joining {@link Player}
+   * @param room   the {@link Room} which the player attempts to join in
+   * @param result the joining result presented by {@link PlayerJoinedRoomResult}. A player is
+   *               considered as it joined the room when the result equals to success
+   * @see PlayerJoinedRoomResult#SUCCESS
+   */
   void handle(Player player, Room room, PlayerJoinedRoomResult result);
 }

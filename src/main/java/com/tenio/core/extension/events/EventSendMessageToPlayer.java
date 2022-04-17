@@ -28,9 +28,15 @@ import com.tenio.core.entity.Player;
 import com.tenio.core.entity.data.ServerMessage;
 
 /**
- * When a server sends a message to a player.
+ * When the server sends a message to a player.
  */
 public interface EventSendMessageToPlayer {
 
+  /**
+   * When the server sends a message to a player.
+   *
+   * @param player  the {@link Player} which is receiving a message to the server
+   * @param message the sending {@link ServerMessage}
+   */
   void handle(Player player, ServerMessage message);
 }

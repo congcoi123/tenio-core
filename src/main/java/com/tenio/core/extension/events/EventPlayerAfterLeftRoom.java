@@ -33,5 +33,15 @@ import com.tenio.core.entity.define.result.PlayerLeftRoomResult;
  */
 public interface EventPlayerAfterLeftRoom {
 
+  /**
+   * When a player has just left its current room.
+   *
+   * @param player the left {@link Player}
+   * @param room   the {@link Room} which the player has just left out
+   * @param result the leaving result presented by {@link PlayerLeftRoomResult}. A player is
+   *               considered as it has already left its room when the result equals to success
+   * @see PlayerLeftRoomResult#SUCCESS
+   * @see EventPlayerBeforeLeaveRoom
+   */
   void handle(Player player, Room room, PlayerLeftRoomResult result);
 }

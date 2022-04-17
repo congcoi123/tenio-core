@@ -29,10 +29,22 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Validates the HTTP request.
+ * Validates an HTTP request on the HTTP service. This method is used to intercept any HTTP
+ * request from clients side then validate it.
  */
 public interface EventHttpRequestValidation {
 
+  /**
+   * Validates an HTTP request on the HTTP service. This method is used to intercept any HTTP
+   * request from client side then validate it.
+   *
+   * @param method   the {@link RestMethod} using in request
+   * @param request  a {@link HttpServletRequest} comes from client side
+   * @param response a {@link HttpServletResponse} sends to client side
+   * @return an instance of {@link HttpServletResponse} for the following steps in the request
+   * handler
+   * @see EventHttpRequestHandle
+   */
   HttpServletResponse handle(RestMethod method, HttpServletRequest request,
                              HttpServletResponse response);
 }

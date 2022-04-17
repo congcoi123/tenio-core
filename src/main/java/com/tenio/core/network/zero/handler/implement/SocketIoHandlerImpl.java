@@ -67,7 +67,7 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
   }
 
   @Override
-  public void updateDroppedPackets(long numberPackets) {
+  public void updateReadDroppedPackets(long numberPackets) {
     networkReaderStatistic.updateReadDroppedPackets(numberPackets);
   }
 

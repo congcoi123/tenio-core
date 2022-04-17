@@ -33,5 +33,14 @@ import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
  */
 public interface EventPlayerBeforeLeaveRoom {
 
+  /**
+   * When a player is going to leave its current room.
+   *
+   * @param player the leaving {@link Player}
+   * @param room   the {@link Room} which the player is going to leave out
+   * @param mode   the leaving {@link PlayerLeaveRoomMode} applied for the player when it leaves
+   *               the room
+   * @see EventPlayerAfterLeftRoom
+   */
   void handle(Player player, Room room, PlayerLeaveRoomMode mode);
 }
