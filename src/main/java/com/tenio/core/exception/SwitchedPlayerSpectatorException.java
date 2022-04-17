@@ -27,7 +27,7 @@ package com.tenio.core.exception;
 import com.tenio.core.entity.define.result.SwitchedPlayerSpectatorResult;
 
 /**
- * When a player try to change its role to a spectator and vice versa.
+ * When a participant tries to change its role to a spectator and vice versa.
  */
 public final class SwitchedPlayerSpectatorException extends RuntimeException {
 
@@ -35,22 +35,24 @@ public final class SwitchedPlayerSpectatorException extends RuntimeException {
 
   private final SwitchedPlayerSpectatorResult result;
 
-/**
-* Creats a new exception.
-*
-* @param message a warning {@link String} message
-* @param result a {@link SwitchedPlayerSpectatorResult} singleton value indicates result of switching
-*/
+  /**
+   * Creates a new exception.
+   *
+   * @param message a warning {@link String} message
+   * @param result  a {@link SwitchedPlayerSpectatorResult} singleton value indicates result of
+   *                switching
+   */
   public SwitchedPlayerSpectatorException(String message, SwitchedPlayerSpectatorResult result) {
     super(message);
     this.result = result;
   }
 
-/**
-* Retrieves the switching result.
-*
-* @return result a {@link SwitchedPlayerSpectatorResult} singleton value indicates result of switching
-*/
+  /**
+   * Retrieves the switching result.
+   *
+   * @return result a {@link SwitchedPlayerSpectatorResult} singleton value indicates result of
+   * switching
+   */
   public SwitchedPlayerSpectatorResult getResult() {
     return result;
   }

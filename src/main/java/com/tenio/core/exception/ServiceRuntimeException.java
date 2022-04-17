@@ -31,11 +31,11 @@ public final class ServiceRuntimeException extends RuntimeException {
 
   private static final long serialVersionUID = 998770370227398281L;
 
-/**
-* Creates a new exception.
-*
-* @param message the warning {@link String} message
-*/
+  /**
+   * Creates a new exception.
+   *
+   * @param message the warning {@link String} message
+   */
   public ServiceRuntimeException(String message) {
     super(message);
   }

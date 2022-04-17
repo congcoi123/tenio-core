@@ -28,7 +28,7 @@ import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
 
 /**
- * When you try to add a player who existed into the room.
+ * When a player is added into a room which is already existed.
  */
 public final class AddedDuplicatedPlayerException extends RuntimeException {
 
@@ -37,7 +37,7 @@ public final class AddedDuplicatedPlayerException extends RuntimeException {
   /**
    * Initialization.
    *
-   * @param player the {@Player} try to join the room
+   * @param player the {@link Player} tries to join the room
    * @param room   the target {@link Room}
    */
   public AddedDuplicatedPlayerException(Player player, Room room) {

@@ -24,20 +24,21 @@ THE SOFTWARE.
 
 package com.tenio.core.exception;
 
+import com.tenio.core.controller.AbstractController;
+
 /**
- * When the comming requests queue is full.
+ * When the coming requests queue is full.
  */
 public final class RequestQueueFullException extends RuntimeException {
 
   private static final long serialVersionUID = 6981972099759381035L;
-  
+
   /**
-* Creates a new exception.
-*
-* @param currentSize the <code>integer</code> current size of the queue
-* @see RequestQueue
-* @see RequestQueuePolicy
-*/
+   * Creates a new exception.
+   *
+   * @param currentSize the current size of the queue (<code>integer</code> value)
+   * @see AbstractController
+   */
   public RequestQueueFullException(int currentSize) {
     super(String.format("Reached max queue size, the request was dropped. The current size: %d",
         currentSize));

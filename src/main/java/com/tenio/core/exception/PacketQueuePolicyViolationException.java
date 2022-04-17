@@ -25,22 +25,25 @@ THE SOFTWARE.
 package com.tenio.core.exception;
 
 import com.tenio.core.network.entity.packet.Packet;
+import com.tenio.core.network.entity.packet.PacketQueue;
+import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 
 /**
- * When the packet queue policy is violated.
+ * When the packet queue, which is using to send packet from the server to clients side, has
+ * any policy is violated.
  */
 public final class PacketQueuePolicyViolationException extends RuntimeException {
 
   private static final long serialVersionUID = -1620230030870946508L;
 
-/**
-* Creates a new exception.
-*
-* @param packet the dropping {@link Packet}
-* @param percentageUsed the <code>float</code> current usage of queue in percent
-* @see PacketQueue
-* @see PacketQueuePolicy
-*/
+  /**
+   * Creates a new exception.
+   *
+   * @param packet         the dropping {@link Packet}
+   * @param percentageUsed the current usage of queue in percent (<code>float</code> value)
+   * @see PacketQueue
+   * @see PacketQueuePolicy
+   */
   public PacketQueuePolicyViolationException(Packet packet, float percentageUsed) {
     super(String.format("Dropped packet: [%s], current packet queue usage: %f%%", packet.toString(),
         percentageUsed));
