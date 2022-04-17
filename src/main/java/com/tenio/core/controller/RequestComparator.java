@@ -24,13 +24,16 @@ THE SOFTWARE.
 
 package com.tenio.core.controller;
 
+import com.tenio.core.network.define.RequestPriority;
 import com.tenio.core.network.entity.protocol.Request;
 import java.util.Comparator;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine.InitializationException;
 
 /**
- * This class provides the comparator using for sort the requests bases on their priorities in
+ * This class provides a comparator using for sort the requests bases on their priorities in
  * the controller requests queue.
+ *
+ * @see RequestPriority
  */
 public final class RequestComparator implements Comparator<Request> {
 
@@ -42,29 +45,23 @@ public final class RequestComparator implements Comparator<Request> {
     }
   }
 
-/**
-* Creates a new instance.
-*
-* @return a {@link RequestComparator} instance
-*/
+  /**
+   * Creates a new instance.
+   *
+   * @return a {@link RequestComparator} instance
+   */
   public static RequestComparator newInstance() {
     return instance;
   }
 
   @Override
   public int compare(Request request1, Request request2) {
-    int result = 0;
+    int result;
 
     if (request1.getPriority().getValue() < request2.getPriority().getValue()) {
       result = -1;
     } else if (request1.getPriority() == request2.getPriority()) {
-      if (request1.getTimestamp() < request2.getTimestamp()) {
-        result = -1;
-      } else if (request1.getTimestamp() > request2.getTimestamp()) {
-        result = 1;
-      } else {
-        result = 0;
-      }
+      result = Long.compare(request1.getTimestamp(), request2.getTimestamp());
     } else {
       result = 1;
     }
