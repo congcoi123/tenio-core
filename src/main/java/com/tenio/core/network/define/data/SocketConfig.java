@@ -27,7 +27,7 @@ package com.tenio.core.network.define.data;
 import com.tenio.core.network.define.TransportType;
 
 /**
- * The configuration for a socket.
+ * A configuration for a socket.
  */
 public final class SocketConfig {
 

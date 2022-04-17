@@ -32,7 +32,6 @@ import com.tenio.core.manager.Manager;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * All supported APIs for the player management. A management can belong to a room or live stand
@@ -76,27 +75,53 @@ public interface PlayerManager extends Manager {
    * Retrieves a player by using its name.
    *
    * @param playerName a unique {@link String} name of player on the server
-   * @return an instance of optional {@link Player}
-   * @see Optional
+   * @return an instance of {@link Player} if present, otherwise <code>null</code>
    */
-  Optional<Player> getPlayerByName(String playerName);
+  Player getPlayerByName(String playerName);
 
   /**
    * Retrieves a player by using its session.
    *
    * @param session the {@link Session} associated with a player on the server
-   * @return an instance of optional {@link Player}
-   * @see Optional
+   * @return an instance of {@link Player} if present, otherwise <code>null</code>
    */
-  Optional<Player> getPlayerBySession(Session session);
+  Player getPlayerBySession(Session session);
 
+  /**
+   * Retrieves an iterator for a player management list. This method should be used to prevent
+   * the "escape references" issue.
+   *
+   * @return an iterator of {@link Player} management list
+   * @see Iterator
+   */
   Iterator<Player> getPlayerIterator();
 
+  /**
+   * Retrieves a read-only player management list. This method should be used to prevent the
+   * "escape references" issue.
+   *
+   * @return a list of all {@link Player}s in the management list
+   * @see List
+   */
   List<Player> getReadonlyPlayersList();
 
-  Iterator<Player> getSessionIterator();
+  /**
+   * Retrieves an iterator for sessions in a player management list. This method should be
+   * used to prevent the "escape references" issue.
+   *
+   * @return an iterator of {@link Session} in the player management list
+   * @see Iterator
+   */
+  Iterator<Session> getSessionIterator();
 
-  List<Player> getReadonlySessionsList();
+  /**
+   * Retrieves a read-only list of sessions in a player management list. This method should be
+   * used to prevent the "escape references" issue.
+   *
+   * @return a list of {@link Session}s in the player management list
+   * @see List
+   */
+  List<Session> getReadonlySessionsList();
 
   /**
    * Removes a player from the management list.
@@ -135,10 +160,9 @@ public interface PlayerManager extends Manager {
   /**
    * Retrieves a room of the management list.
    *
-   * @return an instance of optional {@link Room}
-   * @see Optional
+   * @return an instance of {@link Room} if present, otherwise <code>null</code>
    */
-  Optional<Room> getOwnerRoom();
+  Room getOwnerRoom();
 
   /**
    * Adds the management list to a room.

@@ -29,7 +29,7 @@ import java.util.List;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * Holding configurations for the HTTP service.
+ * Holds configurations for the HTTP service.
  */
 @ThreadSafe
 public final class HttpConfig {

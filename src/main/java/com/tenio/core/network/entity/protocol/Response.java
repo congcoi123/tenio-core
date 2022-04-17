@@ -26,122 +26,154 @@ package com.tenio.core.network.entity.protocol;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.network.define.ResponsePriority;
+import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
-import java.util.List;
 
 /**
- * The response was formed when the server wants to send a message to clients.
+ * The response is created when the server wants to send a message to client side.
  */
 public interface Response {
 
-/**
-* Retrieves an array of binaries data that is carried by the response.
-*
-* @return an array of <code>byte</code> data that is carried by the response
-*/
+  /**
+   * Retrieves an array of binaries data that is carried by the response.
+   *
+   * @return an array of <code>byte</code> data that is carried by the response
+   */
   byte[] getContent();
 
-/**
-* Sets content for the response.
-*
-* @param content an array of <code>byte</code> data that is carried by the response
-* @return the pointer of response
-*/
+  /**
+   * Sets content for the response.
+   *
+   * @param content an array of <code>byte</code> data that is carried by the response
+   * @return the pointer of response
+   */
   Response setContent(byte[] content);
 
-// getReceipientPlayers
-  Collection<Player> getPlayers();
+  /**
+   * Retrieves a collection of recipient players.
+   *
+   * @return a collection of recipient {@link Player}s
+   * @see Collection
+   */
+  Collection<Player> getRecipientPlayers();
 
-// getNonsessionReceipientPlayers
-  Collection<Player> getNonSessionPlayers();
+  /**
+   * Sets a collection of recipient players.
+   *
+   * @param players a collection of recipient {@link Player}s
+   * @return the pointer of this instance
+   * @see Collection
+   */
+  Response setRecipientPlayers(Collection<Player> players);
 
-/**
-* Retrieves a list of recipient socket sessions.
-*
-* @return a list of recipient socket {@link Session}s
-* @see Collection
-*/
+  /**
+   * Retrieves a collection of non session recipient players.
+   *
+   * @return a collection of recipient {@link Player}s
+   * @see Collection
+   */
+  Collection<Player> getNonSessionRecipientPlayers();
+
+  /**
+   * Retrieves a collection of recipient socket sessions.
+   *
+   * @return a collection of recipient {@link Session}s
+   * @see Collection
+   */
   Collection<Session> getRecipientSocketSessions();
 
-/**
-* Retrieves a list of recipient socket sessions which recieves packets by datagram channel.
-*
-* @return a list of recipient socket {@link Session}s which recieves packets by datagram channel
-* @see Collection
-*/
+  /**
+   * Retrieves a collection of recipient socket sessions which receives packets by datagram channel.
+   *
+   * @return a collection of recipient {@link Session}s which receives packets by datagram channel
+   * @see Collection
+   */
   Collection<Session> getRecipientDatagramSessions();
 
-/**
-* Retrieves a list of recipient websocket sessions.
-*
-* @return a list of recipient websocket {@link Session}s
-* @see Collection
-*/
+  /**
+   * Retrieves a collection of recipient WebSocket sessions.
+   *
+   * @return a collection of recipient WebSocket {@link Session}s
+   * @see Collection
+   */
   Collection<Session> getRecipientWebSocketSessions();
 
-// setRecipientPlayers
-  Response setRecipients(Collection<Player> players);
+  /**
+   * Sets a recipient player.
+   *
+   * @param player a recipient {@link Player}
+   * @return the pointer of this instance
+   */
+  Response setRecipientPlayer(Player player);
 
-// setRecipientPlayer
-  Response setRecipient(Player player);
-  
-  // setRecipientSessions
-  
-  // setRecipientSession
+  /**
+   * Sets a collection of recipient sessions.
+   *
+   * @param sessions a collection of recipient {@link Session}s
+   * @return the pointer of this instance
+   * @see Collection
+   */
+  Response setRecipientSessions(Collection<Session> sessions);
 
-/**
-* Sets the higher priority for sending packets via datagram channel. In case the session in use is websocket, then this setting should be ignored.
-*
-* @return the pointer of response
-*/
+  /**
+   * Sets a recipient session.
+   *
+   * @param session a recipient {@link Session}
+   * @return the pointer of this instance
+   */
+  Response setRecipientSession(Session session);
+
+  /**
+   * Sets the higher priority for sending packets via the Datagram channel. In case the session in
+   * use is WebSocket, then this setting should be ignored.
+   *
+   * @return the pointer of response
+   */
   Response prioritizedUdp();
 
-/**
-* Allows the sending content to be encrypted.
-*
-* @return the pointer of response
-*/
+  /**
+   * Allows the sending content to be encrypted.
+   *
+   * @return the pointer of response
+   */
   Response encrypted();
 
-/**
-* Sets priority for the response.
-*
-* @param priority the {@link ResponsePriority}
-* @return the pointer of response
-* @see Policy
-*/
+  /**
+   * Sets priority for the response.
+   *
+   * @param priority the {@link ResponsePriority}
+   * @return the pointer of response
+   * @see PacketQueuePolicy
+   */
   Response priority(ResponsePriority priority);
 
-/**
-* Determines whether the response's content is encrypted.
-*
-* @return <code>true</code> if the response's content is encrypted, otherwise <code>false</code>
-*/
+  /**
+   * Determines whether the response's content is encrypted.
+   *
+   * @return <code>true</code> if the response's content is encrypted, otherwise <code>false</code>
+   */
   boolean isEncrypted();
 
-/**
-* Retrieves the current priority of response.
-*
-* @return the current {@link ResponsePriority} of response
-* @see Policy
-*/
+  /**
+   * Retrieves the current priority of response.
+   *
+   * @return the current {@link ResponsePriority} of response
+   * @see PacketQueuePolicy
+   */
   ResponsePriority getPriority();
 
-/**
-* Writes down the content data to sessions for sending to client sides.
-*/
+  /**
+   * Writes down the content data to sessions for sending to client sides.
+   */
   void write();
 
-// Remove it
-  void write(List<Session> sessions);
-
-/**
-* Writes down the content data to sessions for sending to client sides.
-*
-* @param delayInSeconds allows delaying in the number of seconds
-* @throws UnsupportedOperationException unsupported operation at the moment
-*/
+  /**
+   * Writes down the content data to sessions for sending to client sides.
+   *
+   * @param delayInSeconds allows delaying in the number of seconds
+   * @throws UnsupportedOperationException unsupported operation at the moment
+   */
   default void writeInDelay(int delayInSeconds) {
     throw new UnsupportedOperationException();
   }

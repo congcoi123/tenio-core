@@ -314,13 +314,13 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
     var data = ZeroUtility.binaryToMap(response.getContent());
     var message = ServerMessage.newInstance().setData(data);
 
-    var playerIterator = response.getPlayers().iterator();
+    var playerIterator = response.getRecipientPlayers().iterator();
     while (playerIterator.hasNext()) {
       var player = playerIterator.next();
       eventManager.emit(ServerEvent.SEND_MESSAGE_TO_PLAYER, player, message);
     }
 
-    var nonSessionPlayers = response.getNonSessionPlayers();
+    var nonSessionPlayers = response.getNonSessionRecipientPlayers();
     if (nonSessionPlayers != null) {
       var nonSessionIterator = nonSessionPlayers.iterator();
       while (nonSessionIterator.hasNext()) {

@@ -40,7 +40,7 @@ public abstract class AbstractManager extends SystemLogger {
   /**
    * Initialization.
    *
-   * @param eventManager a {@link EventManager}
+   * @param eventManager an instance of {@link EventManager}
    */
   protected AbstractManager(EventManager eventManager) {
     this.eventManager = eventManager;

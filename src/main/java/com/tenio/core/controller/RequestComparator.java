@@ -34,6 +34,7 @@ import org.apache.logging.log4j.core.tools.picocli.CommandLine.InitializationExc
  * the controller requests queue.
  *
  * @see RequestPriority
+ * @see AbstractController
  */
 public final class RequestComparator implements Comparator<Request> {
 
@@ -61,7 +62,7 @@ public final class RequestComparator implements Comparator<Request> {
     if (request1.getPriority().getValue() < request2.getPriority().getValue()) {
       result = -1;
     } else if (request1.getPriority() == request2.getPriority()) {
-      result = Long.compare(request1.getTimestamp(), request2.getTimestamp());
+      result = Long.compare(request1.getCreatedTimestamp(), request2.getCreatedTimestamp());
     } else {
       result = 1;
     }

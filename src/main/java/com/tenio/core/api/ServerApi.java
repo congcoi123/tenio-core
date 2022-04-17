@@ -38,6 +38,8 @@ import com.tenio.core.extension.events.EventPlayerLoggedinResult;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * This class provides all supported APIs working with the server.
@@ -128,17 +130,19 @@ public interface ServerApi {
    * Retrieves a player on the server by using its name.
    *
    * @param playerName a unique {@link String} value for player's name on the server
-   * @return a corresponding instance of {@link Player} if available, otherwise <code>null</code>
+   * @return a corresponding instance of optional {@link Player}
+   * @see Optional
    */
-  Player getPlayerByName(String playerName);
+  Optional<Player> getPlayerByName(String playerName);
 
   /**
    * Retrieves a player on the server by using its session (if present).
    *
    * @param session a {@link Session} associating to the player on the server
-   * @return a corresponding instance of {@link Player} if available, otherwise <code>null</code>
+   * @return a corresponding instance of optional {@link Player}
+   * @see Optional
    */
-  Player getPlayerBySession(Session session);
+  Optional<Player> getPlayerBySession(Session session);
 
   /**
    * Fetches the current number of players activating on the server.
@@ -161,27 +165,28 @@ public interface ServerApi {
    * Retrieves a read-only global player management list on the server. This method should be used
    * to prevent the "escape references" issue.
    *
-   * @return a collection of all players {@link Player} in the management list on the server
+   * @return a list of all {@link Player}s in the management list on the server
    * @see PlayerManager
-   * @see Collection
+   * @see List
    */
-  Collection<Player> getReadonlyListPlayers();
+  List<Player> getReadonlyPlayersList();
 
   /**
    * Retrieves a room instance by using its ID.
    *
    * @param roomId a unique room ID (<code>long</code> value)
-   * @return a {@link Room} instance if present, otherwise <code>null</code>
+   * @return an optional {@link Room} instance
+   * @see Optional
    */
-  Room getRoomById(long roomId);
+  Optional<Room> getRoomById(long roomId);
 
   /**
-   * Retrieves a read-only global room management list on the server. This method should be used
+   * Retrieves an iterator for the room management list on the server. This method should be used
    * to prevent the "escape references" issue.
    *
-   * @return a collection of all rooms {@link Room} in the management list on the server
+   * @return a list of all rooms {@link Room} in the management list on the server
    * @see RoomManager
-   * @see Collection
+   * @see Iterator
    */
   Iterator<Room> getRoomIterator();
 
@@ -189,11 +194,11 @@ public interface ServerApi {
    * Retrieves a read-only global room management list on the server. This method should be used
    * to prevent the "escape references" issue.
    *
-   * @return a collection of all rooms {@link Room} in the management list on the server
+   * @return a list of all rooms {@link Room} in the management list on the server
    * @see RoomManager
-   * @see Collection
+   * @see List
    */
-  Collection<Room> getReadonlyListRooms();
+  List<Room> getReadonlyRoomsList();
 
   /**
    * Allows a player to join a particular room.

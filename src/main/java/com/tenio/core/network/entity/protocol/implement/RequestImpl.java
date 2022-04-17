@@ -101,7 +101,7 @@ public final class RequestImpl implements Request {
   }
 
   @Override
-  public long getTimestamp() {
+  public long getCreatedTimestamp() {
     return timestamp;
   }
 

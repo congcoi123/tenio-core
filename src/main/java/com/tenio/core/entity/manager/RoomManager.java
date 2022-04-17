@@ -107,19 +107,52 @@ public interface RoomManager extends Manager {
    * Retrieves a room instance by looking for its unique ID.
    *
    * @param roomId the <code>long</code> value of room's ID
-   * @return an instance of optional {@link Room}
-   * @see Optional
+   * @return an instance of {@link Room} if present, otherwise <code>null</code>
    */
   Optional<Room> getRoomById(long roomId);
 
+  /**
+   * Retrieves an iterator for a room management list by searching with the room's name. This method
+   * should be used to prevent the "escape references" issue.
+   *
+   * @param roomName the {@link String} room's name
+   * @return a list of all {@link Room}s sharing the same name in the management list
+   * @see Iterator
+   */
   Iterator<Room> getRoomIteratorByName(String roomName);
 
+  /**
+   * Retrieves a read-only room management list by searching with the room's name. This method
+   * should be used to prevent the "escape references" issue.
+   *
+   * @return a list of all {@link Room}s sharing the same name in the management list
+   * @see List
+   */
   List<Room> getReadonlyRoomsListByName(String roomName);
 
+  /**
+   * Retrieves an iterator for a room management list. This method should be used to prevent the
+   * "escape references" issue.
+   *
+   * @return a list of all {@link Room}s in the management list
+   * @see Iterator
+   */
   Iterator<Room> getRoomIterator();
 
+  /**
+   * Retrieves a read-only room management list. This method should be used to prevent the
+   * "escape references" issue.
+   *
+   * @return a list of all {@link Room}s in the management list
+   * @see List
+   */
   List<Room> getReadonlyRoomsList();
 
+  /**
+   * Removes a room from the management list.
+   *
+   * @param roomId the unique <code>long</code> room's ID
+   */
   void removeRoomById(long roomId);
 
   /**

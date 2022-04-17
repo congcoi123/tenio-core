@@ -27,7 +27,7 @@ package com.tenio.core.network.define.data;
 import com.tenio.core.network.define.RestMethod;
 
 /**
- * Forming a configuration for an HTTP's REST method.
+ * Forms a configuration for an HTTP's REST method.
  */
 public final class PathConfig {
 

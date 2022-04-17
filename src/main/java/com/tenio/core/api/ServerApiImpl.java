@@ -174,7 +174,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
-  public Collection<Player> getReadonlyListPlayers() {
+  public Collection<Player> getReadonlyPlayersList() {
 
   }
 
@@ -189,7 +189,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
-  public Collection<Room> getReadonlyListRooms() {
+  public Collection<Room> getReadonlyRoomsList() {
 
   }
 

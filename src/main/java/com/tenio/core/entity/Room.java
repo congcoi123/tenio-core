@@ -268,22 +268,80 @@ public interface Room {
    */
   boolean containsPlayerName(String playerName);
 
-  // Use Optional
+  /**
+   * Retrieves a player by using its name.
+   *
+   * @param playerName a unique {@link String} name of player on the server
+   * @return an instance of optional {@link Player}
+   * @see Optional
+   */
   Optional<Player> getPlayerByName(String playerName);
 
-  // Use Optional
+  /**
+   * Retrieves a player on the server by using its session (if present).
+   *
+   * @param session a {@link Session} associating to the player on the server
+   * @return a corresponding instance of optional {@link Player}
+   * @see Optional
+   */
   Optional<Player> getPlayerBySession(Session session);
 
+  /**
+   * Retrieves an iterator for a player management list. This method should be used to prevent
+   * the "escape references" issue.
+   *
+   * @return an iterator of {@link Player} management list
+   * @see Iterator
+   */
   Iterator<Player> getPlayerIterator();
 
+  /**
+   * Retrieves a read-only player management list. This method should be used to prevent the
+   * "escape references" issue.
+   *
+   * @return a list of all {@link Player}s in the management list
+   * @see List
+   */
   List<Player> getReadonlyPlayersList();
 
+  /**
+   * Retrieves an iterator for participants in a player management list. This method should be used
+   * to prevent the "escape references" issue.
+   *
+   * @return an iterator of participant in a player management list
+   * @see Iterator
+   * @see PlayerRoleInRoom#PARTICIPANT
+   */
   Iterator<Player> getParticipantIterator();
 
-  List<Session> getReadonlyParticipantsList();
+  /**
+   * Retrieves a read-only list of participants in a player management list. This method should be
+   * used to prevent the "escape references" issue.
+   *
+   * @return a list of participants in a player management list
+   * @see List
+   * @see PlayerRoleInRoom#PARTICIPANT
+   */
+  List<Player> getReadonlyParticipantsList();
 
+  /**
+   * Retrieves an iterator for spectators in a player management list. This method should be used
+   * to prevent the "escape references" issue.
+   *
+   * @return an iterator of spectator in a player management list
+   * @see Iterator
+   * @see PlayerRoleInRoom#SPECTATOR
+   */
   Iterator<Player> getSpectatorIterator();
 
+  /**
+   * Retrieves a read-only list of spectators in a player management list. This method should be
+   * used to prevent the "escape references" issue.
+   *
+   * @return a list of spectators in a player management list
+   * @see List
+   * @see PlayerRoleInRoom#SPECTATOR
+   */
   List<Player> getReadonlySpectatorsList();
 
   /**

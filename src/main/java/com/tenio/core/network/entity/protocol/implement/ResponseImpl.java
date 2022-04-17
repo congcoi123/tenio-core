@@ -78,12 +78,12 @@ public final class ResponseImpl implements Response {
   }
 
   @Override
-  public Collection<Player> getPlayers() {
+  public Collection<Player> getRecipientPlayers() {
     return players;
   }
 
   @Override
-  public Collection<Player> getNonSessionPlayers() {
+  public Collection<Player> getNonSessionRecipientPlayers() {
     return nonSessionPlayers;
   }
 
@@ -103,7 +103,7 @@ public final class ResponseImpl implements Response {
   }
 
   @Override
-  public Response setRecipients(Collection<Player> players) {
+  public Response setRecipientPlayers(Collection<Player> players) {
     if (this.players == null) {
       this.players = players;
     } else {
@@ -114,7 +114,7 @@ public final class ResponseImpl implements Response {
   }
 
   @Override
-  public Response setRecipient(Player player) {
+  public Response setRecipientPlayer(Player player) {
     if (players == null) {
       players = new ArrayList<Player>();
     }

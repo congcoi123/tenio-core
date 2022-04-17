@@ -30,7 +30,7 @@ import com.tenio.common.logger.SystemLogger;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 
 /**
- * Creation of a boostrap.
+ * The creation of a boostrap.
  */
 public final class Bootstrapper extends SystemLogger {
 
@@ -46,21 +46,21 @@ public final class Bootstrapper extends SystemLogger {
     injector = Injector.newInstance();
   }
 
-/**
-* Creates a new instance.
-*
-* @return a new instance of {@link Bootstrapper}
-*/
+  /**
+   * Creates a new instance.
+   *
+   * @return a new instance of {@link Bootstrapper}
+   */
   public static Bootstrapper newInstance() {
     return instance;
   }
 
   /**
-   * Start the bootstrap.
+   * Start the bootstrapping.
    *
-   * @param entryClass the root class
-   * @param packages   the scanning packages
-   * @return <b>true</b> if success, otherwise <b>false</b>>
+   * @param entryClass a {@link Class} in the root package
+   * @param packages   the scanning {@link String} package names
+   * @return <b>true</b> if successful, otherwise <b>false</b>>
    * @throws Exception when any exceptions occurred
    */
   public boolean run(Class<?> entryClass, String... packages) throws Exception {
@@ -85,11 +85,11 @@ public final class Bootstrapper extends SystemLogger {
     }
   }
 
-/**
-* Retrieves an instance for bootstrap handler.
-*
-* @return a {@link BootstrapHandler}
-*/
+  /**
+   * Retrieves an instance of bootstrap handler.
+   *
+   * @return a {@link BootstrapHandler} instance
+   */
   public BootstrapHandler getBootstrapHandler() {
     return bootstrapHandler;
   }
