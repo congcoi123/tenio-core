@@ -29,17 +29,17 @@ package com.tenio.core.entity.define.result;
  */
 public enum PlayerLoggedInResult {
 
-/**
-* Success.
-*/
+  /**
+   * Success.
+   */
   SUCCESS,
   /**
-  * The player fails to log in the server cause its session can not be found.
-  */
+   * The player fails to log in the server cause its session can not be found.
+   */
   SESSION_NOT_FOUND,
   /**
-  * The player fails to log in the server cause it is already in. It should throw an exception.
-  */
+   * The player fails to log in the server because it is already in. It should throw an exception.
+   */
   DUPLICATED_PLAYER;
 
   @Override

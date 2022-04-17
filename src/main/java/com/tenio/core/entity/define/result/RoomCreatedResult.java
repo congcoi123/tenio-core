@@ -29,17 +29,17 @@ package com.tenio.core.entity.define.result;
  */
 public enum RoomCreatedResult {
 
-/**
-* Success.
-*/
+  /**
+   * Success.
+   */
   SUCCESS,
   /**
-  * It fails to create a new room cause the number of room reaches the limitation.
-  */
+   * It fails to create a new room cause the number of room reaches the limitation.
+   */
   REACHED_MAX_ROOMS,
   /**
-  * It fails to create a new room cause its name or password is in invalid format.
-  */
+   * It fails to create a new room cause its name or password is in invalid format.
+   */
   INVALID_NAME_OR_PASSWORD;
 
   @Override

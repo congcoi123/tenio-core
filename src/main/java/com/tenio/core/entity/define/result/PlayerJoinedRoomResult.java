@@ -29,29 +29,32 @@ package com.tenio.core.entity.define.result;
  */
 public enum PlayerJoinedRoomResult {
 
-/**
-* Success.
-*/
+  /**
+   * Success.
+   */
   SUCCESS,
   /**
-  * The player fails to join room cause the room is full.
-  */
+   * The player fails to join room cause the room is full.
+   */
   ROOM_IS_FULL,
   /**
-  * The player fails to join room cause it try to occupy an invalid slot in the room.
-  */
+   * The player fails to join room cause it try to occupy an invalid slot in the room.
+   */
   SLOT_UNAVAILABLE_IN_ROOM,
   /**
-  * The player fails to join room cause there is a same player already in the room. It should aso throw an exception.
-  */
+   * The player fails to join room cause there is a same player already in the room. It should
+   * aso throw an exception.
+   */
   DUPLICATED_PLAYER,
-    /**
-  * The player fails to join room cause the player or room is unavailable. It should aso throw an exception.
-  */
+  /**
+   * The player fails to join room cause the player or room is unavailable. It should aso throw
+   * an exception.
+   */
   PLAYER_OR_ROOM_UNAVAILABLE,
-    /**
-  * The player fails to join room cause it is in another room, it must leave its current room before joining a new one. It should aso throw an exception.
-  */
+  /**
+   * The player fails to join room because it is in another room, it must leave its current room
+   * before joining a new one. It should aso throw an exception.
+   */
   PLAYER_IS_IN_ANOTHER_ROOM;
 
   @Override

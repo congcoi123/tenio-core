@@ -29,25 +29,25 @@ package com.tenio.core.entity.define.result;
  */
 public enum SwitchedPlayerSpectatorResult {
 
-/**
-* Success.
-*/
+  /**
+   * Success.
+   */
   SUCCESS,
   /**
-  * The player fails to switch its role cause it is not in the room anymore.
-  */
+   * The player fails to switch its role cause it is not in the room anymore.
+   */
   PLAYER_WAS_NOT_IN_ROOM,
   /**
-  * The player fails to switch to spectator cause there is no slot available in the room.
-  */ 
+   * The player fails to switch to spectator cause there is no slot available in the room.
+   */
   SWITCH_NO_SPECTATOR_SLOTS_AVAILABLE,
-    /**
-  * The spectator fails to switch to player cause there is no slot available in the room.
-  */ 
+  /**
+   * The spectator fails to switch to player cause there is no slot available in the room.
+   */
   SWITCH_NO_PLAYER_SLOTS_AVAILABLE,
-    /**
-  * The player fails to switch to spectator cause it try to occupy an invalid slot in the room.
-  */ 
+  /**
+   * The player fails to switch to spectator cause it try to occupy an invalid slot in the room.
+   */
   SLOT_UNAVAILABLE_IN_ROOM;
 
   @Override

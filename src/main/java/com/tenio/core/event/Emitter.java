@@ -26,8 +26,6 @@ package com.tenio.core.event;
 
 /**
  * This function interface provides one method for invoking an event.
- *
- * @param T the template
  */
 @FunctionalInterface
 public interface Emitter<T> {
@@ -35,8 +33,8 @@ public interface Emitter<T> {
   /**
    * To invoke an event.
    *
-   * @param params the parameters those will be sent to subscribers
-   * @return the subsribe's result
+   * @param params parameters those will be sent to subscribers
+   * @return an {@link Object} subscribes' result
    */
-  Object emit(@SuppressWarnings("unchecked") T... params);
+  Object emit(T... params);
 }

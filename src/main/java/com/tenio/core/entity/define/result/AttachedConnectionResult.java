@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.entity.define.result;
 
 /**
- * The results when a connection tried to attach to a player.
+ * The results when a connection tried to associate with a player.
  */
 public enum AttachedConnectionResult {
 

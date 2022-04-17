@@ -28,7 +28,8 @@ import com.tenio.common.data.ZeroCollection;
 import com.tenio.common.utility.TimeUtility;
 
 /**
- * Holding the data sent from client associated with timestamp and vice versa.
+ * Holds the data sent from client side, associated with the sending timestamp and other
+ * information.
  */
 public final class ServerMessage {
 
@@ -39,21 +40,40 @@ public final class ServerMessage {
     createdTimestamp = TimeUtility.currentTimeMillis();
   }
 
+  /**
+   * Initialization.
+   *
+   * @return a new instance of {@link ServerMessage}
+   */
   public static ServerMessage newInstance() {
     return new ServerMessage();
   }
 
+  /**
+   * Retrieves the created timestamp for the message in milliseconds.
+   *
+   * @return the created timestamp in milliseconds (<code>long</code> value)
+   */
   public long getCreatedTimestamp() {
     return createdTimestamp;
   }
 
+  /**
+   * Retrieves the data content carried by the message.
+   *
+   * @return the {@link ZeroCollection} data content
+   */
   public ZeroCollection getData() {
     return data;
   }
 
-  public ServerMessage setData(ZeroCollection data) {
+  /**
+   * Sets the data content carried by the message.
+   *
+   * @param data the {@link ZeroCollection} data content
+   */
+  public void setData(ZeroCollection data) {
     this.data = data;
-    return this;
   }
 
   @Override

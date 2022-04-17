@@ -30,122 +30,133 @@ import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import com.tenio.core.exception.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.manager.Manager;
 import com.tenio.core.network.entity.session.Session;
-import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 
 /**
- * All supported APIs for player management. A management can belong to a room or stand alone.
+ * All supported APIs for the player management. A management can belong to a room or live stand
+ * alone.
  */
 public interface PlayerManager extends Manager {
 
-/**
-* Adds a new player in to the management list.
-*
-* @param player a created {@link Player}
-* @throws AddedDuplicatedPlayerException when a same player is aready available in the management list
-*/
+  /**
+   * Adds a new player in to the management list.
+   *
+   * @param player a created {@link Player}
+   * @throws AddedDuplicatedPlayerException when a same player is already available in the
+   *                                        management list, but it is mentioned again
+   */
   void addPlayer(Player player) throws AddedDuplicatedPlayerException;
 
-/**
-* Creates a new player without session and adds it in to the management list.
-*
-* @param name a unique player's name on the server
-* @return a new instance of {@link Player}
-* @throws AddedDuplicatedPlayerException when a same player is aready available in the management list
-*/
-// Changes parameter
+  /**
+   * Creates a new player without session and adds it in to the management list.
+   *
+   * @param name a unique player's name ({@link String} value) on the server
+   * @return a new instance of {@link Player}
+   * @throws AddedDuplicatedPlayerException when a same player is already available in the
+   *                                        management list, but it is mentioned again
+   */
   Player createPlayer(String name) throws AddedDuplicatedPlayerException;
 
-/**
-* Creates a new player with session and adds it in to the management list.
-*
-* @param name a unique player's name on the server
-* @param session a session associated to the player
-* @return a new instance of {@link Player}
-* @throws AddedDuplicatedPlayerException when a same player is aready available in the management list
-*/
-// Changes parameter
+  /**
+   * Creates a new player with session and adds it in to the management list.
+   *
+   * @param name    a unique player's name ({@link String} value) on the server
+   * @param session a {@link Session} associated with the player
+   * @return a new instance of {@link Player}
+   * @throws AddedDuplicatedPlayerException when a same player is already available in the
+   *                                        management list, but it is mentioned again
+   * @throws NullPointerException           when the attaching session could not be found
+   */
   Player createPlayerWithSession(String name, Session session)
       throws AddedDuplicatedPlayerException, NullPointerException;
 
-/**
-* Retrieves a player by using its name.
-*
-* @param playerName a unique name of player on the server
-* @return an instance of {@link Player}, other wise <code>null</code>
-*/
-  Player getPlayerByName(String playerName);
+  /**
+   * Retrieves a player by using its name.
+   *
+   * @param playerName a unique {@link String} name of player on the server
+   * @return an instance of optional {@link Player}
+   * @see Optional
+   */
+  Optional<Player> getPlayerByName(String playerName);
 
-/**
-* Retrieves a player by using its session.
-*
-* @param session the session associated to player on the server
-* @return an instance of {@link Player}, other wise <code>null</code>
-*/
-  Player getPlayerBySession(Session session);
+  /**
+   * Retrieves a player by using its session.
+   *
+   * @param session the {@link Session} associated with a player on the server
+   * @return an instance of optional {@link Player}
+   * @see Optional
+   */
+  Optional<Player> getPlayerBySession(Session session);
 
-  // Retrieves readonly list of players, add iterator
-  Collection<Player> getAllPlayers();
+  Iterator<Player> getPlayerIterator();
 
-  // Retrieves readonly list of sessions, add iterator
-  Collection<Session> getAllSessions();
+  List<Player> getReadonlyPlayersList();
 
-/**
-* Removes a player from the management list.
-*
-* @param playerName the player's name
-* @throws RemovedNonExistentPlayerFromRoomException when the player is unvailable
-*/
+  Iterator<Player> getSessionIterator();
+
+  List<Player> getReadonlySessionsList();
+
+  /**
+   * Removes a player from the management list.
+   *
+   * @param playerName the player's name ({@link String} value)
+   * @throws RemovedNonExistentPlayerFromRoomException when the player is not present in the
+   *                                                   management list
+   */
   void removePlayerByName(String playerName) throws RemovedNonExistentPlayerFromRoomException;
 
-/**
-* Removes a player from the management list.
-*
-* @param session the session associated to a player
-* @throws RemovedNonExistentPlayerFromRoomException when the player is unvailable
-*/
+  /**
+   * Removes a player from the management list.
+   *
+   * @param session the {@link Session} associated to a player
+   * @throws RemovedNonExistentPlayerFromRoomException when the player is not present in the
+   *                                                   management list
+   */
   void removePlayerBySession(Session session) throws RemovedNonExistentPlayerFromRoomException;
 
-/**
-* Determines whether the management list contains a player by checking its name.
-*
-* @param playerName the player's name
-* @return <code>true</code> if the player is available, otherwise <code>false</code>
-*/
+  /**
+   * Determines whether the management list contains a player by checking its name.
+   *
+   * @param playerName the player's name ({@link String} value)
+   * @return <code>true</code> if the player is available, otherwise <code>false</code>
+   */
   boolean containsPlayerName(String playerName);
 
-/**
-* Determines whether the management list contains a player by checking its session.
-*
-* @param session the session associated to a player
-* @return <code>true</code> if the player is available, otherwise <code>false</code>
-*/
+  /**
+   * Determines whether the management list contains a player by checking its session.
+   *
+   * @param session the {@link Session} associated to a player
+   * @return <code>true</code> if the player is available, otherwise <code>false</code>
+   */
   boolean containsPlayerSession(Session session);
 
-/**
-* Retrieves a room of the management list.
-*
-* @return an instance of {@link Room} or <code>null</code>
-*/
-// Checks null value
-  Room getOwnerRoom();
+  /**
+   * Retrieves a room of the management list.
+   *
+   * @return an instance of optional {@link Room}
+   * @see Optional
+   */
+  Optional<Room> getOwnerRoom();
 
-/**
-* Set a room for the management list.
-*
-* @param an instance of {@link Room} or <code>null</code>
-*/
-// Checks null value
+  /**
+   * Adds the management list to a room.
+   *
+   * @param room an instance of {@link Room}, this value can be <code>null</code>. In that case,
+   *             the management list does not belong to any room
+   */
   void setOwnerRoom(Room room);
 
-/**
-* Retrieves the current number of players in the list.
-*
-* @return the current number of players in the list
-*/
+  /**
+   * Retrieves the current number of players in the management list.
+   *
+   * @return the current number (<code>integer</code> value) of players in the list
+   */
   int getPlayerCount();
 
-/**
-* Removes all players from the list.
-*/
+  /**
+   * Removes all players from the list.
+   */
   void clear();
 }

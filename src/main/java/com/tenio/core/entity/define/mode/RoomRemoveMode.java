@@ -25,25 +25,25 @@ THE SOFTWARE.
 package com.tenio.core.entity.define.mode;
 
 /**
- * All modes associated with removing room conditions.
+ * All modes associated with the removing room conditions.
  */
 public enum RoomRemoveMode {
 
-/**
-* Condition: Room is removed in purpose.
-*/
+  /**
+   * Condition: Room is removed in purpose.
+   */
   DEFAULT,
   /**
-  * Condition: Room is empty.
-  */
+   * Condition: Room is empty.
+   */
   WHEN_EMPTY,
   /**
-  * Condition: Room is empty and its creator is gone.
-  */
+   * Condition: Room is empty and its creator is gone.
+   */
   WHEN_EMPTY_AND_CREATOR_IS_GONE,
   /**
-  * Condition: Room is never removed.
-  */
+   * Condition: Room is never removed.
+   */
   NEVER_REMOVE;
 
   @Override

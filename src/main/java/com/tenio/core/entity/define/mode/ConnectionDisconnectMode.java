@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.entity.define.mode;
 
 /**
- * All modes associated with connection disconnected phase.
+ * All modes associated with the connection disconnected phase.
  */
 public enum ConnectionDisconnectMode {
 
@@ -38,24 +38,26 @@ public enum ConnectionDisconnectMode {
    */
   LOST,
   /**
-  * When the number of connection reaches limitation and the server decides to refuse the connection.
-  */
+   * When the number of connection reaches limitation and the server decides to refuse a
+   * new one.
+   */
   REACHED_MAX_CONNECTION,
   /**
-  * When a connection falls in IDLE state for a long time enough to be disconnected.
-  */
+   * When a connection falls in IDLE state for a long time enough to be disconnected.
+   */
   IDLE,
   /**
-  * When a connection is removed from the server in purpose.
-  */
+   * When a connection is removed from the server in purpose.
+   */
   KICK,
   /**
-  * When a connection is removed from the server in purpose and its IP address is also listed in black list.
-  */
+   * When a connection is removed from the server in purpose and its IP address is also listed in
+   * the black list.
+   */
   BAN,
   /**
-  * Disconnected by other reasons.
-  */
+   * Disconnected by other reasons.
+   */
   UNKNOWN;
 
   @Override

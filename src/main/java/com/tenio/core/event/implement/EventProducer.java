@@ -37,6 +37,9 @@ public final class EventProducer {
 
   private final EventHandler<Object> eventHandler;
 
+  /**
+   * Constructor.
+   */
   public EventProducer() {
     eventHandler = new EventHandler<Object>();
   }

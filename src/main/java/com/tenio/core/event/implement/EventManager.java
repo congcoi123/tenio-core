@@ -51,6 +51,10 @@ public final class EventManager extends SystemLogger {
     eventProducer = new EventProducer();
   }
 
+  /**
+   * Initialization.
+   * @return an instance of {@link EventManager}
+   */
   public static EventManager newInstance() {
     return new EventManager();
   }

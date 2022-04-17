@@ -29,13 +29,13 @@ package com.tenio.core.entity.define.result;
  */
 public enum PlayerLeftRoomResult {
 
-/**
-* Success.
-*/
+  /**
+   * Success.
+   */
   SUCCESS,
   /**
-  * The player already left the room. It is considered as a successful result.
-  */
+   * The player already left the room. It is considered as a successful result.
+   */
   PLAYER_ALREADY_LEFT_ROOM;
 
   @Override

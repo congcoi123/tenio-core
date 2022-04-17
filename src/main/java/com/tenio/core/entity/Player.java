@@ -126,20 +126,18 @@ public interface Player {
   boolean isInRoom();
 
   /**
-   * Determines whether the player plays as a "spectator" in a room.
+   * Retrieves a player role when the player joins room.
    *
-   * @return <code>true</code> if the player is playing as a "spectator", otherwise
-   * <code>false</code>
+   * @return the {@link PlayerRoleInRoom}
    */
-  boolean isSpectator();
+  PlayerRoleInRoom getRoleInRoom();
 
   /**
-   * Marks the player working as a "spectator" in its current room.
+   * Sets a player role when the player joins room.
    *
-   * @param isSpectator set value to <code>true</code> for marking the player as a "spectator",
-   *                    contrary set it to <code>false</code>
+   * @param roleInRoom the {@link PlayerRoleInRoom}
    */
-  void setSpectator(boolean isSpectator);
+  void setRoleInRoom(PlayerRoleInRoom roleInRoom);
 
   /**
    * Retrieves the current room which the player is in.

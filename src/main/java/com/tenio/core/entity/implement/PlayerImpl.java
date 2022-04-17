@@ -26,6 +26,7 @@ package com.tenio.core.entity.implement;
 
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.entity.Player;
+import com.tenio.core.entity.PlayerRoleInRoom;
 import com.tenio.core.entity.PlayerState;
 import com.tenio.core.entity.Room;
 import com.tenio.core.network.entity.session.Session;
@@ -42,6 +43,7 @@ public final class PlayerImpl implements Player {
   private volatile Session session;
   private volatile Room currentRoom;
   private volatile PlayerState state;
+  private volatile PlayerRoleInRoom roleInRoom;
 
   private volatile long lastLoginTime;
   private volatile long lastJoinedRoomTime;
@@ -49,7 +51,6 @@ public final class PlayerImpl implements Player {
 
   private volatile boolean loggedIn;
   private volatile boolean activated;
-  private volatile boolean isSpectator;
   private volatile boolean hasSession;
 
   private PlayerImpl(String name) {
