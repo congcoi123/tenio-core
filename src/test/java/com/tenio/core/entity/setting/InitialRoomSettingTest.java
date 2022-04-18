@@ -16,7 +16,7 @@ class InitialRoomSettingTest {
   @Test
   void testBuilderBuild() {
     InitialRoomSetting actualBuildResult = InitialRoomSetting.Builder.newInstance().build();
-    assertEquals(0, actualBuildResult.getMaxPlayers());
+    assertEquals(0, actualBuildResult.getMaxParticipants());
     assertFalse(actualBuildResult.isActivated());
     assertEquals(RoomRemoveMode.DEFAULT, actualBuildResult.getRoomRemoveMode());
     assertTrue(actualBuildResult
@@ -46,7 +46,7 @@ class InitialRoomSettingTest {
 
     InitialRoomSetting.Builder actualNewInstanceResult = InitialRoomSetting.Builder.newInstance();
     actualNewInstanceResult.setActivated(true);
-    actualNewInstanceResult.setMaxPlayers(3);
+    actualNewInstanceResult.setMaxParticipants(3);
     actualNewInstanceResult.setMaxSpectators(3);
     actualNewInstanceResult.setName("Name");
     actualNewInstanceResult.setPassword("iloveyou");

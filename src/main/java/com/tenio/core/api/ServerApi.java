@@ -226,26 +226,26 @@ public interface ServerApi {
   }
 
   /**
-   * Changes the role of a player in its room, from "player" to "spectator".
+   * Changes the role of a player in its room, from "participant" to "spectator".
    *
    * @param player the checking {@link Player}
    * @param room   the current player's {@link Room}
    * @throws UnsupportedOperationException this method is not supported at the moment
    */
-  default void switchPlayerToSpectator(Player player, Room room) {
+  default void switchParticipantToSpectator(Player player, Room room) {
     throw new UnsupportedOperationException("Unsupported at the moment");
   }
 
   /**
-   * Changes the role of a player in its room, from "spectator" to "player".
+   * Changes the role of a player in its room, from "spectator" to "participant".
    *
    * @param player     the checking spectator ({@link Player} instance)
    * @param room       the current spectator's {@link Room}
-   * @param targetSlot a new position (<code>integer</code> value) of transformed "player" in its
-   *                   room
+   * @param targetSlot a new position (<code>integer</code> value) of transformed "participant" in
+   *                  its room
    * @throws UnsupportedOperationException this method is not supported at the moment
    */
-  default void switchSpectatorToPlayer(Player player, Room room, int targetSlot) {
+  default void switchSpectatorToParticipant(Player player, Room room, int targetSlot) {
     throw new UnsupportedOperationException("Unsupported at the moment");
   }
 

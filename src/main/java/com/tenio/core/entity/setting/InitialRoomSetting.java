@@ -40,7 +40,7 @@ public final class InitialRoomSetting {
 
   private final String name;
   private final String password;
-  private final int maxPlayers;
+  private final int maxParticipants;
   private final int maxSpectators;
   private final boolean activated;
   private final RoomRemoveMode roomRemoveMode;
@@ -50,7 +50,7 @@ public final class InitialRoomSetting {
   private InitialRoomSetting(Builder builder) {
     name = builder.name;
     password = builder.password;
-    maxPlayers = builder.maxPlayers;
+    maxParticipants = builder.maxParticipants;
     maxSpectators = builder.maxSpectators;
     activated = builder.activated;
     roomRemoveMode = builder.removeMode;
@@ -82,8 +82,8 @@ public final class InitialRoomSetting {
    *
    * @return the maximum number of participants allowing in the room
    */
-  public int getMaxPlayers() {
-    return maxPlayers;
+  public int getMaxParticipants() {
+    return maxParticipants;
   }
 
   /**
@@ -123,7 +123,7 @@ public final class InitialRoomSetting {
   }
 
   /**
-   * Retrieves the player slot generation strategy in the room.
+   * Retrieves the participant slot generation strategy in the room.
    *
    * @return an instance of {@link RoomPlayerSlotGeneratedStrategy}
    */
@@ -138,7 +138,7 @@ public final class InitialRoomSetting {
 
     private String name;
     private String password;
-    private int maxPlayers;
+    private int maxParticipants;
     private int maxSpectators;
     private boolean activated;
     private RoomRemoveMode removeMode;
@@ -148,7 +148,7 @@ public final class InitialRoomSetting {
     private Builder() {
       name = null;
       password = null;
-      maxPlayers = 0;
+      maxParticipants = 0;
       maxSpectators = 0;
       activated = false;
       removeMode = RoomRemoveMode.DEFAULT;
@@ -190,11 +190,11 @@ public final class InitialRoomSetting {
     /**
      * Sets the room's maximum number of participants.
      *
-     * @param maxPlayers the maximum number of participants allowed be in the room
+     * @param maxParticipants the maximum number of participants allowed be in the room
      * @return the pointer of builder
      */
-    public Builder setMaxPlayers(int maxPlayers) {
-      this.maxPlayers = maxPlayers;
+    public Builder setMaxParticipants(int maxParticipants) {
+      this.maxParticipants = maxParticipants;
       return this;
     }
 
@@ -247,7 +247,7 @@ public final class InitialRoomSetting {
     }
 
     /**
-     * Sets a strategy for generating player's slots in the room.
+     * Sets a strategy for generating participant's slots in the room.
      *
      * @param clazz a class which is an implementation of {@link RoomPlayerSlotGeneratedStrategy}
      * @return the pointer of builder

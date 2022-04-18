@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-class SwitchedPlayerSpectatorResultTest {
+class SwitchedPlayerRoleInRoomResultTest {
   @Test
   void testValueOf() {
-    assertEquals("SUCCESS", SwitchedPlayerSpectatorResult.valueOf("SUCCESS").toString());
+    assertEquals("SUCCESS", SwitchedPlayerRoleInRoomResult.valueOf("SUCCESS").toString());
   }
 }
 

@@ -46,8 +46,8 @@ import com.tenio.core.extension.events.EventSendMessageToPlayer;
 import com.tenio.core.extension.events.EventServerException;
 import com.tenio.core.extension.events.EventServerInitialization;
 import com.tenio.core.extension.events.EventServerTeardown;
-import com.tenio.core.extension.events.EventSwitchPlayerToSpectatorResult;
-import com.tenio.core.extension.events.EventSwitchSpectatorToPlayerResult;
+import com.tenio.core.extension.events.EventSwitchParticipantToSpectatorResult;
+import com.tenio.core.extension.events.EventSwitchSpectatorToParticipantResult;
 import com.tenio.core.extension.events.EventSystemMonitoring;
 import com.tenio.core.extension.events.EventWriteMessageToConnection;
 
@@ -161,17 +161,17 @@ public enum ServerEvent {
    */
   PLAYER_AFTER_LEFT_ROOM,
   /**
-   * When a player attempt to change its role from 'player' to 'spectator'.
+   * When a player attempt to change its role from 'participant' to 'spectator'.
    *
-   * @see EventSwitchPlayerToSpectatorResult
+   * @see EventSwitchParticipantToSpectatorResult
    */
-  SWITCH_PLAYER_TO_SPECTATOR,
+  SWITCH_PARTICIPANT_TO_SPECTATOR,
   /**
-   * When a player attempt to change its role from 'spectator' to 'player'.
+   * When a player attempt to change its role from 'spectator' to 'participant'.
    *
-   * @see EventSwitchSpectatorToPlayerResult
+   * @see EventSwitchSpectatorToParticipantResult
    */
-  SWITCH_SPECTATOR_TO_PLAYER,
+  SWITCH_SPECTATOR_TO_PARTICIPANT,
   /**
    * When a player is going to disconnect from the server.
    *

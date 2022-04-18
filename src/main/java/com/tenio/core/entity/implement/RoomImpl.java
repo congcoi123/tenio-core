@@ -30,7 +30,7 @@ import com.tenio.core.entity.Room;
 import com.tenio.core.entity.RoomState;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
-import com.tenio.core.entity.define.result.SwitchedPlayerSpectatorResult;
+import com.tenio.core.entity.define.result.SwitchedPlayerRoleInRoomResult;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
@@ -344,14 +344,14 @@ public final class RoomImpl implements Room {
     if (!containsPlayerName(player.getName())) {
       throw new SwitchedPlayerRoleInRoomException(
           String.format("Player %s was not in room", player.getName()),
-          SwitchedPlayerSpectatorResult.PLAYER_WAS_NOT_IN_ROOM);
+          SwitchedPlayerRoleInRoomResult.PLAYER_WAS_NOT_IN_ROOM);
     }
 
     switchRoleLock.lock();
     try {
       if (getSpectatorCount() >= getMaxSpectators()) {
         throw new SwitchedPlayerRoleInRoomException("All spectator slots were already taken",
-            SwitchedPlayerSpectatorResult.SWITCH_NO_SPECTATOR_SLOTS_AVAILABLE);
+            SwitchedPlayerRoleInRoomResult.SWITCH_NO_SPECTATOR_SLOTS_AVAILABLE);
       }
 
       roomPlayerSlotGeneratedStrategy.freeSlotWhenPlayerLeft(player.getPlayerSlotInCurrentRoom());
@@ -369,14 +369,14 @@ public final class RoomImpl implements Room {
     if (!containsPlayerName(player.getName())) {
       throw new SwitchedPlayerRoleInRoomException(
           String.format("Player %s was not in room", player.getName()),
-          SwitchedPlayerSpectatorResult.PLAYER_WAS_NOT_IN_ROOM);
+          SwitchedPlayerRoleInRoomResult.PLAYER_WAS_NOT_IN_ROOM);
     }
 
     switchRoleLock.lock();
     try {
       if (getParticipantCount() >= getMaxParticipants()) {
         throw new SwitchedPlayerRoleInRoomException("All participant slots were already taken",
-            SwitchedPlayerSpectatorResult.SWITCH_NO_PLAYER_SLOTS_AVAILABLE);
+            SwitchedPlayerRoleInRoomResult.SWITCH_NO_PARTICIPANT_SLOTS_AVAILABLE);
       }
 
       if (targetSlot == DEFAULT_SLOT) {
@@ -392,7 +392,7 @@ public final class RoomImpl implements Room {
           throw new SwitchedPlayerRoleInRoomException(String
               .format("Unable to set the target slot: %d for the participant: %s", targetSlot,
                   player.getName()),
-              SwitchedPlayerSpectatorResult.SLOT_UNAVAILABLE_IN_ROOM);
+              SwitchedPlayerRoleInRoomResult.SLOT_UNAVAILABLE_IN_ROOM);
         }
       }
     } finally {

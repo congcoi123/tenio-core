@@ -96,7 +96,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     newRoom.setName(roomSetting.getName());
     newRoom.setPassword(roomSetting.getPassword());
     newRoom.setActivated(roomSetting.isActivated());
-    newRoom.setCapacity(roomSetting.getMaxPlayers(), roomSetting.getMaxSpectators());
+    newRoom.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
     newRoom.setOwner(player);
     newRoom.setPlayerManager(PlayerManagerImpl.newInstance(eventManager));
 

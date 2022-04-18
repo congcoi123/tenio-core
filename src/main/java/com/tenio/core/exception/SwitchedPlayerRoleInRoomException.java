@@ -24,25 +24,25 @@ THE SOFTWARE.
 
 package com.tenio.core.exception;
 
-import com.tenio.core.entity.define.result.SwitchedPlayerSpectatorResult;
+import com.tenio.core.entity.define.result.SwitchedPlayerRoleInRoomResult;
 
 /**
- * When a participant tries to change its role to a spectator and vice versa.
+ * When a participant tries to change its role to be a spectator and vice versa.
  */
 public final class SwitchedPlayerRoleInRoomException extends RuntimeException {
 
   private static final long serialVersionUID = 8858056991799548907L;
 
-  private final SwitchedPlayerSpectatorResult result;
+  private final SwitchedPlayerRoleInRoomResult result;
 
   /**
    * Creates a new exception.
    *
    * @param message a warning {@link String} message
-   * @param result  a {@link SwitchedPlayerSpectatorResult} singleton value indicates result of
+   * @param result  a {@link SwitchedPlayerRoleInRoomResult} singleton value indicates result of
    *                switching
    */
-  public SwitchedPlayerRoleInRoomException(String message, SwitchedPlayerSpectatorResult result) {
+  public SwitchedPlayerRoleInRoomException(String message, SwitchedPlayerRoleInRoomResult result) {
     super(message);
     this.result = result;
   }
@@ -50,10 +50,10 @@ public final class SwitchedPlayerRoleInRoomException extends RuntimeException {
   /**
    * Retrieves the switching result.
    *
-   * @return result a {@link SwitchedPlayerSpectatorResult} singleton value indicates result of
+   * @return result a {@link SwitchedPlayerRoleInRoomResult} singleton value indicates result of
    * switching
    */
-  public SwitchedPlayerSpectatorResult getResult() {
+  public SwitchedPlayerRoleInRoomResult getResult() {
     return result;
   }
 }
