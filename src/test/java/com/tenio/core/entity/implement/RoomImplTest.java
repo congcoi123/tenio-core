@@ -16,10 +16,10 @@ class RoomImplTest {
     assertEquals(0, actualNewInstanceResult.getSpectatorCount());
     assertEquals(RoomRemoveMode.DEFAULT, actualNewInstanceResult.getRoomRemoveMode());
     assertNull(actualNewInstanceResult.getPlayerManager());
-    assertEquals(0, actualNewInstanceResult.getPlayerCount());
+    assertEquals(0, actualNewInstanceResult.getParticipantCount());
     assertNull(actualNewInstanceResult.getOwner());
     assertEquals(0, actualNewInstanceResult.getMaxSpectators());
-    assertEquals(0, actualNewInstanceResult.getMaxPlayers());
+    assertEquals(0, actualNewInstanceResult.getMaxParticipants());
   }
 }
 

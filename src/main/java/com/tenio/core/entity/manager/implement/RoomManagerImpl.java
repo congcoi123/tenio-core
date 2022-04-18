@@ -151,11 +151,11 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public void changeRoomCapacity(Room room, int maxPlayers, int maxSpectators) {
-    if (maxPlayers <= room.getPlayerCount()) {
+    if (maxPlayers <= room.getParticipantCount()) {
       throw new IllegalArgumentException(String.format(
           "Unable to assign the new max player number: %d, "
               + "because it's less than the current number of players: %d",
-          maxPlayers, room.getPlayerCount()));
+          maxPlayers, room.getParticipantCount()));
     }
     if (maxSpectators <= room.getSpectatorCount()) {
       throw new IllegalArgumentException(String.format(

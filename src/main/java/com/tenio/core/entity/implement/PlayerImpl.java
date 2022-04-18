@@ -31,10 +31,11 @@ import com.tenio.core.entity.PlayerState;
 import com.tenio.core.entity.Room;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * An implemented player class is for using in the server.
+ * An implemented class is for a player using on the server.
  */
 public final class PlayerImpl implements Player {
 
@@ -59,38 +60,33 @@ public final class PlayerImpl implements Player {
 
   private PlayerImpl(String name, Session session) {
     this.name = name;
-
-    properties = new ConcurrentHashMap<String, Object>();
-
+    properties = new ConcurrentHashMap<>();
     lastLoginTime = 0L;
     lastJoinedRoomTime = 0L;
-
     setCurrentRoom(null);
+    setRoleInRoom(PlayerRoleInRoom.SPECTATOR);
     setSession(session);
     setLoggedIn(false);
     setActivated(false);
-    setSpectator(true);
   }
 
-/**
-* Create a new instance without session.
-*
-* @param name a unique name for player on the server
-* @return a new instance
-*/
-// Delete this.
+  /**
+   * Create a new instance without session.
+   *
+   * @param name a unique name for player on the server
+   * @return a new instance
+   */
   public static Player newInstance(String name) {
     return new PlayerImpl(name);
   }
 
-/**
-* Create a new instance.
-*
-* @param name a unique name for player on the server
-* @param session a session associated to the player
-* @return a new instance
-*/
-// Delete this.
+  /**
+   * Create a new instance.
+   *
+   * @param name    a unique name for player on the server
+   * @param session a session associated to the player
+   * @return a new instance
+   */
   public static Player newInstance(String name, Session session) {
     return new PlayerImpl(name, session);
   }
@@ -153,8 +149,8 @@ public final class PlayerImpl implements Player {
   }
 
   @Override
-  public Session getSession() {
-    return session;
+  public Optional<Session> getSession() {
+    return Optional.ofNullable(session);
   }
 
   @Override
@@ -169,18 +165,18 @@ public final class PlayerImpl implements Player {
   }
 
   @Override
-  public boolean isSpectator() {
-    return isSpectator;
+  public PlayerRoleInRoom getRoleInRoom() {
+    return roleInRoom;
   }
 
   @Override
-  public void setSpectator(boolean isSpectator) {
-    this.isSpectator = isSpectator;
+  public void setRoleInRoom(PlayerRoleInRoom roleInRoom) {
+    this.roleInRoom = roleInRoom;
   }
 
   @Override
-  public Room getCurrentRoom() {
-    return currentRoom;
+  public Optional<Room> getCurrentRoom() {
+    return Optional.ofNullable(currentRoom);
   }
 
   @Override
@@ -266,8 +262,7 @@ public final class PlayerImpl implements Player {
 
   @Override
   public String toString() {
-    return String.format("{ name: %s, session: %b, loggedIn: %b, spectator: %b, activated: %b }",
-        name != null ? name : "null",
-        hasSession, loggedIn, isSpectator, activated);
+    return String.format("{ name: %s, session: %b, loggedIn: %b, role: %s, activated: %b }",
+        name != null ? name : "null", hasSession, loggedIn, roleInRoom.name(), activated);
   }
 }

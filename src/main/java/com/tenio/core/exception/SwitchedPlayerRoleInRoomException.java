@@ -29,7 +29,7 @@ import com.tenio.core.entity.define.result.SwitchedPlayerSpectatorResult;
 /**
  * When a participant tries to change its role to a spectator and vice versa.
  */
-public final class SwitchedPlayerSpectatorException extends RuntimeException {
+public final class SwitchedPlayerRoleInRoomException extends RuntimeException {
 
   private static final long serialVersionUID = 8858056991799548907L;
 
@@ -42,7 +42,7 @@ public final class SwitchedPlayerSpectatorException extends RuntimeException {
    * @param result  a {@link SwitchedPlayerSpectatorResult} singleton value indicates result of
    *                switching
    */
-  public SwitchedPlayerSpectatorException(String message, SwitchedPlayerSpectatorResult result) {
+  public SwitchedPlayerRoleInRoomException(String message, SwitchedPlayerSpectatorResult result) {
     super(message);
     this.result = result;
   }

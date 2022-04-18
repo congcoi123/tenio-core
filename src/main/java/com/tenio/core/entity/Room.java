@@ -34,7 +34,7 @@ import com.tenio.core.entity.setting.strategy.implement.DefaultRoomPlayerSlotGen
 import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import com.tenio.core.exception.PlayerJoinedRoomException;
 import com.tenio.core.exception.RemovedNonExistentPlayerFromRoomException;
-import com.tenio.core.exception.SwitchedPlayerSpectatorException;
+import com.tenio.core.exception.SwitchedPlayerRoleInRoomException;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Iterator;
 import java.util.List;
@@ -107,19 +107,19 @@ public interface Room {
   boolean isPublic();
 
   /**
-   * Retrieves the maximum number of players allowing in the room.
+   * Retrieves the maximum number of participants allowing in the room.
    *
-   * @return the maximum number of players (<code>integer</code> value)
+   * @return the maximum number of participants (<code>integer</code> value)
    */
-  int getMaxPlayers();
+  int getMaxParticipants();
 
   /**
-   * Sets the maximum number of players allowing in the room.
+   * Sets the maximum number of participants allowing in the room.
    *
-   * @param maxPlayers the maximum number of players (<code>integer</code> value)
+   * @param maxParticipants the maximum number of participants (<code>integer</code> value)
    * @throws IllegalArgumentException when an invalid value is used
    */
-  void setMaxPlayers(int maxPlayers) throws IllegalArgumentException;
+  void setMaxParticipants(int maxParticipants) throws IllegalArgumentException;
 
   /**
    * Retrieves the maximum number of spectators allowing in the room.
@@ -231,27 +231,27 @@ public interface Room {
   void clearProperties();
 
   /**
-   * Retrieves the total number of entities allowed to be in the room (players and spectators).
+   * Retrieves the total number of entities allowed to be in the room (participants and spectators).
    *
    * @return the total number of entities (<code>integer</code> value)
    */
   int getCapacity();
 
   /**
-   * Sets the limitation values for players and spectators.
+   * Sets the limitation values for participants and spectators.
    *
-   * @param maxPlayers    the maximum number of players (<code>integer</code> value)
-   * @param maxSpectators the maximum number of spectators (<code>integer</code> value)
+   * @param maxParticipants the maximum number of participants (<code>integer</code> value)
+   * @param maxSpectators   the maximum number of spectators (<code>integer</code> value)
    * @throws IllegalArgumentException when an invalid value is used
    */
-  void setCapacity(int maxPlayers, int maxSpectators) throws IllegalArgumentException;
+  void setCapacity(int maxParticipants, int maxSpectators) throws IllegalArgumentException;
 
   /**
    * Retrieves the current number of players in the room.
    *
    * @return the current number of players (<code>integer</code> value)
    */
-  int getPlayerCount();
+  int getParticipantCount();
 
   /**
    * Retrieves the current number of spectators in the room.
@@ -305,16 +305,6 @@ public interface Room {
   List<Player> getReadonlyPlayersList();
 
   /**
-   * Retrieves an iterator for participants in a player management list. This method should be used
-   * to prevent the "escape references" issue.
-   *
-   * @return an iterator of participant in a player management list
-   * @see Iterator
-   * @see PlayerRoleInRoom#PARTICIPANT
-   */
-  Iterator<Player> getParticipantIterator();
-
-  /**
    * Retrieves a read-only list of participants in a player management list. This method should be
    * used to prevent the "escape references" issue.
    *
@@ -323,16 +313,6 @@ public interface Room {
    * @see PlayerRoleInRoom#PARTICIPANT
    */
   List<Player> getReadonlyParticipantsList();
-
-  /**
-   * Retrieves an iterator for spectators in a player management list. This method should be used
-   * to prevent the "escape references" issue.
-   *
-   * @return an iterator of spectator in a player management list
-   * @see Iterator
-   * @see PlayerRoleInRoom#SPECTATOR
-   */
-  Iterator<Player> getSpectatorIterator();
 
   /**
    * Retrieves a read-only list of spectators in a player management list. This method should be
@@ -350,8 +330,8 @@ public interface Room {
    * @param player      a joining {@link Player}
    * @param asSpectator sets to <code>true</code> if the player joins room as a "spectator",
    *                    otherwise <code>false</code>
-   * @param targetSlot  when the player join the room as role of "player", then it can occupy a
-   *                    slot position (<code>integer</code> value)
+   * @param targetSlot  when the player join the room as role of "participants", then it can
+   *                    occupy a slot position (<code>integer</code> value)
    * @throws PlayerJoinedRoomException      any exception occurred when the player tries to join
    *                                        the room
    * @throws AddedDuplicatedPlayerException when the player has been already in the room, but it
@@ -365,7 +345,7 @@ public interface Room {
    *
    * @param player      a joining {@link Player}
    * @param asSpectator sets to <code>true</code> if the player joins room as a "spectator",
-   *                    *                    otherwise <code>false</code>
+   *                    otherwise <code>false</code>
    * @throws PlayerJoinedRoomException      any exception occurred when the player tries to join
    *                                        the room
    * @throws AddedDuplicatedPlayerException when the player has been already in the room, but it
@@ -378,7 +358,7 @@ public interface Room {
 
   /**
    * Adds a player to the room without indicating any slot position, and it joins as role of a
-   * "player".
+   * "participant".
    *
    * @param player a joining {@link Player}
    * @throws PlayerJoinedRoomException      any exception occurred when the player tries to join
@@ -401,34 +381,34 @@ public interface Room {
   void removePlayer(Player player) throws RemovedNonExistentPlayerFromRoomException;
 
   /**
-   * Changes a player's role from "player" to "spectator" in the room.
+   * Changes a player's role from "participant" to "spectator" in the room.
    *
    * @param player the changing {@link Player}
-   * @throws SwitchedPlayerSpectatorException when the changing could not be done
+   * @throws SwitchedPlayerRoleInRoomException when the changing could not be done
    */
-  void switchPlayerToSpectator(Player player) throws SwitchedPlayerSpectatorException;
+  void switchParticipantToSpectator(Player player) throws SwitchedPlayerRoleInRoomException;
 
   /**
-   * Changes a player's role from "spectator" to "player" in the room.
+   * Changes a player's role from "spectator" to "participant" in the room.
    *
    * @param player     the changing {@link Player}
    * @param targetSlot a new slot position (<code>integer</code> value) set to the player in the
    *                   room
-   * @throws SwitchedPlayerSpectatorException when the changing could not be done
+   * @throws SwitchedPlayerRoleInRoomException when the changing could not be done
    */
-  void switchSpectatorToPlayer(Player player, int targetSlot)
-      throws SwitchedPlayerSpectatorException;
+  void switchSpectatorToParticipant(Player player, int targetSlot)
+      throws SwitchedPlayerRoleInRoomException;
 
   /**
-   * Changes a player's role from "spectator" to "player" without consideration of its slot
+   * Changes a player's role from "spectator" to "participant" without consideration of its slot
    * position in the room.
    *
    * @param player the changing {@link Player}
-   * @throws SwitchedPlayerSpectatorException when the changing could not be done
+   * @throws SwitchedPlayerRoleInRoomException when the changing could not be done
    * @see RoomImpl#DEFAULT_SLOT
    */
-  default void switchSpectatorToPlayer(Player player) throws SwitchedPlayerSpectatorException {
-    switchSpectatorToPlayer(player, RoomImpl.DEFAULT_SLOT);
+  default void switchSpectatorToParticipant(Player player) throws SwitchedPlayerRoleInRoomException {
+    switchSpectatorToParticipant(player, RoomImpl.DEFAULT_SLOT);
   }
 
   /**
