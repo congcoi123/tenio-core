@@ -25,13 +25,21 @@ THE SOFTWARE.
 package com.tenio.core.network.zero.engine.listener;
 
 import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.network.zero.engine.ZeroReader;
 
 /**
- * The writer engine listener.
+ * The writer engine listener. Invoked by the reader engine.
+ *
+ * @see ZeroReader
  */
 public interface ZeroWriterListener {
 
-// copy
-// see
+  /**
+   * In reading phase (the reader engine), it set higher priority to continually put the session
+   * for sending all left packets first.
+   *
+   * @param session the {@link Session} is in processing
+   * @see ZeroReader
+   */
   void continueWriteInterestOp(Session session);
 }

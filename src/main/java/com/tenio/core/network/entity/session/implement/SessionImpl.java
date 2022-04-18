@@ -195,7 +195,7 @@ public final class SessionImpl implements Session {
 
     if (socketChannel.socket() != null && !socketChannel.socket().isClosed()) {
       transportType = TransportType.TCP;
-      createPacketSocketHandle();
+      createPacketSocketHandler();
 
       this.socketChannel = socketChannel;
 
@@ -211,7 +211,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void createPacketSocketHandle() {
+  public void createPacketSocketHandler() {
     packetReadState = PacketReadState.WAIT_NEW_PACKET;
     processedPacket = ProcessedPacket.newInstance();
     pendingPacket = PendingPacket.newInstance();

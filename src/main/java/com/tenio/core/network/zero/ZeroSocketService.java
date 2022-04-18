@@ -147,7 +147,7 @@ public interface ZeroSocketService extends Service {
   void setPacketDecoder(BinaryPacketDecoder packetDecoder);
 
   /**
-   * Writes down (binaries) data to socket/channel in order to send them to clients side.
+   * Writes down (binaries) data to socket/channel in order to send them to client side.
    *
    * @param packet an instance of {@link Packet} using to carry conveying information
    */

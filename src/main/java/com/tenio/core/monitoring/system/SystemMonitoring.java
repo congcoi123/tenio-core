@@ -47,10 +47,19 @@ public final class SystemMonitoring {
   /**
    * Initialization.
    */
-  public SystemMonitoring() {
+  private SystemMonitoring() {
     operatingSystemMxBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
     lastSystemTime = 0L;
     lastProcessCpuTime = 0L;
+  }
+
+  /**
+   * Initialization.
+   *
+   * @return a new instance of {@link SystemMonitoring}
+   */
+  public static SystemMonitoring newInstance() {
+    return new SystemMonitoring();
   }
 
   /**

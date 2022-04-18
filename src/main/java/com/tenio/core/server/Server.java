@@ -26,26 +26,28 @@ package com.tenio.core.server;
 
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.bootstrap.BootstrapHandler;
+import com.tenio.core.bootstrap.Bootstrapper;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.protocol.Response;
+import io.netty.bootstrap.Bootstrap;
 
 /**
- * This class manages the workflow of the current server. The instruction's
- * orders are important, event subscribes must be set last and all configuration
- * values should be confirmed.
+ * This class manages the workflow of the current server. The instruction's orders are important,
+ * event subscribes must be set last and all configuration values should be confirmed.
  */
 public interface Server {
 
   /**
-   * Starts the server bases on your own configurations.
+   * Starts the server bases on the configurations.
    *
-   * @param bootstrapHandler a {@link BootstrapHandler} handles all processes concerning the DI mechanism
-   * @param params a list of {@link String} arguments used by the boostrap
-   * @throws Exeption whenever any issue emerged
+   * @param bootstrapHandler a {@link BootstrapHandler} handles all processes concerning the DI
+   *                         mechanism
+   * @param params           a list of {@link String} arguments used by the boostrap
+   * @throws Exception whenever any issue emerged
    * @see Bootstrap
-   * @see
+   * @see Bootstrapper
    */
   void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception;
 
@@ -54,38 +56,38 @@ public interface Server {
    */
   void shutdown();
 
-/**
-* Retrieves a server APIs object which provides all supporting APIs on the server.
-*
-* @return an instance of {@link ServerApi}
-*/
+  /**
+   * Retrieves a server APIs object which provides all supporting APIs on the server.
+   *
+   * @return an instance of {@link ServerApi}
+   */
   ServerApi getApi();
 
-/**
-* Retrieves a event manager object which manages all events supporting on the server.
-*
-* @return an instance of {@link EventManager}
-*/
+  /**
+   * Retrieves a event manager object which manages all events supporting on the server.
+   *
+   * @return an instance of {@link EventManager}
+   */
   EventManager getEventManager();
 
-/**
-* Retrieves a player manager object which manages all players on the server.
-*
-* @return an instance of {@link PlayerManager}
-*/
+  /**
+   * Retrieves a player manager object which manages all players on the server.
+   *
+   * @return an instance of {@link PlayerManager}
+   */
   PlayerManager getPlayerManager();
 
-/**
-* Retrieves a room manager object which manages all rooms on the server.
-*
-* @return an instance of {@link RoomManager}
-*/
+  /**
+   * Retrieves a room manager object which manages all rooms on the server.
+   *
+   * @return an instance of {@link RoomManager}
+   */
   RoomManager getRoomManager();
 
-/**
-* Writes down data to socket/channel to send them to client sides.
-*
-* @param response an instance of {@link Response} using to carry conveying information
-*/
+  /**
+   * Writes down data to socket/channel to send them to client sides.
+   *
+   * @param response an instance of {@link Response} using to carry conveying information
+   */
   void write(Response response);
 }

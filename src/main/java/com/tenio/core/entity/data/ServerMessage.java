@@ -71,9 +71,11 @@ public final class ServerMessage {
    * Sets the data content carried by the message.
    *
    * @param data the {@link ZeroCollection} data content
+   * @return the pointer of this instance
    */
-  public void setData(ZeroCollection data) {
+  public ServerMessage setData(ZeroCollection data) {
     this.data = data;
+    return this;
   }
 
   @Override

@@ -40,12 +40,12 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
 /**
- * When a connection connected to the server, it's managed by a corresponding session.
+ * When a connection connected to the server, it is managed by a corresponding session.
  */
 public interface Session {
 
   /**
-   * Retrieves the unique Id of session.
+   * Retrieves the unique ID of session.
    *
    * @return the unique <code>long</code> Id of session
    */
@@ -66,28 +66,30 @@ public interface Session {
   void setName(String name);
 
   /**
-   * Determines whether the session connected to the server (It is ready to associate to a player)
+   * Determines whether the session connected to the server (It is ready to associate to a player).
    *
    * @return <code>true</code> if the session connected to the server, otherwise <code>false</code>
    */
   boolean isConnected();
 
   /**
-   * Sets the session connected state on the server (whether it is ready to associate to a player)
+   * Sets connected state to the session on the server (whether it is ready to associate to a
+   * player).
    *
-   * @param connected sets value to <code>true</code> if the session connected to the server, otherwise <code>false</code>
+   * @param connected sets value to <code>true</code> if the session connected to the server,
+   *                  otherwise <code>false</code>
    */
   void setConnected(boolean connected);
 
   /**
-   * Retrieves the packet queue of session which is using to send messages to client sides.
+   * Retrieves a packet queue of session which is using to send messages to clients side.
    *
    * @return an instance of {@link PacketQueue}
    */
   PacketQueue getPacketQueue();
 
   /**
-   * Sets a packet queue to session which is using to send messages to client sides.
+   * Sets a packet queue to session which is using to send messages to clients side.
    *
    * @param packetQueue an instance of {@link PacketQueue}
    * @throws IllegalStateException when an illegal queue is in use
@@ -104,26 +106,31 @@ public interface Session {
   /**
    * Determines whether the session is using the TCP transportation type.
    *
-   * @return <code>true</code> if the session is using the TCP transportation type, otherwise <code>false</code>
+   * @return <code>true</code> if the session is using the TCP transportation type, otherwise
+   * <code>false</code>
    */
   boolean isTcp();
 
   /**
    * Determines whether the session is using the WebSocket transportation type.
    *
-   * @return <code>true</code> if the session is using the WebSocket transportation type, otherwise <code>false</code>
+   * @return <code>true</code> if the session is using the WebSocket transportation type,
+   * otherwise <code>false</code>
    */
   boolean isWebSocket();
 
   /**
-   * Determines whether the session is able to use the server UDP channel for communication. This only applies for the TCP session.
+   * Determines whether the session is able to use the server UDP channel for communication. This
+   * only applies for the TCP session.
    *
-   * @return <code>true</code> if the TCP session is able to use the server UDP channel for communication, otherwise <code>false</code>. In case of WebSocket session, always returns <code>false</code>
+   * @return <code>true</code> if the TCP session is able to use the server UDP channel for
+   * communication, otherwise <code>false</code>. In case of WebSocket session, always returns
+   * <code>false</code>
    */
   boolean containsUdp();
 
   /**
-   * Retrieves the socket (TCP) channel, which is using to communicate via TCP protocol.
+   * Retrieves a socket (TCP) channel, which is using to communicate via TCP protocol.
    *
    * @return an instance of {@link SocketChannel}
    */
@@ -134,13 +141,13 @@ public interface Session {
    *
    * @param socketChannel an instance of {@link SocketChannel}
    * @throws IllegalArgumentException when an invalid value is used
-   * @throws IllegalCallerException
+   * @throws IllegalCallerException   when an invalid transportation type is declared
    */
   void setSocketChannel(SocketChannel socketChannel)
       throws IllegalArgumentException, IllegalCallerException;
 
   /**
-   * Retrieves the selection key for socket (TCP) channel, which is using to switch between channels.
+   * Retrieves a selection key for socket (TCP) channel, which is using to switch between channels.
    *
    * @return an instance of {@link SelectionKey}
    */
@@ -154,10 +161,9 @@ public interface Session {
   void setSelectionKey(SelectionKey selectionKey);
 
   /**
-   * Initializes all processed to handle packet receives from client sides
+   * Initializes all processed to handle packet receives from clients side.
    */
-// Changes the method's name
-  void createPacketSocketHandle();
+  void createPacketSocketHandler();
 
   /**
    * Retrieves the current processing state on a packet.
@@ -188,16 +194,17 @@ public interface Session {
   PendingPacket getPendingPacket();
 
   /**
-   * Retrieves the UDP channel that the session is able to use.
+   * Retrieves a UDP channel that the session is able to use.
    *
    * @return a {@link DatagramChannel} which is using for communication via UDP channel
    */
   DatagramChannel getDatagramChannel();
 
   /**
-   * Declares an UDP channel that the session is able to use.
+   * Declares a UDP channel that the session is able to use.
    *
-   * @param datagramChannel a {@link DatagramChannel} which is using for communication via UDP channel
+   * @param datagramChannel a {@link DatagramChannel} which is using for communication via UDP
+   *                        channel
    * @param remoteAddress   the {@link SocketAddress} remote address associating to the client side
    */
   void setDatagramChannel(DatagramChannel datagramChannel, SocketAddress remoteAddress);
@@ -210,18 +217,20 @@ public interface Session {
   SocketAddress getDatagramRemoteSocketAddress();
 
   /**
-   * Retrieves the websocket channel which is using for communication between the server and client sides via websocket.
+   * Retrieves a WebSocket channel which is using for communication between the server and
+   * client sides via WebSocket.
    *
-   * @return the {@link Channel} websocket channel instance
+   * @return the {@link Channel} WebSocket channel instance
    */
   Channel getWebSocketChannel();
 
   /**
-   * Sets a websocket channel which is using for communication between the server and client sides via websocket.
+   * Sets a WebSocket channel which is using for communication between the server and client
+   * sides via WebSocket.
    *
-   * @param webSocketChannel the {@link Channel} websocket channel instance
+   * @param webSocketChannel the {@link Channel} WebSocket channel instance
    * @throws IllegalArgumentException when an invalid value is in use
-   * @throws IllegalCallerException
+   * @throws IllegalCallerException   when an invalid transportation type is declared
    */
   void setWebSocketChannel(Channel webSocketChannel)
       throws IllegalArgumentException, IllegalCallerException;
@@ -229,126 +238,141 @@ public interface Session {
   /**
    * Retrieves the creation time of session.
    *
-   * @return the <code>long</code> value in miliseconds of creation time
+   * @return the creation time of session in milliseconds (<code>long</code> value)
    */
   long getCreatedTime();
 
   /**
    * Sets creation time to the session.
    *
-   * @param timestamp the <code>long</code> value in miliseconds of creation time
+   * @param timestamp the creation time of session in milliseconds (<code>long</code> value)
    */
   void setCreatedTime(long timestamp);
 
   /**
    * Retrieves the last activity time of session.
    *
-   * @return the <code>long</code> value in miliseconds of the last activity time
+   * @return the last activity time in milliseconds (<code>long</code> value)
    */
   long getLastActivityTime();
 
   /**
    * Sets the last activity time for the session.
    *
-   * @param timestamp the <code>long</code> value in miliseconds of the last activity time
+   * @param timestamp the last activity time in milliseconds (<code>long</code> value)
    */
   void setLastActivityTime(long timestamp);
 
   /**
-   * Retrieves the last time when session receives the last byte of data from client side.
+   * Retrieves the last time when the session receives the last byte of data from client side.
    *
-   * @return the <code>long</code> value in miliseconds of the last reading new message time
+   * @return the last reading new data time in milliseconds (<code>long</code> value)
    */
   long getLastReadTime();
 
   /**
-   * Sets the last time when session receives the last byte of data from client side.
+   * Sets the last time when the session receives the last byte of data from client side.
    *
-   * @param timestamp the <code>long</code> value in miliseconds of the last reading new message time
+   * @param timestamp the last reading new data time in milliseconds (<code>long</code> value)
    */
   void setLastReadTime(long timestamp);
 
   /**
    * Retrieves the last time when session sends the last byte of data to client side.
    *
-   * @return the <code>long</code> value in miliseconds of the last writing new message time
+   * @return the last writing data time in milliseconds (<code>long</code> value)
    */
   long getLastWriteTime();
 
   /**
-   * Sets the last time when session sends the last byte of data to client side.
+   * Sets the last time when the session sends the last byte of data to client side.
    *
-   * @param timestamp the <code>long</code> value in miliseconds of the last writing new message time
+   * @param timestamp the last writing data time in milliseconds (<code>long</code> value)
    */
   void setLastWriteTime(long timestamp);
 
   /**
    * Retrieves the total number of binaries which the session receives from client side.
    *
-   * @return the <code>long</code> value total number of binaries which the session receives from client side
+   * @return the total number of binaries (<code>long</code> value) which the session receives from
+   * client side
    */
   long getReadBytes();
 
   /**
    * Increases the total number of binaries which the session receives from client side.
    *
-   * @param numberBytes the <code>long</code> value which is additional number of binaries which the session receives from client side
+   * @param numberBytes the additional number of binaries (<code>long</code> value) which the
+   *                    session receives from client side
    */
   void addReadBytes(long numberBytes);
 
   /**
    * Retrieves the total number of binaries which the session sends to client side.
    *
-   * @return the <code>long</code> value total number of binaries which the session sends to client side
+   * @return the total number of binaries (<code>long</code> value) which the session sends to
+   * client side
    */
   long getWrittenBytes();
 
   /**
    * Increases the total number of binaries which the session sends to client side.
    *
-   * @param numberBytes the <code>long</code> value which is additional number of binaries which the session sends to client side
+   * @param numberBytes the additional number of binaries (<code>long</code> value) which the
+   *                    session sends to client side
    */
   void addWrittenBytes(long numberBytes);
 
   /**
-   * Retrieves the total number of dropped packets which violated the session's policies and is not able to send to client side.
+   * Retrieves the total number of dropped packets which violated the session's policies and is
+   * not able to send to client side.
    *
-   * @return the <code>long</code> value total number of dropped packets which violated the session's policies and is not able to send to client side
+   * @return the total number of dropped packets (<code>long</code> value) which violated the
+   * session's policies and is not able to send to client side
    */
   long getDroppedPackets();
 
   /**
-   * Increases the total number of dropped packets which violated the session's policies and is not able to send to client side.
+   * Increases the total number of dropped packets which violated the session's policies and is
+   * not able to send to client side.
    *
-   * @param numberPackets the <code>integer</code> value which is additional number of dropped packets which violated the session's policies and is not able to send to client side
+   * @param numberPackets the additional number of dropped packets (<code>integer</code> value)
+   *                      which violated the session's policies and is not able to send to client
+   *                      side
    */
   void addDroppedPackets(int numberPackets);
 
   /**
-   * Retrieves the maximum time in seconds which allows the session to get in IDLE state (Do not perform any action, such as reading or writing data).
+   * Retrieves the maximum time in seconds which allows the session to get in IDLE state (Do not
+   * perform any action, such as reading or writing data).
    *
-   * @return the <code>integer</code> value in seconds that is the maximum time in seconds which allows the session to get in IDLE state
+   * @return the maximum time in seconds (<code>integer</code> value) which allows the session to
+   * get in IDLE state
    */
   int getMaxIdleTimeInSeconds();
 
   /**
-   * Sets the maximum time in seconds which allows the session to get in IDLE state (Do not perform any action, such as reading or writing data).
+   * Sets the maximum time in seconds which allows the session to get in IDLE state (Do not
+   * perform any action, such as reading or writing data).
    *
-   * @param seconds the <code>integer</code> value in seconds that is the maximum time in seconds which allows the session to get in IDLE state
+   * @param seconds the maximum time in seconds (<code>integer</code> value) which allows the
+   *                session to get in IDLE state
    */
   void setMaxIdleTimeInSeconds(int seconds);
 
   /**
-   * Determines whether the session got in IDLE state (Do not perform any action, such as reading or writing data).
+   * Determines whether the session got in IDLE state (Do not perform any action, such as reading
+   * or writing data).
    *
-   * @return the <code>true</code> if the session got in IDLE state, otherwise <code>false</code>
+   * @return <code>true</code> if the session got in IDLE state, otherwise <code>false</code>
    */
   boolean isIdle();
 
   /**
-   * Determines whether the session is activated (To be able to perform actions, such as reading or writing data).
+   * Determines whether the session is activated (To be able to perform actions, such as reading
+   * or writing data).
    *
-   * @return the <code>true</code> if the session is activated, otherwise <code>false</code>
+   * @return <code>true</code> if the session is activated, otherwise <code>false</code>
    */
   boolean isActivated();
 
@@ -365,71 +389,86 @@ public interface Session {
   /**
    * Retrieves how long since the session is inactivated.
    *
-   * @return a <code>long</code> value, how long since the session is inactivated in miliseconds
+   * @return how long since the session is inactivated in milliseconds (<code>long</code> value)
    */
   long getInactivatedTime();
 
   /**
-   * Retrieves full IP address information of the client side which is using the TCP/WebSocket session for communication.
+   * Retrieves full IP address information of the client side which is using the TCP/WebSocket
+   * session for communication.
    *
-   * @return a {@link String} value, full IP address information of the client side which is using the session for communication
+   * @return a {@link String} value, full IP address information of the client side which is
+   * using the session for communication
    */
   String getFullClientIpAddress();
 
   /**
-   * Retrieves IP address information of the client side which is using the TCP/WebSocket session for communication.
+   * Retrieves IP address information of the client side which is using the TCP/WebSocket session
+   * for communication.
    *
-   * @return a {@link String} value, IP address information of the client side which is using the session for communication
+   * @return a {@link String} value, IP address information of the client side which is using the
+   * session for communication
    */
   String getClientAddress();
 
   /**
-   * Retrieves port number of the client side which is using the TCP/WebSocket session for communication.
+   * Retrieves port number of the client side which is using the TCP/WebSocket session for
+   * communication.
    *
-   * @return an <code>integer</code> value, port number of the client side which is using the session for communication
+   * @return an <code>integer</code> value, the port number of the client side which is using by
+   * the session for communication
    */
   int getClientPort();
 
   /**
-   * Retrieves IP address information of the server which is using the TCP/WebSocket session for communication.
+   * Retrieves IP address information of the server which is using the TCP/WebSocket session for
+   * communication.
    *
-   * @return a {@link String} value, IP address information of the server which is using the session for communication
+   * @return a {@link String} value, IP address information of the server which is using the
+   * session for communication
    */
   String getServerAddress();
 
   /**
    * Retrieves port number of the server which is using the TCP/WebSocket session for communication.
    *
-   * @return an <code>integer</code> value, port number of the server which is using the session for communication
+   * @return an <code>integer</code> value, the port number of the server which is using by the
+   * session for communication
    */
   int getServerPort();
 
   /**
-   * Retrieves full IP address information of the server which is using the TCP/WebSocket session for communication.
+   * Retrieves full IP address information of the server which is using the TCP/WebSocket session
+   * for communication.
    *
-   * @return a {@link String} value, full IP address information of the server which is using the session for communication
+   * @return a {@link String} value, full IP address information of the server which is using by the
+   * session for communication
    */
   String getFullServerIpAddress();
 
   /**
    * Retrieves the session manager instance.
    *
-   * @return the {@link SessionManager instance.
+   * @return the {@link SessionManager} instance.
    */
   SessionManager getSessionManager();
 
   /**
    * Sets a session manager instance.
    *
-   * @param sessionManager a {@link SessionManager instance.
+   * @param sessionManager a {@link SessionManager} instance
    */
   void setSessionManager(SessionManager sessionManager);
 
   /**
    * Closes the session, disconnects the connection between client side and the server.
    *
-   * @param connectionDisconnectMode the {@link ConnectionDisconnectMode} regarding rules are applied when the session is closed, and the connection is disconnected
-   * @param playerDisconnectMode     the {@link PlayerDisconnectMode} regarding rules are applied when a player associating to the session is disconnected to the server
+   * @param connectionDisconnectMode a {@link ConnectionDisconnectMode} regarding rules are
+   *                                 applied when the session is closed, and the connection is
+   *                                 disconnected
+   * @param playerDisconnectMode     a {@link PlayerDisconnectMode} regarding rules are applied
+   *                                 when a player associating to the session is disconnected to
+   *                                 the server
    * @throws IOException when the closing process went through any issue
    */
   void close(ConnectionDisconnectMode connectionDisconnectMode,
@@ -437,7 +476,8 @@ public interface Session {
       throws IOException;
 
   /**
-   * Closes the session, disconnects the connection between client side and the server in all default modes.
+   * Closes the session, disconnects the connection between client side and the server in all
+   * default modes.
    *
    * @throws IOException when the closing process went through any issue
    * @see ConnectionDisconnectMode#UNKNOWN

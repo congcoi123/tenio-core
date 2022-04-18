@@ -60,14 +60,14 @@ public interface Service {
   /**
    * Retrieves the service's name.
    *
-   * @return the service's name
+   * @return the {@link String} service's name
    */
   String getName();
 
   /**
    * Set the service's name.
    *
-   * @param name the service's name
+   * @param name the {@link String} service's name
    */
   void setName(String name);
 }
