@@ -32,11 +32,11 @@ import javax.servlet.http.HttpServletResponse;
  */
 public interface ServletHandler {
 
-/**
-* Handles a servlet.
-*
-* @param request the {@link HttpServletRequest}
-* @param response the {@link HttpServletResponse}
-*/
+  /**
+   * Handles a servlet.
+   *
+   * @param request  the {@link HttpServletRequest}
+   * @param response the {@link HttpServletResponse}
+   */
   void handle(HttpServletRequest request, HttpServletResponse response);
 }

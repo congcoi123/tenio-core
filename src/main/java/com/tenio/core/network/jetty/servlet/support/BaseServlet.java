@@ -40,6 +40,14 @@ public abstract class BaseServlet extends HttpServlet {
 
   private final PrivateLogger logger = new PrivateLogger();
 
+  /**
+   * Determines whether a header key is present in a request.
+   *
+   * @param request an instance of {@link HttpServletRequest}
+   * @param key     the checking {@link String} key
+   * @return <code>true</code> if the key is available in the request's header,
+   * <code>false</code> otherwise
+   */
   protected boolean hasHeaderKey(HttpServletRequest request, String key) {
     var headerNames = request.getHeaderNames();
     if (headerNames != null) {
@@ -52,6 +60,12 @@ public abstract class BaseServlet extends HttpServlet {
     return false;
   }
 
+  /**
+   * Retrieves a JSON body from coming request.
+   *
+   * @param request a coming {@link HttpServletRequest}
+   * @return a {@link JSONObject} taken from the request
+   */
   protected JSONObject getBody(HttpServletRequest request) {
     var body = "{}";
     if (request.getMethod().equals("POST") || request.getMethod().equals("PUT")
