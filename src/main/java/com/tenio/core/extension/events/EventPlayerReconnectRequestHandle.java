@@ -30,6 +30,7 @@ import com.tenio.core.network.entity.session.Session;
 /**
  * When a player sends a request to reconnect to the server.
  */
+@FunctionalInterface
 public interface EventPlayerReconnectRequestHandle {
 
   /**

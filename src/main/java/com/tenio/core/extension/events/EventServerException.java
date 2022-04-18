@@ -27,6 +27,7 @@ package com.tenio.core.extension.events;
 /**
  * Something went wrong on the server.
  */
+@FunctionalInterface
 public interface EventServerException {
 
   /**

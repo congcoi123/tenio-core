@@ -30,6 +30,7 @@ import com.tenio.core.network.entity.session.Session;
 /**
  * When the server sends a packet to a connection.
  */
+@FunctionalInterface
 public interface EventWriteMessageToConnection {
 
   /**

@@ -27,6 +27,7 @@ package com.tenio.core.extension.events;
 /**
  * When the server is on shutting down phase.
  */
+@FunctionalInterface
 public interface EventServerTeardown {
 
   /**

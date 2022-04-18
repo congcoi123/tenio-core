@@ -30,6 +30,7 @@ import com.tenio.core.entity.data.ServerMessage;
 /**
  * When the server sends a message to a player.
  */
+@FunctionalInterface
 public interface EventSendMessageToPlayer {
 
   /**

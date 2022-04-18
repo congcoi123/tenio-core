@@ -34,6 +34,7 @@ import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 /**
  * Fetches the bandwidth information on the server.
  */
+@FunctionalInterface
 public interface EventFetchedBandwidthInfo {
 
   /**

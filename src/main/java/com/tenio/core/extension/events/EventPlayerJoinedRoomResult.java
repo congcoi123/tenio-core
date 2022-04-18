@@ -31,6 +31,7 @@ import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 /**
  * When a player tried to join a room.
  */
+@FunctionalInterface
 public interface EventPlayerJoinedRoomResult {
 
   /**

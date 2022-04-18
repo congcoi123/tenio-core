@@ -29,6 +29,7 @@ import com.tenio.core.configuration.define.CoreConfigurationType;
 /**
  * Monitoring the system information.
  */
+@FunctionalInterface
 public interface EventSystemMonitoring {
 
   /**

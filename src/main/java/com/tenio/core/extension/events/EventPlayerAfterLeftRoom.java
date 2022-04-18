@@ -31,6 +31,7 @@ import com.tenio.core.entity.define.result.PlayerLeftRoomResult;
 /**
  * When a player left its current room.
  */
+@FunctionalInterface
 public interface EventPlayerAfterLeftRoom {
 
   /**

@@ -32,6 +32,7 @@ import com.tenio.core.network.entity.session.Session;
 /**
  * Returns the result when a player tried to reconnect to the server.
  */
+@FunctionalInterface
 public interface EventPlayerReconnectedResult {
 
   /**

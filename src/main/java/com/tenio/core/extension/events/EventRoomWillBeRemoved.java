@@ -30,6 +30,7 @@ import com.tenio.core.entity.define.mode.RoomRemoveMode;
 /**
  * The event occurs before a room is eliminated.
  */
+@FunctionalInterface
 public interface EventRoomWillBeRemoved {
 
   /**

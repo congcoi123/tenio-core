@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Handles an HTTP request which sent to the HTTP service from clients side.
  */
+@FunctionalInterface
 public interface EventHttpRequestHandle {
 
   /**

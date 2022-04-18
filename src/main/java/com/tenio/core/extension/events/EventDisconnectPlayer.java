@@ -30,6 +30,7 @@ import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 /**
  * When a player is disconnected.
  */
+@FunctionalInterface
 public interface EventDisconnectPlayer {
 
   /**

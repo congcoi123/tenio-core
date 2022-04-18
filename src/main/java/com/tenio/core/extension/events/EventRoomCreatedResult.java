@@ -31,6 +31,7 @@ import com.tenio.core.entity.setting.InitialRoomSetting;
 /**
  * Returns the result when the server attempts to create a new room.
  */
+@FunctionalInterface
 public interface EventRoomCreatedResult {
 
   /**

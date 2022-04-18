@@ -29,6 +29,7 @@ import com.tenio.common.configuration.Configuration;
 /**
  * When the server is initialized.
  */
+@FunctionalInterface
 public interface EventServerInitialization {
 
   /**

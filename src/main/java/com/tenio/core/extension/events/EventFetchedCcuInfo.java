@@ -30,6 +30,7 @@ import com.tenio.core.entity.Player;
 /**
  * Fetches the CCU information on the server.
  */
+@FunctionalInterface
 public interface EventFetchedCcuInfo {
 
   /**

@@ -30,6 +30,7 @@ import com.tenio.core.entity.define.result.PlayerLoggedInResult;
 /**
  * Returns the result when a player tried to log in the server.
  */
+@FunctionalInterface
 public interface EventPlayerLoggedinResult {
 
   /**

@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
  * Validates an HTTP request on the HTTP service. This method is used to intercept any HTTP
  * request from clients side then validate it.
  */
+@FunctionalInterface
 public interface EventHttpRequestValidation {
 
   /**

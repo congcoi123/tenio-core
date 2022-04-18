@@ -31,6 +31,7 @@ import com.tenio.core.entity.define.result.SwitchedPlayerSpectatorResult;
 /**
  * Returns the result when a participant tries to change to be a spectator.
  */
+@FunctionalInterface
 public interface EventSwitchPlayerToSpectatorResult {
 
   /**

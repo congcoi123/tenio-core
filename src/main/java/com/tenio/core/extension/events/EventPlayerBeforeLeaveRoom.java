@@ -31,6 +31,7 @@ import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
 /**
  * The event occurs before a player leave its current room.
  */
+@FunctionalInterface
 public interface EventPlayerBeforeLeaveRoom {
 
   /**
