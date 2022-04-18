@@ -3,6 +3,7 @@ package com.tenio.core.entity.implement;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
@@ -17,7 +18,7 @@ class RoomImplTest {
     assertEquals(RoomRemoveMode.DEFAULT, actualNewInstanceResult.getRoomRemoveMode());
     assertNull(actualNewInstanceResult.getPlayerManager());
     assertEquals(0, actualNewInstanceResult.getParticipantCount());
-    assertNull(actualNewInstanceResult.getOwner());
+    assertTrue(actualNewInstanceResult.getOwner().isEmpty());
     assertEquals(0, actualNewInstanceResult.getMaxSpectators());
     assertEquals(0, actualNewInstanceResult.getMaxParticipants());
   }

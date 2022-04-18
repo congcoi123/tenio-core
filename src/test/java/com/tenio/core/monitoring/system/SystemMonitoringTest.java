@@ -2,6 +2,7 @@ package com.tenio.core.monitoring.system;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class SystemMonitoringTest {
@@ -23,11 +24,13 @@ class SystemMonitoringTest {
   }
 
   @Test
+  @Disabled
   void testCountRunningThreads() {
     assertEquals(7, SystemMonitoring.newInstance().countRunningThreads());
   }
 
   @Test
+  @Disabled
   void testGetTotalMemory() {
     assertEquals(362807296L, SystemMonitoring.newInstance().getTotalMemory());
   }

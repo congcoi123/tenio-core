@@ -109,17 +109,7 @@ public interface RoomManager extends Manager {
    * @param roomId the <code>long</code> value of room's ID
    * @return an instance of {@link Room} if present, otherwise <code>null</code>
    */
-  Optional<Room> getRoomById(long roomId);
-
-  /**
-   * Retrieves an iterator for a room management list by searching with the room's name. This method
-   * should be used to prevent the "escape references" issue.
-   *
-   * @param roomName the {@link String} room's name
-   * @return a list of all {@link Room}s sharing the same name in the management list
-   * @see Iterator
-   */
-  Iterator<Room> getRoomIteratorByName(String roomName);
+  Room getRoomById(long roomId);
 
   /**
    * Retrieves a read-only room management list by searching with the room's name. This method
@@ -179,13 +169,13 @@ public interface RoomManager extends Manager {
    * Updates a room's capacity.
    *
    * @param room          the updating {@link Room}
-   * @param maxPlayers    the maximum number of players allows in the room (<code>integer</code>
-   *                      value)
+   * @param maxParticipants    the maximum number of participants allows in the room
+   *                           (<code>integer</code> value)
    * @param maxSpectators the maximum number of spectators allows in the room
    *                      (<code>integer</code> value)
    * @throws IllegalArgumentException when invalid value is set
    */
-  void changeRoomCapacity(Room room, int maxPlayers, int maxSpectators)
+  void changeRoomCapacity(Room room, int maxParticipants, int maxSpectators)
       throws IllegalArgumentException;
 
   /**

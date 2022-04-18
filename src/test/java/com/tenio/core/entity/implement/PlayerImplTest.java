@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import com.tenio.core.entity.Player;
+import com.tenio.core.entity.PlayerRoleInRoom;
 import com.tenio.core.network.entity.session.Session;
 import org.junit.jupiter.api.Test;
 
@@ -14,15 +15,15 @@ class PlayerImplTest {
   @Test
   void testNewInstance() {
     Player actualNewInstanceResult = PlayerImpl.newInstance("Name");
-    assertNull(actualNewInstanceResult.getCurrentRoom());
+    assertTrue(actualNewInstanceResult.getCurrentRoom().isEmpty());
     assertEquals(
-        "{ name: Name, session: false, loggedIn: false, spectator: true, activated: false }",
+        "{ name: Name, session: false, loggedIn: false, role: SPECTATOR, activated: false }",
         actualNewInstanceResult.toString());
-    assertTrue(actualNewInstanceResult.isSpectator());
+    assertEquals(PlayerRoleInRoom.SPECTATOR, actualNewInstanceResult.getRoleInRoom());
     assertFalse(actualNewInstanceResult.isLoggedIn());
     assertTrue(actualNewInstanceResult.isInRoom());
     assertFalse(actualNewInstanceResult.isActivated());
-    assertNull(actualNewInstanceResult.getSession());
+    assertFalse(actualNewInstanceResult.getSession().isPresent());
     assertEquals("Name", actualNewInstanceResult.getName());
     assertEquals(0L, actualNewInstanceResult.getLastLoggedInTime());
   }
@@ -30,11 +31,11 @@ class PlayerImplTest {
   @Test
   void testNewInstance2() {
     Player actualNewInstanceResult = PlayerImpl.newInstance("Name", mock(Session.class));
-    assertNull(actualNewInstanceResult.getCurrentRoom());
+    assertTrue(actualNewInstanceResult.getCurrentRoom().isEmpty());
     assertEquals(
-        "{ name: Name, session: true, loggedIn: false, spectator: true, activated: false }",
+        "{ name: Name, session: true, loggedIn: false, role: SPECTATOR, activated: false }",
         actualNewInstanceResult.toString());
-    assertTrue(actualNewInstanceResult.isSpectator());
+    assertEquals(PlayerRoleInRoom.SPECTATOR, actualNewInstanceResult.getRoleInRoom());
     assertFalse(actualNewInstanceResult.isLoggedIn());
     assertTrue(actualNewInstanceResult.isInRoom());
     assertFalse(actualNewInstanceResult.isActivated());
@@ -45,15 +46,15 @@ class PlayerImplTest {
   @Test
   void testNewInstance3() {
     Player actualNewInstanceResult = PlayerImpl.newInstance("Name", null);
-    assertNull(actualNewInstanceResult.getCurrentRoom());
+    assertTrue(actualNewInstanceResult.getCurrentRoom().isEmpty());
     assertEquals(
-        "{ name: Name, session: false, loggedIn: false, spectator: true, activated: false }",
+        "{ name: Name, session: false, loggedIn: false, role: SPECTATOR, activated: false }",
         actualNewInstanceResult.toString());
-    assertTrue(actualNewInstanceResult.isSpectator());
+    assertEquals(PlayerRoleInRoom.SPECTATOR, actualNewInstanceResult.getRoleInRoom());
     assertFalse(actualNewInstanceResult.isLoggedIn());
     assertTrue(actualNewInstanceResult.isInRoom());
     assertFalse(actualNewInstanceResult.isActivated());
-    assertNull(actualNewInstanceResult.getSession());
+    assertFalse(actualNewInstanceResult.getSession().isPresent());
     assertEquals("Name", actualNewInstanceResult.getName());
     assertEquals(0L, actualNewInstanceResult.getLastLoggedInTime());
   }

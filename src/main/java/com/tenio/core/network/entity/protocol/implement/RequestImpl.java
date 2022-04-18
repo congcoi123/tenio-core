@@ -53,7 +53,7 @@ public final class RequestImpl implements Request {
     id = ID_COUNTER.getAndIncrement();
     priority = RequestPriority.NORMAL;
     timestamp = TimeUtility.currentTimeMillis();
-    attributes = new ConcurrentHashMap<String, Object>();
+    attributes = new ConcurrentHashMap<>();
   }
 
   public static Request newInstance() {
@@ -146,7 +146,6 @@ public final class RequestImpl implements Request {
   public String toString() {
     return String.format("{ event: %s, sender: %s, priority: %s, timestamp: %d, attributes: %s }",
         event.toString(), (sender != null ? sender.toString() : "null"), priority.toString(),
-        timestamp,
-        attributes.toString());
+        timestamp, attributes.toString());
   }
 }

@@ -245,7 +245,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     } else if (!player.get().containsSession()) {
       eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player,
           AttachedConnectionResult.SESSION_NOT_FOUND);
-    } else if (!player.get().getSession().isTcp()) {
+    } else if (!player.get().getSession().get().isTcp()) {
       eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player,
           AttachedConnectionResult.INVALID_SESSION_PROTOCOL);
     } else {
@@ -253,10 +253,9 @@ public final class InternalProcessorServiceImpl extends AbstractController
       var remoteAddress = request.getAttribute(EVENT_KEY_DATAGRAM_REMOTE_ADDRESS);
 
       var session = player.get().getSession();
-      var sessionManager = session.getSessionManager();
+      var sessionManager = session.get().getSessionManager();
       sessionManager.addDatagramForSession((DatagramChannel) datagramChannel,
-          (SocketAddress) remoteAddress,
-          session);
+          (SocketAddress) remoteAddress, session.get());
       eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player,
           AttachedConnectionResult.SUCCESS);
     }

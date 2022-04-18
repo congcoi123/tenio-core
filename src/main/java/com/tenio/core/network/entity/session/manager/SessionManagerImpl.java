@@ -59,19 +59,17 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private final Map<Channel, Session> sessionByWebSockets;
   @GuardedBy("this")
   private final Map<SocketAddress, Session> sessionByDatagrams;
-
   private PacketQueuePolicy packetQueuePolicy;
   private int packetQueueSize;
-
   private volatile int sessionCount;
 
   private SessionManagerImpl(EventManager eventManager) {
     super(eventManager);
 
-    sessionByIds = new HashMap<Long, Session>();
-    sessionBySockets = new HashMap<SocketChannel, Session>();
-    sessionByWebSockets = new HashMap<Channel, Session>();
-    sessionByDatagrams = new HashMap<SocketAddress, Session>();
+    sessionByIds = new HashMap<>();
+    sessionBySockets = new HashMap<>();
+    sessionByWebSockets = new HashMap<>();
+    sessionByDatagrams = new HashMap<>();
 
     sessionCount = 0;
     packetQueueSize = DEFAULT_PACKET_QUEUE_SIZE;

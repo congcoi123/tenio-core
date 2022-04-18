@@ -34,8 +34,9 @@ import com.tenio.core.exception.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entity.session.Session;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -50,21 +51,16 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   private final Map<Session, Player> playerBySessions;
 
   private Room ownerRoom;
-
   private volatile int playerCount;
 
   private PlayerManagerImpl(EventManager eventManager) {
     super(eventManager);
-
-    playerByNames = new HashMap<String, Player>();
-    playerBySessions = new HashMap<Session, Player>();
-
+    playerByNames = new HashMap<>();
+    playerBySessions = new HashMap<>();
     ownerRoom = null;
-
     playerCount = 0;
   }
 
-// Delete it.
   public static PlayerManager newInstance(EventManager eventManager) {
     return new PlayerManagerImpl(eventManager);
   }
@@ -78,7 +74,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     synchronized (this) {
       playerByNames.put(player.getName(), player);
       if (player.containsSession()) {
-        playerBySessions.put(player.getSession(), player);
+        playerBySessions.put(player.getSession().get(), player);
       }
       playerCount = playerByNames.size();
     }
@@ -125,16 +121,30 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public Collection<Player> getAllPlayers() {
-    synchronized (playerByNames) {
-      return playerByNames.values();
+  public Iterator<Player> getPlayerIterator() {
+    synchronized (this) {
+      return playerByNames.values().iterator();
     }
   }
 
   @Override
-  public Collection<Session> getAllSessions() {
-    synchronized (playerBySessions) {
-      return playerBySessions.keySet();
+  public List<Player> getReadonlyPlayersList() {
+    synchronized (this) {
+      return List.copyOf(playerByNames.values());
+    }
+  }
+
+  @Override
+  public Iterator<Session> getSessionIterator() {
+    synchronized (this) {
+      return playerBySessions.keySet().iterator();
+    }
+  }
+
+  @Override
+  public List<Session> getReadonlySessionsList() {
+    synchronized (this) {
+      return List.copyOf(playerBySessions.keySet());
     }
   }
 
@@ -200,7 +210,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public void clear() {
     synchronized (this) {
-      var iterator = new ArrayList<Player>(playerByNames.values()).iterator();
+      var iterator = new ArrayList<>(playerByNames.values()).iterator();
       while (iterator.hasNext()) {
         var player = iterator.next();
         removePlayer(player);
