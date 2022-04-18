@@ -53,7 +53,7 @@ public final class NetworkReaderStatistic {
   /**
    * Updates the current number of received bytes from clients side.
    *
-   * @param numberBytes the additional bytes received from client sides (<code>long</code> value)
+   * @param numberBytes the additional bytes received from client sides ({@code long} value)
    */
   public void updateReadBytes(long numberBytes) {
     readBytes.addAndGet(numberBytes);
@@ -62,7 +62,7 @@ public final class NetworkReaderStatistic {
   /**
    * Updates the current number of received packets from clients side.
    *
-   * @param numberPackets the additional packets received from client sides (<code>long</code>
+   * @param numberPackets the additional packets received from client sides ({@code long}
    *                      value)
    */
   public void updateReadPackets(long numberPackets) {
@@ -73,7 +73,7 @@ public final class NetworkReaderStatistic {
    * Updates the current number of refused packets from clients side which violated the policies.
    *
    * @param numberPackets the additional packets refused to handle from clients side
-   *                      (<code>long</code> value)
+   *                      ({@code long} value)
    */
   public void updateReadDroppedPackets(long numberPackets) {
     readDroppedPackets.addAndGet(numberPackets);
@@ -82,7 +82,7 @@ public final class NetworkReaderStatistic {
   /**
    * Retrieves the current number of received bytes data from client sides.
    *
-   * @return the current number of received bytes data (<code>long</code> value)
+   * @return the current number of received bytes data ({@code long} value)
    */
   public long getReadBytes() {
     return readBytes.longValue();
@@ -91,7 +91,7 @@ public final class NetworkReaderStatistic {
   /**
    * Retrieves the current number of received packets from clients side.
    *
-   * @return the current number of received packets (<code>long</code> value)
+   * @return the current number of received packets ({@code long} value)
    */
   public long getReadPackets() {
     return readPackets.longValue();
@@ -100,7 +100,7 @@ public final class NetworkReaderStatistic {
   /**
    * Retrieves the current number of dropped packets which are refused to handle.
    *
-   * @return the current number of dropped packets (<code>long</code> value)
+   * @return the current number of dropped packets ({@code long} value)
    */
   public long getReadDroppedPackets() {
     return readDroppedPackets.longValue();

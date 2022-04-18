@@ -45,35 +45,35 @@ public interface Controller extends Service, ServiceListener {
   /**
    * Retrieves the maximum size of a request queue.
    *
-   * @return the maximum request queue size (<code>integer</code> value)
+   * @return the maximum request queue size ({@code integer} value)
    */
   int getMaxRequestQueueSize();
 
   /**
    * Sets the maximum value size for the request queue.
    *
-   * @param maxSize the maximum size of a request queue (<code>integer</code> value)
+   * @param maxSize the maximum size of a request queue ({@code integer} value)
    */
   void setMaxRequestQueueSize(int maxSize);
 
   /**
    * Retrieves the current percentage using of a request queue.
    *
-   * @return the percentage of using (<code>float</code> value)
+   * @return the percentage of using ({@code float} value)
    */
   float getPercentageUsedRequestQueue();
 
   /**
    * Retrieves the thread pool size using for processes.
    *
-   * @return the thread pool size (<code>integer</code> value)
+   * @return the thread pool size ({@code integer} value)
    */
   int getThreadPoolSize();
 
   /**
    * Set the thread pool size using for processes.
    *
-   * @param maxSize the thread pool size (<code>integer</code> value)
+   * @param maxSize the thread pool size ({@code integer} value)
    */
   void setThreadPoolSize(int maxSize);
 }

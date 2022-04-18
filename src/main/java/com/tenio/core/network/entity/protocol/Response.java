@@ -38,14 +38,14 @@ public interface Response {
   /**
    * Retrieves an array of binaries data that is carried by the response.
    *
-   * @return an array of <code>byte</code> data that is carried by the response
+   * @return an array of {@code byte} data that is carried by the response
    */
   byte[] getContent();
 
   /**
    * Sets content for the response.
    *
-   * @param content an array of <code>byte</code> data that is carried by the response
+   * @param content an array of {@code byte} data that is carried by the response
    * @return the pointer of response
    */
   Response setContent(byte[] content);
@@ -151,7 +151,7 @@ public interface Response {
   /**
    * Determines whether the response's content is encrypted.
    *
-   * @return <code>true</code> if the response's content is encrypted, otherwise <code>false</code>
+   * @return {@code true} if the response's content is encrypted, otherwise returns {@code false}
    */
   boolean isEncrypted();
 

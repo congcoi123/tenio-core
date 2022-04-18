@@ -41,7 +41,7 @@ public interface ScheduleService extends Service {
    * Sets interval time to ask the server frequently checks all rooms for finding out removable
    * ones and remove them from the management list.
    *
-   * @param interval <code>integer</code> value, the interval time (seconds) to ask the sever
+   * @param interval {@code integer} value, the interval time (seconds) to ask the sever
    *                 frequently checks all rooms
    * @see RoomRemoveMode
    */
@@ -51,7 +51,7 @@ public interface ScheduleService extends Service {
    * Sets interval time to ask the server frequently checks all players for finding out removable
    * ones and remove them from the management list.
    *
-   * @param interval <code>integer</code> value, the interval time (seconds) to ask the sever
+   * @param interval {@code integer} value, the interval time (seconds) to ask the sever
    *                 frequently checks all players
    * @see PlayerDisconnectMode
    */
@@ -60,7 +60,7 @@ public interface ScheduleService extends Service {
   /**
    * Sets interval time to ask the server frequently provides CCU information.
    *
-   * @param interval <code>integer</code> value, the interval time (seconds) to ask the sever
+   * @param interval {@code integer} value, the interval time (seconds) to ask the sever
    *                 frequently provides CCU information
    */
   void setCcuReportInterval(int interval);
@@ -68,7 +68,7 @@ public interface ScheduleService extends Service {
   /**
    * Sets interval time to ask the server frequently checks all deadlock occurring on it.
    *
-   * @param interval <code>integer</code> value, the interval time (seconds) to ask the sever
+   * @param interval {@code integer} value, the interval time (seconds) to ask the sever
    *                 frequently checks all deadlock occurring on it
    */
   void setDeadlockScanInterval(int interval);
@@ -76,7 +76,7 @@ public interface ScheduleService extends Service {
   /**
    * Sets interval time to ask the server frequently provides traffic information.
    *
-   * @param interval <code>integer</code> value, the interval time (seconds) to ask the sever
+   * @param interval {@code integer} value, the interval time (seconds) to ask the sever
    *                 frequently provides traffic information
    */
   void setTrafficCounterInterval(int interval);
@@ -84,7 +84,7 @@ public interface ScheduleService extends Service {
   /**
    * Sets interval time to ask the server frequently provides system information.
    *
-   * @param interval <code>integer</code> value, the interval time (seconds) to ask the sever
+   * @param interval {@code integer} value, the interval time (seconds) to ask the sever
    *                 frequently provides system information
    */
   void setSystemMonitoringInterval(int interval);

@@ -44,14 +44,14 @@ public final class PacketHeader {
   /**
    * Initialization.
    *
-   * @param binary     sets to <code>true</code> if the data is written by binary, otherwise
-   *                   <code>false</code>
-   * @param compressed sets to <code>true</code> if the data is compressed, otherwise
-   *                   <code>false</code>
-   * @param bigSized   sets to <code>true</code> if the data size is considered big size,
-   *                   otherwise <code>false</code>
-   * @param encrypted  sets to <code>true</code> if the data is encrypted, otherwise
-   *                   <code>false</code>
+   * @param binary     sets to {@code true} if the data is written by binary, otherwise
+   *                   {@code false}
+   * @param compressed sets to {@code true} if the data is compressed, otherwise
+   *                   {@code false}
+   * @param bigSized   sets to {@code true} if the data size is considered big size,
+   *                   otherwise returns {@code false}
+   * @param encrypted  sets to {@code true} if the data is encrypted, otherwise
+   *                   {@code false}
    */
   public static PacketHeader newInstance(boolean binary, boolean compressed, boolean bigSized,
                                          boolean encrypted) {
@@ -61,7 +61,7 @@ public final class PacketHeader {
   /**
    * Determines whether the data is written by binary.
    *
-   * @return <code>true</code> if the data is written by binary, otherwise <code>false</code>
+   * @return {@code true} if the data is written by binary, otherwise returns {@code false}
    */
   public boolean isBinary() {
     return binary;
@@ -70,7 +70,7 @@ public final class PacketHeader {
   /**
    * Determines whether the data is compressed.
    *
-   * @return <code>true</code> if the data is compressed, otherwise <code>false</code>
+   * @return {@code true} if the data is compressed, otherwise returns {@code false}
    */
   public boolean isCompressed() {
     return compressed;
@@ -79,8 +79,8 @@ public final class PacketHeader {
   /**
    * Determines whether the data size is big.
    *
-   * @return <code>true</code> if the data size is considered as big size, otherwise
-   * <code>false</code>
+   * @return {@code true} if the data size is considered as big size, otherwise
+   * {@code false}
    */
   public boolean isBigSized() {
     return bigSized;
@@ -89,7 +89,7 @@ public final class PacketHeader {
   /**
    * Determines whether the data is encrypted.
    *
-   * @return <code>true</code> if the data is encrypted, otherwise <code>false</code>
+   * @return {@code true} if the data is encrypted, otherwise returns {@code false}
    */
   public boolean isEncrypted() {
     return encrypted;

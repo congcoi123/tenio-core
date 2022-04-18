@@ -172,7 +172,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
    * Close a channel, see {@link Channel}.
    *
    * @param channel the closed channel
-   * @return <b>true</b> if the channel is closed without any exceptions
+   * @return {@code true} if the channel is closed without any exceptions
    */
   private boolean close(Channel channel) {
     if (Objects.isNull(channel)) {

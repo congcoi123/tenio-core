@@ -48,7 +48,7 @@ public interface Room {
   /**
    * Retrieves the room's unique ID in the management list, on the server.
    *
-   * @return the room's unique ID (<code>long</code> value)
+   * @return the room's unique ID ({@code long} value)
    */
   long getId();
 
@@ -102,21 +102,21 @@ public interface Room {
    * Determines whether the room is public which means it does not contain any credential and
    * allowed to freely get in.
    *
-   * @return <code>true</code> if the room is public, otherwise <code>false</code>
+   * @return {@code true} if the room is public, otherwise returns {@code false}
    */
   boolean isPublic();
 
   /**
    * Retrieves the maximum number of participants allowing in the room.
    *
-   * @return the maximum number of participants (<code>integer</code> value)
+   * @return the maximum number of participants ({@code integer} value)
    */
   int getMaxParticipants();
 
   /**
    * Sets the maximum number of participants allowing in the room.
    *
-   * @param maxParticipants the maximum number of participants (<code>integer</code> value)
+   * @param maxParticipants the maximum number of participants ({@code integer} value)
    * @throws IllegalArgumentException when an invalid value is used
    */
   void setMaxParticipants(int maxParticipants) throws IllegalArgumentException;
@@ -124,14 +124,14 @@ public interface Room {
   /**
    * Retrieves the maximum number of spectators allowing in the room.
    *
-   * @return the maximum number of spectators (<code>integer</code> value)
+   * @return the maximum number of spectators ({@code integer} value)
    */
   int getMaxSpectators();
 
   /**
    * Sets the maximum number of spectators allowing in the room.
    *
-   * @param maxSpectators the maximum number of spectators (<code>integer</code> value)
+   * @param maxSpectators the maximum number of spectators ({@code integer} value)
    * @throws IllegalArgumentException when an invalid value is used
    */
   void setMaxSpectators(int maxSpectators) throws IllegalArgumentException;
@@ -168,15 +168,15 @@ public interface Room {
   /**
    * Determines whether the room is activated.
    *
-   * @return <code>true</code> when the room is active, otherwise <code>false</code>
+   * @return {@code true} when the room is active, otherwise returns {@code false}
    */
   boolean isActivated();
 
   /**
    * Updates the active state for the room.
    *
-   * @param activated sets the value to <code>true</code> to activate the room, otherwise
-   *                  <code>false</code>
+   * @param activated sets the value to {@code true} to activate the room, otherwise
+   *                  {@code false}
    */
   void setActivated(boolean activated);
 
@@ -198,7 +198,7 @@ public interface Room {
    * Retrieves a property belongs to the room.
    *
    * @param key the {@link String} key to fetch data
-   * @return an {@link Object} value if present, otherwise <code>null</code>
+   * @return an {@link Object} value if present, otherwise {@code null}
    */
   Object getProperty(String key);
 
@@ -214,7 +214,7 @@ public interface Room {
    * Determines whether a property is available for the room.
    *
    * @param key a {@link String} key used for searching the corresponding property
-   * @return <code>true</code> if the property is available, otherwise <code>false</code>
+   * @return {@code true} if the property is available, otherwise returns {@code false}
    */
   boolean containsProperty(String key);
 
@@ -233,15 +233,15 @@ public interface Room {
   /**
    * Retrieves the total number of entities allowed to be in the room (participants and spectators).
    *
-   * @return the total number of entities (<code>integer</code> value)
+   * @return the total number of entities ({@code integer} value)
    */
   int getCapacity();
 
   /**
    * Sets the limitation values for participants and spectators.
    *
-   * @param maxParticipants the maximum number of participants (<code>integer</code> value)
-   * @param maxSpectators   the maximum number of spectators (<code>integer</code> value)
+   * @param maxParticipants the maximum number of participants ({@code integer} value)
+   * @param maxSpectators   the maximum number of spectators ({@code integer} value)
    * @throws IllegalArgumentException when an invalid value is used
    */
   void setCapacity(int maxParticipants, int maxSpectators) throws IllegalArgumentException;
@@ -249,14 +249,14 @@ public interface Room {
   /**
    * Retrieves the current number of players in the room.
    *
-   * @return the current number of players (<code>integer</code> value)
+   * @return the current number of players ({@code integer} value)
    */
   int getParticipantCount();
 
   /**
    * Retrieves the current number of spectators in the room.
    *
-   * @return the current number of spectators (<code>integer</code> value)
+   * @return the current number of spectators ({@code integer} value)
    */
   int getSpectatorCount();
 
@@ -264,7 +264,7 @@ public interface Room {
    * Determines whether a player is present in the room.
    *
    * @param playerName a unique {@link String} player name in the room's player management list
-   * @return <code>true</code> when a player can be found, otherwise <code>false</code>
+   * @return {@code true} when a player can be found, otherwise returns {@code false}
    */
   boolean containsPlayerName(String playerName);
 
@@ -328,10 +328,10 @@ public interface Room {
    * Adds a player to the room.
    *
    * @param player      a joining {@link Player}
-   * @param asSpectator sets to <code>true</code> if the player joins room as a "spectator",
-   *                    otherwise <code>false</code>
+   * @param asSpectator sets to {@code true} if the player joins room as a "spectator",
+   *                    otherwise returns {@code false}
    * @param targetSlot  when the player join the room as role of "participants", then it can
-   *                    occupy a slot position (<code>integer</code> value)
+   *                    occupy a slot position ({@code integer} value)
    * @throws PlayerJoinedRoomException      any exception occurred when the player tries to join
    *                                        the room
    * @throws AddedDuplicatedPlayerException when the player has been already in the room, but it
@@ -344,8 +344,8 @@ public interface Room {
    * Adds a player to the room without indicating any slot position.
    *
    * @param player      a joining {@link Player}
-   * @param asSpectator sets to <code>true</code> if the player joins room as a "spectator",
-   *                    otherwise <code>false</code>
+   * @param asSpectator sets to {@code true} if the player joins room as a "spectator",
+   *                    otherwise returns {@code false}
    * @throws PlayerJoinedRoomException      any exception occurred when the player tries to join
    *                                        the room
    * @throws AddedDuplicatedPlayerException when the player has been already in the room, but it
@@ -392,7 +392,7 @@ public interface Room {
    * Changes a player's role from "spectator" to "participant" in the room.
    *
    * @param player     the changing {@link Player}
-   * @param targetSlot a new slot position (<code>integer</code> value) set to the player in the
+   * @param targetSlot a new slot position ({@code integer} value) set to the player in the
    *                   room
    * @throws SwitchedPlayerRoleInRoomException when the changing could not be done
    */
@@ -414,15 +414,15 @@ public interface Room {
   /**
    * Determines whether the room is empty.
    *
-   * @return <code>true</code> if there is no entity in the room, otherwise <code>false</code>
+   * @return {@code true} if there is no entity in the room, otherwise returns {@code false}
    */
   boolean isEmpty();
 
   /**
    * Determines whether the room is full.
    *
-   * @return <code>true</code> if the number of entities reached the limitation in the room,
-   * otherwise <code>false</code>
+   * @return {@code true} if the number of entities reached the limitation in the room,
+   * otherwise returns {@code false}
    */
   boolean isFull();
 
@@ -430,7 +430,7 @@ public interface Room {
    * Retrieves a strategy to generate slot positions in the room.
    *
    * @return an implementation of {@link RoomPlayerSlotGeneratedStrategy}, in case this value is
-   * <code>null</code>, then the default implementation will be used
+   * {@code null}, then the default implementation will be used
    * @see DefaultRoomPlayerSlotGeneratedStrategy
    */
   RoomPlayerSlotGeneratedStrategy getPlayerSlotGeneratedStrategy();
@@ -448,7 +448,7 @@ public interface Room {
    * Retrieves a strategy to validate credentials used to allow players get in the room.
    *
    * @return an implementation of {@link RoomCredentialValidatedStrategy}, in case this value is
-   * <code>null</code>, then the default implementation will be used
+   * {@code null}, then the default implementation will be used
    * @see DefaultRoomCredentialValidatedStrategy
    */
   RoomCredentialValidatedStrategy getRoomCredentialValidatedStrategy();

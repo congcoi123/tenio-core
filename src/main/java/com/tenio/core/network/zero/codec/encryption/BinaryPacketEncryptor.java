@@ -34,8 +34,8 @@ public interface BinaryPacketEncryptor {
   /**
    * Encrypts the binary data in a packet.
    *
-   * @param binary an array of <code>byte</code> data for encrypting
-   * @return an array of encrypted <code>byte</code> data
+   * @param binary an array of {@code byte} data for encrypting
+   * @return an array of encrypted {@code byte} data
    * @throws PacketEncryptorException when any issue emerged while encrypting process
    */
   byte[] encrypt(byte[] binary) throws PacketEncryptorException;
@@ -43,8 +43,8 @@ public interface BinaryPacketEncryptor {
   /**
    * Decrypts the binary data in a packet.
    *
-   * @param binary an array of <code>byte</code> data for decrypting
-   * @return an array of decrypted <code>byte</code> data
+   * @param binary an array of {@code byte} data for decrypting
+   * @return an array of decrypted {@code byte} data
    * @throws PacketEncryptorException when any issue emerged while decrypting process
    */
   byte[] decrypt(byte[] binary) throws PacketEncryptorException;

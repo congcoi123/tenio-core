@@ -77,9 +77,9 @@ public interface ServerApi {
    *
    * @param player         the {@link Player} needs to be removed
    * @param message        a {@link String} text delivered to the player before it leaves
-   * @param delayInSeconds a countdown time in seconds (<code>integer</code> value) for removing the
+   * @param delayInSeconds a countdown time in seconds ({@code integer} value) for removing the
    *                       player. In case the player has to be out immediately, this value
-   *                       should be set to <code>0</code>
+   *                       should be set to {@code 0}
    * @throws UnsupportedOperationException this method is not supported at the moment
    */
   default void kickPlayer(Player player, String message, int delayInSeconds) {
@@ -94,10 +94,10 @@ public interface ServerApi {
    *                          banned
    * @param banMode           a rule ({@link PlayerBanMode}) applied for the player
    * @param durationInMinutes how long the player takes punishment calculated in
-   *                          minutes (<code>integer</code> value)
-   * @param delayInSeconds    a countdown time in seconds (<code>integer</code> value) for banning
+   *                          minutes ({@code integer} value)
+   * @param delayInSeconds    a countdown time in seconds ({@code integer} value) for banning
    *                          the player. In case the player has to be banned immediately, this
-   *                          value should be set to <code>0</code>
+   *                          value should be set to {@code 0}
    * @throws UnsupportedOperationException this method is not supported at the moment
    */
   default void banPlayer(Player player, String message, PlayerBanMode banMode,
@@ -110,7 +110,7 @@ public interface ServerApi {
    * Creates a new room on the server without an owner.
    *
    * @param setting all room {@link InitialRoomSetting} at the time its created
-   * @return a new instance of {@link Room} if available, otherwise <code>null</code>
+   * @return a new instance of {@link Room} if available, otherwise {@code null}
    */
   default Room createRoom(InitialRoomSetting setting) {
     return createRoom(setting, null);
@@ -121,8 +121,8 @@ public interface ServerApi {
    *
    * @param setting all room {@link InitialRoomSetting} at the time its created
    * @param owner   a {@link Player} owner of this room, owner can also be declared by
-   *                <code>null</code> value
-   * @return a new instance of {@link Room} if available, otherwise <code>null</code>
+   *                {@code null} value
+   * @return a new instance of {@link Room} if available, otherwise {@code null}
    */
   Room createRoom(InitialRoomSetting setting, Player owner);
 
@@ -147,7 +147,7 @@ public interface ServerApi {
   /**
    * Fetches the current number of players activating on the server.
    *
-   * @return the current number of players (<code>integer</code> value)
+   * @return the current number of players ({@code integer} value)
    */
   int getPlayerCount();
 
@@ -174,7 +174,7 @@ public interface ServerApi {
   /**
    * Retrieves a room instance by using its ID.
    *
-   * @param roomId a unique room ID (<code>long</code> value)
+   * @param roomId a unique room ID ({@code long} value)
    * @return an optional {@link Room} instance
    * @see Optional
    */
@@ -206,10 +206,10 @@ public interface ServerApi {
    * @param player       the joining {@link Player}
    * @param room         the current {@link Room}
    * @param roomPassword a {@link String} credential using for a player to join room.
-   *                     In case of free join, this value would be set to <code>null</code>
-   * @param slotInRoom   the position of player located in the room (<code>integer</code> value)
-   * @param asSpectator  sets by <code>true</code> if the player operating in the room as a
-   *                     spectator, otherwise <code>false</code>
+   *                     In case of free join, this value would be set to {@code null}
+   * @param slotInRoom   the position of player located in the room ({@code integer} value)
+   * @param asSpectator  sets by {@code true} if the player operating in the room as a
+   *                     spectator, otherwise returns {@code false}
    */
   void joinRoom(Player player, Room room, String roomPassword, int slotInRoom, boolean asSpectator);
 
@@ -241,7 +241,7 @@ public interface ServerApi {
    *
    * @param player     the checking spectator ({@link Player} instance)
    * @param room       the current spectator's {@link Room}
-   * @param targetSlot a new position (<code>integer</code> value) of transformed "participant" in
+   * @param targetSlot a new position ({@code integer} value) of transformed "participant" in
    *                  its room
    * @throws UnsupportedOperationException this method is not supported at the moment
    */

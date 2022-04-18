@@ -66,7 +66,7 @@ public interface SessionManager extends Manager {
    * Retrieves a socket (TCP) session from the management list.
    *
    * @param socketChannel the {@link SocketChannel} associating to the session
-   * @return a corresponding {@link Session} instance, otherwise <code>null</code>
+   * @return a corresponding {@link Session} instance, otherwise {@code null}
    */
   Session getSessionBySocket(SocketChannel socketChannel);
 
@@ -90,7 +90,7 @@ public interface SessionManager extends Manager {
    * Retrieves a WebSocket session from the management list.
    *
    * @param webSocketChannel the WebSocket {@link Channel} associating to the session
-   * @return a corresponding {@link Session} instance, otherwise <code>null</code>
+   * @return a corresponding {@link Session} instance, otherwise {@code null}
    */
   Session getSessionByWebSocket(Channel webSocketChannel);
 
@@ -114,7 +114,7 @@ public interface SessionManager extends Manager {
    * @param remoteAddress the remote {@link SocketAddress} of client side which is using the
    *                      session to connect to the server
    * @return a corresponding {@link Session} instance if the session is allowed to use the
-   * datagram channel and the remote address is present, otherwise <code>null</code>
+   * datagram channel and the remote address is present, otherwise {@code null}
    */
   Session getSessionByDatagram(SocketAddress remoteAddress);
 
@@ -153,7 +153,7 @@ public interface SessionManager extends Manager {
   /**
    * Sets the packet queue size.
    *
-   * @param queueSize the <code>integer</code> value of new size for the packet queue
+   * @param queueSize the {@code integer} value of new size for the packet queue
    * @see PacketQueue
    * @see PacketQueuePolicy
    */

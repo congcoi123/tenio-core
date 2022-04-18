@@ -75,7 +75,7 @@ public interface PlayerManager extends Manager {
    * Retrieves a player by using its name.
    *
    * @param playerName a unique {@link String} name of player on the server
-   * @return an instance of {@link Player} if present, otherwise <code>null</code>
+   * @return an instance of {@link Player} if present, otherwise {@code null}
    */
   Player getPlayerByName(String playerName);
 
@@ -83,7 +83,7 @@ public interface PlayerManager extends Manager {
    * Retrieves a player by using its session.
    *
    * @param session the {@link Session} associated with a player on the server
-   * @return an instance of {@link Player} if present, otherwise <code>null</code>
+   * @return an instance of {@link Player} if present, otherwise {@code null}
    */
   Player getPlayerBySession(Session session);
 
@@ -145,7 +145,7 @@ public interface PlayerManager extends Manager {
    * Determines whether the management list contains a player by checking its name.
    *
    * @param playerName the player's name ({@link String} value)
-   * @return <code>true</code> if the player is available, otherwise <code>false</code>
+   * @return {@code true} if the player is available, otherwise returns {@code false}
    */
   boolean containsPlayerName(String playerName);
 
@@ -153,21 +153,21 @@ public interface PlayerManager extends Manager {
    * Determines whether the management list contains a player by checking its session.
    *
    * @param session the {@link Session} associated to a player
-   * @return <code>true</code> if the player is available, otherwise <code>false</code>
+   * @return {@code true} if the player is available, otherwise returns {@code false}
    */
   boolean containsPlayerSession(Session session);
 
   /**
    * Retrieves a room of the management list.
    *
-   * @return an instance of {@link Room} if present, otherwise <code>null</code>
+   * @return an instance of {@link Room} if present, otherwise {@code null}
    */
   Room getOwnerRoom();
 
   /**
    * Adds the management list to a room.
    *
-   * @param room an instance of {@link Room}, this value can be <code>null</code>. In that case,
+   * @param room an instance of {@link Room}, this value can be {@code null}. In that case,
    *             the management list does not belong to any room
    */
   void setOwnerRoom(Room room);
@@ -175,7 +175,7 @@ public interface PlayerManager extends Manager {
   /**
    * Retrieves the current number of players in the management list.
    *
-   * @return the current number (<code>integer</code> value) of players in the list
+   * @return the current number ({@code integer} value) of players in the list
    */
   int getPlayerCount();
 

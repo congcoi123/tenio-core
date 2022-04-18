@@ -99,7 +99,7 @@ public final class InitialRoomSetting {
   /**
    * Determines whether the room is active.
    *
-   * @return <code>true</code> if the room is activated, otherwise <code>false</code>
+   * @return {@code true} if the room is activated, otherwise returns {@code false}
    */
   public boolean isActivated() {
     return activated;
@@ -213,8 +213,8 @@ public final class InitialRoomSetting {
     /**
      * Allows a room to be activated or not.
      *
-     * @param activated set the flag's value to be <code>true</code> when the room is active,
-     *                  otherwise <code>false</code>
+     * @param activated set the flag's value to be {@code true} when the room is active,
+     *                  otherwise returns {@code false}
      * @return the pointer of builder
      */
     public Builder setActivated(boolean activated) {

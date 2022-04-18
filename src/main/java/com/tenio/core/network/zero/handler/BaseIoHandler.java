@@ -37,7 +37,7 @@ public interface BaseIoHandler {
    * When a new message comes from a session then this method is invoked.
    *
    * @param session the {@link Session} using to communicate to client side
-   * @param binary  an array of <code>byte</code> data sent by client side
+   * @param binary  an array of {@code byte} data sent by client side
    */
   void sessionRead(Session session, byte[] binary);
 

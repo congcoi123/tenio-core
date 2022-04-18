@@ -44,7 +44,7 @@ public final class PathConfig {
    * @param method      the {@link RestMethod}
    * @param uri         the URI {@link String} value
    * @param description the {@link String} description
-   * @param version     the current API version (<code>integer</code> value)
+   * @param version     the current API version ({@code integer} value)
    */
   public PathConfig(String name, RestMethod method, String uri, String description,
                     int version) {

@@ -36,12 +36,12 @@ public interface EventSystemMonitoring {
    * Monitoring the system information on the server. The information should be frequently
    * updated every interval time.
    *
-   * @param cpuUsage            <code>double</code> value, the current CPU's usage
-   * @param totalMemory         <code>long</code> value, the total size of memory in byte that
+   * @param cpuUsage            {@code double} value, the current CPU's usage
+   * @param totalMemory         {@code long} value, the total size of memory in byte that
    *                            the JVM occupy from the host machine
-   * @param usedMemory          <code>long</code> value, the memory volume that the JVM is consuming
-   * @param freeMemory          <code>long</code> value, the available memory that the JVM can use
-   * @param countRunningThreads <code>integer</code> value, the current running threads on the JVM
+   * @param usedMemory          {@code long} value, the memory volume that the JVM is consuming
+   * @param freeMemory          {@code long} value, the available memory that the JVM can use
+   * @param countRunningThreads {@code integer} value, the current running threads on the JVM
    * @see CoreConfigurationType#INTERVAL_SYSTEM_MONITORING
    */
   void handle(double cpuUsage, long totalMemory, long usedMemory, long freeMemory,

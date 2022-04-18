@@ -113,7 +113,7 @@ public final class EventManager extends SystemLogger {
    * Check if an event has any subscribers or not.
    *
    * @param event see {@link ServerEvent}
-   * @return <b>true</b> if an event has any subscribers
+   * @return {@code true} if an event has any subscribers
    */
   public boolean hasSubscriber(ServerEvent event) {
     for (var subscriber : eventSubscribers) {

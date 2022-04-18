@@ -41,21 +41,21 @@ public interface Packet {
   /**
    * Retrieves the unique ID of packet.
    *
-   * @return the unique <code>long</code> value ID of packet
+   * @return the unique {@code long} value ID of packet
    */
   long getId();
 
   /**
    * Retrieves data of binaries conveyed by the packet.
    *
-   * @return data of <code>byte</code> array conveyed by the packet
+   * @return data of {@code byte} array conveyed by the packet
    */
   byte[] getData();
 
   /**
    * Puts data of binaries into the packet.
    *
-   * @param binary data of <code>byte</code> array conveyed by the packet
+   * @param binary data of {@code byte} array conveyed by the packet
    */
   void setData(byte[] binary);
 
@@ -90,15 +90,15 @@ public interface Packet {
   /**
    * Determines whether the packet data is encrypted.
    *
-   * @return <code>true</code> if the packet data is encrypted, otherwise <code>false</code>
+   * @return {@code true} if the packet data is encrypted, otherwise returns {@code false}
    */
   boolean isEncrypted();
 
   /**
    * Marks the packet data is encrypted or not.
    *
-   * @param encrypted is set to <code>true</code> if the packet data is encrypted, otherwise
-   *                  <code>false</code>
+   * @param encrypted is set to {@code true} if the packet data is encrypted, otherwise
+   *                  {@code false}
    */
   void setEncrypted(boolean encrypted);
 
@@ -121,45 +121,45 @@ public interface Packet {
   /**
    * Retrieves the creation time of packet in milliseconds.
    *
-   * @return the creation time in milliseconds (<code>long</code> value)
+   * @return the creation time in milliseconds ({@code long} value)
    */
   long getCreatedTime();
 
   /**
    * Retrieves the real size of packet's data in bytes.
    *
-   * @return the real packet's data size in <code>integer</code> value of bytes
+   * @return the real packet's data size in {@code integer} value of bytes
    */
   int getOriginalSize();
 
   /**
    * Determines whether the packet's transportation type is TCP.
    *
-   * @return <code>true</code> if the packet's transportation type is TCP, otherwise
-   * <code>false</code>
+   * @return {@code true} if the packet's transportation type is TCP, otherwise
+   * {@code false}
    */
   boolean isTcp();
 
   /**
    * Determines whether the packet's transportation type is UDP.
    *
-   * @return <code>true</code> if the packet's transportation type is UDP, otherwise
-   * <code>false</code>
+   * @return {@code true} if the packet's transportation type is UDP, otherwise
+   * {@code false}
    */
   boolean isUdp();
 
   /**
    * Determines whether the packet's transportation type is WebSocket.
    *
-   * @return <code>true</code> if the packet's transportation type is WebSocket, otherwise
-   * <code>false</code>
+   * @return {@code true} if the packet's transportation type is WebSocket, otherwise
+   * {@code false}
    */
   boolean isWebSocket();
 
   /**
    * Retrieves the rest of sending binaries from the packet's data.
    *
-   * @return the rest of sending <code>byte</code> array from the packet's data
+   * @return the rest of sending {@code byte} array from the packet's data
    */
   byte[] getFragmentBuffer();
 
@@ -167,15 +167,15 @@ public interface Packet {
    * Updates the rest of sending binaries from the packet's data. The data may not be sent at
    * once, but it is split to some parts according to the sending process.
    *
-   * @param binary the rest of sending <code>byte</code> array from the packet's data
+   * @param binary the rest of sending {@code byte} array from the packet's data
    */
   void setFragmentBuffer(byte[] binary);
 
   /**
    * Determines whether the packet's data is fragmented.
    *
-   * @return <code>true</code> if there is fragmented binaries data waiting to send (In case, the
-   * packet's data could not be sent at once), otherwise <code>false</code>
+   * @return {@code true} if there is fragmented binaries data waiting to send (In case, the
+   * packet's data could not be sent at once), otherwise returns {@code false}
    */
   boolean isFragmented();
 

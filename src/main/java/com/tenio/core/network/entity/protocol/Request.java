@@ -37,7 +37,7 @@ public interface Request {
   /**
    * Retrieves the unique ID of request.
    *
-   * @return the unique <code>long</code> ID of request
+   * @return the unique {@code long} ID of request
    */
   long getId();
 
@@ -45,7 +45,7 @@ public interface Request {
    * Retrieves additional information of the request.
    *
    * @param key the {@link String} value key used to fetch information
-   * @return the corresponding {@link Object} value if available, otherwise <code>null</code>
+   * @return the corresponding {@link Object} value if available, otherwise {@code null}
    */
   Object getAttribute(String key);
 
@@ -108,7 +108,7 @@ public interface Request {
   /**
    * Retrieves the creation timestamp in milliseconds.
    *
-   * @return the creation timestamp in milliseconds (<code>long</code> value)
+   * @return the creation timestamp in milliseconds ({@code long} value)
    */
   long getCreatedTimestamp();
 }

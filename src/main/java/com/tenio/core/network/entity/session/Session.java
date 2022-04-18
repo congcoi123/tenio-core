@@ -47,7 +47,7 @@ public interface Session {
   /**
    * Retrieves the unique ID of session.
    *
-   * @return the unique <code>long</code> Id of session
+   * @return the unique {@code long} Id of session
    */
   long getId();
 
@@ -68,7 +68,7 @@ public interface Session {
   /**
    * Determines whether the session connected to the server (It is ready to associate to a player).
    *
-   * @return <code>true</code> if the session connected to the server, otherwise <code>false</code>
+   * @return {@code true} if the session connected to the server, otherwise returns {@code false}
    */
   boolean isConnected();
 
@@ -76,8 +76,8 @@ public interface Session {
    * Sets connected state to the session on the server (whether it is ready to associate to a
    * player).
    *
-   * @param connected sets value to <code>true</code> if the session connected to the server,
-   *                  otherwise <code>false</code>
+   * @param connected sets value to {@code true} if the session connected to the server,
+   *                  otherwise returns {@code false}
    */
   void setConnected(boolean connected);
 
@@ -106,16 +106,16 @@ public interface Session {
   /**
    * Determines whether the session is using the TCP transportation type.
    *
-   * @return <code>true</code> if the session is using the TCP transportation type, otherwise
-   * <code>false</code>
+   * @return {@code true} if the session is using the TCP transportation type, otherwise {@code
+   * false}
    */
   boolean isTcp();
 
   /**
    * Determines whether the session is using the WebSocket transportation type.
    *
-   * @return <code>true</code> if the session is using the WebSocket transportation type,
-   * otherwise <code>false</code>
+   * @return {@code true} if the session is using the WebSocket transportation type, otherwise
+   * returns {@code false}
    */
   boolean isWebSocket();
 
@@ -123,9 +123,9 @@ public interface Session {
    * Determines whether the session is able to use the server UDP channel for communication. This
    * only applies for the TCP session.
    *
-   * @return <code>true</code> if the TCP session is able to use the server UDP channel for
-   * communication, otherwise <code>false</code>. In case of WebSocket session, always returns
-   * <code>false</code>
+   * @return {@code true} if the TCP session is able to use the server UDP channel for
+   * communication, otherwise returns {@code false}. In case of WebSocket session, always returns
+   * {@code false}
    */
   boolean containsUdp();
 
@@ -238,63 +238,63 @@ public interface Session {
   /**
    * Retrieves the creation time of session.
    *
-   * @return the creation time of session in milliseconds (<code>long</code> value)
+   * @return the creation time of session in milliseconds ({@code long} value)
    */
   long getCreatedTime();
 
   /**
    * Sets creation time to the session.
    *
-   * @param timestamp the creation time of session in milliseconds (<code>long</code> value)
+   * @param timestamp the creation time of session in milliseconds ({@code long} value)
    */
   void setCreatedTime(long timestamp);
 
   /**
    * Retrieves the last activity time of session.
    *
-   * @return the last activity time in milliseconds (<code>long</code> value)
+   * @return the last activity time in milliseconds ({@code long} value)
    */
   long getLastActivityTime();
 
   /**
    * Sets the last activity time for the session.
    *
-   * @param timestamp the last activity time in milliseconds (<code>long</code> value)
+   * @param timestamp the last activity time in milliseconds ({@code long} value)
    */
   void setLastActivityTime(long timestamp);
 
   /**
    * Retrieves the last time when the session receives the last byte of data from client side.
    *
-   * @return the last reading new data time in milliseconds (<code>long</code> value)
+   * @return the last reading new data time in milliseconds ({@code long} value)
    */
   long getLastReadTime();
 
   /**
    * Sets the last time when the session receives the last byte of data from client side.
    *
-   * @param timestamp the last reading new data time in milliseconds (<code>long</code> value)
+   * @param timestamp the last reading new data time in milliseconds ({@code long} value)
    */
   void setLastReadTime(long timestamp);
 
   /**
    * Retrieves the last time when session sends the last byte of data to client side.
    *
-   * @return the last writing data time in milliseconds (<code>long</code> value)
+   * @return the last writing data time in milliseconds ({@code long} value)
    */
   long getLastWriteTime();
 
   /**
    * Sets the last time when the session sends the last byte of data to client side.
    *
-   * @param timestamp the last writing data time in milliseconds (<code>long</code> value)
+   * @param timestamp the last writing data time in milliseconds ({@code long} value)
    */
   void setLastWriteTime(long timestamp);
 
   /**
    * Retrieves the total number of binaries which the session receives from client side.
    *
-   * @return the total number of binaries (<code>long</code> value) which the session receives from
+   * @return the total number of binaries ({@code long} value) which the session receives from
    * client side
    */
   long getReadBytes();
@@ -302,7 +302,7 @@ public interface Session {
   /**
    * Increases the total number of binaries which the session receives from client side.
    *
-   * @param numberBytes the additional number of binaries (<code>long</code> value) which the
+   * @param numberBytes the additional number of binaries ({@code long} value) which the
    *                    session receives from client side
    */
   void addReadBytes(long numberBytes);
@@ -310,7 +310,7 @@ public interface Session {
   /**
    * Retrieves the total number of binaries which the session sends to client side.
    *
-   * @return the total number of binaries (<code>long</code> value) which the session sends to
+   * @return the total number of binaries ({@code long} value) which the session sends to
    * client side
    */
   long getWrittenBytes();
@@ -318,7 +318,7 @@ public interface Session {
   /**
    * Increases the total number of binaries which the session sends to client side.
    *
-   * @param numberBytes the additional number of binaries (<code>long</code> value) which the
+   * @param numberBytes the additional number of binaries ({@code long} value) which the
    *                    session sends to client side
    */
   void addWrittenBytes(long numberBytes);
@@ -327,7 +327,7 @@ public interface Session {
    * Retrieves the total number of dropped packets which violated the session's policies and is
    * not able to send to client side.
    *
-   * @return the total number of dropped packets (<code>long</code> value) which violated the
+   * @return the total number of dropped packets ({@code long} value) which violated the
    * session's policies and is not able to send to client side
    */
   long getDroppedPackets();
@@ -336,7 +336,7 @@ public interface Session {
    * Increases the total number of dropped packets which violated the session's policies and is
    * not able to send to client side.
    *
-   * @param numberPackets the additional number of dropped packets (<code>integer</code> value)
+   * @param numberPackets the additional number of dropped packets ({@code integer} value)
    *                      which violated the session's policies and is not able to send to client
    *                      side
    */
@@ -346,7 +346,7 @@ public interface Session {
    * Retrieves the maximum time in seconds which allows the session to get in IDLE state (Do not
    * perform any action, such as reading or writing data).
    *
-   * @return the maximum time in seconds (<code>integer</code> value) which allows the session to
+   * @return the maximum time in seconds ({@code integer} value) which allows the session to
    * get in IDLE state
    */
   int getMaxIdleTimeInSeconds();
@@ -355,7 +355,7 @@ public interface Session {
    * Sets the maximum time in seconds which allows the session to get in IDLE state (Do not
    * perform any action, such as reading or writing data).
    *
-   * @param seconds the maximum time in seconds (<code>integer</code> value) which allows the
+   * @param seconds the maximum time in seconds ({@code integer} value) which allows the
    *                session to get in IDLE state
    */
   void setMaxIdleTimeInSeconds(int seconds);
@@ -364,7 +364,7 @@ public interface Session {
    * Determines whether the session got in IDLE state (Do not perform any action, such as reading
    * or writing data).
    *
-   * @return <code>true</code> if the session got in IDLE state, otherwise <code>false</code>
+   * @return {@code true} if the session got in IDLE state, otherwise returns {@code false}
    */
   boolean isIdle();
 
@@ -372,7 +372,7 @@ public interface Session {
    * Determines whether the session is activated (To be able to perform actions, such as reading
    * or writing data).
    *
-   * @return <code>true</code> if the session is activated, otherwise <code>false</code>
+   * @return {@code true} if the session is activated, otherwise returns {@code false}
    */
   boolean isActivated();
 
@@ -389,7 +389,7 @@ public interface Session {
   /**
    * Retrieves how long since the session is inactivated.
    *
-   * @return how long since the session is inactivated in milliseconds (<code>long</code> value)
+   * @return how long since the session is inactivated in milliseconds ({@code long} value)
    */
   long getInactivatedTime();
 
@@ -415,7 +415,7 @@ public interface Session {
    * Retrieves port number of the client side which is using the TCP/WebSocket session for
    * communication.
    *
-   * @return an <code>integer</code> value, the port number of the client side which is using by
+   * @return an {@code integer} value, the port number of the client side which is using by
    * the session for communication
    */
   int getClientPort();
@@ -432,7 +432,7 @@ public interface Session {
   /**
    * Retrieves port number of the server which is using the TCP/WebSocket session for communication.
    *
-   * @return an <code>integer</code> value, the port number of the server which is using by the
+   * @return an {@code integer} value, the port number of the server which is using by the
    * session for communication
    */
   int getServerPort();

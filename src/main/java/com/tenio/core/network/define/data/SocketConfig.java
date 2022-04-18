@@ -40,7 +40,7 @@ public final class SocketConfig {
    *
    * @param name the {@link String} configuration name
    * @param type the {@link TransportType}
-   * @param port the opened port (<code>integer</code> value)
+   * @param port the opened port ({@code integer} value)
    */
   public SocketConfig(String name, TransportType type, int port) {
     this.name = name;
@@ -69,7 +69,7 @@ public final class SocketConfig {
   /**
    * Retrieves the socket's port number.
    *
-   * @return the socket's port number (<code>integer</code> value)
+   * @return the socket's port number ({@code integer} value)
    */
   public int getPort() {
     return port;

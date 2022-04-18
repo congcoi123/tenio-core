@@ -87,7 +87,7 @@ public final class PendingPacket {
   /**
    * Retrieves the expected length of packet's data.
    *
-   * @return the expected length of packet's data (<code>integer</code> value)
+   * @return the expected length of packet's data ({@code integer} value)
    */
   public int getExpectedLength() {
     return expectedLength;
@@ -96,7 +96,7 @@ public final class PendingPacket {
   /**
    * Sets the expected length for the packet's data.
    *
-   * @param expectedLength the expected length of packet's data (<code>integer</code> value)
+   * @param expectedLength the expected length of packet's data ({@code integer} value)
    */
   public void setExpectedLength(int expectedLength) {
     this.expectedLength = expectedLength;

@@ -65,7 +65,7 @@ public final class SystemMonitoring {
   /**
    * Retrieves the CPU usage.
    *
-   * @return the CPU usage in percentage (<code>double</code> value)
+   * @return the CPU usage in percentage ({@code double} value)
    */
   public synchronized double getCpuUsage() {
     if (lastSystemTime == 0L) {
@@ -91,7 +91,7 @@ public final class SystemMonitoring {
   /**
    * Retrieves the number of running threads.
    *
-   * @return the number of running threads (<code>integer</code> value)
+   * @return the number of running threads ({@code integer} value)
    */
   public int countRunningThreads() {
     int countRunning = 0;
@@ -106,7 +106,7 @@ public final class SystemMonitoring {
   /**
    * Retrieves the total memory that the JVM allowed using.
    *
-   * @return the total memory that the JVM allowed using (<code>long</code> value)
+   * @return the total memory that the JVM allowed using ({@code long} value)
    */
   public long getTotalMemory() {
     return Runtime.getRuntime().totalMemory();
@@ -115,7 +115,7 @@ public final class SystemMonitoring {
   /**
    * Retrieves the rest of free memory that the JVM allowed using.
    *
-   * @return the rest of free memory that the JVM allowed using (<code>long</code> value)
+   * @return the rest of free memory that the JVM allowed using ({@code long} value)
    */
   public long getFreeMemory() {
     return Runtime.getRuntime().maxMemory() - getUsedMemory();
@@ -124,7 +124,7 @@ public final class SystemMonitoring {
   /**
    * Retrieves the currently using memory that the JVM allowed using.
    *
-   * @return the currently using memory that the JVM allowed using (<code>long</code> value)
+   * @return the currently using memory that the JVM allowed using ({@code long} value)
    */
   public long getUsedMemory() {
     return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();

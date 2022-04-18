@@ -54,35 +54,35 @@ public interface PacketQueue {
   /**
    * Determines whether the queue is empty.
    *
-   * @return <code>true</code> if the queue is empty, otherwise <code>false</code>
+   * @return {@code true} if the queue is empty, otherwise returns {@code false}
    */
   boolean isEmpty();
 
   /**
    * Determines whether the queue is full.
    *
-   * @return <code>true</code> if the queue is full, otherwise <code>false</code>
+   * @return {@code true} if the queue is full, otherwise returns {@code false}
    */
   boolean isFull();
 
   /**
    * Retrieves the current size of queue.
    *
-   * @return the current <code>integer</code> size of queue
+   * @return the current {@code integer} size of queue
    */
   int getSize();
 
   /**
    * Retrieves the maximum allowed size of queue.
    *
-   * @return the maximum <code>integer</code> allowed size of queue
+   * @return the maximum {@code integer} allowed size of queue
    */
   int getMaxSize();
 
   /**
    * Sets the maximum allowed size of queue.
    *
-   * @param maxSize the maximum <code>integer</code> allowed size of queue
+   * @param maxSize the maximum {@code integer} allowed size of queue
    */
   void setMaxSize(int maxSize);
 
@@ -98,7 +98,7 @@ public interface PacketQueue {
   /**
    * Retrieves the current usage of queue.
    *
-   * @return the current <code>float</code> usage of queue. Its range is between 0 and 100 percent
+   * @return the current {@code float} usage of queue. Its range is between 0 and 100 percent
    */
   float getPercentageUsed();
 

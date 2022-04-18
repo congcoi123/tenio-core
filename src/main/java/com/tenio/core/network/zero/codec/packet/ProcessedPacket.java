@@ -49,7 +49,7 @@ public final class ProcessedPacket {
   /**
    * Retrieves the current processing data in the packet.
    *
-   * @return the <code>byte</code> array, current processing data in the packet
+   * @return the {@code byte} array, current processing data in the packet
    */
   public byte[] getData() {
     return binary;
@@ -58,7 +58,7 @@ public final class ProcessedPacket {
   /**
    * Sets the current processing data in the packet.
    *
-   * @param binary the <code>byte</code> array, current processing data in the packet
+   * @param binary the {@code byte} array, current processing data in the packet
    */
   public void setData(byte[] binary) {
     this.binary = binary;
