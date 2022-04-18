@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.manager;
 
 /**
- * The common APIs for all managers.
+ * The common APIs using for all managers.
  */
 public interface Manager {
 }

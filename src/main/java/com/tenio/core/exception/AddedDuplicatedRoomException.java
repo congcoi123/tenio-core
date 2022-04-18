@@ -27,16 +27,16 @@ package com.tenio.core.exception;
 import com.tenio.core.entity.Room;
 
 /**
- * When you try to add a room which existed in the server.
+ * When a room which existed on the server is added again.
  */
 public final class AddedDuplicatedRoomException extends RuntimeException {
 
   private static final long serialVersionUID = -5330961754908231570L;
 
   /**
-   * When you try to add a room which existed in the server.
+   * When a room which existed on the server is added again.
    *
-   * @param room the target room
+   * @param room the target {@link Room}
    */
   public AddedDuplicatedRoomException(Room room) {
     super(String.format("Unable to add room: %s, it already exists", room.toString()));

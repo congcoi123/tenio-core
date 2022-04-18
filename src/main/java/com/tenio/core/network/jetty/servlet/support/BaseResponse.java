@@ -34,9 +34,25 @@ import org.json.JSONObject;
  */
 public abstract class BaseResponse extends AbstractLogger {
 
+  /**
+   * Processes a request from client side and returns a response.
+   *
+   * @param requestedAgent {@link String} value, a requested agent
+   * @param request        an instance of {@link HttpServletRequest}
+   * @param body           a {@link JSONObject} request's body
+   * @param response       the {@link HttpServletResponse} from the server
+   */
   public abstract void process(String requestedAgent, HttpServletRequest request, JSONObject body,
                                HttpServletResponse response);
 
+  /**
+   * Determines whether a header key is present in a request.
+   *
+   * @param request an instance of {@link HttpServletRequest}
+   * @param key     the checking {@link String} key
+   * @return <code>true</code> if the key is available in the request's header,
+   * <code>false</code> otherwise
+   */
   protected boolean hasHeaderKey(HttpServletRequest request, String key) {
     var headerNames = request.getHeaderNames();
     if (headerNames != null) {

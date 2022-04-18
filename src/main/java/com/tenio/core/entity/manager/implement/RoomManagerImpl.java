@@ -57,6 +57,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     maxRooms = DEFAULT_MAX_ROOMS;
   }
 
+// Delete it.
   public static RoomManager newInstance(EventManager eventManager) {
     return new RoomManagerImpl(eventManager);
   }

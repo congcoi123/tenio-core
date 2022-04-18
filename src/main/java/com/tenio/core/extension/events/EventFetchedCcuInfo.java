@@ -24,10 +24,20 @@ THE SOFTWARE.
 
 package com.tenio.core.extension.events;
 
+import com.tenio.core.configuration.define.CoreConfigurationType;
+import com.tenio.core.entity.Player;
+
 /**
- * Returns fetched CCU information.
+ * Fetches the CCU information on the server.
  */
 public interface EventFetchedCcuInfo {
 
+  /**
+   * Fetches the CCU information on the server.The information should be frequently updated every
+   * interval time.
+   *
+   * @param numberPlayers the concurrent number of {@link Player} on the server.
+   * @see CoreConfigurationType#INTERVAL_CCU_SCAN
+   */
   void handle(int numberPlayers);
 }

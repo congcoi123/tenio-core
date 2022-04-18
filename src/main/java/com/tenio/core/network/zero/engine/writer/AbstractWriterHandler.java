@@ -31,9 +31,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * The abstract writer.
- *
- * @see WriterHandler
+ * The abstract writer handler.
  */
 public abstract class AbstractWriterHandler extends SystemLogger implements WriterHandler {
 

@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.entity.define.result;
 
 /**
- * The results when a connection tried to attach to a player.
+ * The results when a connection tried to associate with a player.
  */
 public enum AttachedConnectionResult {
 
@@ -34,15 +34,15 @@ public enum AttachedConnectionResult {
    */
   SUCCESS,
   /**
-   * When the player was not found.
+   * Attached connection is failed cause the player was not found.
    */
   PLAYER_NOT_FOUND,
   /**
-   * When the session was not found.
+   * Attached connection is failed cause the session was not found.
    */
   SESSION_NOT_FOUND,
   /**
-   * When the session protocol is invalid.
+   * Attached connection is failed cause the session protocol is invalid.
    */
   INVALID_SESSION_PROTOCOL;
 

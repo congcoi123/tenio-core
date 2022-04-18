@@ -31,7 +31,21 @@ import com.tenio.core.exception.PacketEncrypterException;
  */
 public interface BinaryPacketEncrypter {
 
+  /**
+   * Encrypts the binary data in a packet.
+   *
+   * @param binary an array of <code>byte</code> data for encrypting
+   * @return an array of encrypted <code>byte</code> data
+   * @throws PacketEncrypterException when any issue emerged while encrypting process
+   */
   byte[] encrypt(byte[] binary) throws PacketEncrypterException;
 
+  /**
+   * Decrypts the binary data in a packet.
+   *
+   * @param binary an array of <code>byte</code> data for decrypting
+   * @return an array of decrypted <code>byte</code> data
+   * @throws PacketEncrypterException when any issue emerged while decrypting process
+   */
   byte[] decrypt(byte[] binary) throws PacketEncrypterException;
 }

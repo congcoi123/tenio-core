@@ -30,7 +30,7 @@ import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
 import com.tenio.core.bootstrap.event.EventHandler;
 
 /**
- * This class provides instances for the event handling and configuration setup.
+ * This class provides instances for the events handler and the configuration setups.
  */
 @Component
 public final class BootstrapHandler {
@@ -41,10 +41,20 @@ public final class BootstrapHandler {
   @Autowired
   private ConfigurationHandler configurationHandler;
 
+  /**
+   * Retrieves an events handler.
+   *
+   * @return the {@link EventHandler} instance
+   */
   public EventHandler getEventHandler() {
     return eventHandler;
   }
 
+  /**
+   * Retrieves a configuration setups.
+   *
+   * @return the {@link ConfigurationHandler} instance
+   */
   public ConfigurationHandler getConfigurationHandler() {
     return configurationHandler;
   }

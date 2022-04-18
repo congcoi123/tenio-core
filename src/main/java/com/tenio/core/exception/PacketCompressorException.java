@@ -24,13 +24,21 @@ THE SOFTWARE.
 
 package com.tenio.core.exception;
 
+import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
+
 /**
- * When something went wrong with the packet compression.
+ * When something went wrong with the packet compression processes.
  */
 public final class PacketCompressorException extends RuntimeException {
 
   private static final long serialVersionUID = 4134024704906630426L;
 
+  /**
+   * Creates a new exception.
+   *
+   * @param message a warning {@link String} message
+   * @see BinaryPacketCompressor
+   */
   public PacketCompressorException(String message) {
     super(message);
   }

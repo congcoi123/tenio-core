@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.entity;
 
 /**
- * Definition for player states. All customized states must be implemented this interface.
+ * Definitions for player states. All customized states must be implemented this interface.
  */
 public interface PlayerState {
 }

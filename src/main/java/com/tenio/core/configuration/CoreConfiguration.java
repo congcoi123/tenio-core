@@ -61,16 +61,16 @@ public abstract class CoreConfiguration extends CommonConfiguration {
    * The constructor.
    */
   public CoreConfiguration() {
-    socketConfigs = new ArrayList<SocketConfig>();
-    httpConfigs = new ArrayList<HttpConfig>();
+    socketConfigs = new ArrayList<>();
+    httpConfigs = new ArrayList<>();
   }
 
   /**
-   * Read file content and convert it to configuration values.
+   * Reads file content and converts it to configuration values.
    *
-   * @param file The name of your configuration file and this file needs to be put
-   *             in same folder with your application
-   * @throws Exception some exceptions, which can be occurred in reading or
+   * @param file The {@link String} name of the configuration file and this file needs to be put
+   *             in same folder with the application
+   * @throws Exception some exceptions, which can be occurred when reading or
    *                   parsing the file
    */
   @Override

@@ -25,11 +25,18 @@ THE SOFTWARE.
 package com.tenio.core.entity.define.result;
 
 /**
- * The results when a connection tried to establish.
+ * The results when a connection tried to establish itself on the server.
  */
 public enum ConnectionEstablishedResult {
 
+  /**
+   * Success.
+   */
   SUCCESS,
+  /**
+   * Connection fails to connect to the server because the server reached maximum number of
+   * connections.
+   */
   REACHED_MAX_CONNECTION;
 
   @Override

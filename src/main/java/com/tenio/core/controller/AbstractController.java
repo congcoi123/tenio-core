@@ -36,7 +36,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * The abstracted class for controllers.
+ * The abstracted class for a controller.
  */
 public abstract class AbstractController extends AbstractManager implements Controller, Runnable {
 
@@ -59,7 +59,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
   /**
    * Initialization.
    *
-   * @param eventManager the event manager
+   * @param eventManager the {@link EventManager}
    */
   protected AbstractController(EventManager eventManager) {
     super(eventManager);
@@ -224,14 +224,14 @@ public abstract class AbstractController extends AbstractManager implements Cont
   }
 
   /**
-   * Subscribe.
+   * Subscribe all events for handling.
    */
   public abstract void subscribe();
 
   /**
    * Processes a request.
    *
-   * @param request the processing request
+   * @param request the processing {@link Request}
    */
   public abstract void processRequest(Request request);
 }

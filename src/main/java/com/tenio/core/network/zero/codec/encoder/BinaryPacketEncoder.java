@@ -33,11 +33,32 @@ import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncrypter;
  */
 public interface BinaryPacketEncoder {
 
+  /**
+   * Encodes a packet to send to clients side.
+   *
+   * @param packet the coming {@link Packet}
+   * @return the encoded {@link Packet}
+   */
   Packet encode(Packet packet);
 
+  /**
+   * Sets the compressor for compressing/uncompressing packets.
+   *
+   * @param compressor the {@link BinaryPacketCompressor} instance
+   */
   void setCompressor(BinaryPacketCompressor compressor);
 
+  /**
+   * Sets the encryptor for encrypting/encrypting packets.
+   *
+   * @param encrypter the {@link BinaryPacketEncrypter} instance
+   */
   void setEncrypter(BinaryPacketEncrypter encrypter);
 
+  /**
+   * Sets the limitation for compression threshold in bytes.
+   *
+   * @param numberBytes the limitation for compression threshold in bytes
+   */
   void setCompressionThresholdBytes(int numberBytes);
 }

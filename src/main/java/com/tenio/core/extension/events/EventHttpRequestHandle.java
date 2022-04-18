@@ -29,9 +29,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Handling the HTTP request.
+ * Handles an HTTP request which sent to the HTTP service from clients side.
  */
 public interface EventHttpRequestHandle {
 
+  /**
+   * Handles an HTTP request which sent to the HTTP service from client side.
+   *
+   * @param method   a {@link RestMethod} using in request
+   * @param request  a {@link HttpServletRequest} comes from client side
+   * @param response a {@link HttpServletResponse} sends to client side
+   */
   void handle(RestMethod method, HttpServletRequest request, HttpServletResponse response);
 }

@@ -25,15 +25,33 @@ THE SOFTWARE.
 package com.tenio.core.entity.define.mode;
 
 /**
- * All modes associated with player leaving room phase.
+ * All modes associated with the player leaving room phase.
  */
 public enum PlayerLeaveRoomMode {
 
+  /**
+   * When a player leaves the room as its desire.
+   */
   DEFAULT,
+  /**
+   * When a player falls in IDLE state then is removed from the server.
+   */
   IDLE,
+  /**
+   * When a player is forced to remove from the server.
+   */
   KICK,
+  /**
+   * When a player logged out from the server.
+   */
   LOG_OUT,
+  /**
+   * When the player's room is removed.
+   */
   ROOM_REMOVED,
+  /**
+   * For other reasons.
+   */
   UNKNOWN;
 
   @Override

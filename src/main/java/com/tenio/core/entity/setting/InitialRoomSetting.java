@@ -30,6 +30,7 @@ import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
 import com.tenio.core.entity.setting.strategy.implement.DefaultRoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.implement.DefaultRoomPlayerSlotGeneratedStrategy;
+import com.tenio.core.schedule.task.AutoRemoveRoomTask;
 import java.lang.reflect.InvocationTargetException;
 
 /**
@@ -58,40 +59,80 @@ public final class InitialRoomSetting {
 
   }
 
+  /**
+   * Retrieves the room's name.
+   *
+   * @return the {@link String} value of room's name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Retrieves the room's password.
+   *
+   * @return the {@link String} value of room's password
+   */
   public String getPassword() {
     return password;
   }
 
+  /**
+   * Retrieves the maximum number of participants allowing in the room.
+   *
+   * @return the maximum number of participants allowing in the room
+   */
   public int getMaxPlayers() {
     return maxPlayers;
   }
 
+  /**
+   * Retrieves the maximum number of spectators allowing in the room.
+   *
+   * @return the maximum number of spectators allowing in the room
+   */
   public int getMaxSpectators() {
     return maxSpectators;
   }
 
+  /**
+   * Determines whether the room is active.
+   *
+   * @return <code>true</code> if the room is activated, otherwise <code>false</code>
+   */
   public boolean isActivated() {
     return activated;
   }
 
+  /**
+   * Retrieves the room removing mode.
+   *
+   * @return the {@link RoomRemoveMode}
+   */
   public RoomRemoveMode getRoomRemoveMode() {
     return roomRemoveMode;
   }
 
+  /**
+   * Retrieves the room credential validation strategy.
+   *
+   * @return an instance of {@link RoomCredentialValidatedStrategy}
+   */
   public RoomCredentialValidatedStrategy getRoomCredentialValidatedStrategy() {
     return roomCredentialValidatedStrategy;
   }
 
+  /**
+   * Retrieves the player slot generation strategy in the room.
+   *
+   * @return an instance of {@link RoomPlayerSlotGeneratedStrategy}
+   */
   public RoomPlayerSlotGeneratedStrategy getRoomPlayerSlotGeneratedStrategy() {
     return roomPlayerSlotGeneratedStrategy;
   }
 
   /**
-   * The builder class for collecting setup information.
+   * The builder class for collecting setups information.
    */
   public static class Builder extends SystemLogger {
 
@@ -115,46 +156,103 @@ public final class InitialRoomSetting {
       playerSlotGeneratedStrategy = null;
     }
 
+    /**
+     * Creates a new instance.
+     *
+     * @return a new instance of {@link Builder}
+     */
     public static Builder newInstance() {
       return new Builder();
     }
 
+    /**
+     * Sets the room's name.
+     *
+     * @param name the {@link String} room's name
+     * @return the pointer of builder
+     */
     public Builder setName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * Sets the room's password.
+     *
+     * @param password the {@link String} room's password
+     * @return the pointer of builder
+     */
     public Builder setPassword(String password) {
       this.password = password;
       return this;
     }
 
+    /**
+     * Sets the room's maximum number of participants.
+     *
+     * @param maxPlayers the maximum number of participants allowed be in the room
+     * @return the pointer of builder
+     */
     public Builder setMaxPlayers(int maxPlayers) {
       this.maxPlayers = maxPlayers;
       return this;
     }
 
+    /**
+     * Sets the room's maximum number of spectators.
+     *
+     * @param maxSpectators the maximum number of spectators allowed be in the room
+     * @return the pointer of builder
+     */
     public Builder setMaxSpectators(int maxSpectators) {
       this.maxSpectators = maxSpectators;
       return this;
     }
 
+    /**
+     * Allows a room to be activated or not.
+     *
+     * @param activated set the flag's value to be <code>true</code> when the room is active,
+     *                  otherwise <code>false</code>
+     * @return the pointer of builder
+     */
     public Builder setActivated(boolean activated) {
       this.activated = activated;
       return this;
     }
 
+    /**
+     * Sets removed mode for the room.
+     *
+     * @param roomRemoveMode the {@link RoomRemoveMode} decides rules applied to remove the room
+     * @return the pointer of builder
+     * @see AutoRemoveRoomTask
+     */
     public Builder setRoomRemoveMode(RoomRemoveMode roomRemoveMode) {
       removeMode = roomRemoveMode;
       return this;
     }
 
+    /**
+     * Sets a strategy for validating credentials using for get in the room.
+     *
+     * @param clazz a class which is an implementation of {@link RoomCredentialValidatedStrategy}
+     * @return the pointer of builder
+     * @see DefaultRoomCredentialValidatedStrategy
+     */
     public Builder setRoomCredentialValidatedStrategy(
         Class<? extends RoomCredentialValidatedStrategy> clazz) {
       credentialValidatedStrategy = (RoomCredentialValidatedStrategy) createNewInstance(clazz);
       return this;
     }
 
+    /**
+     * Sets a strategy for generating player's slots in the room.
+     *
+     * @param clazz a class which is an implementation of {@link RoomPlayerSlotGeneratedStrategy}
+     * @return the pointer of builder
+     * @see DefaultRoomPlayerSlotGeneratedStrategy
+     */
     public Builder setRoomPlayerSlotGeneratedStrategy(
         Class<? extends RoomPlayerSlotGeneratedStrategy> clazz) {
       playerSlotGeneratedStrategy = (RoomPlayerSlotGeneratedStrategy) createNewInstance(clazz);

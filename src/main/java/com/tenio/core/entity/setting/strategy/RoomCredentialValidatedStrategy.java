@@ -25,11 +25,23 @@ THE SOFTWARE.
 package com.tenio.core.entity.setting.strategy;
 
 /**
- * The strategy is for validating room's name and password.
+ * The strategy is for validating a room's credentials.
  */
 public interface RoomCredentialValidatedStrategy {
 
+  /**
+   * Validates a room's name.
+   *
+   * @param name a {@link String} value of room's name for assessment
+   * @throws IllegalArgumentException when an invalid name is used
+   */
   void validateName(String name) throws IllegalArgumentException;
 
+  /**
+   * Validates the room's password.
+   *
+   * @param password the {@link String} value of room's password for assessment
+   * @throws IllegalArgumentException when an invalid name is used
+   */
   void validatePassword(String password) throws IllegalArgumentException;
 }

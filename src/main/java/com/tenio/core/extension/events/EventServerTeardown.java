@@ -29,5 +29,10 @@ package com.tenio.core.extension.events;
  */
 public interface EventServerTeardown {
 
+  /**
+   * When the server is going to shut down.
+   *
+   * @param serverName the server's name ({@link String} value)
+   */
   void handle(String serverName);
 }

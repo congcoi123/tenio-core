@@ -29,7 +29,13 @@ package com.tenio.core.entity.define.result;
  */
 public enum PlayerReconnectedResult {
 
+  /**
+   * Success.
+   */
   SUCCESS,
+  /**
+   * The player fails to reconnect to the server cause its request has invalid format.
+   */
   INVALID_PLAYER_FORMAT;
 
   @Override

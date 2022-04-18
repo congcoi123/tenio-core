@@ -28,15 +28,37 @@ import com.tenio.core.controller.Controller;
 import com.tenio.core.entity.manager.PlayerManager;
 
 /**
- * The internal processor service, the heart of server.
+ * The internal processor service, the heart of the server.
  */
 public interface InternalProcessorService extends Controller {
 
+  /**
+   * Subscribes all events on the server.
+   */
   void subscribe();
 
+  /**
+   * Sets the maximum number of players allowed participating on the server.
+   *
+   * @param maxPlayers <code>integer</code> value, the maximum number of players allowed
+   *                   participating on the server
+   */
   void setMaxNumberPlayers(int maxPlayers);
 
+  /**
+   * Determines if a player could be kept its connection when it is disconnected from the server
+   * for a while.
+   *
+   * @param keepPlayerOnDisconnection sets to <code>true</code> if a player could be kept its
+   *                                  connection when it is disconnected from the server for a
+   *                                  while, otherwise <code>false</code>
+   */
   void setKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection);
 
+  /**
+   * Sets a player manager for the server which is used to manage all players.
+   *
+   * @param playerManager an instance of {@link PlayerManager}
+   */
   void setPlayerManager(PlayerManager playerManager);
 }

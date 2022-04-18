@@ -15,16 +15,16 @@ class RequestComparatorTest {
   void testNewInstance() {
     RequestComparator actualNewInstanceResult = RequestComparator.newInstance();
     Request request = mock(Request.class);
-    when(request.getTimestamp()).thenReturn(10L);
+    when(request.getCreatedTimestamp()).thenReturn(10L);
     when(request.getPriority()).thenReturn(RequestPriority.LOWEST);
     Request request1 = mock(Request.class);
-    when(request1.getTimestamp()).thenReturn(10L);
+    when(request1.getCreatedTimestamp()).thenReturn(10L);
     when(request1.getPriority()).thenReturn(RequestPriority.LOWEST);
     int actualCompareResult = actualNewInstanceResult.compare(request, request1);
     verify(request, atLeast(1)).getPriority();
-    verify(request, atLeast(1)).getTimestamp();
+    verify(request, atLeast(1)).getCreatedTimestamp();
     verify(request1, atLeast(1)).getPriority();
-    verify(request1, atLeast(1)).getTimestamp();
+    verify(request1, atLeast(1)).getCreatedTimestamp();
     assertEquals(0, actualCompareResult);
   }
 
@@ -32,16 +32,16 @@ class RequestComparatorTest {
   void testNewInstance2() {
     RequestComparator actualNewInstanceResult = RequestComparator.newInstance();
     Request request = mock(Request.class);
-    when(request.getTimestamp()).thenReturn(0L);
+    when(request.getCreatedTimestamp()).thenReturn(0L);
     when(request.getPriority()).thenReturn(RequestPriority.LOWEST);
     Request request1 = mock(Request.class);
-    when(request1.getTimestamp()).thenReturn(10L);
+    when(request1.getCreatedTimestamp()).thenReturn(10L);
     when(request1.getPriority()).thenReturn(RequestPriority.LOWEST);
     int actualCompareResult = actualNewInstanceResult.compare(request, request1);
     verify(request, atLeast(1)).getPriority();
-    verify(request).getTimestamp();
+    verify(request).getCreatedTimestamp();
     verify(request1, atLeast(1)).getPriority();
-    verify(request1).getTimestamp();
+    verify(request1).getCreatedTimestamp();
     assertEquals(-1, actualCompareResult);
   }
 
@@ -49,16 +49,16 @@ class RequestComparatorTest {
   void testNewInstance3() {
     RequestComparator actualNewInstanceResult = RequestComparator.newInstance();
     Request request = mock(Request.class);
-    when(request.getTimestamp()).thenReturn(Long.MAX_VALUE);
+    when(request.getCreatedTimestamp()).thenReturn(Long.MAX_VALUE);
     when(request.getPriority()).thenReturn(RequestPriority.LOWEST);
     Request request1 = mock(Request.class);
-    when(request1.getTimestamp()).thenReturn(10L);
+    when(request1.getCreatedTimestamp()).thenReturn(10L);
     when(request1.getPriority()).thenReturn(RequestPriority.LOWEST);
     int actualCompareResult = actualNewInstanceResult.compare(request, request1);
     verify(request, atLeast(1)).getPriority();
-    verify(request, atLeast(1)).getTimestamp();
+    verify(request, atLeast(1)).getCreatedTimestamp();
     verify(request1, atLeast(1)).getPriority();
-    verify(request1, atLeast(1)).getTimestamp();
+    verify(request1, atLeast(1)).getCreatedTimestamp();
     assertEquals(1, actualCompareResult);
   }
 
@@ -66,10 +66,10 @@ class RequestComparatorTest {
   void testNewInstance4() {
     RequestComparator actualNewInstanceResult = RequestComparator.newInstance();
     Request request = mock(Request.class);
-    when(request.getTimestamp()).thenReturn(10L);
+    when(request.getCreatedTimestamp()).thenReturn(10L);
     when(request.getPriority()).thenReturn(RequestPriority.LOW);
     Request request1 = mock(Request.class);
-    when(request1.getTimestamp()).thenReturn(10L);
+    when(request1.getCreatedTimestamp()).thenReturn(10L);
     when(request1.getPriority()).thenReturn(RequestPriority.LOWEST);
     int actualCompareResult = actualNewInstanceResult.compare(request, request1);
     verify(request, atLeast(1)).getPriority();
@@ -81,10 +81,10 @@ class RequestComparatorTest {
   void testNewInstance5() {
     RequestComparator actualNewInstanceResult = RequestComparator.newInstance();
     Request request = mock(Request.class);
-    when(request.getTimestamp()).thenReturn(10L);
+    when(request.getCreatedTimestamp()).thenReturn(10L);
     when(request.getPriority()).thenReturn(RequestPriority.LOWEST);
     Request request1 = mock(Request.class);
-    when(request1.getTimestamp()).thenReturn(10L);
+    when(request1.getCreatedTimestamp()).thenReturn(10L);
     when(request1.getPriority()).thenReturn(RequestPriority.LOW);
     int actualCompareResult = actualNewInstanceResult.compare(request, request1);
     verify(request).getPriority();

@@ -29,9 +29,16 @@ import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.result.SwitchedPlayerSpectatorResult;
 
 /**
- * Returns the result when a spectator tries to change its role to be a player.
+ * Returns the result when a spectator tries to change to be a participant.
  */
 public interface EventSwitchSpectatorToPlayerResult {
 
+  /**
+   * When a spectator tries to change to be a participant in its room.
+   *
+   * @param player the considering {@link Player}
+   * @param room   the player's {@link Room}
+   * @param result the result {@link SwitchedPlayerSpectatorResult} of processing
+   */
   void handle(Player player, Room room, SwitchedPlayerSpectatorResult result);
 }

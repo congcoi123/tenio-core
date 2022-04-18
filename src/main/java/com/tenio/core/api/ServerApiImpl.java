@@ -48,12 +48,9 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.server.Server;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
-/**
- * All supported APIs could be found in this class.
- *
- * @see ServerApi
- */
 public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
   private final Server server;
@@ -62,6 +59,12 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     this.server = server;
   }
 
+  /**
+   * Initialization.
+   *
+   * @param server an instance of {@link Server}
+   * @return an instance of {@link ServerApi}
+   */
   public static ServerApi newInstance(Server server) {
     return new ServerApiImpl(server);
   }
@@ -69,7 +72,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   @Override
   public void login(String playerName) {
     try {
-      var player = getPlayerManager().createPlayer(playerName);
+      final var player = getPlayerManager().createPlayer(playerName);
 
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,
           PlayerLoggedInResult.SUCCESS);
@@ -114,11 +117,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       }
 
       disconnectPlayer(player);
-
-      player = null;
-    } catch (RemovedNonExistentPlayerFromRoomException e) {
-      error(e, "Removed player: ", player.getName(), " with issue");
-    } catch (IOException e) {
+    } catch (RemovedNonExistentPlayerFromRoomException | IOException e) {
       error(e, "Removed player: ", player.getName(), " with issue");
     }
   }
@@ -170,13 +169,28 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
-  public Collection<Player> getAllPlayers() {
-    return getPlayerManager().getAllPlayers();
+  public Iterator<Player> getPlayerIterator() {
+    return getPlayerManager().getAllPlayers().iterator();
+  }
+
+  @Override
+  public Collection<Player> getReadonlyPlayersList() {
+
   }
 
   @Override
   public Room getRoomById(long roomId) {
     return getRoomManager().getRoomById(roomId);
+  }
+
+  @Override
+  public Iterator<Room> getRoomIterator() {
+    return getRoomManager().getRoomList().iterator();
+  }
+
+  @Override
+  public Collection<Room> getReadonlyRoomsList() {
+
   }
 
   @Override
@@ -217,9 +231,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     }
 
     var room = player.getCurrentRoom();
-
     getEventManager().emit(ServerEvent.PLAYER_BEFORE_LEAVE_ROOM, player, room, leaveRoomMode);
-
     try {
       room.removePlayer(player);
       getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,

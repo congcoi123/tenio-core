@@ -29,9 +29,21 @@ package com.tenio.core.network.zero.codec.packet;
  */
 public enum PacketReadState {
 
+  /**
+   * Waits for a new packet to handle.
+   */
   WAIT_NEW_PACKET,
+  /**
+   * Waits for the data's size.
+   */
   WAIT_DATA_SIZE,
+  /**
+   * Waits for the data size of a fragment packet.
+   */
   WAIT_DATA_SIZE_FRAGMENT,
+  /**
+   * Waits for the data to process.
+   */
   WAIT_DATA;
 
   @Override

@@ -25,9 +25,14 @@ THE SOFTWARE.
 package com.tenio.core.extension.events;
 
 /**
- * Something went wrong in the server.
+ * Something went wrong on the server.
  */
 public interface EventServerException {
 
+  /**
+   * Something went wrong on the server.
+   *
+   * @param throwable the {@link Throwable} thrown whenever any exception emerged
+   */
   void handle(Throwable throwable);
 }

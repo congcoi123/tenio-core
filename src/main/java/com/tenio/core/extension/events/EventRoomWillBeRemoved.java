@@ -32,5 +32,12 @@ import com.tenio.core.entity.define.mode.RoomRemoveMode;
  */
 public interface EventRoomWillBeRemoved {
 
+  /**
+   * When a room is going to be removed from the management list.
+   *
+   * @param room the {@link Room} which is going to be removed
+   * @param mode the removing {@link RoomRemoveMode} applied for the room when it is
+   *             eliminated from the management list
+   */
   void handle(Room room, RoomRemoveMode mode);
 }

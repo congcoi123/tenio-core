@@ -28,7 +28,7 @@ import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.event.implement.EventManager;
 
 /**
- * The abstraction for manager.
+ * The abstraction for a manager class.
  */
 public abstract class AbstractManager extends SystemLogger {
 
@@ -40,7 +40,7 @@ public abstract class AbstractManager extends SystemLogger {
   /**
    * Initialization.
    *
-   * @param eventManager the event manager
+   * @param eventManager an instance of {@link EventManager}
    */
   protected AbstractManager(EventManager eventManager) {
     this.eventManager = eventManager;

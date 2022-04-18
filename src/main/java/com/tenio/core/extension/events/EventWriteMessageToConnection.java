@@ -24,15 +24,19 @@ THE SOFTWARE.
 
 package com.tenio.core.extension.events;
 
-import com.tenio.core.entity.Player;
-import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
 
 /**
- * When a server sends a message to a player.
+ * When the server sends a packet to a connection.
  */
 public interface EventWriteMessageToConnection {
 
+  /**
+   * When the server sends a packet to a connection.
+   *
+   * @param session the {@link Session} which is connecting to the server
+   * @param packet  the sending {@link Packet}
+   */
   void handle(Session session, Packet packet);
 }

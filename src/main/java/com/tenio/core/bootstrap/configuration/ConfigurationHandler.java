@@ -29,7 +29,7 @@ import com.tenio.common.bootstrap.annotation.Component;
 import com.tenio.common.configuration.Configuration;
 
 /**
- * This class provides the instance of the project's configuration.
+ * This class provides an instance of the server's configuration.
  */
 @Component
 public final class ConfigurationHandler {
@@ -37,6 +37,11 @@ public final class ConfigurationHandler {
   @Autowired
   private Configuration configuration;
 
+  /**
+   * Retrieves a configuration instance for the server.
+   *
+   * @return the server's {@link Configuration}
+   */
   public Configuration getConfiguration() {
     return configuration;
   }

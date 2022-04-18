@@ -29,7 +29,7 @@ import com.tenio.core.network.define.data.PathConfig;
 import java.util.List;
 
 /**
- * When you try to define an existing Uri method in the HTTP server.
+ * When an existing Uri method on the HTTP service is defined again.
  */
 public final class DuplicatedUriAndMethodException extends RuntimeException {
 
@@ -38,8 +38,9 @@ public final class DuplicatedUriAndMethodException extends RuntimeException {
   /**
    * Initialization.
    *
-   * @param method      the rest method
-   * @param pathConfigs the path configuration
+   * @param method      a {@link RestMethod}
+   * @param pathConfigs a list of {@link PathConfig}
+   * @see List
    */
   public DuplicatedUriAndMethodException(RestMethod method, List<PathConfig> pathConfigs) {
     super(String.format("Duplicated REST method: %s, with the list of configurations: %s",

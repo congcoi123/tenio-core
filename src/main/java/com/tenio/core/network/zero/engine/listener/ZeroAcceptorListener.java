@@ -24,10 +24,20 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.listener;
 
+import com.tenio.core.network.zero.engine.ZeroReader;
+
 /**
- * The acceptor engine listener.
+ * The acceptor engine listener. Invoked by the reader engine.
+ *
+ * @see ZeroReader
  */
 public interface ZeroAcceptorListener {
 
+  /**
+   * Handles all coming acceptable channels. The reader engine reads coming message from client
+   * side and should invoke this method in appropriate occasions.
+   *
+   * @see ZeroReader
+   */
   void handleAcceptableChannels();
 }

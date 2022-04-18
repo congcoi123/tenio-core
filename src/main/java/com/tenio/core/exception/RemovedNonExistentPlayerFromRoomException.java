@@ -27,7 +27,7 @@ package com.tenio.core.exception;
 import com.tenio.core.entity.Room;
 
 /**
- * When you try to eliminate a non-existing player from a room.
+ * When the server tries to eliminate a non-existing player from a room.
  */
 public final class RemovedNonExistentPlayerFromRoomException extends RuntimeException {
 
@@ -36,8 +36,8 @@ public final class RemovedNonExistentPlayerFromRoomException extends RuntimeExce
   /**
    * Initialization.
    *
-   * @param playerIdentity the player's identity
-   * @param room           the room
+   * @param playerIdentity the {@link Object} of player's identity
+   * @param room           the {@link Room} instance
    */
   public RemovedNonExistentPlayerFromRoomException(Object playerIdentity, Room room) {
     super(room == null
@@ -50,7 +50,7 @@ public final class RemovedNonExistentPlayerFromRoomException extends RuntimeExce
   /**
    * Initialization.
    *
-   * @param room the room
+   * @param room the {@link Room} instance
    */
   public RemovedNonExistentPlayerFromRoomException(Room room) {
     super(room == null ? "Unable to remove player, the player did not exist"

@@ -25,11 +25,17 @@ THE SOFTWARE.
 package com.tenio.core.entity.define.mode;
 
 /**
- * All modes related to banning players.
+ * All modes related to the banning players.
  */
 public enum PlayerBanMode {
 
+  /**
+   * Bans a player by using its IP address.
+   */
   BY_ADDRESS,
+  /**
+   * Bans a player by using its unique player's name.
+   */
   BY_NAME;
 
   @Override

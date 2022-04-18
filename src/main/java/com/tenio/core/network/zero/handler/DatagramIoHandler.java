@@ -24,20 +24,28 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.handler;
 
-import com.tenio.core.network.entity.session.Session;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 
 /**
- * The datagram IO handler.
+ * The Datagram IO handler.
  */
 public interface DatagramIoHandler extends BaseIoHandler {
 
+  /**
+   * When a new message comes from client side then this method is invoked.
+   *
+   * @param datagramChannel a {@link DatagramChannel} created on the server
+   * @param remoteAddress   a remote {@link SocketAddress} of client side
+   * @param binary          an array of <code>byte</code> data sent by client side
+   */
   void channelRead(DatagramChannel datagramChannel, SocketAddress remoteAddress, byte[] binary);
 
-  void sessionRead(Session session, byte[] binary);
-
+  /**
+   * When any exception occurred on the Datagram channel then this method is invoked.
+   *
+   * @param datagramChannel the {@link DatagramChannel} created on the server
+   * @param exception       an {@link Exception} emerging
+   */
   void channelException(DatagramChannel datagramChannel, Exception exception);
-
-  void sessionException(Session session, Exception exception);
 }

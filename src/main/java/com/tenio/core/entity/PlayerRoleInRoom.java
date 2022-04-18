@@ -22,21 +22,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.event;
+package com.tenio.core.entity;
 
 /**
- * This function interface provides one method for dispatching the results from
- * an event.
+ * Definitions of a player role when it is in a room
  */
-@FunctionalInterface
-public interface Subscriber {
-
+public enum PlayerRoleInRoom {
   /**
-   * To dispatch results from one event.
-   *
-   * @param params an array of results from an emitter as {@link Object} arguments
-   * @return an {@link Object} result or <code>null</code>
-   * @see Emitter
+   * When a player joins a room as a participant, it has full permission for all activities in
+   * the room.
    */
-  Object dispatch(Object... params);
+  PARTICIPANT,
+  /**
+   * When a player joins a room as a spectator, it can only be allowed to observe others'
+   * activities.
+   */
+  SPECTATOR
 }

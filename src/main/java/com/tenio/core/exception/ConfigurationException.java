@@ -25,12 +25,17 @@ THE SOFTWARE.
 package com.tenio.core.exception;
 
 /**
- * When something went wrong with your configured file.
+ * When something went wrong with the server configuration file.
  */
 public final class ConfigurationException extends RuntimeException {
 
   private static final long serialVersionUID = -713303423920650936L;
 
+  /**
+   * Creates a new exception.
+   *
+   * @param message a warning {@link String} message
+   */
   public ConfigurationException(String message) {
     super(message);
   }
