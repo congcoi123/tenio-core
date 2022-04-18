@@ -45,7 +45,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
 /**
- * This class provides the methods for creating HTTP services.
+ * This class provides methods for creating HTTP service.
  */
 public final class JettyHttpService extends AbstractManager implements Service, Runnable {
 
@@ -61,6 +61,12 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     initialized = false;
   }
 
+/**
+* Initialization.
+*
+* @param eventManager an instance of {@link EventManager}
+* @return an instance of {@link JettyHttpService}
+*/
   public static JettyHttpService newInstance(EventManager eventManager) {
     return new JettyHttpService(eventManager);
   }
