@@ -48,8 +48,8 @@ public final class DefaultConnectionFilter implements ConnectionFilter {
    * Initialization.
    */
   public DefaultConnectionFilter() {
-    bannedAddresses = new HashSet<String>();
-    addressMap = new HashMap<String, AtomicInteger>();
+    bannedAddresses = new HashSet<>();
+    addressMap = new HashMap<>();
     maxConnectionsPerIp = DEFAULT_MAX_CONNECTIONS_PER_IP;
   }
 
@@ -69,7 +69,7 @@ public final class DefaultConnectionFilter implements ConnectionFilter {
 
   @Override
   public String[] getBannedAddresses() {
-    String[] set = null;
+    String[] set;
     synchronized (bannedAddresses) {
       set = new String[bannedAddresses.size()];
       set = bannedAddresses.toArray(set);

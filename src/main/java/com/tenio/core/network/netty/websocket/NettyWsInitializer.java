@@ -36,7 +36,7 @@ import io.netty.handler.ssl.SslHandler;
 import javax.net.ssl.SSLEngine;
 
 /**
- * The initialization for the netty websockets.
+ * An initialization for the Netty websockets.
  */
 public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> {
 

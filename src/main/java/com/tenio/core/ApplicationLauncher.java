@@ -31,7 +31,7 @@ import com.tenio.core.server.ServerImpl;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 
 /**
- * Your application will start from here.
+ * The application will start from here.
  */
 public final class ApplicationLauncher extends SystemLogger {
 
@@ -46,8 +46,8 @@ public final class ApplicationLauncher extends SystemLogger {
   /**
    * Run the application.
    *
-   * @param entryClass the root class
-   * @param params     the parameters
+   * @param entryClass the {@link Class} which is placed in the root package
+   * @param params     the additional parameters
    */
   public static void run(Class<?> entryClass, String[] params) {
     var application = ApplicationLauncher.newInstance();
@@ -59,10 +59,10 @@ public final class ApplicationLauncher extends SystemLogger {
   }
 
   /**
-   * Start The Game Server With DI.
+   * Start the game server with DI mechanism.
    *
-   * @param entryClass the root class
-   * @param params     the parameters
+   * @param entryClass the {@link Class} which is placed in the root package
+   * @param params     the additional parameters
    */
   public void start(Class<?> entryClass, String[] params) {
     Bootstrapper bootstrap = null;
@@ -79,6 +79,7 @@ public final class ApplicationLauncher extends SystemLogger {
 
     var server = ServerImpl.getInstance();
     try {
+      assert bootstrap != null;
       server.start(bootstrap.getBootstrapHandler(), params);
     } catch (Exception e) {
       error(e, "The application started with exceptions occurred: ", e.getMessage());

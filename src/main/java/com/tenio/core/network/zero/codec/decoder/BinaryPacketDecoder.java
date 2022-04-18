@@ -35,14 +35,16 @@ public interface BinaryPacketDecoder {
 
   /**
    * Decodes data from clients side sent by session.
+   *
    * @param session the receiving {@link Session}
-   * @param data the receiving <code>byte</code> data
+   * @param data    the receiving <code>byte</code> data
    * @throws RuntimeException whenever an issue occurred
    */
   void decode(Session session, byte[] data) throws RuntimeException;
 
   /**
    * Sets the listener for packet decoder handler
+   *
    * @param resultListener the {@link PacketDecoderResultListener} instance
    */
   void setResultListener(PacketDecoderResultListener resultListener);

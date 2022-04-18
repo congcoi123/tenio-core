@@ -41,9 +41,9 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import java.io.IOException;
 
 /**
- * Receive all messages sent from clients. It converts serialize data to a
- * system's object for convenience and easy to use. It also handles the logic
- * for the processing of players and connections.
+ * Receive all messages sent from clients side. It converts serialize data to a system's object
+ * for convenience and easy to use. It also handles the logic for the processing of players and
+ * connections.
  */
 public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
 
@@ -71,7 +71,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void channelActive(ChannelHandlerContext ctx) throws Exception {
+  public void channelActive(ChannelHandlerContext ctx) {
     try {
       var address = ctx.channel().remoteAddress().toString();
       connectionFilter.validateAndAddAddress(address);
@@ -86,7 +86,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+  public void channelInactive(ChannelHandlerContext ctx) {
     var session = sessionManager.getSessionByWebSocket(ctx.channel());
     if (session == null) {
       return;
@@ -135,13 +135,13 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
     var session = sessionManager.getSessionByWebSocket(ctx.channel());
     if (session != null) {
       logger.error(cause, "Session: ", session.toString());
       eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, cause);
     } else {
-      logger.error(cause, "Exception was occured on channel: %s", ctx.channel().toString());
+      logger.error(cause, "Exception was occurred on channel: %s", ctx.channel().toString());
     }
   }
 
