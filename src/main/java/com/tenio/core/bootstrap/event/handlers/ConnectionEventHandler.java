@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2021 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,8 @@ import com.tenio.core.extension.events.EventAttachConnectionRequestValidation;
 import com.tenio.core.extension.events.EventAttachedConnectionResult;
 import com.tenio.core.extension.events.EventConnectionEstablishedResult;
 import com.tenio.core.extension.events.EventDisconnectConnection;
+import com.tenio.core.extension.events.EventWriteMessageToConnection;
+import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -50,6 +52,9 @@ public final class ConnectionEventHandler {
 
   @AutowiredAcceptNull
   private EventConnectionEstablishedResult eventConnectionEstablishedResult;
+
+  @AutowiredAcceptNull
+  private EventWriteMessageToConnection eventWriteMessageToConnection;
 
   @AutowiredAcceptNull
   private EventAttachConnectionRequestValidation eventAttachConnectionRequestValidation;
@@ -69,6 +74,8 @@ public final class ConnectionEventHandler {
 
     final var eventConnectionEstablishedResultOp =
         Optional.ofNullable(eventConnectionEstablishedResult);
+    final var eventWriteMessageToConnectionOp =
+        Optional.ofNullable(eventWriteMessageToConnection);
 
     final var eventAttachConnectionRequestValidationOp =
         Optional.ofNullable(eventAttachConnectionRequestValidation);
@@ -98,6 +105,25 @@ public final class ConnectionEventHandler {
       }
     });
 
+    eventWriteMessageToConnectionOp.ifPresent(new Consumer<EventWriteMessageToConnection>() {
+
+      @Override
+      public void accept(EventWriteMessageToConnection event) {
+        eventManager.on(ServerEvent.SESSION_WRITE_MESSAGE, new Subscriber() {
+
+          @Override
+          public Object dispatch(Object... params) {
+            var session = (Session) params[0];
+            var packet = (Packet) params[1];
+
+            event.handle(session, packet);
+
+            return null;
+          }
+        });
+      }
+    });
+
     eventAttachConnectionRequestValidationOp.ifPresent(
         new Consumer<EventAttachConnectionRequestValidation>() {
 
@@ -115,7 +141,7 @@ public final class ConnectionEventHandler {
           }
         });
 
-    eventAttachedConnectionResultOp.ifPresent(new Consumer<EventAttachedConnectionResult>() {
+    eventAttachedConnectionResultOp.ifPresent(new Consumer<>() {
 
       @Override
       public void accept(EventAttachedConnectionResult event) {
@@ -123,7 +149,7 @@ public final class ConnectionEventHandler {
 
           @Override
           public Object dispatch(Object... params) {
-            var player = (Player) params[0];
+            var player = (Optional<Player>) params[0];
             var result = (AttachedConnectionResult) params[1];
 
             event.handle(player, result);

@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2021 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.network.jetty.servlet;
 
-import com.tenio.common.data.element.CommonObject;
+import com.tenio.common.data.common.CommonMap;
+import com.tenio.common.logger.AbstractLogger;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
@@ -48,12 +49,31 @@ public final class ServletManager extends BaseServlet {
 
   private static final long serialVersionUID = -1971993446960398293L;
 
+  /**
+   * Event manager
+   */
   private final EventManager eventManager;
+  /**
+   * The class cannot extend {@link AbstractLogger} for logging, so it is necessary to create a
+   * private logger instance
+   */
   private final PrivateLogger logger;
 
+  /**
+   * Post process
+   */
   private ProcessPost processPost;
+  /**
+   * Put process
+   */
   private ProcessPut processPut;
+  /**
+   * Get process
+   */
   private ProcessGet processGet;
+  /**
+   * Delete process
+   */
   private ProcessDelete processDelete;
 
   /**
@@ -129,7 +149,7 @@ public final class ServletManager extends BaseServlet {
     response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
     try {
       var json = new JSONObject();
-      CommonObject.newInstance().add("status", "failed").add("message", "405 Method Not Allowed")
+      CommonMap.newInstance().add("status", "failed").add("message", "405 Method Not Allowed")
           .forEach((key, value) -> {
             json.put(key, value);
           });

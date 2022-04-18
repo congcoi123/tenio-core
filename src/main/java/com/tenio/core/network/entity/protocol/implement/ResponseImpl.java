@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2021 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -77,12 +77,12 @@ public final class ResponseImpl implements Response {
   }
 
   @Override
-  public Collection<Player> getPlayers() {
+  public Collection<Player> getRecipientPlayers() {
     return players;
   }
 
   @Override
-  public Collection<Player> getNonSessionPlayers() {
+  public Collection<Player> getNonSessionRecipientPlayers() {
     return nonSessionPlayers;
   }
 
@@ -102,7 +102,7 @@ public final class ResponseImpl implements Response {
   }
 
   @Override
-  public Response setRecipients(Collection<Player> players) {
+  public Response setRecipientPlayers(Collection<Player> players) {
     if (this.players == null) {
       this.players = players;
     } else {
@@ -113,12 +113,24 @@ public final class ResponseImpl implements Response {
   }
 
   @Override
-  public Response setRecipient(Player player) {
+  public Response setRecipientPlayer(Player player) {
     if (players == null) {
-      players = new ArrayList<Player>();
+      players = new ArrayList<>();
     }
     players.add(player);
 
+    return this;
+  }
+
+  @Override
+  public Response setRecipientSessions(Collection<Session> sessions) {
+    sessions.forEach(this::checksAndAddsSession);
+    return this;
+  }
+
+  @Override
+  public Response setRecipientSession(Session session) {
+    checksAndAddsSession(session);
     return this;
   }
 
@@ -161,44 +173,49 @@ public final class ResponseImpl implements Response {
   }
 
   private void construct() {
-    // if udp is using in use in case of websocket, use websocket instead
-    players.stream().forEach(player -> {
+    // if UDP is set to the highest priority in use but the session type is WebSocket, then use the
+    // WebSocket channel instead
+    players.forEach(player -> {
       if (player.containsSession()) {
         var session = player.getSession();
-        if (session.isTcp()) {
-          // when the session contains an UDP connection and the response requires it, add
-          // its session to the list
-          if (isPrioritizedUdp && session.containsUdp()) {
-            if (datagramSessions == null) {
-              datagramSessions = new ArrayList<Session>();
-            }
-            datagramSessions.add(session);
-          } else {
-            if (socketSessions == null) {
-              socketSessions = new ArrayList<Session>();
-            }
-            socketSessions.add(session);
-          }
-        } else if (session.isWebSocket()) {
-          if (webSocketSessions == null) {
-            webSocketSessions = new ArrayList<Session>();
-          }
-          webSocketSessions.add(session);
-        }
+        session.ifPresent(this::checksAndAddsSession);
       } else {
         if (nonSessionPlayers == null) {
-          nonSessionPlayers = new ArrayList<Player>();
+          nonSessionPlayers = new ArrayList<>();
         }
         nonSessionPlayers.add(player);
       }
     });
   }
 
+  private void checksAndAddsSession(Session session) {
+    if (session.isTcp()) {
+      // when the session contains a UDP connection and the response requires it, add its session
+      // to the list
+      if (isPrioritizedUdp && session.containsUdp()) {
+        if (datagramSessions == null) {
+          datagramSessions = new ArrayList<>();
+        }
+        datagramSessions.add(session);
+      } else {
+        if (socketSessions == null) {
+          socketSessions = new ArrayList<>();
+        }
+        socketSessions.add(session);
+      }
+    } else if (session.isWebSocket()) {
+      if (webSocketSessions == null) {
+        webSocketSessions = new ArrayList<>();
+      }
+      webSocketSessions.add(session);
+    }
+  }
+
   @Override
   public String toString() {
     return String.format(
         "{ content: bytes[%d], players: %s, socket: %s, datagram: %s, "
-            + "websocket: %s, non-session: %s, priority: %s, udp: %b, encrypted: %b}",
+            + "WebSocket: %s, non-session: %s, priority: %s, udp: %b, encrypted: %b}",
         content.length, players != null ? players.toString() : "null",
         socketSessions != null ? socketSessions.toString() : "null",
         datagramSessions != null ? datagramSessions.toString() : "null",

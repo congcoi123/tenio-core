@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2021 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -60,14 +60,14 @@ public interface Service {
   /**
    * Retrieves the service's name.
    *
-   * @return the service's name
+   * @return the {@link String} service's name
    */
   String getName();
 
   /**
    * Set the service's name.
    *
-   * @param name the service's name
+   * @param name the {@link String} service's name
    */
   void setName(String name);
 }

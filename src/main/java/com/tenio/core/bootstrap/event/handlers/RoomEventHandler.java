@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2021 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@ import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 import com.tenio.core.entity.define.result.PlayerLeftRoomResult;
 import com.tenio.core.entity.define.result.RoomCreatedResult;
-import com.tenio.core.entity.define.result.SwitchedPlayerSpectatorResult;
+import com.tenio.core.entity.define.result.SwitchedPlayerRoleInRoomResult;
 import com.tenio.core.entity.setting.InitialRoomSetting;
 import com.tenio.core.event.Subscriber;
 import com.tenio.core.event.implement.EventManager;
@@ -43,8 +43,8 @@ import com.tenio.core.extension.events.EventPlayerBeforeLeaveRoom;
 import com.tenio.core.extension.events.EventPlayerJoinedRoomResult;
 import com.tenio.core.extension.events.EventRoomCreatedResult;
 import com.tenio.core.extension.events.EventRoomWillBeRemoved;
-import com.tenio.core.extension.events.EventSwitchPlayerToSpectatorResult;
-import com.tenio.core.extension.events.EventSwitchSpectatorToPlayerResult;
+import com.tenio.core.extension.events.EventSwitchParticipantToSpectatorResult;
+import com.tenio.core.extension.events.EventSwitchSpectatorToParticipantResult;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -70,10 +70,10 @@ public final class RoomEventHandler {
   private EventRoomWillBeRemoved eventRoomWillBeRemoved;
 
   @AutowiredAcceptNull
-  private EventSwitchPlayerToSpectatorResult eventSwitchPlayerToSpectatorResult;
+  private EventSwitchParticipantToSpectatorResult eventSwitchParticipantToSpectatorResult;
 
   @AutowiredAcceptNull
-  private EventSwitchSpectatorToPlayerResult eventSwitchSpectatorToPlayerResult;
+  private EventSwitchSpectatorToParticipantResult eventSwitchSpectatorToParticipantResult;
 
   /**
    * Initialization.
@@ -94,10 +94,10 @@ public final class RoomEventHandler {
     final var eventRoomWillBeRemovedOp =
         Optional.ofNullable(eventRoomWillBeRemoved);
 
-    final var eventSwitchPlayerToSpectatorResultOp =
-        Optional.ofNullable(eventSwitchPlayerToSpectatorResult);
-    final var eventSwitchSpectatorToPlayerResultOp =
-        Optional.ofNullable(eventSwitchSpectatorToPlayerResult);
+    final var eventSwitchParticipantToSpectatorResultOp =
+        Optional.ofNullable(eventSwitchParticipantToSpectatorResult);
+    final var eventSwitchSpectatorToParticipantResultOp =
+        Optional.ofNullable(eventSwitchSpectatorToParticipantResult);
 
     eventPlayerAfterLeftRoomOp.ifPresent(new Consumer<EventPlayerAfterLeftRoom>() {
 
@@ -198,18 +198,18 @@ public final class RoomEventHandler {
       }
     });
 
-    eventSwitchPlayerToSpectatorResultOp.ifPresent(
-        new Consumer<EventSwitchPlayerToSpectatorResult>() {
+    eventSwitchParticipantToSpectatorResultOp.ifPresent(
+        new Consumer<EventSwitchParticipantToSpectatorResult>() {
 
           @Override
-          public void accept(EventSwitchPlayerToSpectatorResult event) {
-            eventManager.on(ServerEvent.SWITCH_PLAYER_TO_SPECTATOR, new Subscriber() {
+          public void accept(EventSwitchParticipantToSpectatorResult event) {
+            eventManager.on(ServerEvent.SWITCH_PARTICIPANT_TO_SPECTATOR, new Subscriber() {
 
               @Override
               public Object dispatch(Object... params) {
                 var player = (Player) params[0];
                 var room = (Room) params[1];
-                var result = (SwitchedPlayerSpectatorResult) params[2];
+                var result = (SwitchedPlayerRoleInRoomResult) params[2];
 
                 event.handle(player, room, result);
 
@@ -219,18 +219,18 @@ public final class RoomEventHandler {
           }
         });
 
-    eventSwitchSpectatorToPlayerResultOp.ifPresent(
-        new Consumer<EventSwitchSpectatorToPlayerResult>() {
+    eventSwitchSpectatorToParticipantResultOp.ifPresent(
+        new Consumer<EventSwitchSpectatorToParticipantResult>() {
 
           @Override
-          public void accept(EventSwitchSpectatorToPlayerResult event) {
-            eventManager.on(ServerEvent.SWITCH_SPECTATOR_TO_PLAYER, new Subscriber() {
+          public void accept(EventSwitchSpectatorToParticipantResult event) {
+            eventManager.on(ServerEvent.SWITCH_SPECTATOR_TO_PARTICIPANT, new Subscriber() {
 
               @Override
               public Object dispatch(Object... params) {
                 var player = (Player) params[0];
                 var room = (Room) params[1];
-                var result = (SwitchedPlayerSpectatorResult) params[2];
+                var result = (SwitchedPlayerRoleInRoomResult) params[2];
 
                 event.handle(player, room, result);
 

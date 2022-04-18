@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2021 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.netty.websocket;
 
-import com.tenio.common.data.utility.ZeroDataSerializerUtility;
+import com.tenio.common.data.utility.ZeroUtility;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.data.ServerMessage;
@@ -32,7 +32,7 @@ import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RefusedConnectionAddressException;
-import com.tenio.core.network.entity.session.SessionManager;
+import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import io.netty.channel.ChannelHandlerContext;
@@ -41,9 +41,9 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import java.io.IOException;
 
 /**
- * Receive all messages sent from clients. It converts serialize data to a
- * system's object for convenience and easy to use. It also handles the logic
- * for the processing of players and connections.
+ * Receive all messages sent from clients side. It converts serialize data to a system's object
+ * for convenience and easy to use. It also handles the logic for the processing of players and
+ * connections.
  */
 public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
 
@@ -71,7 +71,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void channelActive(ChannelHandlerContext ctx) throws Exception {
+  public void channelActive(ChannelHandlerContext ctx) {
     try {
       var address = ctx.channel().remoteAddress().toString();
       connectionFilter.validateAndAddAddress(address);
@@ -79,6 +79,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       var session = sessionManager.createWebSocketSession(ctx.channel());
       eventManager.emit(ServerEvent.SESSION_CREATED, session);
     } catch (RefusedConnectionAddressException e) {
+      // TODO: Creates an orphan session for a new event
       logger.error(e, "Refused connection with address: ", e.getMessage());
 
       ctx.channel().close();
@@ -86,7 +87,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+  public void channelInactive(ChannelHandlerContext ctx) {
     var session = sessionManager.getSessionByWebSocket(ctx.channel());
     if (session == null) {
       return;
@@ -123,7 +124,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       networkReaderStatistic.updateReadBytes(binary.length);
       networkReaderStatistic.updateReadPackets(1);
 
-      var data = ZeroDataSerializerUtility.binaryToElement(binary);
+      var data = ZeroUtility.binaryToCollection(binary);
       var message = ServerMessage.newInstance().setData(data);
 
       if (!session.isConnected()) {
@@ -135,13 +136,13 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
     var session = sessionManager.getSessionByWebSocket(ctx.channel());
     if (session != null) {
       logger.error(cause, "Session: ", session.toString());
       eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, cause);
     } else {
-      logger.error(cause, "Exception was occured on channel: %s", ctx.channel().toString());
+      logger.error(cause, "Exception was occurred on channel: %s", ctx.channel().toString());
     }
   }
 

@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2021 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -51,6 +51,11 @@ public final class EventManager extends SystemLogger {
     eventProducer = new EventProducer();
   }
 
+  /**
+   * Initialization.
+   *
+   * @return an instance of {@link EventManager}
+   */
   public static EventManager newInstance() {
     return new EventManager();
   }

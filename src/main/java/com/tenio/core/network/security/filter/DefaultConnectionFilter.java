@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2021 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,8 +34,6 @@ import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * The default implementation for the connection filter.
- *
- * @see ConnectionFilter
  */
 @ThreadSafe
 public final class DefaultConnectionFilter implements ConnectionFilter {
@@ -50,8 +48,8 @@ public final class DefaultConnectionFilter implements ConnectionFilter {
    * Initialization.
    */
   public DefaultConnectionFilter() {
-    bannedAddresses = new HashSet<String>();
-    addressMap = new HashMap<String, AtomicInteger>();
+    bannedAddresses = new HashSet<>();
+    addressMap = new HashMap<>();
     maxConnectionsPerIp = DEFAULT_MAX_CONNECTIONS_PER_IP;
   }
 
@@ -71,7 +69,7 @@ public final class DefaultConnectionFilter implements ConnectionFilter {
 
   @Override
   public String[] getBannedAddresses() {
-    String[] set = null;
+    String[] set;
     synchronized (bannedAddresses) {
       set = new String[bannedAddresses.size()];
       set = bannedAddresses.toArray(set);

@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2021 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,7 @@ import com.tenio.core.network.zero.engine.listener.ZeroAcceptorListener;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.StandardSocketOptions;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
@@ -53,8 +54,8 @@ import java.util.List;
 public final class ZeroAcceptorImpl extends AbstractZeroEngine
     implements ZeroAcceptor, ZeroAcceptorListener {
 
-  private List<SocketChannel> acceptableSockets;
-  private List<SelectableChannel> boundSockets;
+  private final List<SocketChannel> acceptableSockets;
+  private final List<SelectableChannel> boundSockets;
   private Selector acceptableSelector;
   private ConnectionFilter connectionFilter;
   private ZeroReaderListener zeroReaderListener;
@@ -64,8 +65,8 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   private ZeroAcceptorImpl(EventManager eventManager) {
     super(eventManager);
 
-    acceptableSockets = new ArrayList<SocketChannel>();
-    boundSockets = new ArrayList<SelectableChannel>();
+    acceptableSockets = new ArrayList<>();
+    boundSockets = new ArrayList<>();
     serverAddress = CoreConstant.LOCAL_HOST;
 
     setName("acceptor");
@@ -103,8 +104,8 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     try {
       var serverSocketChannel = ServerSocketChannel.open();
       serverSocketChannel.configureBlocking(false);
+      serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
       serverSocketChannel.socket().bind(new InetSocketAddress(serverAddress, port));
-      serverSocketChannel.socket().setReuseAddress(true);
       // only server socket should interest in this key OP_ACCEPT
       serverSocketChannel.register(acceptableSelector, SelectionKey.OP_ACCEPT);
       synchronized (boundSockets) {
@@ -120,9 +121,10 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   private void bindUdpSocket(int port) throws ServiceRuntimeException {
     try {
       var datagramChannel = DatagramChannel.open();
-      datagramChannel.socket().bind(new InetSocketAddress(serverAddress, port));
-      datagramChannel.socket().setReuseAddress(true);
       datagramChannel.configureBlocking(false);
+      datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
+      datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
+      datagramChannel.socket().bind(new InetSocketAddress(serverAddress, port));
       // udp datagram is a connectionless protocol, we don't need to create
       // bi-direction connection, that why it's not necessary to register it to
       // acceptable selector. Just leave it to the reader selector later
@@ -232,9 +234,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   }
 
   private void cleanup() {
-    boundSockets = null;
     acceptableSelector = null;
-    acceptableSockets = null;
   }
 
   @Override
@@ -272,6 +272,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
 
                 getSocketIoHandler().channelActive(socketChannel, selectionKey);
               } catch (RefusedConnectionAddressException e1) {
+                // TODO: Creates an orphan session for a new event
                 getSocketIoHandler().channelException(socketChannel, e1);
                 error(e1, "Refused connection with address: ", e1.getMessage());
 
@@ -290,7 +291,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
               } catch (IOException e3) {
                 getSocketIoHandler().channelException(socketChannel, e3);
                 var logger = buildgen("Failed accepting connection: ");
-                if (socketChannel != null && socketChannel.socket() != null) {
+                if (socketChannel.socket() != null) {
                   logger.append(socketChannel.socket().getInetAddress().getHostAddress());
                 }
 

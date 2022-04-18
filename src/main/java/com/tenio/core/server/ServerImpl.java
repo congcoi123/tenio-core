@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2021 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,10 +25,10 @@ THE SOFTWARE.
 package com.tenio.core.server;
 
 import com.tenio.common.configuration.Configuration;
-import com.tenio.common.configuration.constant.Trademark;
+import com.tenio.common.constant.Trademark;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.api.ServerApi;
-import com.tenio.core.api.ServerApiImpl;
+import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.define.CoreConfigurationType;
@@ -49,7 +49,7 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncrypter;
+import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
 import com.tenio.core.schedule.ScheduleService;
 import com.tenio.core.schedule.ScheduleServiceImpl;
 import com.tenio.core.server.service.InternalProcessorService;
@@ -251,10 +251,10 @@ public final class ServerImpl extends SystemLogger implements Server {
     final var binaryPacketCompressor =
         (BinaryPacketCompressor) binaryPacketCompressorClazz.getDeclaredConstructor()
             .newInstance();
-    final var binaryPacketEncrypterClazz = Class
-        .forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_ENCRYPTER).strip());
-    final var binaryPacketEncrypter =
-        (BinaryPacketEncrypter) binaryPacketEncrypterClazz.getDeclaredConstructor()
+    final var binaryPacketEncryptorClazz = Class
+        .forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_ENCRYPTOR).strip());
+    final var binaryPacketEncryptor =
+        (BinaryPacketEncryptor) binaryPacketEncryptorClazz.getDeclaredConstructor()
             .newInstance();
     final var binaryPacketEncoderClazz = Class
         .forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_ENCODER).strip());
@@ -269,10 +269,10 @@ public final class ServerImpl extends SystemLogger implements Server {
         configuration.getInt(
             CoreConfigurationType.NETWORK_PROP_PACKET_COMPRESSION_THRESHOLD_BYTES));
     binaryPacketEncoder.setCompressor(binaryPacketCompressor);
-    binaryPacketEncoder.setEncrypter(binaryPacketEncrypter);
+    binaryPacketEncoder.setEncryptor(binaryPacketEncryptor);
 
     binaryPacketDecoder.setCompressor(binaryPacketCompressor);
-    binaryPacketDecoder.setEncrypter(binaryPacketEncrypter);
+    binaryPacketDecoder.setEncryptor(binaryPacketEncryptor);
 
     networkService.setPacketDecoder(binaryPacketDecoder);
     networkService.setPacketEncoder(binaryPacketEncoder);

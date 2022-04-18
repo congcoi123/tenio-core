@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2021 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,11 +28,9 @@ import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
 import java.io.IOException;
-import java.net.SocketAddress;
-import java.nio.channels.DatagramChannel;
 
 /**
- * For datagram writing.
+ * The Datagram writing handler.
  */
 public final class DatagramWriterHandler extends AbstractWriterHandler {
 
@@ -57,9 +55,11 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
     if (datagramChannel == null) {
       debug("DATAGRAM CHANNEL SEND", "UDP Packet cannot be sent to ", session.toString(),
           ", no DatagramChannel was set");
+      return;
     } else if (remoteSocketAddress == null) {
       debug("DATAGRAM CHANNEL SEND", "UDP Packet cannot be sent to ", session.toString(),
           ", no InetSocketAddress was set");
+      return;
     }
 
     // clear the buffer first
