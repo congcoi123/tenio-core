@@ -22,22 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.encryption;
+package com.tenio.core.exception;
+
+import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
 
 /**
- * The default implementation for the binary packet encryption.
- *
- * @see BinaryPacketEncrypter
+ * When something went wrong with the packet encryption processes.
  */
-public final class DefaultBinaryPacketEncrypter implements BinaryPacketEncrypter {
+public final class PacketEncryptorException extends RuntimeException {
 
-  @Override
-  public byte[] decrypt(byte[] binary) {
-    return binary;
-  }
+  private static final long serialVersionUID = -4260223574425695248L;
 
-  @Override
-  public byte[] encrypt(byte[] binary) {
-    return binary;
+  /**
+   * Creates a new exception.
+   *
+   * @param message a warning {@link String} message
+   * @see BinaryPacketEncryptor
+   */
+  public PacketEncryptorException(String message) {
+    super(message);
   }
 }

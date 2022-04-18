@@ -24,28 +24,20 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.codec.encryption;
 
-import com.tenio.core.exception.PacketEncrypterException;
-
 /**
- * The APIs designed for encrypting and decrypting packets.
+ * The default implementation for the binary packet encryption.
+ *
+ * @see BinaryPacketEncryptor
  */
-public interface BinaryPacketEncrypter {
+public final class DefaultBinaryPacketEncryptor implements BinaryPacketEncryptor {
 
-  /**
-   * Encrypts the binary data in a packet.
-   *
-   * @param binary an array of <code>byte</code> data for encrypting
-   * @return an array of encrypted <code>byte</code> data
-   * @throws PacketEncrypterException when any issue emerged while encrypting process
-   */
-  byte[] encrypt(byte[] binary) throws PacketEncrypterException;
+  @Override
+  public byte[] decrypt(byte[] binary) {
+    return binary;
+  }
 
-  /**
-   * Decrypts the binary data in a packet.
-   *
-   * @param binary an array of <code>byte</code> data for decrypting
-   * @return an array of decrypted <code>byte</code> data
-   * @throws PacketEncrypterException when any issue emerged while decrypting process
-   */
-  byte[] decrypt(byte[] binary) throws PacketEncrypterException;
+  @Override
+  public byte[] encrypt(byte[] binary) {
+    return binary;
+  }
 }

@@ -34,7 +34,7 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncrypter;
+import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,9 +66,9 @@ public enum CoreConfigurationType implements ConfigurationType {
    * Class: Declares a class for packet encryption handling. The data in packet will be encrypted or
    * decrypted before sending or after receiving from clients side.
    *
-   * @see BinaryPacketEncrypter
+   * @see BinaryPacketEncryptor
    */
-  CLASS_PACKET_ENCRYPTER("packet-encrypter"),
+  CLASS_PACKET_ENCRYPTOR("packet-encryptor"),
   /**
    * Class: Declares a class for packet compression handling. The data in packet will be compressed
    * or uncompressed before sending or after receiving from clients side.

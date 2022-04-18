@@ -26,7 +26,7 @@ package com.tenio.core.network.zero.codec.decoder;
 
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncrypter;
+import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
 
 /**
  * The APIs designed for decoding binary packets.
@@ -59,7 +59,7 @@ public interface BinaryPacketDecoder {
   /**
    * Sets the encryptor for encrypting/encrypting packets.
    *
-   * @param encrypter the {@link BinaryPacketEncrypter} instance
+   * @param encryptor the {@link BinaryPacketEncryptor} instance
    */
-  void setEncrypter(BinaryPacketEncrypter encrypter);
+  void setEncryptor(BinaryPacketEncryptor encryptor);
 }
