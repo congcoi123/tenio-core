@@ -79,6 +79,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       var session = sessionManager.createWebSocketSession(ctx.channel());
       eventManager.emit(ServerEvent.SESSION_CREATED, session);
     } catch (RefusedConnectionAddressException e) {
+      // TODO: Creates an orphan session for a new event
       logger.error(e, "Refused connection with address: ", e.getMessage());
 
       ctx.channel().close();

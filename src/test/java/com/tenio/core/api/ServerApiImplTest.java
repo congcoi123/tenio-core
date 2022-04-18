@@ -3,6 +3,7 @@ package com.tenio.core.api;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.server.Server;
 import org.junit.jupiter.api.Test;
 

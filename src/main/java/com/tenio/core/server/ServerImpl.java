@@ -28,7 +28,7 @@ import com.tenio.common.configuration.Configuration;
 import com.tenio.common.constant.Trademark;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.api.ServerApi;
-import com.tenio.core.api.ServerApiImpl;
+import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.define.CoreConfigurationType;

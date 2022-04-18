@@ -209,14 +209,14 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
       try {
         remoteAddress = datagramChannel.receive(readerBuffer);
       } catch (IOException e) {
-        error(e, "An exception was occured on channel: ", datagramChannel.toString());
+        error(e, "An exception was occurred on channel: ", datagramChannel.toString());
         getDatagramIoHandler().channelException(datagramChannel, e);
       }
 
       if (remoteAddress == null) {
         var addressNotFoundException =
-            new NotFoundException("Remove addess for the datagram channel");
-        error(addressNotFoundException, "An exception was occured on channel: ",
+            new NotFoundException("Remove address for the datagram channel");
+        error(addressNotFoundException, "An exception was occurred on channel: ",
             datagramChannel.toString());
         getDatagramIoHandler().channelException(datagramChannel, addressNotFoundException);
         return;

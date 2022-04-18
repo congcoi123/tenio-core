@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.api;
+package com.tenio.core.api.implement;
 
 import com.tenio.common.logger.SystemLogger;
+import com.tenio.core.api.ServerApi;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;

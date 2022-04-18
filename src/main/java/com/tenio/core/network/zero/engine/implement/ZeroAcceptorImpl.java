@@ -36,8 +36,6 @@ import com.tenio.core.network.zero.engine.listener.ZeroAcceptorListener;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketOption;
-import java.net.SocketOptions;
 import java.net.StandardSocketOptions;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectableChannel;
@@ -56,8 +54,8 @@ import java.util.List;
 public final class ZeroAcceptorImpl extends AbstractZeroEngine
     implements ZeroAcceptor, ZeroAcceptorListener {
 
-  private List<SocketChannel> acceptableSockets;
-  private List<SelectableChannel> boundSockets;
+  private final List<SocketChannel> acceptableSockets;
+  private final List<SelectableChannel> boundSockets;
   private Selector acceptableSelector;
   private ConnectionFilter connectionFilter;
   private ZeroReaderListener zeroReaderListener;
@@ -67,8 +65,8 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   private ZeroAcceptorImpl(EventManager eventManager) {
     super(eventManager);
 
-    acceptableSockets = new ArrayList<SocketChannel>();
-    boundSockets = new ArrayList<SelectableChannel>();
+    acceptableSockets = new ArrayList<>();
+    boundSockets = new ArrayList<>();
     serverAddress = CoreConstant.LOCAL_HOST;
 
     setName("acceptor");
@@ -236,9 +234,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   }
 
   private void cleanup() {
-    boundSockets = null;
     acceptableSelector = null;
-    acceptableSockets = null;
   }
 
   @Override
@@ -276,6 +272,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
 
                 getSocketIoHandler().channelActive(socketChannel, selectionKey);
               } catch (RefusedConnectionAddressException e1) {
+                // TODO: Creates an orphan session for a new event
                 getSocketIoHandler().channelException(socketChannel, e1);
                 error(e1, "Refused connection with address: ", e1.getMessage());
 
@@ -294,7 +291,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
               } catch (IOException e3) {
                 getSocketIoHandler().channelException(socketChannel, e3);
                 var logger = buildgen("Failed accepting connection: ");
-                if (socketChannel != null && socketChannel.socket() != null) {
+                if (socketChannel.socket() != null) {
                   logger.append(socketChannel.socket().getInetAddress().getHostAddress());
                 }
 
