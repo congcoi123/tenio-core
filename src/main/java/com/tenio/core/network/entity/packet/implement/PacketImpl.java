@@ -30,6 +30,7 @@ import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -156,7 +157,7 @@ public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
 
   @Override
   public boolean isFragmented() {
-    return fragmentBuffer != null;
+    return Objects.nonNull(fragmentBuffer);
   }
 
   @Override

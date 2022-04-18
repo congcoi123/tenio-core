@@ -45,6 +45,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The implementation for acceptor engine.
@@ -165,7 +166,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
             var clientChannel = serverChannel.accept();
 
             // make sure that the socket is available
-            if (clientChannel != null) {
+            if (Objects.nonNull(clientChannel)) {
               synchronized (acceptableSockets) {
                 acceptableSockets.add(clientChannel);
               }
@@ -254,16 +255,16 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
         // makes sure that the loop will never check this item again
         socketIterator.remove();
 
-        if (socketChannel == null) {
+        if (Objects.isNull(socketChannel)) {
           debug("ACCEPTABLE CHANNEL", "Acceptor handle a null socket channel");
         } else {
           var socket = socketChannel.socket();
 
-          if (socket == null) {
+          if (Objects.isNull(socket)) {
             debug("ACCEPTABLE CHANNEL", "Acceptor handle a null socket");
           } else {
             var inetAddress = socket.getInetAddress();
-            if (inetAddress != null) {
+            if (Objects.nonNull(inetAddress)) {
               try {
                 connectionFilter.validateAndAddAddress(inetAddress.getHostAddress());
                 socketChannel.configureBlocking(false);
@@ -291,7 +292,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
               } catch (IOException e3) {
                 getSocketIoHandler().channelException(socketChannel, e3);
                 var logger = buildgen("Failed accepting connection: ");
-                if (socketChannel.socket() != null) {
+                if (Objects.nonNull(socketChannel.socket())) {
                   logger.append(socketChannel.socket().getInetAddress().getHostAddress());
                 }
 

@@ -30,6 +30,7 @@ import com.tenio.core.network.define.RequestPriority;
 import com.tenio.core.network.entity.protocol.Request;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -145,7 +146,7 @@ public final class RequestImpl implements Request {
   @Override
   public String toString() {
     return String.format("{ event: %s, sender: %s, priority: %s, timestamp: %d, attributes: %s }",
-        event.toString(), (sender != null ? sender.toString() : "null"), priority.toString(),
+        event.toString(), (Objects.nonNull(sender) ? sender.toString() : "null"), priority.toString(),
         timestamp, attributes.toString());
   }
 }

@@ -50,6 +50,7 @@ import com.tenio.core.server.Server;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -110,7 +111,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
   @Override
   public void logout(Player player) {
-    if (player == null) {
+    if (Objects.isNull(player)) {
       // maybe we needn't do anything
       return;
     }
@@ -141,7 +142,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   public Room createRoom(InitialRoomSetting setting, Player owner) {
     Room room = null;
     try {
-      if (owner == null) {
+      if (Objects.isNull(owner)) {
         room = getRoomManager().createRoom(setting);
       } else {
         room = getRoomManager().createRoomWithOwner(setting, owner);
@@ -201,7 +202,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   @Override
   public void joinRoom(Player player, Room room, String roomPassword, int slotInRoom,
                        boolean asSpectator) {
-    if (player == null || room == null) {
+    if (Objects.isNull(player) || Objects.isNull(room)) {
       getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
           PlayerJoinedRoomResult.PLAYER_OR_ROOM_UNAVAILABLE);
       return;
@@ -249,7 +250,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
   @Override
   public void removeRoom(Room room, RoomRemoveMode removeRoomMode) {
-    if (room == null) {
+    if (Objects.isNull(room)) {
       // nothing needs to do
       return;
     }

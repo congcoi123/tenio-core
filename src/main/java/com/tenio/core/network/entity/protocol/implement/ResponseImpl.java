@@ -31,6 +31,7 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.server.ServerImpl;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * The implementation for response.
@@ -103,7 +104,7 @@ public final class ResponseImpl implements Response {
 
   @Override
   public Response setRecipientPlayers(Collection<Player> players) {
-    if (this.players == null) {
+    if (Objects.isNull(this.players)) {
       this.players = players;
     } else {
       this.players.addAll(players);
@@ -114,7 +115,7 @@ public final class ResponseImpl implements Response {
 
   @Override
   public Response setRecipientPlayer(Player player) {
-    if (players == null) {
+    if (Objects.isNull(players)) {
       players = new ArrayList<>();
     }
     players.add(player);
@@ -164,7 +165,7 @@ public final class ResponseImpl implements Response {
 
   @Override
   public void write() {
-    if (players == null || players.isEmpty()) {
+    if (Objects.isNull(players) || players.isEmpty()) {
       return;
     }
 
@@ -180,7 +181,7 @@ public final class ResponseImpl implements Response {
         var session = player.getSession();
         session.ifPresent(this::checksAndAddsSession);
       } else {
-        if (nonSessionPlayers == null) {
+        if (Objects.isNull(nonSessionPlayers)) {
           nonSessionPlayers = new ArrayList<>();
         }
         nonSessionPlayers.add(player);
@@ -193,18 +194,18 @@ public final class ResponseImpl implements Response {
       // when the session contains a UDP connection and the response requires it, add its session
       // to the list
       if (isPrioritizedUdp && session.containsUdp()) {
-        if (datagramSessions == null) {
+        if (Objects.isNull(datagramSessions)) {
           datagramSessions = new ArrayList<>();
         }
         datagramSessions.add(session);
       } else {
-        if (socketSessions == null) {
+        if (Objects.isNull(socketSessions)) {
           socketSessions = new ArrayList<>();
         }
         socketSessions.add(session);
       }
     } else if (session.isWebSocket()) {
-      if (webSocketSessions == null) {
+      if (Objects.isNull(webSocketSessions)) {
         webSocketSessions = new ArrayList<>();
       }
       webSocketSessions.add(session);
@@ -216,11 +217,11 @@ public final class ResponseImpl implements Response {
     return String.format(
         "{ content: bytes[%d], players: %s, socket: %s, datagram: %s, "
             + "WebSocket: %s, non-session: %s, priority: %s, udp: %b, encrypted: %b}",
-        content.length, players != null ? players.toString() : "null",
-        socketSessions != null ? socketSessions.toString() : "null",
-        datagramSessions != null ? datagramSessions.toString() : "null",
-        webSocketSessions != null ? webSocketSessions.toString() : "null",
-        nonSessionPlayers != null ? nonSessionPlayers.toString() : "null",
+        content.length, Objects.nonNull(players) ? players.toString() : "null",
+        Objects.nonNull(socketSessions) ? socketSessions.toString() : "null",
+        Objects.nonNull(datagramSessions) ? datagramSessions.toString() : "null",
+        Objects.nonNull(webSocketSessions) ? webSocketSessions.toString() : "null",
+        Objects.nonNull(nonSessionPlayers) ? nonSessionPlayers.toString() : "null",
         priority.toString(),
         isPrioritizedUdp, isEncrypted);
   }

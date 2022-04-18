@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.codec.packet;
 
+import java.util.Objects;
+
 /**
  * Holds the processed packet for the next steps.
  */
@@ -83,7 +85,7 @@ public final class ProcessedPacket {
   @Override
   public String toString() {
     return String.format("{ packetReadState: %s, data: bytes[%d] }",
-        packetReadState != null ? packetReadState.toString() : "null",
+        Objects.nonNull(packetReadState) ? packetReadState.toString() : "null",
         binary.length);
   }
 }

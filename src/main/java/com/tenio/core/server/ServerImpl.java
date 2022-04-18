@@ -57,6 +57,7 @@ import com.tenio.core.server.service.InternalProcessorServiceImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -99,7 +100,7 @@ public final class ServerImpl extends SystemLogger implements Server {
    * @return a new instance
    */
   public static Server getInstance() {
-    if (instance == null) {
+    if (Objects.isNull(instance)) {
       instance = new ServerImpl();
     }
     return instance;
@@ -110,7 +111,7 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     // get the file path
     var file = params.length == 0 ? null : params[0];
-    if (file == null) {
+    if (Objects.isNull(file)) {
       file = CoreConstant.DEFAULT_CONFIGURATION_FILE;
     }
 

@@ -52,6 +52,7 @@ import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The implementation for network service.
@@ -175,7 +176,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
 
   @Override
   public void setHttpPathConfigs(List<PathConfig> pathConfigs) {
-    if (pathConfigs == null) {
+    if (Objects.isNull(pathConfigs)) {
       return;
     }
     httpService.setPathConfigs(pathConfigs);
@@ -321,7 +322,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
     }
 
     var nonSessionPlayers = response.getNonSessionRecipientPlayers();
-    if (nonSessionPlayers != null) {
+    if (Objects.nonNull(nonSessionPlayers)) {
       var nonSessionIterator = nonSessionPlayers.iterator();
       while (nonSessionIterator.hasNext()) {
         var player = nonSessionIterator.next();
@@ -333,21 +334,21 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
     var datagramSessions = response.getRecipientDatagramSessions();
     var webSocketSessions = response.getRecipientWebSocketSessions();
 
-    if (socketSessions != null) {
+    if (Objects.nonNull(socketSessions)) {
       var packet = createPacket(response, socketSessions, TransportType.TCP);
       socketService.write(packet);
       socketSessions.stream().forEach(
           session -> eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet));
     }
 
-    if (datagramSessions != null) {
+    if (Objects.nonNull(datagramSessions)) {
       var packet = createPacket(response, datagramSessions, TransportType.UDP);
       socketService.write(packet);
       datagramSessions.stream().forEach(
           session -> eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet));
     }
 
-    if (webSocketSessions != null) {
+    if (Objects.nonNull(webSocketSessions)) {
       var packet = createPacket(response, webSocketSessions, TransportType.WEB_SOCKET);
       webSocketService.write(packet);
       webSocketSessions.stream().forEach(session -> {

@@ -27,6 +27,7 @@ package com.tenio.core.bootstrap;
 import com.tenio.common.bootstrap.annotation.Bootstrap;
 import com.tenio.common.bootstrap.injector.Injector;
 import com.tenio.common.logger.SystemLogger;
+import java.util.Objects;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 
 /**
@@ -40,7 +41,7 @@ public final class Bootstrapper extends SystemLogger {
   private BootstrapHandler bootstrapHandler;
 
   private Bootstrapper() {
-    if (instance != null) {
+    if (Objects.nonNull(instance)) {
       throw new CommandLine.InitializationException("Could not recreate this class instance");
     }
     injector = Injector.newInstance();

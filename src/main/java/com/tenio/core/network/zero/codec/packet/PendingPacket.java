@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.network.zero.codec.packet;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 /**
  * Holds a pending packet for the next steps.
@@ -104,7 +105,7 @@ public final class PendingPacket {
   @Override
   public String toString() {
     return String.format("{ packetHeader: %s, expectedLength: %d }",
-        packetHeader != null ? packetHeader.toString() : "null",
+        Objects.nonNull(packetHeader) ? packetHeader.toString() : "null",
         expectedLength);
   }
 }

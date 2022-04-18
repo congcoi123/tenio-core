@@ -35,6 +35,7 @@ import com.tenio.core.network.jetty.servlet.support.BaseProcessServlet;
 import com.tenio.core.network.jetty.servlet.support.BaseServlet;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -108,7 +109,7 @@ public final class ServletManager extends BaseServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException {
-    if (processGet != null) {
+    if (Objects.nonNull(processGet)) {
       processGet.handle(request, response);
     } else {
       sendUnsupportedMethod(response);
@@ -118,7 +119,7 @@ public final class ServletManager extends BaseServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException {
-    if (processPost != null) {
+    if (Objects.nonNull(processPost)) {
       processPost.handle(request, response);
     } else {
       sendUnsupportedMethod(response);
@@ -128,7 +129,7 @@ public final class ServletManager extends BaseServlet {
   @Override
   protected void doPut(HttpServletRequest request, HttpServletResponse response)
       throws ServletException {
-    if (processPut != null) {
+    if (Objects.nonNull(processPut)) {
       processPut.handle(request, response);
     } else {
       sendUnsupportedMethod(response);
@@ -138,7 +139,7 @@ public final class ServletManager extends BaseServlet {
   @Override
   protected void doDelete(HttpServletRequest request, HttpServletResponse response)
       throws ServletException {
-    if (processDelete != null) {
+    if (Objects.nonNull(processDelete)) {
       processDelete.handle(request, response);
     } else {
       sendUnsupportedMethod(response);
@@ -150,9 +151,7 @@ public final class ServletManager extends BaseServlet {
     try {
       var json = new JSONObject();
       CommonMap.newInstance().add("status", "failed").add("message", "405 Method Not Allowed")
-          .forEach((key, value) -> {
-            json.put(key, value);
-          });
+          .forEach(json::put);
       response.getWriter().println(json);
     } catch (IOException e) {
       logger.error(e);
@@ -165,7 +164,7 @@ public final class ServletManager extends BaseServlet {
     protected void handleImpl(HttpServletRequest request, HttpServletResponse response) {
       var check = eventManager.emit(ServerEvent.HTTP_REQUEST_VALIDATION, RestMethod.POST, request,
           response);
-      if (check == null) {
+      if (Objects.isNull(check)) {
         eventManager.emit(ServerEvent.HTTP_REQUEST_HANDLE, RestMethod.POST, request, response);
       }
     }
@@ -178,7 +177,7 @@ public final class ServletManager extends BaseServlet {
     protected void handleImpl(HttpServletRequest request, HttpServletResponse response) {
       var check = eventManager.emit(ServerEvent.HTTP_REQUEST_VALIDATION, RestMethod.PUT, request,
           response);
-      if (check == null) {
+      if (Objects.isNull(check)) {
         eventManager.emit(ServerEvent.HTTP_REQUEST_HANDLE, RestMethod.PUT, request, response);
       }
     }
@@ -191,7 +190,7 @@ public final class ServletManager extends BaseServlet {
     protected void handleImpl(HttpServletRequest request, HttpServletResponse response) {
       var check = eventManager.emit(ServerEvent.HTTP_REQUEST_VALIDATION, RestMethod.GET, request,
           response);
-      if (check == null) {
+      if (Objects.isNull(check)) {
         eventManager.emit(ServerEvent.HTTP_REQUEST_HANDLE, RestMethod.GET, request, response);
       }
     }
@@ -205,7 +204,7 @@ public final class ServletManager extends BaseServlet {
       var check =
           eventManager.emit(ServerEvent.HTTP_REQUEST_VALIDATION, RestMethod.DELETE, request,
               response);
-      if (check == null) {
+      if (Objects.isNull(check)) {
         eventManager.emit(ServerEvent.HTTP_REQUEST_HANDLE, RestMethod.DELETE, request, response);
       }
     }
