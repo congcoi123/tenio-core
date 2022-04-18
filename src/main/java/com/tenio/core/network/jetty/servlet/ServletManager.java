@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.network.jetty.servlet;
 
 import com.tenio.common.data.common.CommonMap;
+import com.tenio.common.logger.AbstractLogger;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
@@ -48,12 +49,31 @@ public final class ServletManager extends BaseServlet {
 
   private static final long serialVersionUID = -1971993446960398293L;
 
+  /**
+   * Event manager
+   */
   private final EventManager eventManager;
+  /**
+   * The class cannot extend {@link AbstractLogger} for logging, so it is necessary to create a
+   * private logger instance
+   */
   private final PrivateLogger logger;
 
+  /**
+   * Post process
+   */
   private ProcessPost processPost;
+  /**
+   * Put process
+   */
   private ProcessPut processPut;
+  /**
+   * Get process
+   */
   private ProcessGet processGet;
+  /**
+   * Delete process
+   */
   private ProcessDelete processDelete;
 
   /**

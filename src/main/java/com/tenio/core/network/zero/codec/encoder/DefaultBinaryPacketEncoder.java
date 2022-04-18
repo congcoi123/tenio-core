@@ -45,6 +45,9 @@ public final class DefaultBinaryPacketEncoder implements BinaryPacketEncoder {
   private BinaryPacketEncryptor encryptor;
   private int compressionThresholdBytes;
 
+  /**
+   * Initialization.
+   */
   public DefaultBinaryPacketEncoder() {
     compressionThresholdBytes = DEFAULT_COMPRESSION_THRESHOLD_BYTES;
   }

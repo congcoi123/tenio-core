@@ -273,14 +273,16 @@ public final class RoomImpl implements Room {
 
   @Override
   public List<Player> getReadonlyParticipantsList() {
-    return getReadonlyPlayersList().stream().filter(player -> player.getRoleInRoom() ==
-        PlayerRoleInRoom.PARTICIPANT).collect(Collectors.toList());
+    return getReadonlyPlayersList().stream()
+        .filter(player -> player.getRoleInRoom() == PlayerRoleInRoom.PARTICIPANT)
+        .collect(Collectors.toList());
   }
 
   @Override
   public List<Player> getReadonlySpectatorsList() {
-    return getReadonlyPlayersList().stream().filter(player -> player.getRoleInRoom() ==
-        PlayerRoleInRoom.SPECTATOR).collect(Collectors.toList());
+    return getReadonlyPlayersList().stream()
+        .filter(player -> player.getRoleInRoom() == PlayerRoleInRoom.SPECTATOR)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -435,8 +437,8 @@ public final class RoomImpl implements Room {
 
   @Override
   public String toString() {
-    return String.format("{ id: %d, name: %s, password: %s, max participants: %d, max spectator: " +
-            "%d }", id, name != null ? name : "null", password != null ? password : "null",
+    return String.format("{ id: %d, name: %s, password: %s, max participants: %d, max spectator: "
+            + "%d }", id, name != null ? name : "null", password != null ? password : "null",
         maxParticipants, maxSpectators);
   }
 

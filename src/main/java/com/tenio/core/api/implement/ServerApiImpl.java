@@ -52,6 +52,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * An implementation for Server APIs.
+ */
 public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
   private final Server server;

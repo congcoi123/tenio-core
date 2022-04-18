@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.jetty.servlet.support;
 
+import com.tenio.common.logger.AbstractLogger;
 import com.tenio.common.logger.SystemLogger;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -38,6 +39,10 @@ public abstract class BaseServlet extends HttpServlet {
 
   private static final long serialVersionUID = -5030886807666928581L;
 
+  /**
+   * The class cannot extend {@link AbstractLogger} for logging, so it is necessary to create a
+   * private logger instance
+   */
   private final PrivateLogger logger = new PrivateLogger();
 
   /**

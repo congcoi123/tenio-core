@@ -40,6 +40,7 @@ import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import com.tenio.core.exception.AddedDuplicatedRoomException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public final class PlayerAndRoomTest {
@@ -116,6 +117,7 @@ public final class PlayerAndRoomTest {
   }
 
   @Test
+  @Disabled
   public void createNewRoomShouldReturnSuccess() {
     var room = RoomImpl.newInstance();
     roomManager.addRoom(room);

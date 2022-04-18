@@ -43,7 +43,7 @@ public interface BinaryPacketDecoder {
   void decode(Session session, byte[] data) throws RuntimeException;
 
   /**
-   * Sets the listener for packet decoder handler
+   * Sets the listener for packet decoder handler.
    *
    * @param resultListener the {@link PacketDecoderResultListener} instance
    */

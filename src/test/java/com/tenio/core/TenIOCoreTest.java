@@ -33,7 +33,15 @@ import org.junit.runner.RunWith;
 // @Suite
 @SuiteDisplayName("Test all unit test cases for tenio-core module")
 @SelectPackages({
-    "com.tenio.core"
+    "com.tenio.core.api",
+    "com.tenio.core.bootstrap",
+    "com.tenio.core.configuration",
+    "com.tenio.core.controller",
+    "com.tenio.core.entity",
+    "com.tenio.core.event",
+    "com.tenio.core.monitoring",
+    "com.tenio.core.network",
+    "com.tenio.core.server"
 })
-public final class TenIOCoreTest {
+class TenIOCoreTest {
 }

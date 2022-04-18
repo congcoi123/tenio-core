@@ -51,7 +51,7 @@ public interface EventConnectionEstablishedResult {
    *                then the established session should close. However, before it is closed, the
    *                session could be used to send responses to the client side.
    * @see ServerEvent#CONNECTION_ESTABLISHED_RESULT
-   * @see Response#write(List)
+   * @see Response#setRecipientSession(Session)
    * @see Session#close()
    */
   void handle(Session session, ServerMessage message, ConnectionEstablishedResult result);

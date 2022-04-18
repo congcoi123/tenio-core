@@ -53,6 +53,7 @@ public final class EventManager extends SystemLogger {
 
   /**
    * Initialization.
+   *
    * @return an instance of {@link EventManager}
    */
   public static EventManager newInstance() {

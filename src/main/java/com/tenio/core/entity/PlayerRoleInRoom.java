@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.entity;
 
 /**
- * Definitions of a player role when it is in a room
+ * Definitions of a player role when it is in a room.
  */
 public enum PlayerRoleInRoom {
   /**

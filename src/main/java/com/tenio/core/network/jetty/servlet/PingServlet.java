@@ -40,6 +40,9 @@ public final class PingServlet extends HttpServlet {
 
   private static final long serialVersionUID = 5999711002391728401L;
 
+  /**
+   * Create a new instance of {@link Process}
+   */
   private final Process process = new Process();
 
   @Override
