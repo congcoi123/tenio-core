@@ -24,5 +24,5 @@ THE SOFTWARE.
 
 package com.tenio.core.controller;
 
-public final class ControllerTest {
+class ControllerTest {
 }

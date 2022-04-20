@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.exception;
 
 import com.tenio.core.entity.Room;
+import java.util.Objects;
 
 /**
  * When the server tries to eliminate a non-existing player from a room.
@@ -40,7 +41,7 @@ public final class RemovedNonExistentPlayerFromRoomException extends RuntimeExce
    * @param room           the {@link Room} instance
    */
   public RemovedNonExistentPlayerFromRoomException(Object playerIdentity, Room room) {
-    super(room == null
+    super(Objects.isNull(room)
         ? String.format("Unable to remove player: %s, the player did not exist",
         playerIdentity.toString())
         : String.format("Unable to remove player: %s, the player did not exist in room: %s",
@@ -53,7 +54,7 @@ public final class RemovedNonExistentPlayerFromRoomException extends RuntimeExce
    * @param room the {@link Room} instance
    */
   public RemovedNonExistentPlayerFromRoomException(Room room) {
-    super(room == null ? "Unable to remove player, the player did not exist"
+    super(Objects.isNull(room) ? "Unable to remove player, the player did not exist"
         : String.format("Unable to remove player, the player did not exist in room: %s",
         room.getName()));
   }

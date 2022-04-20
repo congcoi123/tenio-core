@@ -39,22 +39,22 @@ public interface RoomPlayerSlotGeneratedStrategy {
   /**
    * Retrieves a free slot available for a participant in the room.
    *
-   * @return a position (<code>integer</code> value) of slot if available, otherwise
-   * <code>-1</code> should be used
+   * @return a position ({@code integer} value) of slot if available, otherwise
+   * {@code -1} should be used
    */
   int getFreePlayerSlotInRoom();
 
   /**
    * Frees a participant's slot when the player left the room.
    *
-   * @param slot the player's slot position (<code>integer</code> value) before it leave the room
+   * @param slot the player's slot position ({@code integer} value) before it leave the room
    */
   void freeSlotWhenPlayerLeft(int slot);
 
   /**
    * When a new player wants to join the room, and it tries to acquire a slot.
    *
-   * @param slot an <code>integer</code> value of slot position
+   * @param slot an {@code integer} value of slot position
    * @throws IllegalArgumentException when the required slot value is invalid
    */
   void tryTakeSlot(int slot) throws IllegalArgumentException;

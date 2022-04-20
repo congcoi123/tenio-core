@@ -56,7 +56,7 @@ public final class NetworkWriterStatistic {
   /**
    * Updates the number of sent bytes data to clients side.
    *
-   * @param numberBytes <code>long</code> value, the number of sent bytes data to clients side
+   * @param numberBytes {@code long} value, the number of sent bytes data to clients side
    */
   public void updateWrittenBytes(long numberBytes) {
     writtenBytes.addAndGet(numberBytes);
@@ -65,7 +65,7 @@ public final class NetworkWriterStatistic {
   /**
    * Updates the number of sent packets to clients side.
    *
-   * @param numberPackets <code>long</code> value, the number of sent packets to clients side
+   * @param numberPackets {@code long} value, the number of sent packets to clients side
    */
   public void updateWrittenPackets(long numberPackets) {
     writtenPackets.addAndGet(numberPackets);
@@ -75,7 +75,7 @@ public final class NetworkWriterStatistic {
    * Updates the number of dropped packets which violated policies and not be able to send to
    * clients side.
    *
-   * @param numberPackets <code>long</code> value, the number of dropped packets which violated
+   * @param numberPackets {@code long} value, the number of dropped packets which violated
    *                      policies
    * @see PacketQueuePolicy
    */
@@ -87,7 +87,7 @@ public final class NetworkWriterStatistic {
    * Updates the number of dropped packets which cannot append to a full queue and not be able to
    * send to clients side.
    *
-   * @param numberPackets <code>long</code> value, the number of dropped packets which cannot
+   * @param numberPackets {@code long} value, the number of dropped packets which cannot
    *                      append to the full queue
    * @see PacketQueuePolicy
    */
@@ -98,7 +98,7 @@ public final class NetworkWriterStatistic {
   /**
    * Retrieves the current number of sending bytes data to clients side.
    *
-   * @return <code>long</code> value, the current number of sending bytes data to clients side
+   * @return {@code long} value, the current number of sending bytes data to clients side
    */
   public long getWrittenBytes() {
     return writtenBytes.longValue();
@@ -107,7 +107,7 @@ public final class NetworkWriterStatistic {
   /**
    * Retrieves the current number of sending packets to clients side.
    *
-   * @return <code>long</code> value, the current number of sending packets to clients side
+   * @return {@code long} value, the current number of sending packets to clients side
    */
   public long getWrittenPackets() {
     return writtenPackets.longValue();
@@ -117,7 +117,7 @@ public final class NetworkWriterStatistic {
    * Retrieves the current number of dropped packets which violated policies and not be able to
    * send to clients side.
    *
-   * @return <code>long</code> value, the number of dropped packets which violated policies
+   * @return {@code long} value, the number of dropped packets which violated policies
    * @see PacketQueuePolicy
    */
   public long getWrittenDroppedPacketsByPolicy() {

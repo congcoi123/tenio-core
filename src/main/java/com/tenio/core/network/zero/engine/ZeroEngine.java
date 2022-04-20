@@ -80,28 +80,28 @@ public interface ZeroEngine extends Service, ServiceListener {
   /**
    * Retrieves the thread pool size.
    *
-   * @return the thread pool size (<code>integer</code> value)
+   * @return the thread pool size ({@code integer} value)
    */
   int getThreadPoolSize();
 
   /**
    * Sets the thread pool size.
    *
-   * @param maxSize the thread pool size (<code>integer</code> value)
+   * @param maxSize the thread pool size ({@code integer} value)
    */
   void setThreadPoolSize(int maxSize);
 
   /**
    * Retrieves the maximum value of buffer size.
    *
-   * @return the maximum value buffer size (<code>integer</code> value)
+   * @return the maximum value buffer size ({@code integer} value)
    */
   int getMaxBufferSize();
 
   /**
    * Sets the maximum value of buffer size.
    *
-   * @param maxSize the maximum value buffer size (<code>integer</code> value)
+   * @param maxSize the maximum value buffer size ({@code integer} value)
    */
   void setMaxBufferSize(int maxSize);
 }

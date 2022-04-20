@@ -126,7 +126,7 @@ public final class PacketQueueImpl implements PacketQueue {
   public void clear() {
     synchronized (queue) {
       queue.clear();
-      size = queue.size();
+      size = 0;
     }
   }
 

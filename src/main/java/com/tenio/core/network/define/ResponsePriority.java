@@ -71,7 +71,7 @@ public enum ResponsePriority {
   /**
    * Retrieves the response's priority in numeric value.
    *
-   * @return the response's priority in <code>integer</code> numeric value
+   * @return the response's priority in {@code integer} numeric value
    */
   public final int getValue() {
     return value;

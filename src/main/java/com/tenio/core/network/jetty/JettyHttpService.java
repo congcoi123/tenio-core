@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.eclipse.jetty.server.Server;
@@ -155,7 +156,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     executorService.execute(this);
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      if (executorService != null && !executorService.isShutdown()) {
+      if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
         try {
           shutdown();
         } catch (Exception e) {
@@ -174,12 +175,13 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     try {
       server.stop();
       executorService.shutdownNow();
+
+      info("STOPPED SERVICE", buildgen(getName(), " (", 1, ")"));
+      destroy();
+      info("DESTROYED SERVICE", buildgen(getName(), " (", 1, ")"));
     } catch (Exception e) {
       error(e);
     }
-    info("STOPPED SERVICE", buildgen(getName(), " (", 1, ")"));
-    destroy();
-    info("DESTROYED SERVICE", buildgen(getName(), " (", 1, ")"));
   }
 
   private void destroy() {

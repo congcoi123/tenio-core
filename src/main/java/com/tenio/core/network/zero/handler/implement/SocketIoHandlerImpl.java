@@ -37,6 +37,7 @@ import com.tenio.core.network.zero.handler.SocketIoHandler;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.Objects;
 
 /**
  * The implementation for socket IO handler.
@@ -90,7 +91,7 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
   @Override
   public void channelInactive(SocketChannel socketChannel) {
     var session = sessionManager.getSessionBySocket(socketChannel);
-    if (session == null) {
+    if (Objects.isNull(session)) {
       return;
     }
 

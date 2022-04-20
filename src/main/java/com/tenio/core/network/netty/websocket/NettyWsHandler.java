@@ -39,6 +39,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * Receive all messages sent from clients side. It converts serialize data to a system's object
@@ -89,7 +90,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelInactive(ChannelHandlerContext ctx) {
     var session = sessionManager.getSessionByWebSocket(ctx.channel());
-    if (session == null) {
+    if (Objects.isNull(session)) {
       return;
     }
 
@@ -113,7 +114,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
 
       var session = sessionManager.getSessionByWebSocket(ctx.channel());
 
-      if (session == null) {
+      if (Objects.isNull(session)) {
         logger.debug("WEBSOCKET READ CHANNEL",
             "Reader handle a null session with the web socket channel: ",
             ctx.channel().toString());
@@ -138,7 +139,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
     var session = sessionManager.getSessionByWebSocket(ctx.channel());
-    if (session != null) {
+    if (Objects.nonNull(session)) {
       logger.error(cause, "Session: ", session.toString());
       eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, cause);
     } else {

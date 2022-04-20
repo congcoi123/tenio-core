@@ -28,6 +28,7 @@ import com.tenio.common.logger.SystemLogger;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.Security;
+import java.util.Objects;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 
@@ -53,7 +54,7 @@ public final class WebSocketSslContext extends SystemLogger {
 
     try {
       var algorithm = Security.getProperty(KEY_MANAGER_FACTORY_ALGORITHM);
-      if (algorithm == null) {
+      if (Objects.isNull(algorithm)) {
         algorithm = DEFAULT_ALGORITHM;
       }
 

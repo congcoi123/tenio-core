@@ -52,7 +52,7 @@ public final class ServerMessage {
   /**
    * Retrieves the created timestamp for the message in milliseconds.
    *
-   * @return the created timestamp in milliseconds (<code>long</code> value)
+   * @return the created timestamp in milliseconds ({@code long} value)
    */
   public long getCreatedTimestamp() {
     return createdTimestamp;

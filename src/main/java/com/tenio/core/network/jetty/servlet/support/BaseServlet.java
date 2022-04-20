@@ -28,6 +28,7 @@ import com.tenio.common.logger.AbstractLogger;
 import com.tenio.common.logger.SystemLogger;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Objects;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import org.json.JSONObject;
@@ -50,12 +51,12 @@ public abstract class BaseServlet extends HttpServlet {
    *
    * @param request an instance of {@link HttpServletRequest}
    * @param key     the checking {@link String} key
-   * @return <code>true</code> if the key is available in the request's header,
-   * <code>false</code> otherwise
+   * @return {@code true} if the key is available in the request's header,
+   * {@code false} otherwise
    */
   protected boolean hasHeaderKey(HttpServletRequest request, String key) {
     var headerNames = request.getHeaderNames();
-    if (headerNames != null) {
+    if (Objects.nonNull(headerNames)) {
       while (headerNames.hasMoreElements()) {
         if (headerNames.nextElement().equals(key)) {
           return true;
@@ -89,7 +90,7 @@ public abstract class BaseServlet extends HttpServlet {
         // swallow silently -- can't get body, won't
         logger.error(e);
       } finally {
-        if (bufferedReader != null) {
+        if (Objects.nonNull(bufferedReader)) {
           try {
             bufferedReader.close();
           } catch (IOException e) {

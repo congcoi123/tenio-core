@@ -41,21 +41,21 @@ public interface EventFetchedBandwidthInfo {
    * Fetches the bandwidth information on the server. The information should be frequently
    * updated every interval time.
    *
-   * @param readBytes                     <code>long</code> value, the current total number of
+   * @param readBytes                     {@code long} value, the current total number of
    *                                      read binary data from clients side
-   * @param readPackets                   <code>long</code> value, the current total number of
+   * @param readPackets                   {@code long} value, the current total number of
    *                                      read packets from clients side
-   * @param readDroppedPackets            <code>long</code> value, the current total number of
+   * @param readDroppedPackets            {@code long} value, the current total number of
    *                                      dropped packets sent from clients side which violated
    *                                      request queue policies and could not be processed
-   * @param writtenBytes                  <code>long</code> value, the current total number of
+   * @param writtenBytes                  {@code long} value, the current total number of
    *                                      sending binary data to clients side
-   * @param writtenPackets                <code>long</code> value, the current total number of
+   * @param writtenPackets                {@code long} value, the current total number of
    *                                      sending packets to clients side
-   * @param writtenDroppedPacketsByPolicy <code>long</code> value, the current total number of
+   * @param writtenDroppedPacketsByPolicy {@code long} value, the current total number of
    *                                      dropped packets which could not sent to clients side
    *                                      because they violated the packet queue policies
-   * @param writtenDroppedPacketsByFull   <code>long</code> value, the current total number of
+   * @param writtenDroppedPacketsByFull   {@code long} value, the current total number of
    *                                      dropped packets which could not sent to clients side
    *                                      because packet queue is full and could not hold any
    *                                      written packet

@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.network.zero.codec.packet;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 /**
  * Holds a pending packet for the next steps.
@@ -86,7 +87,7 @@ public final class PendingPacket {
   /**
    * Retrieves the expected length of packet's data.
    *
-   * @return the expected length of packet's data (<code>integer</code> value)
+   * @return the expected length of packet's data ({@code integer} value)
    */
   public int getExpectedLength() {
     return expectedLength;
@@ -95,7 +96,7 @@ public final class PendingPacket {
   /**
    * Sets the expected length for the packet's data.
    *
-   * @param expectedLength the expected length of packet's data (<code>integer</code> value)
+   * @param expectedLength the expected length of packet's data ({@code integer} value)
    */
   public void setExpectedLength(int expectedLength) {
     this.expectedLength = expectedLength;
@@ -104,7 +105,7 @@ public final class PendingPacket {
   @Override
   public String toString() {
     return String.format("{ packetHeader: %s, expectedLength: %d }",
-        packetHeader != null ? packetHeader.toString() : "null",
+        Objects.nonNull(packetHeader) ? packetHeader.toString() : "null",
         expectedLength);
   }
 }

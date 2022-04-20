@@ -40,6 +40,7 @@ import com.tenio.core.network.entity.session.Session;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -137,7 +138,7 @@ public final class RoomImpl implements Room {
 
   @Override
   public boolean isPublic() {
-    return password == null;
+    return Objects.isNull(password);
   }
 
   @Override
@@ -438,7 +439,7 @@ public final class RoomImpl implements Room {
   @Override
   public String toString() {
     return String.format("{ id: %d, name: %s, password: %s, max participants: %d, max spectator: "
-            + "%d }", id, name != null ? name : "null", password != null ? password : "null",
+            + "%d }", id, Objects.nonNull(name) ? name : "null", Objects.nonNull(password) ? password : "null",
         maxParticipants, maxSpectators);
   }
 

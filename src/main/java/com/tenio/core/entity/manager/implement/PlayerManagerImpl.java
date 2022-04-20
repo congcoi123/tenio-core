@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -93,7 +94,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   @Override
   public Player createPlayerWithSession(String name, Session session) {
-    if (session == null) {
+    if (Objects.isNull(session)) {
       throw new NullPointerException("Unable to assign a null session for the player");
     }
 
@@ -151,7 +152,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public void removePlayerByName(String playerName) {
     var player = getPlayerByName(playerName);
-    if (player == null) {
+    if (Objects.isNull(player)) {
       throw new RemovedNonExistentPlayerFromRoomException(playerName, ownerRoom);
     }
 
@@ -161,7 +162,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public void removePlayerBySession(Session session) {
     var player = getPlayerBySession(session);
-    if (player == null) {
+    if (Objects.isNull(player)) {
       throw new RemovedNonExistentPlayerFromRoomException(session.toString(), ownerRoom);
     }
 
@@ -172,7 +173,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     synchronized (this) {
       playerByNames.remove(player.getName());
       if (player.containsSession()) {
-        playerBySessions.remove(player.getSession());
+        playerBySessions.remove(player.getSession().get());
       }
       playerCount = playerByNames.size();
     }

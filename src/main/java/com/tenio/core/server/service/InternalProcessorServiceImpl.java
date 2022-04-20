@@ -40,6 +40,7 @@ import com.tenio.core.network.entity.session.Session;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -160,20 +161,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
     }
 
     // check reconnected case
-    if (player != null) {
-      if (!(player instanceof Player)) {
-        var castException = new ClassCastException(
-            String.format("Unable to cast the object: %s to class Player", player.toString()));
-        error(castException);
-        eventManager.emit(ServerEvent.SERVER_EXCEPTION, castException);
-        eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player,
-            PlayerReconnectedResult.INVALID_PLAYER_FORMAT);
-      } else {
-        session.setName(player.getName());
-        player.setSession(session);
-        eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player,
-            PlayerReconnectedResult.SUCCESS);
-      }
+    if (Objects.nonNull(player)) {
+      session.setName(player.getName());
+      player.setSession(session);
+      eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player,
+          PlayerReconnectedResult.SUCCESS);
       // check new reconnection
     } else {
       // check the number of current players
@@ -202,7 +194,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
     var player = playerManager.getPlayerBySession(session);
     // the player maybe existed
-    if (player != null) {
+    if (Objects.nonNull(player)) {
       eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerClosedMode);
       player.setSession(null);
       if (!keepPlayerOnDisconnection) {
@@ -217,7 +209,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     var session = request.getSender();
 
     var player = playerManager.getPlayerBySession(session);
-    if (player == null) {
+    if (Objects.isNull(player)) {
       var illegalValueException = new IllegalArgumentException(
           String.format("Unable to find player for the session: %s", session.toString()));
       error(illegalValueException);

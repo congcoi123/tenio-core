@@ -36,7 +36,7 @@ public final class RequestQueueFullException extends RuntimeException {
   /**
    * Creates a new exception.
    *
-   * @param currentSize the current size of the queue (<code>integer</code> value)
+   * @param currentSize the current size of the queue ({@code integer} value)
    * @see AbstractController
    */
   public RequestQueueFullException(int currentSize) {

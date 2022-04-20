@@ -31,6 +31,7 @@ import com.tenio.core.entity.PlayerState;
 import com.tenio.core.entity.Room;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -156,7 +157,7 @@ public final class PlayerImpl implements Player {
   @Override
   public void setSession(Session session) {
     this.session = session;
-    hasSession = this.session != null;
+    hasSession = Objects.nonNull(this.session);
   }
 
   @Override
@@ -182,7 +183,7 @@ public final class PlayerImpl implements Player {
   @Override
   public void setCurrentRoom(Room room) {
     currentRoom = room;
-    if (currentRoom == null) {
+    if (Objects.isNull(currentRoom)) {
       playerSlotInCurrentRoom = RoomImpl.NIL_SLOT;
     } else {
       playerSlotInCurrentRoom = RoomImpl.DEFAULT_SLOT;
@@ -256,13 +257,13 @@ public final class PlayerImpl implements Player {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((name == null) ? 0 : name.hashCode());
+    result = prime * result + (Objects.isNull(name) ? 0 : name.hashCode());
     return result;
   }
 
   @Override
   public String toString() {
     return String.format("{ name: %s, session: %b, loggedIn: %b, role: %s, activated: %b }",
-        name != null ? name : "null", hasSession, loggedIn, roleInRoom.name(), activated);
+        Objects.nonNull(name) ? name : "null", hasSession, loggedIn, roleInRoom.name(), activated);
   }
 }

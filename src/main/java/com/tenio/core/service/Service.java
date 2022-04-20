@@ -53,7 +53,7 @@ public interface Service {
   /**
    * Determines whether the service is activated.
    *
-   * @return <b>true</b> if the service is activated, <b>false</b> otherwise
+   * @return {@code true} if the service is activated, {@code false} otherwise
    */
   boolean isActivated();
 

@@ -40,7 +40,7 @@ public final class PacketQueuePolicyViolationException extends RuntimeException 
    * Creates a new exception.
    *
    * @param packet         the dropping {@link Packet}
-   * @param percentageUsed the current usage of queue in percent (<code>float</code> value)
+   * @param percentageUsed the current usage of queue in percent ({@code float} value)
    * @see PacketQueue
    * @see PacketQueuePolicy
    */

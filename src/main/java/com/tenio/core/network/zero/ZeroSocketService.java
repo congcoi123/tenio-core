@@ -45,7 +45,7 @@ public interface ZeroSocketService extends Service {
    * Sets size of {@link ByteBuffer} using for an acceptor worker to read/write binaries data
    * from/down.
    *
-   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for
+   * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for
    *                   reading/writing binaries data
    */
   void setAcceptorBufferSize(int bufferSize);
@@ -54,7 +54,7 @@ public interface ZeroSocketService extends Service {
    * Sets the number of acceptor workers for the socket (TCP) which are using to accept new coming
    * clients.
    *
-   * @param workerSize the number of acceptor workers for the socket (<code>integer</code> value)
+   * @param workerSize the number of acceptor workers for the socket ({@code integer} value)
    */
   void setAcceptorWorkerSize(int workerSize);
 
@@ -62,7 +62,7 @@ public interface ZeroSocketService extends Service {
    * Sets size of {@link ByteBuffer} using for a reader worker to read/write binaries data
    * from/down.
    *
-   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for
+   * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for
    *                   reading/writing binaries data
    */
   void setReaderBufferSize(int bufferSize);
@@ -71,7 +71,7 @@ public interface ZeroSocketService extends Service {
    * Sets the number of reader workers for the socket (TCP) which are using to read coming packets
    * from clients side.
    *
-   * @param workerSize the number of reader workers for the socket (<code>integer</code> value)
+   * @param workerSize the number of reader workers for the socket ({@code integer} value)
    */
   void setReaderWorkerSize(int workerSize);
 
@@ -79,7 +79,7 @@ public interface ZeroSocketService extends Service {
    * Sets size of {@link ByteBuffer} using for a writer worker to read/write binaries data
    * from/down.
    *
-   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for
+   * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for
    *                   reading/writing binaries data
    */
   void setWriterBufferSize(int bufferSize);
@@ -88,7 +88,7 @@ public interface ZeroSocketService extends Service {
    * Sets the number of writer workers for the socket (TCP) which are using to send packets to
    * clients side.
    *
-   * @param workerSize the number of writer workers for the socket (<code>integer</code> value)
+   * @param workerSize the number of writer workers for the socket ({@code integer} value)
    */
   void setWriterWorkerSize(int workerSize);
 

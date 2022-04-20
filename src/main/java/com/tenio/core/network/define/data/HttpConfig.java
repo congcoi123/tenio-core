@@ -42,10 +42,10 @@ public final class HttpConfig {
    * Initialization.
    *
    * @param name a {@link String} configuration name
-   * @param port an associated port (<code>integer</code> value)
+   * @param port an associated port ({@code integer} value)
    */
   public HttpConfig(String name, int port) {
-    paths = new ArrayList<PathConfig>();
+    paths = new ArrayList<>();
     this.name = name;
     this.port = port;
   }
@@ -85,7 +85,7 @@ public final class HttpConfig {
   /**
    * Retrieves the port number.
    *
-   * @return the port number (<code>integer</code> value)
+   * @return the port number ({@code integer} value)
    */
   public int getPort() {
     return port;

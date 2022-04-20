@@ -59,7 +59,7 @@ public enum RequestPriority {
   /**
    * Retrieves a numeric value of a request's priority.
    *
-   * @return the <code>integer</code> value of a request's priority
+   * @return the {@code integer} value of a request's priority
    */
   public final int getValue() {
     return value;

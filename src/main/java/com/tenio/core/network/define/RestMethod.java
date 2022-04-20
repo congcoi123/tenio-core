@@ -68,7 +68,7 @@ public enum RestMethod {
    * Retrieves the REST method by looking at its value.
    *
    * @param value the corresponding {@link String} value of REST method
-   * @return the corresponding {@link RestMethod} if it is available, otherwise <code>null</code>
+   * @return the corresponding {@link RestMethod} if it is available, otherwise {@code null}
    */
   public static RestMethod getByValue(String value) {
     return lookup.get(value);

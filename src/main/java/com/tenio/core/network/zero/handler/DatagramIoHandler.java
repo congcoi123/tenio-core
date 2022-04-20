@@ -37,7 +37,7 @@ public interface DatagramIoHandler extends BaseIoHandler {
    *
    * @param datagramChannel a {@link DatagramChannel} created on the server
    * @param remoteAddress   a remote {@link SocketAddress} of client side
-   * @param binary          an array of <code>byte</code> data sent by client side
+   * @param binary          an array of {@code byte} data sent by client side
    */
   void channelRead(DatagramChannel datagramChannel, SocketAddress remoteAddress, byte[] binary);
 

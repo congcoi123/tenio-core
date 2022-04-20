@@ -35,7 +35,7 @@ public interface PacketDecoderResultListener {
    * The final binary data processed by the session.
    *
    * @param session the processing {@link Session}
-   * @param binary  the processed <code>byte</code> data
+   * @param binary  the processed {@code byte} data
    */
   void resultFrame(Session session, byte[] binary);
 
@@ -43,14 +43,14 @@ public interface PacketDecoderResultListener {
    * Updates the current number of refused packets from clients side which violated the policies.
    *
    * @param numberPackets the additional packets refused to handle from clients side
-   *                      (<code>long</code> value)
+   *                      ({@code long} value)
    */
   void updateReadDroppedPackets(long numberPackets);
 
   /**
    * Updates the current number of received packets from clients side.
    *
-   * @param numberPackets the additional packets received from client sides (<code>long</code>
+   * @param numberPackets the additional packets received from client sides ({@code long}
    *                      value)
    */
   void updateReadPackets(long numberPackets);

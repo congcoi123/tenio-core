@@ -43,14 +43,14 @@ public interface RoomManager extends Manager {
   /**
    * Retrieves the maximum number of rooms on the server.
    *
-   * @return the maximum number of room on the server (<code>integer</code> value)
+   * @return the maximum number of room on the server ({@code integer} value)
    */
   int getMaxRooms();
 
   /**
    * Sets the maximum number of room on the server.
    *
-   * @param maxRooms the maximum number of rooms (<code>integer</code> value)
+   * @param maxRooms the maximum number of rooms ({@code integer} value)
    */
   void setMaxRooms(int maxRooms);
 
@@ -90,8 +90,8 @@ public interface RoomManager extends Manager {
   /**
    * Determines whether a room is in the management list by looking for its unique ID.
    *
-   * @param roomId the <code>long</code> value of room's ID
-   * @return <code>true</code> if the searching room is available, otherwise <code>false</code>
+   * @param roomId the {@code long} value of room's ID
+   * @return {@code true} if the searching room is available, otherwise returns {@code false}
    */
   boolean containsRoomId(long roomId);
 
@@ -99,15 +99,15 @@ public interface RoomManager extends Manager {
    * Determines whether a room is in the management list by looking for its name.
    *
    * @param roomName the {@link String} value room's name
-   * @return <code>true</code> if the searching room is available, otherwise <code>false</code>
+   * @return {@code true} if the searching room is available, otherwise returns {@code false}
    */
   boolean containsRoomName(String roomName);
 
   /**
    * Retrieves a room instance by looking for its unique ID.
    *
-   * @param roomId the <code>long</code> value of room's ID
-   * @return an instance of {@link Room} if present, otherwise <code>null</code>
+   * @param roomId the {@code long} value of room's ID
+   * @return an instance of {@link Room} if present, otherwise {@code null}
    */
   Room getRoomById(long roomId);
 
@@ -141,7 +141,7 @@ public interface RoomManager extends Manager {
   /**
    * Removes a room from the management list.
    *
-   * @param roomId the unique <code>long</code> room's ID
+   * @param roomId the unique {@code long} room's ID
    */
   void removeRoomById(long roomId);
 
@@ -170,9 +170,9 @@ public interface RoomManager extends Manager {
    *
    * @param room          the updating {@link Room}
    * @param maxParticipants    the maximum number of participants allows in the room
-   *                           (<code>integer</code> value)
+   *                           ({@code integer} value)
    * @param maxSpectators the maximum number of spectators allows in the room
-   *                      (<code>integer</code> value)
+   *                      ({@code integer} value)
    * @throws IllegalArgumentException when invalid value is set
    */
   void changeRoomCapacity(Room room, int maxParticipants, int maxSpectators)
@@ -181,7 +181,7 @@ public interface RoomManager extends Manager {
   /**
    * Fetches the current number of rooms in the management list.
    *
-   * @return the current number of rooms (<code>integer</code> value)
+   * @return the current number of rooms ({@code integer} value)
    */
   int getRoomCount();
 

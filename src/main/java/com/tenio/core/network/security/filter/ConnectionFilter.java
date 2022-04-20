@@ -77,7 +77,7 @@ public interface ConnectionFilter {
   /**
    * Sets the maximum number of connection allowed in a particular IP address.
    *
-   * @param maxConnections the maximum number of connection (<code>integer</code> value) allowed
+   * @param maxConnections the maximum number of connection ({@code integer} value) allowed
    *                       in a particular IP address
    */
   void setMaxConnectionsPerIp(int maxConnections);

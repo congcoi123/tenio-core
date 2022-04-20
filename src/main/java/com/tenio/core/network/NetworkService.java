@@ -50,7 +50,7 @@ public interface NetworkService extends Service {
   /**
    * Assigns a port number for the HTTP service.
    *
-   * @param port the number (<code>integer</code> value) for the HTTP service
+   * @param port the number ({@code integer} value) for the HTTP service
    */
   void setHttpPort(int port);
 
@@ -66,7 +66,7 @@ public interface NetworkService extends Service {
    * Sets an implementation class for the connection filter.
    *
    * @param clazz               an implementation class of {@link ConnectionFilter}
-   * @param maxConnectionsPerIp an <code>integer</code> value, the maximum number of connections
+   * @param maxConnectionsPerIp an {@code integer} value, the maximum number of connections
    *                            allowed in a same IP address
    * @throws InstantiationException    it is caused by
    *                                   Class#getDeclaredConstructor(Class[])#newInstance()
@@ -88,21 +88,21 @@ public interface NetworkService extends Service {
   /**
    * Sets the number of consumer workers for the WebSocket.
    *
-   * @param workerSize the number (<code>integer</code> value) of consumer workers for the WebSocket
+   * @param workerSize the number ({@code integer} value) of consumer workers for the WebSocket
    */
   void setWebSocketConsumerWorkers(int workerSize);
 
   /**
    * Sets the number of producer workers for the WebSocket.
    *
-   * @param workerSize the number (<code>integer</code> value) of producer workers for the WebSocket
+   * @param workerSize the number ({@code integer} value) of producer workers for the WebSocket
    */
   void setWebSocketProducerWorkers(int workerSize);
 
   /**
    * Sets size of {@link ByteBuffer} using for the WebSocket to write binaries data down.
    *
-   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for writing
+   * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for writing
    *                   binaries data
    */
   void setWebSocketSenderBufferSize(int bufferSize);
@@ -110,7 +110,7 @@ public interface NetworkService extends Service {
   /**
    * Sets size of {@link ByteBuffer} using for the WebSocket to read binaries data from.
    *
-   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for reading
+   * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for reading
    *                   binaries data
    */
   void setWebSocketReceiverBufferSize(int bufferSize);
@@ -118,7 +118,7 @@ public interface NetworkService extends Service {
   /**
    * Determines whether the WebSocket is able to use the SSL.
    *
-   * @param usingSsl sets to <code>true</code> in case of using SSL, otherwise <code>false</code>
+   * @param usingSsl sets to {@code true} in case of using SSL, otherwise returns {@code false}
    */
   void setWebSocketUsingSsl(boolean usingSsl);
 
@@ -126,7 +126,7 @@ public interface NetworkService extends Service {
    * Sets the number of acceptor workers for the socket (TCP) which are using to accept new coming
    * clients.
    *
-   * @param workerSize the number of acceptor workers for the socket (<code>integer</code> value)
+   * @param workerSize the number of acceptor workers for the socket ({@code integer} value)
    */
   void setSocketAcceptorWorkers(int workerSize);
 
@@ -134,7 +134,7 @@ public interface NetworkService extends Service {
    * Sets the number of reader workers for the socket (TCP) which are using to read coming packets
    * from clients side.
    *
-   * @param workerSize the number of reader workers for the socket (<code>integer</code> value)
+   * @param workerSize the number of reader workers for the socket ({@code integer} value)
    */
   void setSocketReaderWorkers(int workerSize);
 
@@ -142,7 +142,7 @@ public interface NetworkService extends Service {
    * Sets the number of writer workers for the socket (TCP) which are using to send packets to
    * clients side.
    *
-   * @param workerSize the number of writer workers for the socket (<code>integer</code> value)
+   * @param workerSize the number of writer workers for the socket ({@code integer} value)
    */
   void setSocketWriterWorkers(int workerSize);
 
@@ -150,7 +150,7 @@ public interface NetworkService extends Service {
    * Sets size of {@link ByteBuffer} using for an acceptor worker to read/write binaries data
    * from/down.
    *
-   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for
+   * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for
    *                   reading/writing binaries data
    */
   void setSocketAcceptorBufferSize(int bufferSize);
@@ -159,7 +159,7 @@ public interface NetworkService extends Service {
    * Sets size of {@link ByteBuffer} using for a reader worker to read/write binaries data
    * from/down.
    *
-   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for
+   * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for
    *                   reading/writing binaries data
    */
   void setSocketReaderBufferSize(int bufferSize);
@@ -168,7 +168,7 @@ public interface NetworkService extends Service {
    * Sets size of {@link ByteBuffer} using for a writer worker to read/write binaries data
    * from/down.
    *
-   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for
+   * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for
    *                   reading/writing binaries data
    */
   void setSocketWriterBufferSize(int bufferSize);
@@ -207,7 +207,7 @@ public interface NetworkService extends Service {
   /**
    * Sets the packet queue size.
    *
-   * @param queueSize the new size (<code>integer</code> value) for the packet queue
+   * @param queueSize the new size ({@code integer} value) for the packet queue
    * @see PacketQueue
    * @see PacketQueuePolicy
    */

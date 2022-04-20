@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.codec.packet;
 
+import java.util.Objects;
+
 /**
  * Holds the processed packet for the next steps.
  */
@@ -47,7 +49,7 @@ public final class ProcessedPacket {
   /**
    * Retrieves the current processing data in the packet.
    *
-   * @return the <code>byte</code> array, current processing data in the packet
+   * @return the {@code byte} array, current processing data in the packet
    */
   public byte[] getData() {
     return binary;
@@ -56,7 +58,7 @@ public final class ProcessedPacket {
   /**
    * Sets the current processing data in the packet.
    *
-   * @param binary the <code>byte</code> array, current processing data in the packet
+   * @param binary the {@code byte} array, current processing data in the packet
    */
   public void setData(byte[] binary) {
     this.binary = binary;
@@ -83,7 +85,7 @@ public final class ProcessedPacket {
   @Override
   public String toString() {
     return String.format("{ packetReadState: %s, data: bytes[%d] }",
-        packetReadState != null ? packetReadState.toString() : "null",
+        Objects.nonNull(packetReadState) ? packetReadState.toString() : "null",
         binary.length);
   }
 }

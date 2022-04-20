@@ -43,6 +43,7 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.Objects;
 import javassist.NotFoundException;
 
 /**
@@ -60,7 +61,6 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
   private ZeroReaderImpl(EventManager eventManager) {
     super(eventManager);
-
     setName("reader");
   }
 
@@ -82,9 +82,9 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   }
 
   private void readIncomingSocketData(ByteBuffer readerBuffer) {
-    SocketChannel socketChannel = null;
-    DatagramChannel datagramChannel = null;
-    SelectionKey selectionKey = null;
+    SocketChannel socketChannel;
+    DatagramChannel datagramChannel;
+    SelectionKey selectionKey;
 
     try {
       // blocks until at least one channel is ready for the events you registered for
@@ -138,7 +138,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     // retrieves session by its socket channel
     var session = getSessionManager().getSessionBySocket(socketChannel);
 
-    if (session == null) {
+    if (Objects.isNull(session)) {
       debug("READ CHANNEL", "Reader handle a null session with the socket channel: ",
           socketChannel.toString());
       return;
@@ -213,7 +213,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         getDatagramIoHandler().channelException(datagramChannel, e);
       }
 
-      if (remoteAddress == null) {
+      if (Objects.isNull(remoteAddress)) {
         var addressNotFoundException =
             new NotFoundException("Remove address for the datagram channel");
         error(addressNotFoundException, "An exception was occurred on channel: ",
@@ -237,7 +237,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
       // distinguish them
       session = getSessionManager().getSessionByDatagram(remoteAddress);
 
-      if (session == null) {
+      if (Objects.isNull(session)) {
         getDatagramIoHandler().channelRead(datagramChannel, remoteAddress, binary);
       } else {
         session.addReadBytes(byteCount);
@@ -245,7 +245,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
       }
     }
 
-    if (selectionKey.isWritable() && session != null) {
+    if (selectionKey.isWritable() && Objects.nonNull(session)) {
       // should continue put this session for sending all left packets first
       zeroWriterListener.continueWriteInterestOp(session);
       // now we should set it back to interest in OP_READ

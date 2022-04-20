@@ -81,7 +81,7 @@ public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> 
   }
 
   @Override
-  protected void initChannel(SocketChannel channel) throws Exception {
+  protected void initChannel(SocketChannel channel) {
     var pipeline = channel.pipeline();
 
     // add ssl handler

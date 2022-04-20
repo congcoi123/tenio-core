@@ -47,6 +47,7 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -147,10 +148,10 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
     }
     serverWebsockets.clear();
 
-    if (websocketAcceptors != null) {
+    if (Objects.nonNull(websocketAcceptors)) {
       websocketAcceptors.shutdownGracefully();
     }
-    if (websocketWorkers != null) {
+    if (Objects.nonNull(websocketWorkers)) {
       websocketWorkers.shutdownGracefully();
     }
 
@@ -171,10 +172,10 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
    * Close a channel, see {@link Channel}.
    *
    * @param channel the closed channel
-   * @return <b>true</b> if the channel is closed without any exceptions
+   * @return {@code true} if the channel is closed without any exceptions
    */
   private boolean close(Channel channel) {
-    if (channel == null) {
+    if (Objects.isNull(channel)) {
       return false;
     }
 

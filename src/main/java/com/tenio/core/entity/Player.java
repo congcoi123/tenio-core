@@ -42,7 +42,7 @@ public interface Player {
   /**
    * Determines whether the player contains a session.
    *
-   * @return <code>true</code> if the player contains a session, otherwise <code>false</code>
+   * @return {@code true} if the player contains a session, otherwise returns {@code false}
    */
   boolean containsSession();
 
@@ -50,7 +50,7 @@ public interface Player {
    * Determines whether the player is in a particular state.
    *
    * @param state a {@link PlayerState} is in judgment
-   * @return <code>true</code> if the player in that state, otherwise <code>false</code>
+   * @return {@code true} if the player in that state, otherwise returns {@code false}
    */
   boolean isState(PlayerState state);
 
@@ -71,7 +71,7 @@ public interface Player {
   /**
    * Determines whether the player is activated.
    *
-   * @return <code>true</code> if the player is activated, otherwise <code>false</code>
+   * @return {@code true} if the player is activated, otherwise returns {@code false}
    */
   boolean isActivated();
 
@@ -85,7 +85,7 @@ public interface Player {
   /**
    * Determines whether the player is logged in the server.
    *
-   * @return <code>true</code> if the player is logged, otherwise <code>false</code>
+   * @return {@code true} if the player is logged, otherwise returns {@code false}
    */
   boolean isLoggedIn();
 
@@ -99,7 +99,7 @@ public interface Player {
   /**
    * Retrieves the last logged in time in milliseconds of the player on the server.
    *
-   * @return a <code>long</code> milliseconds value
+   * @return a {@code long} milliseconds value
    */
   long getLastLoggedInTime();
 
@@ -121,7 +121,7 @@ public interface Player {
   /**
    * Determines whether the player is in a room.
    *
-   * @return <code>true</code> if the player is in a room, otherwise <code>false</code>
+   * @return {@code true} if the player is in a room, otherwise returns {@code false}
    */
   boolean isInRoom();
 
@@ -157,21 +157,21 @@ public interface Player {
   /**
    * Retrieves the last time the player left its room.
    *
-   * @return the milliseconds in <code>long</code> value
+   * @return the milliseconds in {@code long} value
    */
   long getLastJoinedRoomTime();
 
   /**
    * Retrieves the player's slot in its room.
    *
-   * @return the <code>integer</code> value of the player slot position
+   * @return the {@code integer} value of the player slot position
    */
   int getPlayerSlotInCurrentRoom();
 
   /**
    * Set a slot value for the player in its room.
    *
-   * @param slot the <code>integer</code> value of the player slot position
+   * @param slot the {@code integer} value of the player slot position
    */
   void setPlayerSlotInCurrentRoom(int slot);
 
@@ -179,7 +179,7 @@ public interface Player {
    * Retrieves a property belongs to the player.
    *
    * @param key the {@link String} key to fetch data
-   * @return an {@link Object} value if present, otherwise <code>null</code>
+   * @return an {@link Object} value if present, otherwise {@code null}
    */
   Object getProperty(String key);
 
@@ -195,7 +195,7 @@ public interface Player {
    * Determines whether a property is available for the player.
    *
    * @param key a {@link String} key used for searching the corresponding property
-   * @return <code>true</code> if the property is available, otherwise <code>false</code>
+   * @return {@code true} if the property is available, otherwise returns {@code false}
    */
   boolean containsProperty(String key);
 

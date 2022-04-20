@@ -40,7 +40,7 @@ public interface InternalProcessorService extends Controller {
   /**
    * Sets the maximum number of players allowed participating on the server.
    *
-   * @param maxPlayers <code>integer</code> value, the maximum number of players allowed
+   * @param maxPlayers {@code integer} value, the maximum number of players allowed
    *                   participating on the server
    */
   void setMaxNumberPlayers(int maxPlayers);
@@ -49,9 +49,9 @@ public interface InternalProcessorService extends Controller {
    * Determines if a player could be kept its connection when it is disconnected from the server
    * for a while.
    *
-   * @param keepPlayerOnDisconnection sets to <code>true</code> if a player could be kept its
+   * @param keepPlayerOnDisconnection sets to {@code true} if a player could be kept its
    *                                  connection when it is disconnected from the server for a
-   *                                  while, otherwise <code>false</code>
+   *                                  while, otherwise returns {@code false}
    */
   void setKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection);
 

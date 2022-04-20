@@ -41,7 +41,7 @@ public interface NettyWebSocketService extends Service {
   /**
    * Sets size of {@link ByteBuffer} using for the WebSocket to write binaries data down.
    *
-   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for writing
+   * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for writing
    *                   binaries data
    */
   void setSenderBufferSize(int bufferSize);
@@ -49,7 +49,7 @@ public interface NettyWebSocketService extends Service {
   /**
    * Sets size of {@link ByteBuffer} using for the WebSocket to read binaries data from.
    *
-   * @param bufferSize the size of {@link ByteBuffer} (<code>integer</code> value) for reading
+   * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for reading
    *                   binaries data
    */
   void setReceiverBufferSize(int bufferSize);
@@ -57,14 +57,14 @@ public interface NettyWebSocketService extends Service {
   /**
    * Sets the number of producer workers for the WebSocket.
    *
-   * @param workerSize the number (<code>integer</code> value) of producer workers for the WebSocket
+   * @param workerSize the number ({@code integer} value) of producer workers for the WebSocket
    */
   void setProducerWorkerSize(int workerSize);
 
   /**
    * Sets the number of consumer workers for the WebSocket.
    *
-   * @param workerSize the number (<code>integer</code> value) of consumer workers for the WebSocket
+   * @param workerSize the number ({@code integer} value) of consumer workers for the WebSocket
    */
   void setConsumerWorkerSize(int workerSize);
 
@@ -108,7 +108,7 @@ public interface NettyWebSocketService extends Service {
   /**
    * Determines whether the WebSocket is able to use the SSL.
    *
-   * @param usingSsl sets to <code>true</code> in case of using SSL, otherwise <code>false</code>
+   * @param usingSsl sets to {@code true} in case of using SSL, otherwise returns {@code false}
    */
   void setUsingSsl(boolean usingSsl);
 

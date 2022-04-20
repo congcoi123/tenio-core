@@ -39,7 +39,7 @@ public final class CodecUtility {
   /**
    * Decoding the header byte to find the packet header setting.
    *
-   * @param headerByte the first read <code>byte</code>
+   * @param headerByte the first read {@code byte}
    * @return the new instance of {@link PacketHeader}
    */
   public static PacketHeader decodeFirstHeaderByte(byte headerByte) {

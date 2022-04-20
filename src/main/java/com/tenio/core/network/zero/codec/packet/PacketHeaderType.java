@@ -68,7 +68,7 @@ public enum PacketHeaderType {
   /**
    * Retrieves the header type by using its value.
    *
-   * @param value the <code>integer</code> value of header type
+   * @param value the {@code integer} value of header type
    * @return the corresponding {@link PacketHeaderType}
    */
   public static PacketHeaderType getByValue(int value) {
@@ -78,7 +78,7 @@ public enum PacketHeaderType {
   /**
    * Retrieves the value of a header type.
    *
-   * @return the <code>integer</code> value of header type
+   * @return the {@code integer} value of header type
    */
   public final int getValue() {
     return value;

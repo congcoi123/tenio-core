@@ -34,8 +34,8 @@ public interface BinaryPacketCompressor {
   /**
    * Compresses an array of binary size into another smaller one.
    *
-   * @param binary an array of <code>byte</code>
-   * @return a new smaller size of <code>byte</code> array
+   * @param binary an array of {@code byte}
+   * @return a new smaller size of {@code byte} array
    * @throws PacketCompressorException when an exception occurred during the compression process
    */
   byte[] compress(byte[] binary) throws PacketCompressorException;
@@ -43,8 +43,8 @@ public interface BinaryPacketCompressor {
   /**
    * Uncompressed an array of binary and reverts it to the original one.
    *
-   * @param binary compressed array of <code>byte</code>
-   * @return the original data of <code>byte</code> array
+   * @param binary compressed array of {@code byte}
+   * @return the original data of {@code byte} array
    * @throws PacketCompressorException when an exception occurred during the compression process
    */
   byte[] uncompress(byte[] binary) throws PacketCompressorException;

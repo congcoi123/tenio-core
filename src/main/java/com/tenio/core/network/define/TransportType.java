@@ -72,7 +72,7 @@ public enum TransportType {
    * Retrieves the transportation type by looking at its value.
    *
    * @param value the corresponding {@link String} value of transportation type
-   * @return the corresponding {@link TransportType} if it is available, otherwise <code>null</code>
+   * @return the corresponding {@link TransportType} if it is available, otherwise {@code null}
    */
   public static TransportType getByValue(String value) {
     return lookup.get(value);

@@ -36,7 +36,7 @@ public final class PacketQueueFullException extends RuntimeException {
   /**
    * Creates a new exception.
    *
-   * @param currentSize the current size of the packet queue (<code>integer</code> value)
+   * @param currentSize the current size of the packet queue ({@code integer} value)
    * @see PacketQueue
    */
   public PacketQueueFullException(int currentSize) {
