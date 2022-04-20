@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The abstracted class for a controller.
@@ -44,7 +45,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
   private static final int DEFAULT_MAX_QUEUE_SIZE = 50;
   private static final int DEFAULT_NUMBER_WORKERS = 5;
 
-  private volatile int id;
+  private final AtomicInteger id;
   private String name;
 
   private ExecutorService executorService;
@@ -69,11 +70,12 @@ public abstract class AbstractController extends AbstractManager implements Cont
     executorSize = DEFAULT_NUMBER_WORKERS;
     activated = false;
     initialized = false;
+    id = new AtomicInteger();
   }
 
   private void initializeWorkers() {
     var requestComparator = RequestComparator.newInstance();
-    requestQueue = new PriorityBlockingQueue<Request>(maxQueueSize, requestComparator);
+    requestQueue = new PriorityBlockingQueue<>(maxQueueSize, requestComparator);
 
     executorService = Executors.newFixedThreadPool(executorSize);
     for (int i = 0; i < executorSize; i++) {
@@ -85,18 +87,15 @@ public abstract class AbstractController extends AbstractManager implements Cont
       executorService.execute(this);
     }
 
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override
-      public void run() {
-        if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
-          try {
-            attemptToShutdown();
-          } catch (Exception e) {
-            error(e);
-          }
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
+        try {
+          attemptToShutdown();
+        } catch (Exception e) {
+          error(e);
         }
       }
-    });
+    }));
   }
 
   private void attemptToShutdown() {
@@ -119,7 +118,6 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   @Override
   public void run() {
-    id++;
     setThreadName();
 
     while (true) {
@@ -127,10 +125,8 @@ public abstract class AbstractController extends AbstractManager implements Cont
         try {
           var request = requestQueue.take();
           processRequest(request);
-        } catch (InterruptedException e1) {
-          error(e1);
-        } catch (Throwable e2) {
-          error(e2);
+        } catch (Throwable e) {
+          error(e);
         }
       }
     }
@@ -144,7 +140,8 @@ public abstract class AbstractController extends AbstractManager implements Cont
   }
 
   private void setThreadName() {
-    Thread.currentThread().setName(StringUtility.strgen("controller-", getName(), "-", id));
+    Thread.currentThread()
+        .setName(StringUtility.strgen("controller-", getName(), "-", id.incrementAndGet()));
   }
 
   private void destroyController() {

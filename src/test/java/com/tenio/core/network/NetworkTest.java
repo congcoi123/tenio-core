@@ -24,5 +24,5 @@ THE SOFTWARE.
 
 package com.tenio.core.network;
 
-public final class NetworkTest {
+class NetworkTest {
 }

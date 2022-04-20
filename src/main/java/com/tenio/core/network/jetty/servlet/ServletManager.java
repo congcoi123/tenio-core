@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
@@ -107,8 +106,7 @@ public final class ServletManager extends BaseServlet {
   }
 
   @Override
-  protected void doGet(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException {
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     if (Objects.nonNull(processGet)) {
       processGet.handle(request, response);
     } else {
@@ -117,8 +115,7 @@ public final class ServletManager extends BaseServlet {
   }
 
   @Override
-  protected void doPost(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException {
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     if (Objects.nonNull(processPost)) {
       processPost.handle(request, response);
     } else {
@@ -127,8 +124,7 @@ public final class ServletManager extends BaseServlet {
   }
 
   @Override
-  protected void doPut(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException {
+  protected void doPut(HttpServletRequest request, HttpServletResponse response) {
     if (Objects.nonNull(processPut)) {
       processPut.handle(request, response);
     } else {
@@ -137,8 +133,7 @@ public final class ServletManager extends BaseServlet {
   }
 
   @Override
-  protected void doDelete(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException {
+  protected void doDelete(HttpServletRequest request, HttpServletResponse response) {
     if (Objects.nonNull(processDelete)) {
       processDelete.handle(request, response);
     } else {

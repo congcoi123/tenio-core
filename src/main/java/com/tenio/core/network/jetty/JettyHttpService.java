@@ -175,12 +175,13 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     try {
       server.stop();
       executorService.shutdownNow();
+
+      info("STOPPED SERVICE", buildgen(getName(), " (", 1, ")"));
+      destroy();
+      info("DESTROYED SERVICE", buildgen(getName(), " (", 1, ")"));
     } catch (Exception e) {
       error(e);
     }
-    info("STOPPED SERVICE", buildgen(getName(), " (", 1, ")"));
-    destroy();
-    info("DESTROYED SERVICE", buildgen(getName(), " (", 1, ")"));
   }
 
   private void destroy() {

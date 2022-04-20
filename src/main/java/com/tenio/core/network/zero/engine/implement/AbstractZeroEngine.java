@@ -36,6 +36,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The abstract engine.
@@ -45,7 +46,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   private static final int DEFAULT_NUMBER_WORKERS = 5;
   private static final int DEFAULT_BUFFER_SIZE = 1024;
 
-  private volatile int id;
+  private final AtomicInteger id;
   private String name;
 
   private ExecutorService executorService;
@@ -69,7 +70,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
     executorSize = DEFAULT_NUMBER_WORKERS;
     bufferSize = DEFAULT_BUFFER_SIZE;
     activated = false;
-    id = 0;
+    id = new AtomicInteger();
   }
 
   private void initializeWorkers() {
@@ -83,18 +84,15 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
       executorService.execute(this);
     }
 
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override
-      public void run() {
-        if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
-          try {
-            halting();
-          } catch (Exception e) {
-            error(e);
-          }
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
+        try {
+          halting();
+        } catch (Exception e) {
+          error(e);
         }
       }
-    });
+    }));
   }
 
   private void halting() throws ServiceRuntimeException {
@@ -123,13 +121,13 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
 
   @Override
   public void run() {
-    id++;
     setThreadName();
     onRunning();
   }
 
   private void setThreadName() {
-    Thread.currentThread().setName(StringUtility.strgen("zero-", getName(), "-", id));
+    Thread.currentThread()
+        .setName(StringUtility.strgen("zero-", getName(), "-", id.incrementAndGet()));
   }
 
   @Override

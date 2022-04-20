@@ -161,13 +161,13 @@ public enum ServerEvent {
    */
   PLAYER_AFTER_LEFT_ROOM,
   /**
-   * When a player attempt to change its role from 'participant' to 'spectator'.
+   * When a player attempts to change its role from 'participant' to 'spectator'.
    *
    * @see EventSwitchParticipantToSpectatorResult
    */
   SWITCH_PARTICIPANT_TO_SPECTATOR,
   /**
-   * When a player attempt to change its role from 'spectator' to 'participant'.
+   * When a player attempts to change its role from 'spectator' to 'participant'.
    *
    * @see EventSwitchSpectatorToParticipantResult
    */

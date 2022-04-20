@@ -50,14 +50,15 @@ public final class TrafficCounterTask extends AbstractTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-      eventManager.emit(ServerEvent.FETCHED_BANDWIDTH_INFO, networkReaderStatistic.getReadBytes(),
-          networkReaderStatistic.getReadPackets(),
-          networkReaderStatistic.getReadDroppedPackets(),
-          networkWriterStatistic.getWrittenBytes(), networkWriterStatistic.getWrittenPackets(),
-          networkWriterStatistic.getWrittenDroppedPacketsByPolicy(),
-          networkWriterStatistic.getWrittenDroppedPacketsByFull());
-    }, 0, interval, TimeUnit.SECONDS);
+    return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+        () -> eventManager.emit(ServerEvent.FETCHED_BANDWIDTH_INFO,
+            networkReaderStatistic.getReadBytes(),
+            networkReaderStatistic.getReadPackets(),
+            networkReaderStatistic.getReadDroppedPackets(),
+            networkWriterStatistic.getWrittenBytes(), networkWriterStatistic.getWrittenPackets(),
+            networkWriterStatistic.getWrittenDroppedPacketsByPolicy(),
+            networkWriterStatistic.getWrittenDroppedPacketsByFull()), 0, interval,
+        TimeUnit.SECONDS);
   }
 
   public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {

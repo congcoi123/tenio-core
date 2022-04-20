@@ -39,7 +39,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public final class EventManagerTest {
+class EventManagerTest {
 
   private EventManager eventManager;
   private PlayerManager playerManager;

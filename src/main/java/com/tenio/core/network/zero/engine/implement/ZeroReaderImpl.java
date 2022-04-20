@@ -61,7 +61,6 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
   private ZeroReaderImpl(EventManager eventManager) {
     super(eventManager);
-
     setName("reader");
   }
 
@@ -83,9 +82,9 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   }
 
   private void readIncomingSocketData(ByteBuffer readerBuffer) {
-    SocketChannel socketChannel = null;
-    DatagramChannel datagramChannel = null;
-    SelectionKey selectionKey = null;
+    SocketChannel socketChannel;
+    DatagramChannel datagramChannel;
+    SelectionKey selectionKey;
 
     try {
       // blocks until at least one channel is ready for the events you registered for

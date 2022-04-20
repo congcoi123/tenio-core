@@ -54,9 +54,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
 
   private ZeroWriterImpl(EventManager eventManager) {
     super(eventManager);
-
-    sessionTicketsQueue = new LinkedBlockingQueue<Session>();
-
+    sessionTicketsQueue = new LinkedBlockingQueue<>();
     setName("writer");
   }
 

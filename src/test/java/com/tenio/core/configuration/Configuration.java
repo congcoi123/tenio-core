@@ -27,7 +27,7 @@ package com.tenio.core.configuration;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public final class Configuration extends CoreConfiguration {
+public class Configuration extends CoreConfiguration {
 
   @Override
   protected void extend(Map<String, String> extProperties) {

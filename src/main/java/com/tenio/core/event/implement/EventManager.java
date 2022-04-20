@@ -47,7 +47,7 @@ public final class EventManager extends SystemLogger {
   private final EventProducer eventProducer;
 
   private EventManager() {
-    eventSubscribers = new ArrayList<EventSubscriber>();
+    eventSubscribers = new ArrayList<>();
     eventProducer = new EventProducer();
   }
 

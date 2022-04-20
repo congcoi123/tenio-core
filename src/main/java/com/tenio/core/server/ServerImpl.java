@@ -56,9 +56,11 @@ import com.tenio.core.server.service.InternalProcessorService;
 import com.tenio.core.server.service.InternalProcessorServiceImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
+import org.apache.logging.log4j.util.Strings;
 
 /**
  * This class manages the workflow of the current server. The instruction's
@@ -88,9 +90,8 @@ public final class ServerImpl extends SystemLogger implements Server {
     serverApi = ServerApiImpl.newInstance(this);
 
     // print out the framework's preface
-    for (var line : Trademark.CONTENT) {
-      info("", "", line);
-    }
+    var trademark = String.format("\n\n%s\n", Strings.join(Arrays.asList(Trademark.CONTENT), '\n'));
+    info("HAPPY CODING", trademark);
   } // prevent creation manually
 
   /**

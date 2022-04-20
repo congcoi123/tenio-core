@@ -88,9 +88,8 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
   public void start() {
     info("START SERVICE", buildgen(getName(), " (", 1, ")"));
 
-    // __taskManager.create("auto-disconnect-player",
-    // __autoDisconnectPlayerTask.run());
-    // __taskManager.create("auto-remove-room", __autoRemoveRoomTask.run());
+    // taskManager.create("auto-disconnect-player", autoDisconnectPlayerTask.run());
+    // taskManager.create("auto-remove-room", autoRemoveRoomTask.run());
     taskManager.create("ccu-report", ccuReportTask.run());
     taskManager.create("dead-lock", deadlockScanTask.run());
     taskManager.create("system-monitoring", systemMonitoringTask.run());

@@ -24,5 +24,5 @@ THE SOFTWARE.
 
 package com.tenio.core.server;
 
-public final class ServerTest {
+class ServerTest {
 }

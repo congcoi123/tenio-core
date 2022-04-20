@@ -32,7 +32,6 @@ import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.result.AttachedConnectionResult;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
-import com.tenio.core.event.Subscriber;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.extension.events.EventAttachConnectionRequestValidation;
 import com.tenio.core.extension.events.EventAttachedConnectionResult;
@@ -42,7 +41,6 @@ import com.tenio.core.extension.events.EventWriteMessageToConnection;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 /**
  * Dispatching all events related to connections.
@@ -85,98 +83,52 @@ public final class ConnectionEventHandler {
     final var eventDisconnectConnectionOp =
         Optional.ofNullable(eventDisconnectConnection);
 
-    eventConnectionEstablishedResultOp.ifPresent(new Consumer<EventConnectionEstablishedResult>() {
+    eventConnectionEstablishedResultOp.ifPresent(
+        event -> eventManager.on(ServerEvent.CONNECTION_ESTABLISHED_RESULT, params -> {
+          var session = (Session) params[0];
+          var message = (ServerMessage) params[1];
+          var result = (ConnectionEstablishedResult) params[2];
 
-      @Override
-      public void accept(EventConnectionEstablishedResult event) {
-        eventManager.on(ServerEvent.CONNECTION_ESTABLISHED_RESULT, new Subscriber() {
+          event.handle(session, message, result);
 
-          @Override
-          public Object dispatch(Object... params) {
-            var session = (Session) params[0];
-            var message = (ServerMessage) params[1];
-            var result = (ConnectionEstablishedResult) params[2];
+          return null;
+        }));
 
-            event.handle(session, message, result);
+    eventWriteMessageToConnectionOp.ifPresent(
+        event -> eventManager.on(ServerEvent.SESSION_WRITE_MESSAGE, params -> {
+          var session = (Session) params[0];
+          var packet = (Packet) params[1];
 
-            return null;
-          }
-        });
-      }
-    });
+          event.handle(session, packet);
 
-    eventWriteMessageToConnectionOp.ifPresent(new Consumer<EventWriteMessageToConnection>() {
-
-      @Override
-      public void accept(EventWriteMessageToConnection event) {
-        eventManager.on(ServerEvent.SESSION_WRITE_MESSAGE, new Subscriber() {
-
-          @Override
-          public Object dispatch(Object... params) {
-            var session = (Session) params[0];
-            var packet = (Packet) params[1];
-
-            event.handle(session, packet);
-
-            return null;
-          }
-        });
-      }
-    });
+          return null;
+        }));
 
     eventAttachConnectionRequestValidationOp.ifPresent(
-        new Consumer<EventAttachConnectionRequestValidation>() {
+        event -> eventManager.on(ServerEvent.ATTACH_CONNECTION_REQUEST_VALIDATION, params -> {
+          var message = (ServerMessage) params[0];
 
-          @Override
-          public void accept(EventAttachConnectionRequestValidation event) {
-            eventManager.on(ServerEvent.ATTACH_CONNECTION_REQUEST_VALIDATION, new Subscriber() {
+          return event.handle(message);
+        }));
 
-              @Override
-              public Object dispatch(Object... params) {
-                var message = (ServerMessage) params[0];
+    eventAttachedConnectionResultOp.ifPresent(
+        event -> eventManager.on(ServerEvent.ATTACHED_CONNECTION_RESULT, params -> {
+          var player = (Optional<Player>) params[0];
+          var result = (AttachedConnectionResult) params[1];
 
-                return event.handle(message);
-              }
-            });
-          }
-        });
+          event.handle(player, result);
 
-    eventAttachedConnectionResultOp.ifPresent(new Consumer<>() {
+          return null;
+        }));
 
-      @Override
-      public void accept(EventAttachedConnectionResult event) {
-        eventManager.on(ServerEvent.ATTACHED_CONNECTION_RESULT, new Subscriber() {
+    eventDisconnectConnectionOp.ifPresent(
+        event -> eventManager.on(ServerEvent.DISCONNECT_CONNECTION, params -> {
+          var session = (Session) params[0];
+          var mode = (ConnectionDisconnectMode) params[1];
 
-          @Override
-          public Object dispatch(Object... params) {
-            var player = (Optional<Player>) params[0];
-            var result = (AttachedConnectionResult) params[1];
+          event.handle(session, mode);
 
-            event.handle(player, result);
-
-            return null;
-          }
-        });
-      }
-    });
-
-    eventDisconnectConnectionOp.ifPresent(new Consumer<EventDisconnectConnection>() {
-
-      @Override
-      public void accept(EventDisconnectConnection event) {
-        eventManager.on(ServerEvent.DISCONNECT_CONNECTION, new Subscriber() {
-
-          @Override
-          public Object dispatch(Object... params) {
-            var session = (Session) params[0];
-            var mode = (ConnectionDisconnectMode) params[1];
-
-            event.handle(session, mode);
-
-            return null;
-          }
-        });
-      }
-    });
+          return null;
+        }));
   }
 }

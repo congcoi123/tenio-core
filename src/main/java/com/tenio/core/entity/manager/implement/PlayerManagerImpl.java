@@ -173,7 +173,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     synchronized (this) {
       playerByNames.remove(player.getName());
       if (player.containsSession()) {
-        playerBySessions.remove(player.getSession());
+        playerBySessions.remove(player.getSession().get());
       }
       playerCount = playerByNames.size();
     }

@@ -337,23 +337,22 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
     if (Objects.nonNull(socketSessions)) {
       var packet = createPacket(response, socketSessions, TransportType.TCP);
       socketService.write(packet);
-      socketSessions.stream().forEach(
+      socketSessions.forEach(
           session -> eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet));
     }
 
     if (Objects.nonNull(datagramSessions)) {
       var packet = createPacket(response, datagramSessions, TransportType.UDP);
       socketService.write(packet);
-      datagramSessions.stream().forEach(
+      datagramSessions.forEach(
           session -> eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet));
     }
 
     if (Objects.nonNull(webSocketSessions)) {
       var packet = createPacket(response, webSocketSessions, TransportType.WEB_SOCKET);
       webSocketService.write(packet);
-      webSocketSessions.stream().forEach(session -> {
-        eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet);
-      });
+      webSocketSessions.forEach(
+          session -> eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet));
     }
   }
 

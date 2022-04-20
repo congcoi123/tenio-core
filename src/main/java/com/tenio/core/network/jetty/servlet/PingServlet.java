@@ -27,7 +27,6 @@ package com.tenio.core.network.jetty.servlet;
 import com.tenio.common.data.common.CommonMap;
 import com.tenio.core.network.jetty.servlet.support.BaseProcessServlet;
 import java.io.IOException;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -46,14 +45,12 @@ public final class PingServlet extends HttpServlet {
   private final Process process = new Process();
 
   @Override
-  protected void doGet(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException {
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     doPost(request, response);
   }
 
   @Override
-  protected void doPost(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException {
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     process.handle(request, response);
   }
 
@@ -65,9 +62,7 @@ public final class PingServlet extends HttpServlet {
       try {
         var json = new JSONObject();
         CommonMap.newInstance().add("status", "ok").add("message", "PING PONG")
-            .forEach((key, value) -> {
-              json.put(key, value);
-            });
+            .forEach(json::put);
         response.getWriter().println(json);
       } catch (IOException e) {
         error(e);

@@ -24,5 +24,5 @@ THE SOFTWARE.
 
 package com.tenio.core.api;
 
-public final class ServerApiTest {
+class ServerApiTest {
 }

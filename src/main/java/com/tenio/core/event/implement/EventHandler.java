@@ -64,7 +64,7 @@ public final class EventHandler<T> {
    * @return the event result (the response of its subscribers), see {@link Object} or <b>null</b>
    */
   @SafeVarargs
-  public final Object emit(ServerEvent event, @SuppressWarnings("unchecked") T... params) {
+  public final Object emit(ServerEvent event, T... params) {
     if (delegate.containsKey(event)) {
       return delegate.get(event).emit(params);
     }

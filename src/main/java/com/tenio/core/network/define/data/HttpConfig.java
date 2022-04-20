@@ -45,7 +45,7 @@ public final class HttpConfig {
    * @param port an associated port ({@code integer} value)
    */
   public HttpConfig(String name, int port) {
-    paths = new ArrayList<PathConfig>();
+    paths = new ArrayList<>();
     this.name = name;
     this.port = port;
   }

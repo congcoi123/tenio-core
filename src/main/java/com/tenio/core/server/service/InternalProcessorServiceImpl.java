@@ -162,19 +162,10 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
     // check reconnected case
     if (Objects.nonNull(player)) {
-      if (!(player instanceof Player)) {
-        var castException = new ClassCastException(
-            String.format("Unable to cast the object: %s to class Player", player.toString()));
-        error(castException);
-        eventManager.emit(ServerEvent.SERVER_EXCEPTION, castException);
-        eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player,
-            PlayerReconnectedResult.INVALID_PLAYER_FORMAT);
-      } else {
-        session.setName(player.getName());
-        player.setSession(session);
-        eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player,
-            PlayerReconnectedResult.SUCCESS);
-      }
+      session.setName(player.getName());
+      player.setSession(session);
+      eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player,
+          PlayerReconnectedResult.SUCCESS);
       // check new reconnection
     } else {
       // check the number of current players

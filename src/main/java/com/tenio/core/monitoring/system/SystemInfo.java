@@ -54,7 +54,7 @@ public final class SystemInfo extends SystemLogger {
           .append("\n");
     }
 
-    logger.append("\t").append("Default charset: " + Charset.defaultCharset()).append("\n");
+    logger.append("\t").append("Default charset: ").append(Charset.defaultCharset()).append("\n");
 
     info("SYSTEM INFORMATION", logger);
   }

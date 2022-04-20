@@ -88,8 +88,6 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
         // do the Handshake to upgrade connection from HTTP to WebSocket protocol
         handleHandshake(ctx, httpRequest);
       }
-    } else {
-      // do nothing or logging
     }
   }
 
