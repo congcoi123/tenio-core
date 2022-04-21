@@ -39,8 +39,6 @@
     </scm>
 
     <properties>
-        <tenio.common.version>0.0.2</tenio.common.version>
-
         <io.netty.version>4.1.75.Final</io.netty.version>
         <org.eclipse.jetty.version>9.4.38.v20210224</org.eclipse.jetty.version>
         <javax.servlet.version>2.5</javax.servlet.version>
@@ -73,7 +71,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>tenio-common</artifactId>
-            <version>${tenio.common.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
