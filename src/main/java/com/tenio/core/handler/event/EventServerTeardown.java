@@ -22,22 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
-
-import com.tenio.core.network.entity.packet.Packet;
-import com.tenio.core.network.entity.session.Session;
+package com.tenio.core.handler.event;
 
 /**
- * When the server sends a packet to a connection.
+ * When the server is on shutting down phase.
  */
 @FunctionalInterface
-public interface EventWriteMessageToConnection {
+public interface EventServerTeardown {
 
   /**
-   * When the server sends a packet to a connection.
+   * When the server is going to shut down.
    *
-   * @param session the {@link Session} which is connecting to the server
-   * @param packet  the sending {@link Packet}
+   * @param serverName the server's name ({@link String} value)
    */
-  void handle(Session session, Packet packet);
+  void handle(String serverName);
 }

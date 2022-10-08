@@ -22,23 +22,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
+import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
+import com.tenio.core.entity.data.ServerMessage;
+import java.util.Optional;
 
 /**
- * When a player is disconnected.
+ * When a player attempts to connect to UDP channel to send and receive messages.
  */
 @FunctionalInterface
-public interface EventDisconnectPlayer {
+public interface EventAttachConnectionRequestValidation {
 
   /**
-   * When a player is disconnected from the server, and it is also removed from the management list.
+   * When a player attempts to connect to UDP channel to send and receive messages.
    *
-   * @param player the disconnected {@link Player}
-   * @param mode   the corresponding {@link PlayerDisconnectMode} which shows the reason for
-   *               disconnection
+   * @param message an instance of {@link ServerMessage} sent by client to identify its
+   *                corresponding player on the server
+   * @return an optional of {@link Player} is present if it qualifies identified conditions,
+   * otherwise is empty
+   * @see ServerEvent#ATTACH_CONNECTION_REQUEST_VALIDATION
+   * @see EventAttachedConnectionResult
+   * @see Optional
    */
-  void handle(Player player, PlayerDisconnectMode mode);
+  Optional<Player> handle(ServerMessage message);
 }

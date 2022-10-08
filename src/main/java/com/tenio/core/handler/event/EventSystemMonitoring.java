@@ -22,22 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.entity.Player;
-import com.tenio.core.entity.data.ServerMessage;
+import com.tenio.core.configuration.define.CoreConfigurationType;
 
 /**
- * When the server receives a message from a player.
+ * Monitoring the system information.
  */
 @FunctionalInterface
-public interface EventReceivedMessageFromPlayer {
+public interface EventSystemMonitoring {
 
   /**
-   * When the server receives a message from a player.
+   * Monitoring the system information on the server. The information should be frequently
+   * updated every interval time.
    *
-   * @param player  the {@link Player} which is sending a message to the server
-   * @param message the receiving {@link ServerMessage}
+   * @param cpuUsage            {@code double} value, the current CPU's usage
+   * @param totalMemory         {@code long} value, the total size of memory in byte that
+   *                            the JVM occupy from the host machine
+   * @param usedMemory          {@code long} value, the memory volume that the JVM is consuming
+   * @param freeMemory          {@code long} value, the available memory that the JVM can use
+   * @param countRunningThreads {@code integer} value, the current running threads on the JVM
+   * @see CoreConfigurationType#INTERVAL_SYSTEM_MONITORING
    */
-  void handle(Player player, ServerMessage message);
+  void handle(double cpuUsage, long totalMemory, long usedMemory, long freeMemory,
+              int countRunningThreads);
 }

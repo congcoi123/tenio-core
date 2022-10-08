@@ -42,6 +42,13 @@ import java.util.List;
 public interface ZeroSocketService extends Service {
 
   /**
+   * Declares the server IP address.
+   *
+   * @param serverAddress the {@link String} value of server IP address
+   */
+  void setAcceptorServerAddress(String serverAddress);
+
+  /**
    * Sets size of {@link ByteBuffer} using for an acceptor worker to read/write binaries data
    * from/down.
    *

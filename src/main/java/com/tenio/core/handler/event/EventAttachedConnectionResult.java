@@ -22,22 +22,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
+import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.data.ServerMessage;
+import com.tenio.core.entity.define.result.AttachedConnectionResult;
+import java.util.Optional;
 
 /**
- * When the server sends a message to a player.
+ * When the server responds to the request from client side which requires using the UDP channel.
  */
 @FunctionalInterface
-public interface EventSendMessageToPlayer {
+public interface EventAttachedConnectionResult {
 
   /**
-   * When the server sends a message to a player.
+   * When the server responds to the request from client side which requires using the UDP channel.
    *
-   * @param player  the {@link Player} which is receiving a message to the server
-   * @param message the sending {@link ServerMessage}
+   * @param player the optional of {@link Player} which requires using UDP channel
+   * @param result the responded {@link AttachedConnectionResult} from the server, if the result
+   *               equals to {@link AttachedConnectionResult#PLAYER_NOT_FOUND} then the returned
+   *               player is empty, otherwise it is present
+   * @see ServerEvent#ATTACHED_CONNECTION_RESULT
+   * @see EventAttachConnectionRequestValidation
+   * @see Optional
    */
-  void handle(Player player, ServerMessage message);
+  void handle(Optional<Player> player, AttachedConnectionResult result);
 }

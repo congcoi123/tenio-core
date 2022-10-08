@@ -22,31 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.define.result.PlayerReconnectedResult;
-import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.entity.Room;
+import com.tenio.core.entity.define.result.SwitchedPlayerRoleInRoomResult;
 
 /**
- * Returns the result when a player tried to reconnect to the server.
+ * Returns the result when a participant tries to change to be a spectator.
  */
 @FunctionalInterface
-public interface EventPlayerReconnectedResult {
+public interface EventSwitchParticipantToSpectatorResult {
 
   /**
-   * When a player tried to reconnect to the server. The situation happens if the player gets in
-   * an IDLE state for long time enough to be disconnected from the server automatically.
+   * When a participant tries to change to be a spectator in its room.
    *
-   * @param player  the reconnecting {@link Player}
-   * @param session a new {@link Session} which the player is using to reconnect to the server
-   * @param result  the reconnecting result presented by {@link PlayerReconnectedResult}. A
-   *                player is considered as it rejoined the server when the result equals to success
-   * @see PlayerReconnectedResult#SUCCESS
-   * @see CoreConfigurationType#PROP_KEEP_PLAYER_ON_DISCONNECTION
-   * @see CoreConfigurationType#PROP_MAX_PLAYER_IDLE_TIME
-   * @see EventPlayerReconnectRequestHandle
+   * @param player the considering {@link Player}
+   * @param room   the player's {@link Room}
+   * @param result the result {@link SwitchedPlayerRoleInRoomResult} of processing
    */
-  void handle(Player player, Session session, PlayerReconnectedResult result);
+  void handle(Player player, Room room, SwitchedPlayerRoleInRoomResult result);
 }

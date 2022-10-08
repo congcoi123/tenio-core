@@ -22,18 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
+
+import com.tenio.core.entity.Room;
+import com.tenio.core.entity.define.result.RoomCreatedResult;
+import com.tenio.core.entity.setting.InitialRoomSetting;
 
 /**
- * Something went wrong on the server.
+ * Returns the result when the server attempts to create a new room.
  */
 @FunctionalInterface
-public interface EventServerException {
+public interface EventRoomCreatedResult {
 
   /**
-   * Something went wrong on the server.
+   * Retrieves the result when the server attempts to create a new room.
    *
-   * @param throwable the {@link Throwable} thrown whenever any exception emerged
+   * @param room    a new creating {@link Room}
+   * @param setting all settings in {@link InitialRoomSetting} needs for the room creation
+   * @param result  the creation result presented by {@link RoomCreatedResult}. A
+   *                new room is considered as it is created and is added to the management list
+   *                when the result equals to success
+   * @see RoomCreatedResult#SUCCESS
    */
-  void handle(Throwable throwable);
+  void handle(Room room, InitialRoomSetting setting, RoomCreatedResult result);
 }

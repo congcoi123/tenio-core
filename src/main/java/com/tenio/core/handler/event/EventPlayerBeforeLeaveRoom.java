@@ -22,27 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
-import com.tenio.core.entity.define.result.PlayerLeftRoomResult;
+import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
 
 /**
- * When a player left its current room.
+ * The event occurs before a player leave its current room.
  */
 @FunctionalInterface
-public interface EventPlayerAfterLeftRoom {
+public interface EventPlayerBeforeLeaveRoom {
 
   /**
-   * When a player has just left its current room.
+   * When a player is going to leave its current room.
    *
-   * @param player the left {@link Player}
-   * @param room   the {@link Room} which the player has just left out
-   * @param result the leaving result presented by {@link PlayerLeftRoomResult}. A player is
-   *               considered as it has already left its room when the result equals to success
-   * @see PlayerLeftRoomResult#SUCCESS
-   * @see EventPlayerBeforeLeaveRoom
+   * @param player the leaving {@link Player}
+   * @param room   the {@link Room} which the player is going to leave out
+   * @param mode   the leaving {@link PlayerLeaveRoomMode} applied for the player when it leaves
+   *               the room
+   * @see EventPlayerAfterLeftRoom
    */
-  void handle(Player player, Room room, PlayerLeftRoomResult result);
+  void handle(Player player, Room room, PlayerLeaveRoomMode mode);
 }

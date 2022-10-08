@@ -22,23 +22,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.configuration.define.CoreConfigurationType;
-import com.tenio.core.entity.Player;
+import com.tenio.core.entity.data.ServerMessage;
+import com.tenio.core.network.entity.session.Session;
 
 /**
- * Fetches the CCU information on the server.
+ * When a player sends a request to reconnect to the server.
  */
 @FunctionalInterface
-public interface EventFetchedCcuInfo {
+public interface EventPlayerReconnectRequestHandle {
 
   /**
-   * Fetches the CCU information on the server.The information should be frequently updated every
-   * interval time.
+   * When a player tried to reconnect to the server. The situation happens if the player gets in
+   * an IDLE state for long time enough to be disconnected from the server automatically.
    *
-   * @param numberPlayers the concurrent number of {@link Player} on the server.
-   * @see CoreConfigurationType#INTERVAL_CCU_SCAN
+   * @param session a new {@link Session} which the player is using to reconnect to the server
+   * @param message a {@link ServerMessage} that the client side tries to send to the server to
+   *                judge if the corresponding player could reconnect
+   * @see EventPlayerReconnectedResult
    */
-  void handle(int numberPlayers);
+  void handle(Session session, ServerMessage message);
 }

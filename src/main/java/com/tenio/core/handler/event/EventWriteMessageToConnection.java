@@ -22,26 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.entity.Player;
-import com.tenio.core.entity.Room;
-import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
+import com.tenio.core.network.entity.packet.Packet;
+import com.tenio.core.network.entity.session.Session;
 
 /**
- * The event occurs before a player leave its current room.
+ * When the server sends a packet to a connection.
  */
 @FunctionalInterface
-public interface EventPlayerBeforeLeaveRoom {
+public interface EventWriteMessageToConnection {
 
   /**
-   * When a player is going to leave its current room.
+   * When the server sends a packet to a connection.
    *
-   * @param player the leaving {@link Player}
-   * @param room   the {@link Room} which the player is going to leave out
-   * @param mode   the leaving {@link PlayerLeaveRoomMode} applied for the player when it leaves
-   *               the room
-   * @see EventPlayerAfterLeftRoom
+   * @param session the {@link Session} which is connecting to the server
+   * @param packet  the sending {@link Packet}
    */
-  void handle(Player player, Room room, PlayerLeaveRoomMode mode);
+  void handle(Session session, Packet packet);
 }

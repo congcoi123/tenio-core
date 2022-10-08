@@ -22,30 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.network.define.RestMethod;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.Room;
+import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 
 /**
- * Validates an HTTP request on the HTTP service. This method is used to intercept any HTTP
- * request from clients side then validate it.
+ * When a player tried to join a room.
  */
 @FunctionalInterface
-public interface EventHttpRequestValidation {
+public interface EventPlayerJoinedRoomResult {
 
   /**
-   * Validates an HTTP request on the HTTP service. This method is used to intercept any HTTP
-   * request from client side then validate it.
+   * When a player tried to join a room.
    *
-   * @param method   the {@link RestMethod} using in request
-   * @param request  a {@link HttpServletRequest} comes from client side
-   * @param response a {@link HttpServletResponse} sends to client side
-   * @return an instance of {@link HttpServletResponse} for the following steps in the request
-   * handler
-   * @see EventHttpRequestHandle
+   * @param player the joining {@link Player}
+   * @param room   the {@link Room} which the player attempts to join in
+   * @param result the joining result presented by {@link PlayerJoinedRoomResult}. A player is
+   *               considered as it joined the room when the result equals to success
+   * @see PlayerJoinedRoomResult#SUCCESS
    */
-  HttpServletResponse handle(RestMethod method, HttpServletRequest request,
-                             HttpServletResponse response);
+  void handle(Player player, Room room, PlayerJoinedRoomResult result);
 }

@@ -22,18 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
+
+import com.tenio.common.configuration.Configuration;
 
 /**
- * When the server is on shutting down phase.
+ * When the server is initialized.
  */
 @FunctionalInterface
-public interface EventServerTeardown {
+public interface EventServerInitialization {
 
   /**
-   * When the server is going to shut down.
+   * When the server finished initialization process.
    *
-   * @param serverName the server's name ({@link String} value)
+   * @param serverName    the {@link String} name of the server
+   * @param configuration all server settings in {@link Configuration}
    */
-  void handle(String serverName);
+  void handle(String serverName, Configuration configuration);
 }

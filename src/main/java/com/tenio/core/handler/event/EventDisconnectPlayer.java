@@ -22,25 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.entity.data.ServerMessage;
-import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 
 /**
- * When a player sends a request to reconnect to the server.
+ * When a player is disconnected.
  */
 @FunctionalInterface
-public interface EventPlayerReconnectRequestHandle {
+public interface EventDisconnectPlayer {
 
   /**
-   * When a player tried to reconnect to the server. The situation happens if the player gets in
-   * an IDLE state for long time enough to be disconnected from the server automatically.
+   * When a player is disconnected from the server, and it is also removed from the management list.
    *
-   * @param session a new {@link Session} which the player is using to reconnect to the server
-   * @param message a {@link ServerMessage} that the client side tries to send to the server to
-   *                judge if the corresponding player could reconnect
-   * @see EventPlayerReconnectedResult
+   * @param player the disconnected {@link Player}
+   * @param mode   the corresponding {@link PlayerDisconnectMode} which shows the reason for
+   *               disconnection
    */
-  void handle(Session session, ServerMessage message);
+  void handle(Player player, PlayerDisconnectMode mode);
 }

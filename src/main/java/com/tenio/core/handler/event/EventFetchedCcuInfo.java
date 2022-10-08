@@ -22,24 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
+import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.Room;
-import com.tenio.core.entity.define.result.SwitchedPlayerRoleInRoomResult;
 
 /**
- * Returns the result when a spectator tries to change to be a participant.
+ * Fetches the CCU information on the server.
  */
 @FunctionalInterface
-public interface EventSwitchSpectatorToParticipantResult {
+public interface EventFetchedCcuInfo {
 
   /**
-   * When a spectator tries to change to be a participant in its room.
+   * Fetches the CCU information on the server.The information should be frequently updated every
+   * interval time.
    *
-   * @param player the considering {@link Player}
-   * @param room   the player's {@link Room}
-   * @param result the result {@link SwitchedPlayerRoleInRoomResult} of processing
+   * @param numberPlayers the concurrent number of {@link Player} on the server.
+   * @see CoreConfigurationType#INTERVAL_CCU_SCAN
    */
-  void handle(Player player, Room room, SwitchedPlayerRoleInRoomResult result);
+  void handle(int numberPlayers);
 }

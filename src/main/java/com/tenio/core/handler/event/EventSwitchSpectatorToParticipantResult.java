@@ -22,21 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
-import com.tenio.common.configuration.Configuration;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.Room;
+import com.tenio.core.entity.define.result.SwitchedPlayerRoleInRoomResult;
 
 /**
- * When the server is initialized.
+ * Returns the result when a spectator tries to change to be a participant.
  */
 @FunctionalInterface
-public interface EventServerInitialization {
+public interface EventSwitchSpectatorToParticipantResult {
 
   /**
-   * When the server finished initialization process.
+   * When a spectator tries to change to be a participant in its room.
    *
-   * @param serverName    the {@link String} name of the server
-   * @param configuration all server settings in {@link Configuration}
+   * @param player the considering {@link Player}
+   * @param room   the player's {@link Room}
+   * @param result the result {@link SwitchedPlayerRoleInRoomResult} of processing
    */
-  void handle(String serverName, Configuration configuration);
+  void handle(Player player, Room room, SwitchedPlayerRoleInRoomResult result);
 }
