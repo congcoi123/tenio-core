@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.implement;
 
+import com.tenio.common.utility.OsUtility;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RefusedConnectionAddressException;
@@ -105,7 +106,9 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     try {
       var serverSocketChannel = ServerSocketChannel.open();
       serverSocketChannel.configureBlocking(false);
-      // serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
+      if (OsUtility.getOperatingSystemType() != OsUtility.OsType.WINDOWS) {
+        serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
+      }
       serverSocketChannel.socket().bind(new InetSocketAddress(serverAddress, port));
       // only server socket should interest in this key OP_ACCEPT
       serverSocketChannel.register(acceptableSelector, SelectionKey.OP_ACCEPT);
@@ -123,7 +126,9 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     try {
       var datagramChannel = DatagramChannel.open();
       datagramChannel.configureBlocking(false);
-      // datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
+      if (OsUtility.getOperatingSystemType() != OsUtility.OsType.WINDOWS) {
+        datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
+      }
       datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
       datagramChannel.socket().bind(new InetSocketAddress(serverAddress, port));
       // udp datagram is a connectionless protocol, we don't need to create
