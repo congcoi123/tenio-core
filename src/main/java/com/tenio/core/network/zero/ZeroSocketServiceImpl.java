@@ -162,6 +162,11 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   }
 
   @Override
+  public void setAcceptorServerAddress(String serverAddress) {
+    acceptorEngine.setServerAddress(serverAddress);
+  }
+
+  @Override
   public void setAcceptorBufferSize(int bufferSize) {
     acceptorEngine.setMaxBufferSize(bufferSize);
   }

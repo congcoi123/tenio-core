@@ -123,6 +123,13 @@ public interface NetworkService extends Service {
   void setWebSocketUsingSsl(boolean usingSsl);
 
   /**
+   * Declares the server IP address.
+   *
+   * @param serverAddress the {@link String} value of server IP address
+   */
+  void setSocketAcceptorServerAddress(String serverAddress);
+
+  /**
    * Sets the number of acceptor workers for the socket (TCP) which are using to accept new coming
    * clients.
    *

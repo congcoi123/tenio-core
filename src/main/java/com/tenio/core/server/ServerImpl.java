@@ -208,6 +208,9 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.setHttpPort(!httpConfig.isEmpty() ? httpConfig.get(0).getPort() : 0);
     networkService.setHttpPathConfigs(!httpConfig.isEmpty() ? httpConfig.get(0).getPaths() : null);
 
+    networkService.setSocketAcceptorServerAddress(
+        configuration.getString(CoreConfigurationType.SERVER_ADDRESS));
+
     networkService.setSocketAcceptorBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE));
     networkService.setSocketAcceptorWorkers(

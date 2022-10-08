@@ -55,6 +55,10 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   SERVER_ID("server-id"),
   /**
+   * The server address.
+   */
+  SERVER_ADDRESS("server-address"),
+  /**
    * This server version code in numeric type (It can be used to compare to other versions).
    */
   SERVER_VERSION_CODE("version-code"),
