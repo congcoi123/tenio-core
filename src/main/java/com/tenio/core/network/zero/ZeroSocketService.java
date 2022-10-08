@@ -49,6 +49,13 @@ public interface ZeroSocketService extends Service {
   void setAcceptorServerAddress(String serverAddress);
 
   /**
+   * Declares the number of Udp channel will be opened on the server.
+   *
+   * @param amountUdpWorkers the number of opening Udp channels
+   */
+  void setAcceptorAmountUdpWorkers(int amountUdpWorkers);
+
+  /**
    * Sets size of {@link ByteBuffer} using for an acceptor worker to read/write binaries data
    * from/down.
    *

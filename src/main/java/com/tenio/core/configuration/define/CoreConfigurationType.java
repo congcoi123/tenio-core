@@ -112,28 +112,32 @@ public enum CoreConfigurationType implements ConfigurationType {
   /**
    * The number of threads using for handlers to accept new incoming client socket on the server.
    */
-  THREADS_SOCKET_ACCEPTOR("socket-acceptor"),
+  WORKER_SOCKET_ACCEPTOR("socket-acceptor"),
   /**
    * The number of threads using for handlers to read new messages from client sockets on the
    * server.
    */
-  THREADS_SOCKET_READER("socket-reader"),
+  WORKER_SOCKET_READER("socket-reader"),
   /**
    * The number of threads using for handlers to write new messages to client sockets on the server.
    */
-  THREADS_SOCKET_WRITER("socket-writer"),
+  WORKER_SOCKET_WRITER("socket-writer"),
   /**
    * The number of threads using for handlers of WebSocket producers on the server.
    */
-  THREADS_WEBSOCKET_PRODUCER("websocket-producer"),
+  WORKER_WEBSOCKET_PRODUCER("websocket-producer"),
   /**
    * The number of threads using for handlers of WebSocket consumers on the server.
    */
-  THREADS_WEBSOCKET_CONSUMER("websocket-consumer"),
+  WORKER_WEBSOCKET_CONSUMER("websocket-consumer"),
   /**
    * The number of threads using for handlers to manage internal processes on the server.
    */
-  THREADS_INTERNAL_PROCESSOR("internal-processor"),
+  WORKER_INTERNAL_PROCESSOR("internal-processor"),
+  /**
+   * The number of UDP channel will be opened on the server.
+   */
+  WORKER_UDP_WORKER("udp-worker"),
   /**
    * Sets an interval to frequently check removable rooms for removing them.
    *
@@ -235,11 +239,12 @@ public enum CoreConfigurationType implements ConfigurationType {
   /**
    * The list of socket configurations in the server configuration.
    */
-  SOCKET_CONFIGS("socket-configs"),
+  NETWORK_SOCKET_CONFIGS("socket-configs"),
   /**
    * The list of HTTP configurations in the server configuration.
    */
-  HTTP_CONFIGS("http-configs");
+  NETWORK_HTTP_CONFIGS("http-configs");
+
   // Reverse-lookup map for getting a type from a value
   private static final Map<String, CoreConfigurationType> lookup =
       new HashMap<>();

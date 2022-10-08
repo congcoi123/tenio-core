@@ -167,6 +167,11 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   }
 
   @Override
+  public void setAcceptorAmountUdpWorkers(int amountUdpWorkers) {
+    acceptorEngine.setAmountUdpWorkers(amountUdpWorkers);
+  }
+
+  @Override
   public void setAcceptorBufferSize(int bufferSize) {
     acceptorEngine.setMaxBufferSize(bufferSize);
   }

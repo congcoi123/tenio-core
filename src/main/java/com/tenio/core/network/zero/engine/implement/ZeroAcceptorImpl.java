@@ -34,6 +34,7 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.engine.ZeroAcceptor;
 import com.tenio.core.network.zero.engine.listener.ZeroAcceptorListener;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
+import com.tenio.core.server.ServerImpl;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
@@ -61,6 +62,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   private ConnectionFilter connectionFilter;
   private ZeroReaderListener zeroReaderListener;
   private String serverAddress;
+  private int amountUdpWorkers;
   private List<SocketConfig> socketConfigs;
 
   private ZeroAcceptorImpl(EventManager eventManager) {
@@ -93,8 +95,9 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   private void bindSocket(SocketConfig socketConfig) throws ServiceRuntimeException {
     if (socketConfig.getType() == TransportType.TCP) {
       bindTcpSocket(socketConfig.getPort());
-    } else if (socketConfig.getType() == TransportType.UDP) {
-      bindUdpSocket(socketConfig.getPort());
+    }
+    if (amountUdpWorkers > 0) {
+      bindUdpSocket();
     }
   }
 
@@ -106,36 +109,40 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
         serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
       }
       serverSocketChannel.socket().bind(new InetSocketAddress(serverAddress, port));
+      info("TCP SOCKET", buildgen("Started at address: ", serverAddress, ", port: ",
+          serverSocketChannel.socket().getLocalPort()));
       // only server socket should interest in this key OP_ACCEPT
       serverSocketChannel.register(acceptableSelector, SelectionKey.OP_ACCEPT);
       synchronized (boundSockets) {
         boundSockets.add(serverSocketChannel);
       }
-
-      info("TCP SOCKET", buildgen("Started at address: ", serverAddress, ", port: ", port));
     } catch (IOException e) {
       throw new ServiceRuntimeException(e.getMessage());
     }
   }
 
-  private void bindUdpSocket(int port) throws ServiceRuntimeException {
+  private void bindUdpSocket() throws ServiceRuntimeException {
     try {
-      var datagramChannel = DatagramChannel.open();
-      datagramChannel.configureBlocking(false);
-      if (OsUtility.getOperatingSystemType() != OsUtility.OsType.WINDOWS) {
-        datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
-      }
-      datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
-      datagramChannel.socket().bind(new InetSocketAddress(serverAddress, port));
-      // udp datagram is a connectionless protocol, we don't need to create
-      // bi-direction connection, that why it's not necessary to register it to
-      // acceptable selector. Just leave it to the reader selector later
-      zeroReaderListener.acceptDatagramChannel(datagramChannel);
       synchronized (boundSockets) {
-        boundSockets.add(datagramChannel);
+        for (int i = 0; i < amountUdpWorkers; i++) {
+          var datagramChannel = DatagramChannel.open();
+          datagramChannel.configureBlocking(false);
+          if (OsUtility.getOperatingSystemType() != OsUtility.OsType.WINDOWS) {
+            datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
+          }
+          datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
+          datagramChannel.socket().bind(new InetSocketAddress(serverAddress, 0));
+          // udp datagram is a connectionless protocol, we don't need to create
+          // bi-direction connection, that why it's not necessary to register it to
+          // acceptable selector. Just leave it to the reader selector later
+          zeroReaderListener.acceptDatagramChannel(datagramChannel);
+          int boundPort = datagramChannel.socket().getLocalPort();
+          ServerImpl.getInstance().getUdpChannelManager().appendUdpPort(boundPort);
+          info("UDP SOCKET",
+              buildgen("Started at address: ", serverAddress, ", port: ", boundPort));
+          boundSockets.add(datagramChannel);
+        }
       }
-
-      info("UDP SOCKET", buildgen("Started at address: ", serverAddress, ", port: ", port));
     } catch (IOException e) {
       throw new ServiceRuntimeException(e.getMessage());
     }
@@ -314,6 +321,11 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   @Override
   public void setServerAddress(String serverAddress) {
     this.serverAddress = serverAddress;
+  }
+
+  @Override
+  public void setAmountUdpWorkers(int amountUdpWorkers) {
+    this.amountUdpWorkers = amountUdpWorkers;
   }
 
   @Override
