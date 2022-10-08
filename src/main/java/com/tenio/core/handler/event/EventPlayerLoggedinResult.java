@@ -22,23 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.entity.Room;
-import com.tenio.core.entity.define.mode.RoomRemoveMode;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.define.result.PlayerLoggedInResult;
 
 /**
- * The event occurs before a room is eliminated.
+ * Returns the result when a player tried to log in the server.
  */
 @FunctionalInterface
-public interface EventRoomWillBeRemoved {
+public interface EventPlayerLoggedinResult {
 
   /**
-   * When a room is going to be removed from the management list.
+   * When a player tried to log in the server.
    *
-   * @param room the {@link Room} which is going to be removed
-   * @param mode the removing {@link RoomRemoveMode} applied for the room when it is
-   *             eliminated from the management list
+   * @param player the joining {@link Player}
+   * @param result the joining result presented by {@link PlayerLoggedInResult}. A player is
+   *               considered as it joined the server when the result equals to success
+   * @see PlayerLoggedInResult#SUCCESS
    */
-  void handle(Room room, RoomRemoveMode mode);
+  void handle(Player player, PlayerLoggedInResult result);
 }

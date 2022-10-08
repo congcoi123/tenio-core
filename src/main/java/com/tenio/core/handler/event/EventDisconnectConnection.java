@@ -22,28 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.configuration.define.CoreConfigurationType;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.network.entity.session.Session;
 
 /**
- * Monitoring the system information.
+ * When a connection is disconnected.
  */
 @FunctionalInterface
-public interface EventSystemMonitoring {
+public interface EventDisconnectConnection {
 
   /**
-   * Monitoring the system information on the server. The information should be frequently
-   * updated every interval time.
+   * When a connection is disconnected from server, and it is also removed from the management list.
    *
-   * @param cpuUsage            {@code double} value, the current CPU's usage
-   * @param totalMemory         {@code long} value, the total size of memory in byte that
-   *                            the JVM occupy from the host machine
-   * @param usedMemory          {@code long} value, the memory volume that the JVM is consuming
-   * @param freeMemory          {@code long} value, the available memory that the JVM can use
-   * @param countRunningThreads {@code integer} value, the current running threads on the JVM
-   * @see CoreConfigurationType#INTERVAL_SYSTEM_MONITORING
+   * @param session the disconnected {@link Session}
+   * @param mode    the corresponding {@link ConnectionDisconnectMode} which shows the reason for
+   *               disconnection
    */
-  void handle(double cpuUsage, long totalMemory, long usedMemory, long freeMemory,
-              int countRunningThreads);
+  void handle(Session session, ConnectionDisconnectMode mode);
 }

@@ -22,24 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
-
-import com.tenio.core.network.define.RestMethod;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+package com.tenio.core.handler.event;
 
 /**
- * Handles an HTTP request which sent to the HTTP service from clients side.
+ * Something went wrong on the server.
  */
 @FunctionalInterface
-public interface EventHttpRequestHandle {
+public interface EventServerException {
 
   /**
-   * Handles an HTTP request which sent to the HTTP service from client side.
+   * Something went wrong on the server.
    *
-   * @param method   a {@link RestMethod} using in request
-   * @param request  a {@link HttpServletRequest} comes from client side
-   * @param response a {@link HttpServletResponse} sends to client side
+   * @param throwable the {@link Throwable} thrown whenever any exception emerged
    */
-  void handle(RestMethod method, HttpServletRequest request, HttpServletResponse response);
+  void handle(Throwable throwable);
 }

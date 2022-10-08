@@ -22,24 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.entity.Player;
-import com.tenio.core.entity.define.result.PlayerLoggedInResult;
+import com.tenio.core.network.define.RestMethod;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
- * Returns the result when a player tried to log in the server.
+ * Handles an HTTP request which sent to the HTTP service from clients side.
  */
 @FunctionalInterface
-public interface EventPlayerLoggedinResult {
+public interface EventHttpRequestHandle {
 
   /**
-   * When a player tried to log in the server.
+   * Handles an HTTP request which sent to the HTTP service from client side.
    *
-   * @param player the joining {@link Player}
-   * @param result the joining result presented by {@link PlayerLoggedInResult}. A player is
-   *               considered as it joined the server when the result equals to success
-   * @see PlayerLoggedInResult#SUCCESS
+   * @param method   a {@link RestMethod} using in request
+   * @param request  a {@link HttpServletRequest} comes from client side
+   * @param response a {@link HttpServletResponse} sends to client side
    */
-  void handle(Player player, PlayerLoggedInResult result);
+  void handle(RestMethod method, HttpServletRequest request, HttpServletResponse response);
 }

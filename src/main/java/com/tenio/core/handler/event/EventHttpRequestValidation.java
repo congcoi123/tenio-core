@@ -22,23 +22,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
-import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.network.define.RestMethod;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
- * When a connection is disconnected.
+ * Validates an HTTP request on the HTTP service. This method is used to intercept any HTTP
+ * request from clients side then validate it.
  */
 @FunctionalInterface
-public interface EventDisconnectConnection {
+public interface EventHttpRequestValidation {
 
   /**
-   * When a connection is disconnected from server, and it is also removed from the management list.
+   * Validates an HTTP request on the HTTP service. This method is used to intercept any HTTP
+   * request from client side then validate it.
    *
-   * @param session the disconnected {@link Session}
-   * @param mode    the corresponding {@link ConnectionDisconnectMode} which shows the reason for
-   *               disconnection
+   * @param method   the {@link RestMethod} using in request
+   * @param request  a {@link HttpServletRequest} comes from client side
+   * @param response a {@link HttpServletResponse} sends to client side
+   * @return an instance of {@link HttpServletResponse} for the following steps in the request
+   * handler
+   * @see EventHttpRequestHandle
    */
-  void handle(Session session, ConnectionDisconnectMode mode);
+  HttpServletResponse handle(RestMethod method, HttpServletRequest request,
+                             HttpServletResponse response);
 }

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension;
+package com.tenio.core.handler;
 
 import com.tenio.common.data.ZeroArray;
 import com.tenio.common.data.ZeroMap;
@@ -38,7 +38,7 @@ import com.tenio.core.server.ServerImpl;
 /**
  * This class provides all the necessary APIs for a logic game handling.
  */
-public abstract class AbstractExtension extends AbstractLogger {
+public abstract class AbstractHandler extends AbstractLogger {
 
   private final Server server = ServerImpl.getInstance();
 

@@ -22,27 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.extension.events;
+package com.tenio.core.handler.event;
 
+import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
-import com.tenio.core.entity.define.result.RoomCreatedResult;
-import com.tenio.core.entity.setting.InitialRoomSetting;
+import com.tenio.core.entity.define.result.PlayerLeftRoomResult;
 
 /**
- * Returns the result when the server attempts to create a new room.
+ * When a player left its current room.
  */
 @FunctionalInterface
-public interface EventRoomCreatedResult {
+public interface EventPlayerAfterLeftRoom {
 
   /**
-   * Retrieves the result when the server attempts to create a new room.
+   * When a player has just left its current room.
    *
-   * @param room    a new creating {@link Room}
-   * @param setting all settings in {@link InitialRoomSetting} needs for the room creation
-   * @param result  the creation result presented by {@link RoomCreatedResult}. A
-   *                new room is considered as it is created and is added to the management list
-   *                when the result equals to success
-   * @see RoomCreatedResult#SUCCESS
+   * @param player the left {@link Player}
+   * @param room   the {@link Room} which the player has just left out
+   * @param result the leaving result presented by {@link PlayerLeftRoomResult}. A player is
+   *               considered as it has already left its room when the result equals to success
+   * @see PlayerLeftRoomResult#SUCCESS
+   * @see EventPlayerBeforeLeaveRoom
    */
-  void handle(Room room, InitialRoomSetting setting, RoomCreatedResult result);
+  void handle(Player player, Room room, PlayerLeftRoomResult result);
 }
