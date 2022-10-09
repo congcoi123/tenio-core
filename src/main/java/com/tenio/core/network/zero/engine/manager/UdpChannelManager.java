@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.manager;
 
+import com.tenio.core.exception.EmptyUdpChannelsException;
 import com.tenio.core.manager.Manager;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +65,9 @@ public class UdpChannelManager implements Manager {
    */
   public synchronized int getCurrentAvailableUdpPort() {
     int size = udpPorts.size();
+    if (size == 0) {
+      throw new EmptyUdpChannelsException();
+    }
     currentIndex++;
     if (currentIndex >= size) {
       currentIndex = 0;
