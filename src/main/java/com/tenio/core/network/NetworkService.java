@@ -130,6 +130,13 @@ public interface NetworkService extends Service {
   void setSocketAcceptorServerAddress(String serverAddress);
 
   /**
+   * Declares the number of Udp channel will be opened on the server.
+   *
+   * @param amountUdpWorkers the number of opening Udp channels
+   */
+  void setSocketAcceptorAmountUdpWorkers(int amountUdpWorkers);
+
+  /**
    * Sets the number of acceptor workers for the socket (TCP) which are using to accept new coming
    * clients.
    *

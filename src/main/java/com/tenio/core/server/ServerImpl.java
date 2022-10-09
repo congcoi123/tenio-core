@@ -50,6 +50,7 @@ import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.core.network.zero.engine.manager.UdpChannelManager;
 import com.tenio.core.schedule.ScheduleService;
 import com.tenio.core.schedule.ScheduleServiceImpl;
 import com.tenio.core.server.service.InternalProcessorService;
@@ -74,6 +75,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final EventManager eventManager;
   private final RoomManager roomManager;
   private final PlayerManager playerManager;
+  private final UdpChannelManager udpChannelManager;
   private final InternalProcessorService internalProcessorService;
   private final ScheduleService scheduleService;
   private final NetworkService networkService;
@@ -84,6 +86,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     eventManager = EventManager.newInstance();
     roomManager = RoomManagerImpl.newInstance(eventManager);
     playerManager = PlayerManagerImpl.newInstance(eventManager);
+    udpChannelManager = UdpChannelManager.newInstance();
     networkService = NetworkServiceImpl.newInstance(eventManager);
     internalProcessorService = InternalProcessorServiceImpl.newInstance(eventManager);
     scheduleService = ScheduleServiceImpl.newInstance(eventManager);
@@ -204,37 +207,40 @@ public final class ServerImpl extends SystemLogger implements Server {
         (Class<? extends ConnectionFilter>) connectionFilterClazz,
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_MAX_CONNECTIONS_PER_IP));
 
-    final var httpConfig = (List<HttpConfig>) configuration.get(CoreConfigurationType.HTTP_CONFIGS);
+    final var httpConfig =
+        (List<HttpConfig>) configuration.get(CoreConfigurationType.NETWORK_HTTP_CONFIGS);
     networkService.setHttpPort(!httpConfig.isEmpty() ? httpConfig.get(0).getPort() : 0);
     networkService.setHttpPathConfigs(!httpConfig.isEmpty() ? httpConfig.get(0).getPaths() : null);
 
     networkService.setSocketAcceptorServerAddress(
         configuration.getString(CoreConfigurationType.SERVER_ADDRESS));
+    networkService.setSocketAcceptorAmountUdpWorkers(
+        configuration.getInt(CoreConfigurationType.WORKER_UDP_WORKER));
 
     networkService.setSocketAcceptorBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE));
     networkService.setSocketAcceptorWorkers(
-        configuration.getInt(CoreConfigurationType.THREADS_SOCKET_ACCEPTOR));
+        configuration.getInt(CoreConfigurationType.WORKER_SOCKET_ACCEPTOR));
 
     networkService.setSocketConfigs(
-        (List<SocketConfig>) configuration.get(CoreConfigurationType.SOCKET_CONFIGS));
+        (List<SocketConfig>) configuration.get(CoreConfigurationType.NETWORK_SOCKET_CONFIGS));
 
     networkService.setSocketReaderBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_READER_BUFFER_SIZE));
     networkService.setSocketReaderWorkers(
-        configuration.getInt(CoreConfigurationType.THREADS_SOCKET_READER));
+        configuration.getInt(CoreConfigurationType.WORKER_SOCKET_READER));
 
     networkService.setSocketWriterBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_WRITER_BUFFER_SIZE));
     networkService.setSocketWriterWorkers(
-        configuration.getInt(CoreConfigurationType.THREADS_SOCKET_WRITER));
+        configuration.getInt(CoreConfigurationType.WORKER_SOCKET_WRITER));
 
     networkService
         .setWebSocketConsumerWorkers(
-            configuration.getInt(CoreConfigurationType.THREADS_WEBSOCKET_CONSUMER));
+            configuration.getInt(CoreConfigurationType.WORKER_WEBSOCKET_CONSUMER));
     networkService
         .setWebSocketProducerWorkers(
-            configuration.getInt(CoreConfigurationType.THREADS_WEBSOCKET_PRODUCER));
+            configuration.getInt(CoreConfigurationType.WORKER_WEBSOCKET_PRODUCER));
 
     networkService.setWebSocketReceiverBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_RECEIVER_BUFFER_SIZE));
@@ -291,7 +297,7 @@ public final class ServerImpl extends SystemLogger implements Server {
         .setMaxRequestQueueSize(
             configuration.getInt(CoreConfigurationType.PROP_MAX_REQUEST_QUEUE_SIZE));
     internalProcessorService
-        .setThreadPoolSize(configuration.getInt(CoreConfigurationType.THREADS_INTERNAL_PROCESSOR));
+        .setThreadPoolSize(configuration.getInt(CoreConfigurationType.WORKER_INTERNAL_PROCESSOR));
   }
 
   @Override
@@ -327,6 +333,11 @@ public final class ServerImpl extends SystemLogger implements Server {
   @Override
   public RoomManager getRoomManager() {
     return roomManager;
+  }
+
+  @Override
+  public UdpChannelManager getUdpChannelManager() {
+    return udpChannelManager;
   }
 
   @Override

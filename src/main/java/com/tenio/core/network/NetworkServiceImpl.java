@@ -227,6 +227,11 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
+  public void setSocketAcceptorAmountUdpWorkers(int amountUdpWorkers) {
+    socketService.setAcceptorAmountUdpWorkers(amountUdpWorkers);
+  }
+
+  @Override
   public void setSocketAcceptorWorkers(int workerSize) {
     socketService.setAcceptorWorkerSize(workerSize);
   }

@@ -110,22 +110,19 @@ public final class ConfigurationAssessment {
   @SuppressWarnings("unchecked")
   private boolean containsTcpSocketConfig() {
     var socketConfigs =
-        (List<SocketConfig>) configuration.get(CoreConfigurationType.SOCKET_CONFIGS);
+        (List<SocketConfig>) configuration.get(CoreConfigurationType.NETWORK_SOCKET_CONFIGS);
     return socketConfigs.stream()
         .anyMatch(socketConfig -> socketConfig.getType() == TransportType.TCP);
   }
 
   @SuppressWarnings("unchecked")
   private boolean containsUdpSocketConfig() {
-    var socketConfigs =
-        (List<SocketConfig>) configuration.get(CoreConfigurationType.SOCKET_CONFIGS);
-    return socketConfigs.stream()
-        .anyMatch(socketConfig -> socketConfig.getType() == TransportType.UDP);
+    return configuration.getInt(CoreConfigurationType.WORKER_UDP_WORKER) > 0;
   }
 
   @SuppressWarnings("unchecked")
   private boolean containsHttpPathConfigs() {
-    var httpConfigs = (List<HttpConfig>) configuration.get(CoreConfigurationType.HTTP_CONFIGS);
+    var httpConfigs = (List<HttpConfig>) configuration.get(CoreConfigurationType.NETWORK_HTTP_CONFIGS);
     return !httpConfigs.isEmpty();
   }
 }

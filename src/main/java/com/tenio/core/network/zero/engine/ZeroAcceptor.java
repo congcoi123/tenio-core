@@ -57,6 +57,13 @@ public interface ZeroAcceptor extends ZeroEngine {
   void setServerAddress(String serverAddress);
 
   /**
+   * Declares the number of Udp channel will be opened on the server.
+   *
+   * @param amountUdpWorkers the number of opening Udp channels
+   */
+  void setAmountUdpWorkers(int amountUdpWorkers);
+
+  /**
    * Declares a list of socket configurations for the network.
    *
    * @param socketConfigs a list of {@link SocketConfig}

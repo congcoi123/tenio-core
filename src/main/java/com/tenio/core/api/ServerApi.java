@@ -241,7 +241,7 @@ public interface ServerApi {
    * @param player     the checking spectator ({@link Player} instance)
    * @param room       the current spectator's {@link Room}
    * @param targetSlot a new position ({@code integer} value) of transformed "participant" in
-   *                  its room
+   *                   its room
    * @throws UnsupportedOperationException this method is not supported at the moment
    */
   default void switchSpectatorToParticipant(Player player, Room room, int targetSlot) {
@@ -287,4 +287,12 @@ public interface ServerApi {
   default void sendPrivateMessage(Player sender, Player recipient, ServerMessage message) {
     throw new UnsupportedOperationException("Unsupported at the moment");
   }
+
+  /**
+   * Retrieves the current available UDP port.
+   *
+   * @return an {@code integer} value of UDP port
+   *
+   */
+  int getCurrentAvailableUdpPort();
 }
