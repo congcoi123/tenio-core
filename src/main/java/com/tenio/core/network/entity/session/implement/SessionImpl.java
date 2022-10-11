@@ -112,7 +112,7 @@ public final class SessionImpl implements Session {
     activated = false;
     connected = false;
     hasUdp = false;
-    enabledKcp = true; // TODO: Temporarily set
+    enabledKcp = false;
     hasKcp = false;
 
     setCreatedTime(now());
@@ -187,8 +187,8 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void setEnabledKcp() {
-    enabledKcp = true;
+  public void setEnabledKcp(boolean enabledKcp) {
+    this.enabledKcp = enabledKcp;
   }
 
   @Override

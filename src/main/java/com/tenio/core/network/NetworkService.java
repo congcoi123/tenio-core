@@ -203,6 +203,13 @@ public interface NetworkService extends Service {
   void setSocketConfigs(List<SocketConfig> socketConfigs);
 
   /**
+   * Determines if UDP channels can use KCP transportation for communication.
+   *
+   * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}
+   */
+  void setSessionEnabledKcp(boolean enabledKcp);
+
+  /**
    * Sets a packet queue policy class for the network.
    *
    * @param clazz the implementation class of {@link PacketQueuePolicy} used to apply rules for

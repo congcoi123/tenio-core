@@ -260,6 +260,9 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.setPacketQueueSize(
         configuration.getInt(CoreConfigurationType.PROP_MAX_PACKET_QUEUE_SIZE));
 
+    networkService.setSessionEnabledKcp(
+        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP));
+
     final var binaryPacketCompressorClazz = Class
         .forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_COMPRESSOR).strip());
     final var binaryPacketCompressor =

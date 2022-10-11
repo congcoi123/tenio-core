@@ -141,8 +141,10 @@ public interface Session {
 
   /**
    * Allows using the KCP transportation via UDP channels.
+   *
+   * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}
    */
-  void setEnabledKcp();
+  void setEnabledKcp(boolean enabledKcp);
 
   /**
    * Determines if the session has a KCP instance for communication.

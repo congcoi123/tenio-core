@@ -281,6 +281,11 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
     }
   }
 
+  @Override
+  public void setSessionEnabledKcp(boolean enabledKcp) {
+    sessionManager.setEnabledKcp(enabledKcp);
+  }
+
   private boolean containsSocketPort(List<SocketConfig> socketConfigs) {
     return socketConfigs.stream()
         .anyMatch(socketConfig -> socketConfig.getType() == TransportType.TCP

@@ -61,6 +61,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private final Map<SocketAddress, Session> sessionByDatagrams;
   private PacketQueuePolicy packetQueuePolicy;
   private int packetQueueSize;
+  private boolean enabledKcp;
   private volatile int sessionCount;
 
   private SessionManagerImpl(EventManager eventManager) {
@@ -87,6 +88,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     session.setSelectionKey(selectionKey);
     session.setSessionManager(this);
     session.setPacketQueue(createNewPacketQueue());
+    session.setEnabledKcp(enabledKcp);
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
       sessionBySockets.put(session.getSocketChannel(), session);
@@ -209,5 +211,10 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   @Override
   public int getSessionCount() {
     return sessionCount;
+  }
+
+  @Override
+  public void setEnabledKcp(boolean enabledKcp) {
+    this.enabledKcp = enabledKcp;
   }
 }

@@ -174,4 +174,11 @@ public interface SessionManager extends Manager {
    * @return the current number of sessions in the management list
    */
   int getSessionCount();
+
+  /**
+   * Determines if UDP channels can use KCP transportation for communication.
+   *
+   * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}
+   */
+  void setEnabledKcp(boolean enabledKcp);
 }
