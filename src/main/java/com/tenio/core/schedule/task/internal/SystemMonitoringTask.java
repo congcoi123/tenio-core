@@ -22,50 +22,41 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.schedule.task;
+package com.tenio.core.schedule.task.internal;
 
+import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.network.statistic.NetworkReaderStatistic;
-import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.monitoring.system.SystemMonitoring;
+import com.tenio.core.schedule.task.AbstractTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Collecting the traffic data like the amount of reader and writer binary.
+ * To retrieve the current system information in period time. You can configure
+ * this time in your own configurations, see {@link CoreConfiguration}
  */
-public final class TrafficCounterTask extends AbstractTask {
+public final class SystemMonitoringTask extends AbstractTask {
 
-  private NetworkReaderStatistic networkReaderStatistic;
-  private NetworkWriterStatistic networkWriterStatistic;
+  private final SystemMonitoring systemMonitoring;
 
-  private TrafficCounterTask(EventManager eventManager) {
+  private SystemMonitoringTask(EventManager eventManager) {
     super(eventManager);
+
+    systemMonitoring = SystemMonitoring.newInstance();
   }
 
-  public static TrafficCounterTask newInstance(EventManager eventManager) {
-    return new TrafficCounterTask(eventManager);
+  public static SystemMonitoringTask newInstance(EventManager eventManager) {
+    return new SystemMonitoringTask(eventManager);
   }
 
   @Override
   public ScheduledFuture<?> run() {
     return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-        () -> eventManager.emit(ServerEvent.FETCHED_BANDWIDTH_INFO,
-            networkReaderStatistic.getReadBytes(),
-            networkReaderStatistic.getReadPackets(),
-            networkReaderStatistic.getReadDroppedPackets(),
-            networkWriterStatistic.getWrittenBytes(), networkWriterStatistic.getWrittenPackets(),
-            networkWriterStatistic.getWrittenDroppedPacketsByPolicy(),
-            networkWriterStatistic.getWrittenDroppedPacketsByFull()), 0, interval,
-        TimeUnit.SECONDS);
-  }
-
-  public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
-    this.networkReaderStatistic = networkReaderStatistic;
-  }
-
-  public void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic) {
-    this.networkWriterStatistic = networkWriterStatistic;
+        () -> eventManager.emit(ServerEvent.SYSTEM_MONITORING, systemMonitoring.getCpuUsage(),
+            systemMonitoring.getTotalMemory(), systemMonitoring.getUsedMemory(),
+            systemMonitoring.getFreeMemory(),
+            systemMonitoring.countRunningThreads()), 0, interval, TimeUnit.SECONDS);
   }
 }

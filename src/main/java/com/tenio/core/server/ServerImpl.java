@@ -214,8 +214,11 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     networkService.setSocketAcceptorServerAddress(
         configuration.getString(CoreConfigurationType.SERVER_ADDRESS));
+
     networkService.setSocketAcceptorAmountUdpWorkers(
         configuration.getInt(CoreConfigurationType.WORKER_UDP_WORKER));
+    networkService.setSocketAcceptorEnabledKcp(
+        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP));
 
     networkService.setSocketAcceptorBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE));
@@ -298,6 +301,11 @@ public final class ServerImpl extends SystemLogger implements Server {
             configuration.getInt(CoreConfigurationType.PROP_MAX_REQUEST_QUEUE_SIZE));
     internalProcessorService
         .setThreadPoolSize(configuration.getInt(CoreConfigurationType.WORKER_INTERNAL_PROCESSOR));
+    internalProcessorService.setEnabledKcp(
+        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP
+        ));
+    internalProcessorService.setKeepPlayerOnDisconnection(
+        !configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ALLOW_CHANGE_SESSION));
   }
 
   @Override

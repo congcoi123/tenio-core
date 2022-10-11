@@ -32,12 +32,12 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.schedule.task.AutoDisconnectPlayerTask;
-import com.tenio.core.schedule.task.AutoRemoveRoomTask;
-import com.tenio.core.schedule.task.CcuReportTask;
-import com.tenio.core.schedule.task.DeadlockScanTask;
-import com.tenio.core.schedule.task.SystemMonitoringTask;
-import com.tenio.core.schedule.task.TrafficCounterTask;
+import com.tenio.core.schedule.task.internal.AutoDisconnectPlayerTask;
+import com.tenio.core.schedule.task.internal.AutoRemoveRoomTask;
+import com.tenio.core.schedule.task.internal.CcuReportTask;
+import com.tenio.core.schedule.task.internal.DeadlockScanTask;
+import com.tenio.core.schedule.task.internal.SystemMonitoringTask;
+import com.tenio.core.schedule.task.internal.TrafficCounterTask;
 
 /**
  * The implementation for the schedule service.

@@ -56,6 +56,13 @@ public interface InternalProcessorService extends Controller {
   void setKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection);
 
   /**
+   * Determines if UDP channels can use KCP transportation for communication.
+   *
+   * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}
+   */
+  void setEnabledKcp(boolean enabledKcp);
+
+  /**
    * Sets a player manager for the server which is used to manage all players.
    *
    * @param playerManager an instance of {@link PlayerManager}

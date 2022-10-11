@@ -145,6 +145,13 @@ public interface NetworkService extends Service {
   void setSocketAcceptorWorkers(int workerSize);
 
   /**
+   * Determines if UDP channels can use KCP transportation for communication.
+   *
+   * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}
+   */
+  void setSocketAcceptorEnabledKcp(boolean enabledKcp);
+
+  /**
    * Sets the number of reader workers for the socket (TCP) which are using to read coming packets
    * from clients side.
    *

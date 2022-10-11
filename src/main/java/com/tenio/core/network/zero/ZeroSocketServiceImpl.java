@@ -182,6 +182,11 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   }
 
   @Override
+  public void setAcceptorEnabledKcp(boolean enabledKcp) {
+    acceptorEngine.setEnabledKcp(enabledKcp);
+  }
+
+  @Override
   public void setReaderBufferSize(int bufferSize) {
     readerEngine.setMaxBufferSize(bufferSize);
   }

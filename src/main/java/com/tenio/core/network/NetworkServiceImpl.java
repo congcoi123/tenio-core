@@ -237,6 +237,11 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
+  public void setSocketAcceptorEnabledKcp(boolean enabledKcp) {
+    socketService.setAcceptorEnabledKcp(enabledKcp);
+  }
+
+  @Override
   public void setSocketReaderWorkers(int workerSize) {
     socketService.setReaderWorkerSize(workerSize);
   }

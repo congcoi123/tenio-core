@@ -32,6 +32,7 @@ import com.tenio.core.network.zero.engine.ZeroReader;
 import com.tenio.core.network.zero.engine.listener.ZeroAcceptorListener;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
 import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
+import io.netty.buffer.Unpooled;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -118,10 +119,8 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
               readUpdData(datagramChannel, selectionKey, readerBuffer);
             }
           }
-
         }
       }
-
     } catch (ClosedSelectorException e1) {
       error(e1, "Selector is closed: ", e1.getMessage());
     } catch (CancelledKeyException e2) {
@@ -241,7 +240,11 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         getDatagramIoHandler().channelRead(datagramChannel, remoteAddress, binary);
       } else {
         session.addReadBytes(byteCount);
-        getDatagramIoHandler().sessionRead(session, binary);
+        if (session.containsKcp()) {
+          session.getUkcp().read(Unpooled.wrappedBuffer(binary));
+        } else {
+          getDatagramIoHandler().sessionRead(session, binary);
+        }
       }
     }
 

@@ -63,6 +63,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   private ZeroReaderListener zeroReaderListener;
   private String serverAddress;
   private int amountUdpWorkers;
+  private boolean enabledKcp;
   private List<SocketConfig> socketConfigs;
 
   private ZeroAcceptorImpl(EventManager eventManager) {
@@ -105,7 +106,9 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     try {
       var serverSocketChannel = ServerSocketChannel.open();
       serverSocketChannel.configureBlocking(false);
-      if (OsUtility.getOperatingSystemType() != OsUtility.OsType.WINDOWS) {
+      if (OsUtility.getOperatingSystemType() == OsUtility.OsType.WINDOWS) {
+        serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+      } else {
         serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
       }
       serverSocketChannel.socket().bind(new InetSocketAddress(serverAddress, port));
@@ -127,7 +130,9 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
         for (int i = 0; i < amountUdpWorkers; i++) {
           var datagramChannel = DatagramChannel.open();
           datagramChannel.configureBlocking(false);
-          if (OsUtility.getOperatingSystemType() != OsUtility.OsType.WINDOWS) {
+          if (OsUtility.getOperatingSystemType() == OsUtility.OsType.WINDOWS) {
+            datagramChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+          } else {
             datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
           }
           datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
@@ -138,7 +143,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
           zeroReaderListener.acceptDatagramChannel(datagramChannel);
           int boundPort = datagramChannel.socket().getLocalPort();
           ServerImpl.getInstance().getUdpChannelManager().appendUdpPort(boundPort);
-          info("UDP SOCKET",
+          info(enabledKcp ? "UDP CHANNEL (KCP)" : "UDP CHANNEL",
               buildgen("Started at address: ", serverAddress, ", port: ", boundPort));
           boundSockets.add(datagramChannel);
         }
@@ -326,6 +331,11 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   @Override
   public void setAmountUdpWorkers(int amountUdpWorkers) {
     this.amountUdpWorkers = amountUdpWorkers;
+  }
+
+  @Override
+  public void setEnabledKcp(boolean enabledKcp) {
+    this.enabledKcp = enabledKcp;
   }
 
   @Override

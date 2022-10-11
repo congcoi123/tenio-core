@@ -27,6 +27,7 @@ package com.tenio.core.network.zero.engine.writer;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
+import io.netty.buffer.Unpooled;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -82,17 +83,21 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
     // ready to send
     getBuffer().flip();
 
-    // send data to the client
-    try {
-      int writtenBytes = datagramChannel.send(getBuffer(), remoteSocketAddress);
-      // update statistic data
-      getNetworkWriterStatistic().updateWrittenBytes(writtenBytes);
-      getNetworkWriterStatistic().updateWrittenPackets(1);
+    if (session.containsKcp()) {
+      session.getUkcp().write(Unpooled.wrappedBuffer(getBuffer()));
+    } else {
+      // send data to the client
+      try {
+        int writtenBytes = datagramChannel.send(getBuffer(), remoteSocketAddress);
+        // update statistic data
+        getNetworkWriterStatistic().updateWrittenBytes(writtenBytes);
+        getNetworkWriterStatistic().updateWrittenPackets(1);
 
-      // update statistic data for session
-      session.addWrittenBytes(writtenBytes);
-    } catch (IOException e) {
-      error(e, "Error occurred in writing on session: ", session.toString());
+        // update statistic data for session
+        session.addWrittenBytes(writtenBytes);
+      } catch (IOException e) {
+        error(e, "Error occurred in writing on session: ", session.toString());
+      }
     }
 
     // it is always safe to remove the packet from queue hence it should be sent
