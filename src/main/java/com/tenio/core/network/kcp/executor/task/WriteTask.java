@@ -2,6 +2,7 @@ package com.tenio.core.network.kcp.executor.task;
 
 import com.tenio.core.network.kcp.executor.KcpTask;
 import com.tenio.core.network.kcp.kcp.Ukcp;
+import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.util.Queue;
@@ -14,6 +15,7 @@ public class WriteTask implements KcpTask {
 
 
   private final Ukcp ukcp;
+  private NetworkWriterStatistic writerStatistic;
 
   public WriteTask(Ukcp ukcp) {
     this.ukcp = ukcp;

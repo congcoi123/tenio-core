@@ -41,15 +41,17 @@ public class KcpOutputSocket implements KcpOutput<DatagramSocket> {
   }
 
   @Override
-  public void out(Kcp kcp, ByteBuf data) {
+  public int out(ByteBuf data) {
     byte[] binary = new byte[data.readableBytes()];
     data.duplicate().readBytes(binary);
     data.release();
     var request = new DatagramPacket(binary, binary.length, getLocalAddress(), getPort());
     try {
       datagramSocket.send(request);
+      return binary.length;
     } catch (IOException e) {
       e.printStackTrace();
     }
+    return 0;
   }
 }

@@ -248,14 +248,14 @@ public class Kcp implements IKcp {
     return (int) (later - earlier);
   }
 
-  private static void output(ByteBuf data, Kcp kcp) {
+  private static int output(ByteBuf data, Kcp kcp) {
     if (log.isDebugEnabled()) {
       log.debug("{} [RO] {} bytes", kcp, data.readableBytes());
     }
     if (data.readableBytes() == 0) {
-      return;
+      return 0;
     }
-    kcp.output.out(kcp, data);
+    return kcp.output.out(data);
   }
 
   private static int encodeSeg(ByteBuf buf, Segment seg) {

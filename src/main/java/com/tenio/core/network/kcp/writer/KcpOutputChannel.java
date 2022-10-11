@@ -1,6 +1,5 @@
 package com.tenio.core.network.kcp.writer;
 
-import com.tenio.core.network.kcp.kcp.Kcp;
 import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -38,18 +37,12 @@ public class KcpOutputChannel implements KcpOutput<DatagramChannel> {
   }
 
   @Override
-  public void out(Kcp kcp, ByteBuf data) {
-    // send data to the client
+  public int out(ByteBuf data) {
     try {
-      getWriter().send(data.nioBuffer(), getRemoteAddress());
-      // update statistic data
-//            getNetworkWriterStatistic().updateWrittenBytes(writtenBytes);
-//            getNetworkWriterStatistic().updateWrittenPackets(1);
-
-      // update statistic data for session
-//            session.addWrittenBytes(writtenBytes);
+      return getWriter().send(data.nioBuffer(), getRemoteAddress());
     } catch (IOException e) {
-//            error(e, "Error occurred in writing on session: ", session.toString());
+      e.printStackTrace();
     }
+    return 0;
   }
 }

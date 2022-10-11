@@ -3,6 +3,7 @@ package com.tenio.core.network.kcp.executor.task;
 import com.tenio.core.network.kcp.executor.KcpTask;
 import com.tenio.core.network.kcp.internal.CodecOutputList;
 import com.tenio.core.network.kcp.kcp.Ukcp;
+import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.util.Queue;
@@ -15,6 +16,7 @@ public class ReadTask implements KcpTask {
 
 
   private final Ukcp ukcp;
+  private NetworkReaderStatistic readerStatistic;
 
   public ReadTask(Ukcp ukcp) {
     this.ukcp = ukcp;

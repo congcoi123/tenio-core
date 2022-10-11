@@ -84,6 +84,15 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
   private InternalProcessorServiceImpl(EventManager eventManager) {
     super(eventManager);
+  }
+
+  public static InternalProcessorServiceImpl newInstance(EventManager eventManager) {
+    return new InternalProcessorServiceImpl(eventManager);
+  }
+
+  @Override
+  public void initialize() {
+    super.initialize();
     if (enabledKcp) {
       kcpConfiguration = new KcpConfiguration();
       hashedWheelTimer =
@@ -92,10 +101,6 @@ public final class InternalProcessorServiceImpl extends AbstractController
       kcpIoHandler = KcpIoHandlerImpl.newInstance(eventManager);
       kcpConvId = new AtomicInteger(0);
     }
-  }
-
-  public static InternalProcessorServiceImpl newInstance(EventManager eventManager) {
-    return new InternalProcessorServiceImpl(eventManager);
   }
 
   @Override

@@ -66,6 +66,7 @@ public class Ukcp {
     this.session = session;
     this.writeBuffer = new LinkedBlockingQueue<>();
     this.readBuffer = new LinkedBlockingQueue<>();
+    this.session.setUkcp(this);
 
     if (kcpConfiguration.getReadBufferSize() != -1) {
       this.controlReadBufferSize = true;
