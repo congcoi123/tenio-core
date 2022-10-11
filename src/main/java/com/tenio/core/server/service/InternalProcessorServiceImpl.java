@@ -37,13 +37,13 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.protocol.Request;
 import com.tenio.core.network.entity.protocol.implement.RequestImpl;
 import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.network.kcp.configuration.KcpConfiguration;
 import com.tenio.core.network.kcp.executor.MessageExecutor;
 import com.tenio.core.network.kcp.executor.MessageExecutorPool;
-import com.tenio.core.network.kcp.configuration.KcpConfiguration;
-import com.tenio.core.network.kcp.writer.KcpOutput;
-import com.tenio.core.network.kcp.writer.KcpOutputChannel;
 import com.tenio.core.network.kcp.executor.task.ScheduleTask;
 import com.tenio.core.network.kcp.kcp.Ukcp;
+import com.tenio.core.network.kcp.writer.KcpOutput;
+import com.tenio.core.network.kcp.writer.KcpOutputChannel;
 import com.tenio.core.network.zero.handler.KcpIoHandler;
 import com.tenio.core.network.zero.handler.implement.KcpIoHandlerImpl;
 import io.netty.util.HashedWheelTimer;
@@ -72,12 +72,13 @@ public final class InternalProcessorServiceImpl extends AbstractController
   private static final String EVENT_KEY_SERVER_MESSAGE = "server-message";
   private static final String EVENT_KEY_DATAGRAM_REMOTE_ADDRESS = "datagram-remote-address";
 
-  private boolean enabledKcp;
+  private PlayerManager playerManager;
   private KcpConfiguration kcpConfiguration;
   private HashedWheelTimer hashedWheelTimer;
   private MessageExecutorPool messageExecutorPool;
-  private PlayerManager playerManager;
   private KcpIoHandler kcpIoHandler;
+  private AtomicInteger kcpConvId;
+  private boolean enabledKcp;
   private int maxNumberPlayers;
   private boolean keepPlayerOnDisconnection;
 
@@ -89,6 +90,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
           new HashedWheelTimer(new TimerThreadFactory(), 1, TimeUnit.MILLISECONDS);
       messageExecutorPool = kcpConfiguration.getMessageExecutorPool();
       kcpIoHandler = KcpIoHandlerImpl.newInstance(eventManager);
+      kcpConvId = new AtomicInteger(0);
     }
   }
 
@@ -278,14 +280,14 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
       if (enabledKcp) {
         if (sessionInstance.containsKcp()) {
-          // reconnect
+          // TODO: reconnect
 
         } else {
           // connect
           initializeKcp(sessionInstance, player);
         }
       } else {
-        eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player,
+        eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, -1,
             AttachedConnectionResult.SUCCESS);
       }
     }
@@ -295,12 +297,14 @@ public final class InternalProcessorServiceImpl extends AbstractController
     MessageExecutor messageExecutor = messageExecutorPool.getMessageExecutor();
     KcpOutput<DatagramChannel> kcpOutput = new KcpOutputChannel(session
         .getDatagramChannel(), session.getDatagramRemoteSocketAddress());
-    Ukcp ukcp = new Ukcp(1, kcpOutput, kcpIoHandler, messageExecutor, kcpConfiguration, session);
+    int kcpConv = kcpConvId.getAndIncrement();
+    Ukcp ukcp = new Ukcp(kcpConv, kcpOutput, kcpIoHandler, messageExecutor,
+        kcpConfiguration, session);
 
     messageExecutor.execute(() -> {
       try {
         ukcp.getKcpListener().channelActiveIn(session);
-        eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player,
+        eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, kcpConv,
             AttachedConnectionResult.SUCCESS);
       } catch (Exception exception) {
         ukcp.getKcpListener().sessionException(session, exception);

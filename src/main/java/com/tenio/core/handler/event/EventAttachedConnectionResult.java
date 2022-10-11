@@ -38,13 +38,14 @@ public interface EventAttachedConnectionResult {
   /**
    * When the server responds to the request from client side which requires using the UDP channel.
    *
-   * @param player the optional of {@link Player} which requires using UDP channel
-   * @param result the responded {@link AttachedConnectionResult} from the server, if the result
-   *               equals to {@link AttachedConnectionResult#PLAYER_NOT_FOUND} then the returned
-   *               player is empty, otherwise it is present
+   * @param player  the optional of {@link Player} which requires using UDP channel
+   * @param kcpConv the KCP convey ID when it is using, otherwise the value is always "-1"
+   * @param result  the responded {@link AttachedConnectionResult} from the server, if the result
+   *                equals to {@link AttachedConnectionResult#PLAYER_NOT_FOUND} then the returned
+   *                player is empty, otherwise it is present
    * @see ServerEvent#ATTACHED_CONNECTION_RESULT
    * @see EventAttachConnectionRequestValidation
    * @see Optional
    */
-  void handle(Optional<Player> player, AttachedConnectionResult result);
+  void handle(Optional<Player> player, int kcpConv, AttachedConnectionResult result);
 }

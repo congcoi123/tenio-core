@@ -114,9 +114,10 @@ public final class ConnectionEventHandler {
     eventAttachedConnectionResultOp.ifPresent(
         event -> eventManager.on(ServerEvent.ATTACHED_CONNECTION_RESULT, params -> {
           var player = (Optional<Player>) params[0];
-          var result = (AttachedConnectionResult) params[1];
+          var kcpConv = (int) params[1];
+          var result = (AttachedConnectionResult) params[2];
 
-          event.handle(player, result);
+          event.handle(player, kcpConv, result);
 
           return null;
         }));

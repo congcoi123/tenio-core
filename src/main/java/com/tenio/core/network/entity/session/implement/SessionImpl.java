@@ -28,6 +28,7 @@ import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
+import com.tenio.core.exception.EmptyUdpChannelsException;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
@@ -181,7 +182,7 @@ public final class SessionImpl implements Session {
   @Override
   public boolean isEnabledKcp() {
     if (!containsUdp()) {
-      // throw new KcpException();
+      throw new EmptyUdpChannelsException();
     }
     return enabledKcp;
   }
