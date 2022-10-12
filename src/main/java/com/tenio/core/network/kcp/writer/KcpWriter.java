@@ -1,6 +1,6 @@
 package com.tenio.core.network.kcp.writer;
 
-import io.netty.buffer.ByteBuf;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketAddress;
 
@@ -14,5 +14,5 @@ public interface KcpWriter<T> {
 
   T getWriter();
 
-  int write(ByteBuf data);
+  int write(byte[] binaries, int size) throws IOException;
 }

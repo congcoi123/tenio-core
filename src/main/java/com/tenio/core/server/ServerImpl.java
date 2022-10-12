@@ -189,10 +189,13 @@ public final class ServerImpl extends SystemLogger implements Server {
         .setTrafficCounterInterval(
             configuration.getInt(CoreConfigurationType.INTERVAL_TRAFFIC_COUNTER));
 
+    scheduleService.setSessionManager(networkService.getSessionManager());
     scheduleService.setPlayerManager(playerManager);
     scheduleService.setRoomManager(roomManager);
     scheduleService.setNetworkReaderStatistic(networkService.getNetworkReaderStatistic());
     scheduleService.setNetworkWriterStatistic(networkService.getNetworkWriterStatistic());
+    scheduleService.setEnabledKcp(
+        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP));
   }
 
   @SuppressWarnings("unchecked")

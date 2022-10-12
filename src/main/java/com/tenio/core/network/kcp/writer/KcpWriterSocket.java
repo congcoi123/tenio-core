@@ -1,6 +1,5 @@
 package com.tenio.core.network.kcp.writer;
 
-import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -40,17 +39,9 @@ public class KcpWriterSocket implements KcpWriter<DatagramSocket> {
   }
 
   @Override
-  public int write(ByteBuf data) {
-    byte[] binary = new byte[data.readableBytes()];
-    data.duplicate().readBytes(binary);
-    data.release();
-    var request = new DatagramPacket(binary, binary.length, getLocalAddress(), getPort());
-    try {
-      datagramSocket.send(request);
-      return binary.length;
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return 0;
+  public int write(byte[] binaries, int size) throws IOException {
+    var request = new DatagramPacket(binaries, size, getLocalAddress(), getPort());
+    datagramSocket.send(request);
+    return size;
   }
 }

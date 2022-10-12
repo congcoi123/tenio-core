@@ -321,6 +321,11 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
+  public SessionManager getSessionManager() {
+    return sessionManager;
+  }
+
+  @Override
   public NetworkReaderStatistic getNetworkReaderStatistic() {
     return networkReaderStatistic;
   }

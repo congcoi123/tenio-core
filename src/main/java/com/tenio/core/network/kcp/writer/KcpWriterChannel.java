@@ -1,9 +1,9 @@
 package com.tenio.core.network.kcp.writer;
 
-import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
 public class KcpWriterChannel implements KcpWriter<DatagramChannel> {
@@ -37,12 +37,15 @@ public class KcpWriterChannel implements KcpWriter<DatagramChannel> {
   }
 
   @Override
-  public int write(ByteBuf data) {
-    try {
-      return getWriter().send(data.nioBuffer(), getRemoteAddress());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return 0;
+  public int write(byte[] binaries, int size) throws IOException {
+    return getWriter().send(ByteBuffer.wrap(binaries), getRemoteAddress());
+  }
+
+  @Override
+  public String toString() {
+    return "KcpWriterChannel{" +
+        "datagramChannel=" + datagramChannel +
+        ", remoteAddress=" + remoteAddress +
+        '}';
   }
 }

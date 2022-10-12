@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.server.service;
 
 import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.configuration.kcp.KcpConfiguration;
 import com.tenio.core.controller.AbstractController;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
@@ -37,23 +38,16 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.protocol.Request;
 import com.tenio.core.network.entity.protocol.implement.RequestImpl;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.kcp.configuration.KcpConfiguration;
-import com.tenio.core.network.kcp.executor.MessageExecutorPool;
-import com.tenio.core.network.kcp.executor.task.ScheduleTask;
 import com.tenio.core.network.kcp.kcp.Ukcp;
 import com.tenio.core.network.kcp.writer.KcpWriterChannel;
 import com.tenio.core.network.zero.handler.KcpIoHandler;
 import com.tenio.core.network.zero.handler.implement.KcpIoHandlerImpl;
-import io.netty.util.HashedWheelTimer;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.annotation.Nonnull;
 
 /**
  * The implementation for the processor service.
@@ -71,9 +65,6 @@ public final class InternalProcessorServiceImpl extends AbstractController
   private static final String EVENT_KEY_DATAGRAM_REMOTE_ADDRESS = "datagram-remote-address";
 
   private PlayerManager playerManager;
-  private KcpConfiguration kcpConfiguration;
-  private HashedWheelTimer hashedWheelTimer;
-  private MessageExecutorPool messageExecutorPool;
   private KcpIoHandler kcpIoHandler;
   private AtomicInteger kcpConvId;
   private boolean enabledKcp;
@@ -92,10 +83,6 @@ public final class InternalProcessorServiceImpl extends AbstractController
   public void initialize() {
     super.initialize();
     if (enabledKcp) {
-      kcpConfiguration = new KcpConfiguration();
-      hashedWheelTimer =
-          new HashedWheelTimer(new TimerThreadFactory(), 1, TimeUnit.MILLISECONDS);
-      messageExecutorPool = kcpConfiguration.getMessageExecutorPool();
       kcpIoHandler = KcpIoHandlerImpl.newInstance(eventManager);
       kcpConvId = new AtomicInteger(0);
     }
@@ -297,25 +284,15 @@ public final class InternalProcessorServiceImpl extends AbstractController
   }
 
   private void initializeKcp(Session session, Optional<Player> player) {
-    var messageExecutor = messageExecutorPool.getMessageExecutor();
-    var kcpOutput = new KcpWriterChannel(session
+    var kcpWriter = new KcpWriterChannel(session
         .getDatagramChannel(), session.getDatagramRemoteSocketAddress());
     var kcpConv = kcpConvId.getAndIncrement();
-    var ukcp = new Ukcp(kcpConv, kcpOutput, kcpIoHandler, messageExecutor,
-        kcpConfiguration, session);
+    var ukcp = new Ukcp(0, KcpConfiguration.PROFILE, session, kcpIoHandler, kcpWriter);
+    System.out.println("KCP WRITER: " + kcpWriter);
 
-    messageExecutor.execute(() -> {
-      try {
-        ukcp.getKcpListener().channelActiveIn(session);
-        eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, kcpConv,
-            AttachedConnectionResult.SUCCESS);
-      } catch (Exception exception) {
-        ukcp.getKcpListener().sessionException(session, exception);
-      }
-    });
-
-    var scheduleTask = new ScheduleTask(messageExecutor, ukcp, hashedWheelTimer);
-    hashedWheelTimer.newTimeout(scheduleTask, ukcp.getInterval(), TimeUnit.MILLISECONDS);
+    ukcp.getKcpIoHandler().channelActiveIn(session);
+    eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, kcpConv,
+        AttachedConnectionResult.SUCCESS);
   }
 
   @Override
@@ -366,14 +343,5 @@ public final class InternalProcessorServiceImpl extends AbstractController
   @Override
   public void onDestroyed() {
     // do nothing
-  }
-}
-
-class TimerThreadFactory implements ThreadFactory {
-  private final AtomicInteger timeThreadName = new AtomicInteger(0);
-
-  @Override
-  public Thread newThread(@Nonnull Runnable runnable) {
-    return new Thread(runnable, "KcpServerTimerThread " + timeThreadName.addAndGet(1));
   }
 }

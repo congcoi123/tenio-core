@@ -30,6 +30,7 @@ import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.packet.policy.DefaultPacketQueuePolicy;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.protocol.Response;
+import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.filter.DefaultConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
@@ -256,6 +257,13 @@ public interface NetworkService extends Service {
    * @param packetDecoder an instance of {@link BinaryPacketDecoder}
    */
   void setPacketDecoder(BinaryPacketDecoder packetDecoder);
+
+  /**
+   * Retrieves the session manager instance.
+   *
+   * @return an instance of {@link SessionManager}
+   */
+  SessionManager getSessionManager();
 
   /**
    * Retrieves a network reader statistic instance which takes responsibility recording the

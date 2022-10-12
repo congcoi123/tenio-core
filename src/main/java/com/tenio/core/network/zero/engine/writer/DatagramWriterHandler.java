@@ -27,7 +27,6 @@ package com.tenio.core.network.zero.engine.writer;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
-import io.netty.buffer.Unpooled;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -70,24 +69,24 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
     // the datagram channel will send data by packet, so no fragment using here
     byte[] sendingData = packet.getData();
 
-    // buffer size is not enough, need to be allocated more bytes
-    if (getBuffer().capacity() < sendingData.length) {
-      debug("DATAGRAM CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(), " to ",
-          sendingData.length, " bytes");
-      allocateBuffer(sendingData.length);
-    }
-
-    // put data to buffer
-    getBuffer().put(sendingData);
-
-    // ready to send
-    getBuffer().flip();
-
     if (session.containsKcp()) {
-      session.getUkcp().write(Unpooled.wrappedBuffer(getBuffer()));
+      session.getUkcp().send(sendingData);
     } else {
       // send data to the client
       try {
+        // buffer size is not enough, need to be allocated more bytes
+        if (getBuffer().capacity() < sendingData.length) {
+          debug("DATAGRAM CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(), " to ",
+              sendingData.length, " bytes");
+          allocateBuffer(sendingData.length);
+        }
+
+        // put data to buffer
+        getBuffer().put(sendingData);
+
+        // ready to send
+        getBuffer().flip();
+
         int writtenBytes = datagramChannel.send(getBuffer(), remoteSocketAddress);
         // update statistic data
         getNetworkWriterStatistic().updateWrittenBytes(writtenBytes);

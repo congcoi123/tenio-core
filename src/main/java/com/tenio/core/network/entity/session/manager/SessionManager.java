@@ -39,11 +39,21 @@ import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.Iterator;
 
 /**
  * A session manager.
  */
 public interface SessionManager extends Manager {
+
+  /**
+   * Retrieves an iterator for a session management list. This method should be used to prevent
+   * the "escape references" issue.
+   *
+   * @return an iterator of {@link Session} management list
+   * @see Iterator
+   */
+  Iterator<Session> getSessionIterator();
 
   /**
    * Creates a new socket (TCP) session and adds it to the management list.

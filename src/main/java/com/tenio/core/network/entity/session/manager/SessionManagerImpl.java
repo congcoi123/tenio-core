@@ -39,6 +39,7 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -79,6 +80,13 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   public static SessionManager newInstance(EventManager eventManager) {
     return new SessionManagerImpl(eventManager);
+  }
+
+  @Override
+  public Iterator<Session> getSessionIterator() {
+    synchronized (this) {
+      return sessionByIds.values().iterator();
+    }
   }
 
   @Override
