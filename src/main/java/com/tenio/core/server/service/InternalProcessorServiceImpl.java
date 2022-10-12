@@ -38,12 +38,10 @@ import com.tenio.core.network.entity.protocol.Request;
 import com.tenio.core.network.entity.protocol.implement.RequestImpl;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.kcp.configuration.KcpConfiguration;
-import com.tenio.core.network.kcp.executor.MessageExecutor;
 import com.tenio.core.network.kcp.executor.MessageExecutorPool;
 import com.tenio.core.network.kcp.executor.task.ScheduleTask;
 import com.tenio.core.network.kcp.kcp.Ukcp;
-import com.tenio.core.network.kcp.writer.KcpOutput;
-import com.tenio.core.network.kcp.writer.KcpOutputChannel;
+import com.tenio.core.network.kcp.writer.KcpWriterChannel;
 import com.tenio.core.network.zero.handler.KcpIoHandler;
 import com.tenio.core.network.zero.handler.implement.KcpIoHandlerImpl;
 import io.netty.util.HashedWheelTimer;
@@ -265,13 +263,13 @@ public final class InternalProcessorServiceImpl extends AbstractController
             message);
 
     if (player.isEmpty()) {
-      eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player,
+      eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, -1,
           AttachedConnectionResult.PLAYER_NOT_FOUND);
     } else if (!player.get().containsSession()) {
-      eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player,
+      eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, -1,
           AttachedConnectionResult.SESSION_NOT_FOUND);
     } else if (!player.get().getSession().get().isTcp()) {
-      eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player,
+      eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, -1,
           AttachedConnectionResult.INVALID_SESSION_PROTOCOL);
     } else {
       var datagramChannel = request.getAttribute(EVENT_KEY_DATAGRAM_CHANNEL);
@@ -299,11 +297,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
   }
 
   private void initializeKcp(Session session, Optional<Player> player) {
-    MessageExecutor messageExecutor = messageExecutorPool.getMessageExecutor();
-    KcpOutput<DatagramChannel> kcpOutput = new KcpOutputChannel(session
+    var messageExecutor = messageExecutorPool.getMessageExecutor();
+    var kcpOutput = new KcpWriterChannel(session
         .getDatagramChannel(), session.getDatagramRemoteSocketAddress());
-    int kcpConv = kcpConvId.getAndIncrement();
-    Ukcp ukcp = new Ukcp(kcpConv, kcpOutput, kcpIoHandler, messageExecutor,
+    var kcpConv = kcpConvId.getAndIncrement();
+    var ukcp = new Ukcp(kcpConv, kcpOutput, kcpIoHandler, messageExecutor,
         kcpConfiguration, session);
 
     messageExecutor.execute(() -> {
@@ -316,7 +314,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
       }
     });
 
-    ScheduleTask scheduleTask = new ScheduleTask(messageExecutor, ukcp, hashedWheelTimer);
+    var scheduleTask = new ScheduleTask(messageExecutor, ukcp, hashedWheelTimer);
     hashedWheelTimer.newTimeout(scheduleTask, ukcp.getInterval(), TimeUnit.MILLISECONDS);
   }
 

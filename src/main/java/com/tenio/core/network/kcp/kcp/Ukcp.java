@@ -5,12 +5,10 @@ import com.tenio.core.network.kcp.configuration.KcpConfiguration;
 import com.tenio.core.network.kcp.executor.MessageExecutor;
 import com.tenio.core.network.kcp.executor.task.ReadTask;
 import com.tenio.core.network.kcp.executor.task.WriteTask;
-import com.tenio.core.network.kcp.writer.KcpOutput;
+import com.tenio.core.network.kcp.writer.KcpWriter;
 import com.tenio.core.network.zero.handler.KcpIoHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
@@ -18,12 +16,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Ukcp {
+public class Ukcp extends Kcp {
 
-  private static final InternalLogger log = InternalLoggerFactory.getInstance(Ukcp.class);
-
-
-  private final IKcp kcp;
   private final Queue<ByteBuf> writeBuffer;
   private final Queue<ByteBuf> readBuffer;
   private final MessageExecutor iMessageExecutor;
@@ -36,6 +30,7 @@ public class Ukcp {
   private final AtomicInteger writeBufferIncr = new AtomicInteger(-1);
   private final WriteTask writeTask = new WriteTask(this);
   private final ReadTask readTask = new ReadTask(this);
+  private final KcpWriter<?> writer;
   private boolean fastFlush = true;
   private long tsUpdate = -1;
   private boolean active;
@@ -55,11 +50,13 @@ public class Ukcp {
    *
    * @param output output for kcp
    */
-  public Ukcp(int conv, KcpOutput output, KcpIoHandler kcpListener,
+  public Ukcp(int conv, KcpWriter<?> writer, KcpIoHandler kcpListener,
               MessageExecutor iMessageExecutor,
               KcpConfiguration kcpConfiguration, Session session) {
+    super(conv);
+
+    this.writer = writer;
     this.timeoutMillis = kcpConfiguration.getTimeoutMillis();
-    this.kcp = new Kcp(conv, output);
     this.active = true;
     this.kcpListener = kcpListener;
     this.iMessageExecutor = iMessageExecutor;
@@ -432,7 +429,6 @@ public class Ukcp {
     return controlWriteBufferSize;
   }
 
-
   @Override
   public String toString() {
     return "Ukcp(" +
@@ -440,5 +436,10 @@ public class Ukcp {
         ", state=" + kcp.getState() +
         ", active=" + active +
         ')';
+  }
+
+  @Override
+  protected void output(byte[] buffer, int size) {
+    writer.write(buffer, size);
   }
 }

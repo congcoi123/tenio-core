@@ -6,12 +6,12 @@ import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 
-public class KcpOutputChannel implements KcpOutput<DatagramChannel> {
+public class KcpWriterChannel implements KcpWriter<DatagramChannel> {
 
   private final DatagramChannel datagramChannel;
   private final SocketAddress remoteAddress;
 
-  public KcpOutputChannel(DatagramChannel datagramChannel, SocketAddress remoteAddress) {
+  public KcpWriterChannel(DatagramChannel datagramChannel, SocketAddress remoteAddress) {
     this.datagramChannel = datagramChannel;
     this.remoteAddress = remoteAddress;
   }
@@ -37,7 +37,7 @@ public class KcpOutputChannel implements KcpOutput<DatagramChannel> {
   }
 
   @Override
-  public int out(ByteBuf data) {
+  public int write(ByteBuf data) {
     try {
       return getWriter().send(data.nioBuffer(), getRemoteAddress());
     } catch (IOException e) {

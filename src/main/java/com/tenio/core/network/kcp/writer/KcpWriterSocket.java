@@ -1,6 +1,5 @@
 package com.tenio.core.network.kcp.writer;
 
-import com.tenio.core.network.kcp.kcp.Kcp;
 import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -8,13 +7,13 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketAddress;
 
-public class KcpOutputSocket implements KcpOutput<DatagramSocket> {
+public class KcpWriterSocket implements KcpWriter<DatagramSocket> {
 
   private final DatagramSocket datagramSocket;
   private final InetAddress localAddress;
   private final int port;
 
-  public KcpOutputSocket(DatagramSocket datagramSocket, InetAddress localAddress, int port) {
+  public KcpWriterSocket(DatagramSocket datagramSocket, InetAddress localAddress, int port) {
     this.datagramSocket = datagramSocket;
     this.localAddress = localAddress;
     this.port = port;
@@ -41,7 +40,7 @@ public class KcpOutputSocket implements KcpOutput<DatagramSocket> {
   }
 
   @Override
-  public int out(ByteBuf data) {
+  public int write(ByteBuf data) {
     byte[] binary = new byte[data.readableBytes()];
     data.duplicate().readBytes(binary);
     data.release();

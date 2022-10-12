@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import java.net.InetAddress;
 import java.net.SocketAddress;
 
-public interface KcpOutput<T> {
+public interface KcpWriter<T> {
 
   InetAddress getLocalAddress();
 
@@ -14,5 +14,5 @@ public interface KcpOutput<T> {
 
   T getWriter();
 
-  int out(ByteBuf data);
+  int write(ByteBuf data);
 }
