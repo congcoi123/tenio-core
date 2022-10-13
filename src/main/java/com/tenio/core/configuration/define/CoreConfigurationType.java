@@ -56,6 +56,7 @@ public enum CoreConfigurationType implements ConfigurationType {
   SERVER_ID("server-id"),
   /**
    * The server address.
+   * @since 0.3.0
    */
   SERVER_ADDRESS("server-address"),
   /**
@@ -136,6 +137,7 @@ public enum CoreConfigurationType implements ConfigurationType {
   WORKER_INTERNAL_PROCESSOR("internal-processor"),
   /**
    * The number of UDP channel will be opened on the server.
+   * @since 0.3.0
    */
   WORKER_UDP_WORKER("udp-worker"),
   /**
@@ -238,6 +240,7 @@ public enum CoreConfigurationType implements ConfigurationType {
   NETWORK_PROP_ALLOW_CHANGE_SESSION("allow-change-session"),
   /**
    * Allows using KCP transportation in UDP channels.
+   * @since 0.3.0
    */
   NETWORK_PROP_ENABLED_KCP("enabled-kcp"),
   /**

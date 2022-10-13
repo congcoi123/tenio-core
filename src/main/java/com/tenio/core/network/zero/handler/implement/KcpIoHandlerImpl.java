@@ -33,6 +33,7 @@ import com.tenio.core.network.zero.handler.KcpIoHandler;
 
 /**
  * The implementation of {@link KcpIoHandler}.
+ * @since 0.3.0
  */
 public final class KcpIoHandlerImpl extends AbstractIoHandler implements KcpIoHandler {
 

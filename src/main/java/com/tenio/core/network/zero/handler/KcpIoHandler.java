@@ -28,6 +28,7 @@ import com.tenio.core.network.entity.session.Session;
 
 /**
  * The KCP channel behaviours.
+ * @since 0.3.0
  */
 public interface KcpIoHandler extends BaseIoHandler {
 

@@ -26,6 +26,7 @@ package com.tenio.core.configuration.kcp;
 
 /**
  * All related configuration when the server uses KCP transportation.
+ * @since 0.3.0
  */
 public final class KcpConfiguration {
 

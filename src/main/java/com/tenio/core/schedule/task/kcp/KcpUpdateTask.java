@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * This task takes responsibility to update every KCP channel frequently.
+ * @since 0.3.0
  */
 public final class KcpUpdateTask extends AbstractTask {
 

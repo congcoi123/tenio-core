@@ -34,6 +34,8 @@ import java.nio.channels.DatagramChannel;
 
 /**
  * The implementation of {@link KcpWriter} using on the server.
+ *
+ * @since 0.3.0
  */
 public class KcpWriterHandler extends SystemLogger implements KcpWriter<DatagramChannel> {
 

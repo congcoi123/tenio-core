@@ -32,6 +32,7 @@ import java.net.SocketAddress;
  * The class provides interfaces to allow KCP channel sending data via its conveying channel.
  *
  * @param <T> the conveying channel
+ * @since 0.3.0
  */
 public interface KcpWriter<T> {
 

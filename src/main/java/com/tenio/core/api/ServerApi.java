@@ -292,7 +292,7 @@ public interface ServerApi {
    * Retrieves the current available UDP port.
    *
    * @return an {@code integer} value of UDP port
-   *
+   * @since 0.3.0
    */
   int getCurrentAvailableUdpPort();
 }

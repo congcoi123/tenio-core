@@ -26,6 +26,7 @@ package com.tenio.core.configuration.kcp;
 
 /**
  * The profile mechanism allows configuring KCP behaviors by groups.
+ * @since 0.3.0
  */
 public enum KcpProfile {
 
