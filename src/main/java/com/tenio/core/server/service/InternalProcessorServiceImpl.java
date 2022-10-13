@@ -38,8 +38,8 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.protocol.Request;
 import com.tenio.core.network.entity.protocol.implement.RequestImpl;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.kcp.kcp.Ukcp;
-import com.tenio.core.network.kcp.writer.KcpWriterChannel;
+import com.tenio.core.network.entity.kcp.Ukcp;
+import com.tenio.core.network.zero.engine.writer.KcpWriterHandler;
 import com.tenio.core.network.zero.handler.KcpIoHandler;
 import com.tenio.core.network.zero.handler.implement.KcpIoHandlerImpl;
 import java.io.IOException;
@@ -284,13 +284,12 @@ public final class InternalProcessorServiceImpl extends AbstractController
   }
 
   private void initializeKcp(Session session, Optional<Player> player) {
-    var kcpWriter = new KcpWriterChannel(session
+    var kcpWriter = new KcpWriterHandler(session
         .getDatagramChannel(), session.getDatagramRemoteSocketAddress());
     var kcpConv = kcpConvId.getAndIncrement();
-    var ukcp = new Ukcp(0, KcpConfiguration.PROFILE, session, kcpIoHandler, kcpWriter);
-    System.out.println("KCP WRITER: " + kcpWriter);
-
+    var ukcp = new Ukcp(kcpConv, KcpConfiguration.PROFILE, session, kcpIoHandler, kcpWriter);
     ukcp.getKcpIoHandler().channelActiveIn(session);
+
     eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, kcpConv,
         AttachedConnectionResult.SUCCESS);
   }

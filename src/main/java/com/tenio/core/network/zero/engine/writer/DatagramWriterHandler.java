@@ -44,34 +44,34 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
 
   @Override
   public void send(PacketQueue packetQueue, Session session, Packet packet) {
-    // retrieve the datagram channel instance from session
-    var datagramChannel = session.getDatagramChannel();
-
-    // the InetSocketAddress should be saved when the datagram channel receive first
-    // messages from the client
-    var remoteSocketAddress = session.getDatagramRemoteSocketAddress();
-
-    // the datagram need to be declared first, something went wrong here, need to
-    // log the exception content
-    if (Objects.isNull(datagramChannel)) {
-      debug("DATAGRAM CHANNEL SEND", "UDP Packet cannot be sent to ", session.toString(),
-          ", no DatagramChannel was set");
-      return;
-    } else if (Objects.isNull(remoteSocketAddress)) {
-      debug("DATAGRAM CHANNEL SEND", "UDP Packet cannot be sent to ", session.toString(),
-          ", no InetSocketAddress was set");
-      return;
-    }
-
-    // clear the buffer first
-    getBuffer().clear();
-
     // the datagram channel will send data by packet, so no fragment using here
     byte[] sendingData = packet.getData();
 
     if (session.containsKcp()) {
       session.getUkcp().send(sendingData);
     } else {
+      // retrieve the datagram channel instance from session
+      var datagramChannel = session.getDatagramChannel();
+
+      // the InetSocketAddress should be saved when the datagram channel receive first
+      // messages from the client
+      var remoteSocketAddress = session.getDatagramRemoteSocketAddress();
+
+      // the datagram need to be declared first, something went wrong here, need to
+      // log the exception content
+      if (Objects.isNull(datagramChannel)) {
+        debug("DATAGRAM CHANNEL SEND", "UDP Packet cannot be sent to ", session.toString(),
+            ", no DatagramChannel was set");
+        return;
+      } else if (Objects.isNull(remoteSocketAddress)) {
+        debug("DATAGRAM CHANNEL SEND", "UDP Packet cannot be sent to ", session.toString(),
+            ", no InetSocketAddress was set");
+        return;
+      }
+
+      // clear the buffer first
+      getBuffer().clear();
+
       // send data to the client
       try {
         // buffer size is not enough, need to be allocated more bytes

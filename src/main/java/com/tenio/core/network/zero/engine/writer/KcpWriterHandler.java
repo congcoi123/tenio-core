@@ -1,17 +1,18 @@
-package com.tenio.core.network.kcp.writer;
+package com.tenio.core.network.zero.engine.writer;
 
+import com.tenio.core.network.zero.engine.KcpWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
-public class KcpWriterChannel implements KcpWriter<DatagramChannel> {
+public class KcpWriterHandler implements KcpWriter<DatagramChannel> {
 
   private final DatagramChannel datagramChannel;
   private final SocketAddress remoteAddress;
 
-  public KcpWriterChannel(DatagramChannel datagramChannel, SocketAddress remoteAddress) {
+  public KcpWriterHandler(DatagramChannel datagramChannel, SocketAddress remoteAddress) {
     this.datagramChannel = datagramChannel;
     this.remoteAddress = remoteAddress;
   }
@@ -43,7 +44,7 @@ public class KcpWriterChannel implements KcpWriter<DatagramChannel> {
 
   @Override
   public String toString() {
-    return "KcpWriterChannel{" +
+    return "KcpWriterHandler{" +
         "datagramChannel=" + datagramChannel +
         ", remoteAddress=" + remoteAddress +
         '}';

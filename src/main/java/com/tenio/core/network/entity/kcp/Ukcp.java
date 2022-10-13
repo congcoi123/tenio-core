@@ -1,9 +1,9 @@
-package com.tenio.core.network.kcp.kcp;
+package com.tenio.core.network.entity.kcp;
 
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.configuration.kcp.KcpProfile;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.kcp.writer.KcpWriter;
+import com.tenio.core.network.zero.engine.KcpWriter;
 import com.tenio.core.network.zero.handler.KcpIoHandler;
 import java.io.IOException;
 

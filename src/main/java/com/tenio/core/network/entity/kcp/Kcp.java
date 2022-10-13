@@ -9,7 +9,7 @@
 // + Lightweight, distributed as a single source file.
 //
 //=====================================================================
-package com.tenio.core.network.kcp.kcp;
+package com.tenio.core.network.entity.kcp;
 
 import java.util.ArrayList;
 
