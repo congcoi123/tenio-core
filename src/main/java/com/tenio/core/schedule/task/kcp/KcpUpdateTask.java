@@ -32,7 +32,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-
+/**
+ * This task takes responsibility to update every KCP channel frequently.
+ */
 public final class KcpUpdateTask extends AbstractTask {
 
   private SessionManager sessionManager;
@@ -65,6 +67,11 @@ public final class KcpUpdateTask extends AbstractTask {
         }, 0, 10, TimeUnit.MILLISECONDS);
   }
 
+  /**
+   * Sets a session manager to be able to update all managed sessions.
+   *
+   * @param sessionManager an instance of {@link SessionManager}
+   */
   public void setSessionManager(SessionManager sessionManager) {
     this.sessionManager = sessionManager;
   }
