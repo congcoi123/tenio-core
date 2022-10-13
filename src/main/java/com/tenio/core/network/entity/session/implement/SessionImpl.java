@@ -508,6 +508,11 @@ public final class SessionImpl implements Session {
         connectionDisconnectMode,
         playerDisconnectMode);
 
+    if (hasKcp) {
+      ukcp.getKcpIoHandler().channelInactiveIn(this);
+      setUkcp(null);
+    }
+
     switch (transportType) {
       case TCP:
         if (Objects.nonNull(socketChannel)) {

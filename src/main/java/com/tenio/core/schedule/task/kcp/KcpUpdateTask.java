@@ -27,14 +27,13 @@ package com.tenio.core.schedule.task.kcp;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.schedule.task.AbstractTask;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 
 public final class KcpUpdateTask extends AbstractTask {
-
-  private static final int DEFAULT_BYTE_BUFFER_SIZE = 10240;
 
   private SessionManager sessionManager;
 
@@ -48,16 +47,19 @@ public final class KcpUpdateTask extends AbstractTask {
 
   @Override
   public ScheduledFuture<?> run() {
+    ExecutorService workers = Executors.newFixedThreadPool(Runtime.getRuntime()
+        .availableProcessors() * 2);
     return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
         () -> {
           var iterator = sessionManager.getSessionIterator();
           while (iterator.hasNext()) {
             var session = iterator.next();
             if (session.containsKcp()) {
-              var ukcp = session.getUkcp();
-              ukcp.update();
-              byte[] buffer = new byte[DEFAULT_BYTE_BUFFER_SIZE];
-              ukcp.receive(buffer);
+              workers.execute(() -> {
+                var ukcp = session.getUkcp();
+                ukcp.update();
+                ukcp.receive();
+              });
             }
           }
         }, 0, 10, TimeUnit.MILLISECONDS);

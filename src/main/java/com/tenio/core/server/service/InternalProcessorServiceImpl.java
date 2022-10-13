@@ -35,10 +35,12 @@ import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.entity.define.result.PlayerReconnectedResult;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.network.entity.kcp.Ukcp;
 import com.tenio.core.network.entity.protocol.Request;
 import com.tenio.core.network.entity.protocol.implement.RequestImpl;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.entity.kcp.Ukcp;
+import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.engine.writer.KcpWriterHandler;
 import com.tenio.core.network.zero.handler.KcpIoHandler;
 import com.tenio.core.network.zero.handler.implement.KcpIoHandlerImpl;
@@ -64,6 +66,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
   private static final String EVENT_KEY_SERVER_MESSAGE = "server-message";
   private static final String EVENT_KEY_DATAGRAM_REMOTE_ADDRESS = "datagram-remote-address";
 
+  private NetworkReaderStatistic networkReaderStatistic;
+  private NetworkWriterStatistic networkWriterStatistic;
   private PlayerManager playerManager;
   private KcpIoHandler kcpIoHandler;
   private AtomicInteger kcpConvId;
@@ -287,7 +291,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
     var kcpWriter = new KcpWriterHandler(session
         .getDatagramChannel(), session.getDatagramRemoteSocketAddress());
     var kcpConv = kcpConvId.getAndIncrement();
-    var ukcp = new Ukcp(kcpConv, KcpConfiguration.PROFILE, session, kcpIoHandler, kcpWriter);
+    var ukcp = new Ukcp(kcpConv, KcpConfiguration.PROFILE, session, kcpIoHandler, kcpWriter,
+        networkWriterStatistic);
     ukcp.getKcpIoHandler().channelActiveIn(session);
 
     eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, kcpConv,
@@ -317,6 +322,16 @@ public final class InternalProcessorServiceImpl extends AbstractController
   @Override
   public void setPlayerManager(PlayerManager playerManager) {
     this.playerManager = playerManager;
+  }
+
+  @Override
+  public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
+    this.networkReaderStatistic = networkReaderStatistic;
+  }
+
+  @Override
+  public void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic) {
+    this.networkWriterStatistic = networkWriterStatistic;
   }
 
   @Override

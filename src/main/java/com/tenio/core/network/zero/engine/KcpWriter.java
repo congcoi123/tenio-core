@@ -14,5 +14,5 @@ public interface KcpWriter<T> {
 
   T getWriter();
 
-  int write(byte[] binaries, int size) throws IOException;
+  int send(byte[] binaries, int size) throws IOException;
 }
