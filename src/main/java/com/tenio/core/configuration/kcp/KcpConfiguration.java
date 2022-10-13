@@ -22,38 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.schedule.task;
-
-import com.tenio.core.entity.manager.PlayerManager;
-import com.tenio.core.event.implement.EventManager;
-import java.util.concurrent.ScheduledFuture;
+package com.tenio.core.configuration.kcp;
 
 /**
- * For a player which is in IDLE mode, that means for a long time without
- * receiving or sending any data from the server or from a client. This task
- * will scan those IDLE players in period time and force them to log out. Those
- * players got a "timeout" error.
+ * All related configuration when the server uses KCP transportation.
  */
-public final class AutoDisconnectPlayerTask extends AbstractTask {
-
-  private AutoDisconnectPlayerTask(EventManager eventManager) {
-    super(eventManager);
-  }
-
-  public static AutoDisconnectPlayerTask newInstance(EventManager eventManager) {
-    return new AutoDisconnectPlayerTask(eventManager);
-  }
-
-  @Override
-  public ScheduledFuture<?> run() {
-    return null;
-  }
+public final class KcpConfiguration {
 
   /**
-   * Set the player manager.
-   *
-   * @param playerManager the player manager
+   * The current profile setting.
    */
-  public void setPlayerManager(PlayerManager playerManager) {
+  public static KcpProfile PROFILE = KcpProfile.BOOSTER_MODE;
+
+  private KcpConfiguration() {
+    throw new UnsupportedOperationException();
   }
 }

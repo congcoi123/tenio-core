@@ -22,40 +22,48 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.schedule.task;
+package com.tenio.core.network.zero.handler.implement;
 
-import com.tenio.core.configuration.CoreConfiguration;
+import com.tenio.common.data.utility.ZeroUtility;
 import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.monitoring.system.SystemMonitoring;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.network.zero.handler.KcpIoHandler;
 
 /**
- * To retrieve the current system information in period time. You can configure
- * this time in your own configurations, see {@link CoreConfiguration}
+ * The implementation of {@link KcpIoHandler}.
  */
-public final class SystemMonitoringTask extends AbstractTask {
+public final class KcpIoHandlerImpl extends AbstractIoHandler implements KcpIoHandler {
 
-  private final SystemMonitoring systemMonitoring;
-
-  private SystemMonitoringTask(EventManager eventManager) {
+  private KcpIoHandlerImpl(EventManager eventManager) {
     super(eventManager);
-
-    systemMonitoring = SystemMonitoring.newInstance();
   }
 
-  public static SystemMonitoringTask newInstance(EventManager eventManager) {
-    return new SystemMonitoringTask(eventManager);
+  public static KcpIoHandlerImpl newInstance(EventManager eventManager) {
+    return new KcpIoHandlerImpl(eventManager);
   }
 
   @Override
-  public ScheduledFuture<?> run() {
-    return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-        () -> eventManager.emit(ServerEvent.SYSTEM_MONITORING, systemMonitoring.getCpuUsage(),
-            systemMonitoring.getTotalMemory(), systemMonitoring.getUsedMemory(),
-            systemMonitoring.getFreeMemory(),
-            systemMonitoring.countRunningThreads()), 0, interval, TimeUnit.SECONDS);
+  public void sessionRead(Session session, byte[] binary) {
+    var data = ZeroUtility.binaryToCollection(binary);
+    var message = ServerMessage.newInstance().setData(data);
+
+    eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
+  }
+
+  @Override
+  public void sessionException(Session session, Exception exception) {
+    eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
+  }
+
+  @Override
+  public void channelActiveIn(Session session) {
+    debug("KCP CHANNEL", "Activated", session.getUkcp());
+  }
+
+  @Override
+  public void channelInactiveIn(Session session) {
+    debug("KCP CHANNEL", "Inactivated", session.getUkcp());
   }
 }

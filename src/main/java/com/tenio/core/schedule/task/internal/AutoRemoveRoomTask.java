@@ -22,30 +22,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.handler.event;
+package com.tenio.core.schedule.task.internal;
 
-import com.tenio.core.configuration.define.ServerEvent;
-import com.tenio.core.entity.Player;
-import com.tenio.core.entity.define.result.AttachedConnectionResult;
-import java.util.Optional;
+import com.tenio.core.configuration.CoreConfiguration;
+import com.tenio.core.entity.manager.RoomManager;
+import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.schedule.task.AbstractTask;
+import java.util.concurrent.ScheduledFuture;
 
 /**
- * When the server responds to the request from client side which requires using the UDP channel.
+ * To remove the empty room (a room without any players) in period time. You can
+ * configure this time in your own configurations, see {@link CoreConfiguration}
  */
-@FunctionalInterface
-public interface EventAttachedConnectionResult {
+public final class AutoRemoveRoomTask extends AbstractTask {
+
+  private AutoRemoveRoomTask(EventManager eventManager) {
+    super(eventManager);
+  }
+
+  public static AutoRemoveRoomTask newInstance(EventManager eventManager) {
+    return new AutoRemoveRoomTask(eventManager);
+  }
+
+  @Override
+  public ScheduledFuture<?> run() {
+    return null;
+  }
 
   /**
-   * When the server responds to the request from client side which requires using the UDP channel.
+   * Set the room manager.
    *
-   * @param player  the optional of {@link Player} which requires using UDP channel
-   * @param kcpConv the KCP convey ID when it is using, otherwise the value is always "-1"
-   * @param result  the responded {@link AttachedConnectionResult} from the server, if the result
-   *                equals to {@link AttachedConnectionResult#PLAYER_NOT_FOUND} then the returned
-   *                player is empty, otherwise it is present
-   * @see ServerEvent#ATTACHED_CONNECTION_RESULT
-   * @see EventAttachConnectionRequestValidation
-   * @see Optional
+   * @param roomManager the room manager
    */
-  void handle(Optional<Player> player, int kcpConv, AttachedConnectionResult result);
+  public void setRoomManager(RoomManager roomManager) {
+  }
 }

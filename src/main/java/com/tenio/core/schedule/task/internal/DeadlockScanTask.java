@@ -22,10 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.schedule.task;
+package com.tenio.core.schedule.task.internal;
 
 import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.schedule.task.AbstractTask;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;

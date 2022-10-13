@@ -189,10 +189,13 @@ public final class ServerImpl extends SystemLogger implements Server {
         .setTrafficCounterInterval(
             configuration.getInt(CoreConfigurationType.INTERVAL_TRAFFIC_COUNTER));
 
+    scheduleService.setSessionManager(networkService.getSessionManager());
     scheduleService.setPlayerManager(playerManager);
     scheduleService.setRoomManager(roomManager);
     scheduleService.setNetworkReaderStatistic(networkService.getNetworkReaderStatistic());
     scheduleService.setNetworkWriterStatistic(networkService.getNetworkWriterStatistic());
+    scheduleService.setEnabledKcp(
+        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP));
   }
 
   @SuppressWarnings("unchecked")
@@ -214,8 +217,11 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     networkService.setSocketAcceptorServerAddress(
         configuration.getString(CoreConfigurationType.SERVER_ADDRESS));
+
     networkService.setSocketAcceptorAmountUdpWorkers(
         configuration.getInt(CoreConfigurationType.WORKER_UDP_WORKER));
+    networkService.setSocketAcceptorEnabledKcp(
+        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP));
 
     networkService.setSocketAcceptorBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE));
@@ -256,6 +262,9 @@ public final class ServerImpl extends SystemLogger implements Server {
         (Class<? extends PacketQueuePolicy>) packetQueuePolicyClazz);
     networkService.setPacketQueueSize(
         configuration.getInt(CoreConfigurationType.PROP_MAX_PACKET_QUEUE_SIZE));
+
+    networkService.setSessionEnabledKcp(
+        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP));
 
     final var binaryPacketCompressorClazz = Class
         .forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_COMPRESSOR).strip());
@@ -298,6 +307,14 @@ public final class ServerImpl extends SystemLogger implements Server {
             configuration.getInt(CoreConfigurationType.PROP_MAX_REQUEST_QUEUE_SIZE));
     internalProcessorService
         .setThreadPoolSize(configuration.getInt(CoreConfigurationType.WORKER_INTERNAL_PROCESSOR));
+    internalProcessorService.setEnabledKcp(
+        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP
+        ));
+    internalProcessorService.setKeepPlayerOnDisconnection(
+        !configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ALLOW_CHANGE_SESSION));
+
+    internalProcessorService.setNetworkReaderStatistic(networkService.getNetworkReaderStatistic());
+    internalProcessorService.setNetworkWriterStatistic(networkService.getNetworkWriterStatistic());
   }
 
   @Override

@@ -22,30 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.handler.event;
+package com.tenio.core.network.zero.handler;
 
-import com.tenio.core.configuration.define.ServerEvent;
-import com.tenio.core.entity.Player;
-import com.tenio.core.entity.define.result.AttachedConnectionResult;
-import java.util.Optional;
+import com.tenio.core.network.entity.session.Session;
 
 /**
- * When the server responds to the request from client side which requires using the UDP channel.
+ * The KCP channel behaviours.
  */
-@FunctionalInterface
-public interface EventAttachedConnectionResult {
+public interface KcpIoHandler extends BaseIoHandler {
 
   /**
-   * When the server responds to the request from client side which requires using the UDP channel.
+   * When a new KCP channel is established in a session.
    *
-   * @param player  the optional of {@link Player} which requires using UDP channel
-   * @param kcpConv the KCP convey ID when it is using, otherwise the value is always "-1"
-   * @param result  the responded {@link AttachedConnectionResult} from the server, if the result
-   *                equals to {@link AttachedConnectionResult#PLAYER_NOT_FOUND} then the returned
-   *                player is empty, otherwise it is present
-   * @see ServerEvent#ATTACHED_CONNECTION_RESULT
-   * @see EventAttachConnectionRequestValidation
-   * @see Optional
+   * @param session the target {@link Session} which is using KCP transport
    */
-  void handle(Optional<Player> player, int kcpConv, AttachedConnectionResult result);
+  void channelActiveIn(Session session);
+
+  /**
+   * When a new KCP channel is removed from a session.
+   *
+   * @param session the {@link Session} which abandons using KCP transport
+   */
+  void channelInactiveIn(Session session);
 }

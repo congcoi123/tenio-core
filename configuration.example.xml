@@ -38,6 +38,7 @@
 			<Property name="packet-compression-threshold-bytes">10240</Property>
 			<Property name="allow-change-session">false</Property>
 			<Property name="max-connections-per-ip">10</Property>
+			<Property name="enabled-kcp">false</Property>
 		</Properties>
 		<Http>
 			<Port name="main" value="9999">

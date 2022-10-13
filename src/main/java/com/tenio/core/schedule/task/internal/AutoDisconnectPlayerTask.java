@@ -22,25 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.schedule.task;
+package com.tenio.core.schedule.task.internal;
 
-import com.tenio.core.configuration.CoreConfiguration;
-import com.tenio.core.entity.manager.RoomManager;
+import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.schedule.task.AbstractTask;
 import java.util.concurrent.ScheduledFuture;
 
 /**
- * To remove the empty room (a room without any players) in period time. You can
- * configure this time in your own configurations, see {@link CoreConfiguration}
+ * For a player which is in IDLE mode, that means for a long time without
+ * receiving or sending any data from the server or from a client. This task
+ * will scan those IDLE players in period time and force them to log out. Those
+ * players got a "timeout" error.
  */
-public final class AutoRemoveRoomTask extends AbstractTask {
+public final class AutoDisconnectPlayerTask extends AbstractTask {
 
-  private AutoRemoveRoomTask(EventManager eventManager) {
+  private AutoDisconnectPlayerTask(EventManager eventManager) {
     super(eventManager);
   }
 
-  public static AutoRemoveRoomTask newInstance(EventManager eventManager) {
-    return new AutoRemoveRoomTask(eventManager);
+  public static AutoDisconnectPlayerTask newInstance(EventManager eventManager) {
+    return new AutoDisconnectPlayerTask(eventManager);
   }
 
   @Override
@@ -49,10 +51,10 @@ public final class AutoRemoveRoomTask extends AbstractTask {
   }
 
   /**
-   * Set the room manager.
+   * Set the player manager.
    *
-   * @param roomManager the room manager
+   * @param playerManager the player manager
    */
-  public void setRoomManager(RoomManager roomManager) {
+  public void setPlayerManager(PlayerManager playerManager) {
   }
 }

@@ -73,6 +73,13 @@ public interface ZeroSocketService extends Service {
   void setAcceptorWorkerSize(int workerSize);
 
   /**
+   * Determines if UDP channels can use KCP transportation for communication.
+   *
+   * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}
+   */
+  void setAcceptorEnabledKcp(boolean enabledKcp);
+
+  /**
    * Sets size of {@link ByteBuffer} using for a reader worker to read/write binaries data
    * from/down.
    *

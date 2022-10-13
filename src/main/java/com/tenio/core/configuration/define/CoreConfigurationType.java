@@ -237,6 +237,10 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   NETWORK_PROP_ALLOW_CHANGE_SESSION("allow-change-session"),
   /**
+   * Allows using KCP transportation in UDP channels.
+   */
+  NETWORK_PROP_ENABLED_KCP("enabled-kcp"),
+  /**
    * The list of socket configurations in the server configuration.
    */
   NETWORK_SOCKET_CONFIGS("socket-configs"),

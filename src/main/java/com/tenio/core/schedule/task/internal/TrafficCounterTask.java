@@ -22,40 +22,51 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.schedule.task;
+package com.tenio.core.schedule.task.internal;
 
-import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.configuration.define.ServerEvent;
-import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.schedule.task.AbstractTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * To retrieve the CCU in period time. You can configure this time in your own
- * configurations, see {@link CoreConfiguration}
+ * Collecting the traffic data like the amount of reader and writer binary.
  */
-public final class CcuReportTask extends AbstractTask {
+public final class TrafficCounterTask extends AbstractTask {
 
-  private PlayerManager playerManager;
+  private NetworkReaderStatistic networkReaderStatistic;
+  private NetworkWriterStatistic networkWriterStatistic;
 
-  private CcuReportTask(EventManager eventManager) {
+  private TrafficCounterTask(EventManager eventManager) {
     super(eventManager);
   }
 
-  public static CcuReportTask newInstance(EventManager eventManager) {
-    return new CcuReportTask(eventManager);
+  public static TrafficCounterTask newInstance(EventManager eventManager) {
+    return new TrafficCounterTask(eventManager);
   }
 
   @Override
   public ScheduledFuture<?> run() {
     return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-        () -> eventManager.emit(ServerEvent.FETCHED_CCU_INFO, playerManager.getPlayerCount()), 0,
-        interval, TimeUnit.SECONDS);
+        () -> eventManager.emit(ServerEvent.FETCHED_BANDWIDTH_INFO,
+            networkReaderStatistic.getReadBytes(),
+            networkReaderStatistic.getReadPackets(),
+            networkReaderStatistic.getReadDroppedPackets(),
+            networkWriterStatistic.getWrittenBytes(), networkWriterStatistic.getWrittenPackets(),
+            networkWriterStatistic.getWrittenDroppedPacketsByPolicy(),
+            networkWriterStatistic.getWrittenDroppedPacketsByFull()), 0, interval,
+        TimeUnit.SECONDS);
   }
 
-  public void setPlayerManager(PlayerManager playerManager) {
-    this.playerManager = playerManager;
+  public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
+    this.networkReaderStatistic = networkReaderStatistic;
+  }
+
+  public void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic) {
+    this.networkWriterStatistic = networkWriterStatistic;
   }
 }
