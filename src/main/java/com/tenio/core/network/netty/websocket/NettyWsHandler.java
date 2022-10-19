@@ -146,7 +146,8 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       logger.error(cause, "Exception was occurred on channel: %s", ctx.channel().toString());
     }
   }
-
-  private final class PrivateLogger extends SystemLogger {
-  }
 }
+
+class PrivateLogger extends SystemLogger {
+}
+

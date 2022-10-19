@@ -97,8 +97,11 @@ public final class PacketHeader {
 
   @Override
   public String toString() {
-    return String.format("{ Normal: %b, Compressed: %b, BigSized: %b, Encrypted: %b }", binary,
-        compressed,
-        bigSized, encrypted);
+    return "PacketHeader{" +
+        "binary=" + binary +
+        ", compressed=" + compressed +
+        ", bigSized=" + bigSized +
+        ", encrypted=" + encrypted +
+        '}';
   }
 }

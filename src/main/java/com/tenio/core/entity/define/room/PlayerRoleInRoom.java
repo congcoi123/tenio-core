@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.entity;
+package com.tenio.core.entity.define.room;
 
 /**
  * Definitions of a player role when it is in a room.
@@ -37,5 +37,10 @@ public enum PlayerRoleInRoom {
    * When a player joins a room as a spectator, it can only be allowed to observe others'
    * activities.
    */
-  SPECTATOR
+  SPECTATOR;
+
+  @Override
+  public String toString() {
+    return this.name();
+  }
 }

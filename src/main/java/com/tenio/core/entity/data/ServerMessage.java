@@ -80,6 +80,9 @@ public final class ServerMessage {
 
   @Override
   public String toString() {
-    return String.format("{ timestamp: %d, data: %s }", createdTimestamp, data.toString());
+    return "ServerMessage{" +
+        "createdTimestamp=" + createdTimestamp +
+        ", data=" + data +
+        '}';
   }
 }

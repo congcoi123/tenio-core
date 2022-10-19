@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.PlayerRoleInRoom;
+import com.tenio.core.entity.define.room.PlayerRoleInRoom;
 import com.tenio.core.network.entity.session.Session;
 import org.junit.jupiter.api.Test;
 

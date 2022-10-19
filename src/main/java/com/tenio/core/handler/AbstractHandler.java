@@ -74,7 +74,7 @@ public abstract class AbstractHandler extends AbstractLogger {
    *
    * @return an instance of {@link ZeroMap}
    */
-  public final ZeroMap object() {
+  public final ZeroMap map() {
     return ZeroUtility.newZeroMap();
   }
 
