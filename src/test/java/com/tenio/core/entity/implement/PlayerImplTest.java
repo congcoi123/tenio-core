@@ -2,7 +2,6 @@ package com.tenio.core.entity.implement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -16,8 +15,7 @@ class PlayerImplTest {
   void testNewInstance() {
     Player actualNewInstanceResult = PlayerImpl.newInstance("Name");
     assertTrue(actualNewInstanceResult.getCurrentRoom().isEmpty());
-    assertEquals(
-        "{ name: Name, session: false, loggedIn: false, role: SPECTATOR, activated: false }",
+    assertEquals("Player{name='Name', properties={}, session=null, currentRoom=null, state=null, roleInRoom=SPECTATOR, lastLoginTime=0, lastJoinedRoomTime=1666206549193, playerSlotInCurrentRoom=-1, loggedIn=false, activated=false, hasSession=false}",
         actualNewInstanceResult.toString());
     assertEquals(PlayerRoleInRoom.SPECTATOR, actualNewInstanceResult.getRoleInRoom());
     assertFalse(actualNewInstanceResult.isLoggedIn());
@@ -33,7 +31,7 @@ class PlayerImplTest {
     Player actualNewInstanceResult = PlayerImpl.newInstance("Name", mock(Session.class));
     assertTrue(actualNewInstanceResult.getCurrentRoom().isEmpty());
     assertEquals(
-        "{ name: Name, session: true, loggedIn: false, role: SPECTATOR, activated: false }",
+        "Player{name='Name', properties={}, session=Mock for Session, hashCode: 1192603187, currentRoom=null, state=null, roleInRoom=SPECTATOR, lastLoginTime=0, lastJoinedRoomTime=1666206366622, playerSlotInCurrentRoom=-1, loggedIn=false, activated=false, hasSession=true}",
         actualNewInstanceResult.toString());
     assertEquals(PlayerRoleInRoom.SPECTATOR, actualNewInstanceResult.getRoleInRoom());
     assertFalse(actualNewInstanceResult.isLoggedIn());
@@ -48,7 +46,7 @@ class PlayerImplTest {
     Player actualNewInstanceResult = PlayerImpl.newInstance("Name", null);
     assertTrue(actualNewInstanceResult.getCurrentRoom().isEmpty());
     assertEquals(
-        "{ name: Name, session: false, loggedIn: false, role: SPECTATOR, activated: false }",
+        "Player{name='Name', properties={}, session=null, currentRoom=null, state=null, roleInRoom=SPECTATOR, lastLoginTime=0, lastJoinedRoomTime=1666206366627, playerSlotInCurrentRoom=-1, loggedIn=false, activated=false, hasSession=false}",
         actualNewInstanceResult.toString());
     assertEquals(PlayerRoleInRoom.SPECTATOR, actualNewInstanceResult.getRoleInRoom());
     assertFalse(actualNewInstanceResult.isLoggedIn());

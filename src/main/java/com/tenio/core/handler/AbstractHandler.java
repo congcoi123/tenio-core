@@ -24,9 +24,11 @@ THE SOFTWARE.
 
 package com.tenio.core.handler;
 
-import com.tenio.common.data.ZeroArray;
-import com.tenio.common.data.ZeroMap;
-import com.tenio.common.data.utility.ZeroUtility;
+import com.tenio.common.data.msgpack.element.MsgPackArray;
+import com.tenio.common.data.msgpack.element.MsgPackMap;
+import com.tenio.common.data.zero.ZeroArray;
+import com.tenio.common.data.zero.ZeroMap;
+import com.tenio.common.data.zero.utility.ZeroUtility;
 import com.tenio.common.logger.AbstractLogger;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.entity.setting.InitialRoomSetting;
@@ -70,12 +72,30 @@ public abstract class AbstractHandler extends AbstractLogger {
   }
 
   /**
-   * Retrieves an zero map instance.
+   * Retrieves a zero map instance.
    *
    * @return an instance of {@link ZeroMap}
    */
   public final ZeroMap map() {
     return ZeroUtility.newZeroMap();
+  }
+
+  /**
+   * Retrieves a msgpack array instance.
+   *
+   * @return an instance of {@link MsgPackArray}
+   */
+  public final MsgPackArray msgarray() {
+    return MsgPackArray.newInstance();
+  }
+
+  /**
+   * Retrieves a msgpack map instance.
+   *
+   * @return an instance of {@link MsgPackMap}
+   */
+  public final MsgPackMap msgmap() {
+    return MsgPackMap.newInstance();
   }
 
   /**

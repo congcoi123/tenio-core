@@ -15,7 +15,7 @@ class PacketQueueImplTest {
     actualNewInstanceResult.setPacketQueuePolicy(mock(PacketQueuePolicy.class));
     assertEquals(3, actualNewInstanceResult.getMaxSize());
     assertEquals(0, actualNewInstanceResult.getSize());
-    assertEquals("[]", actualNewInstanceResult.toString());
+    assertEquals("PacketQueue{queue=[], packetQueuePolicy=Mock for PacketQueuePolicy, hashCode: 1124360095, maxSize=3, size=0}", actualNewInstanceResult.toString());
   }
 
   @Test
@@ -34,7 +34,7 @@ class PacketQueueImplTest {
   void testClear() {
     PacketQueueImpl newInstanceResult = PacketQueueImpl.newInstance();
     newInstanceResult.clear();
-    assertEquals("[]", newInstanceResult.toString());
+    assertEquals("PacketQueue{queue=[], packetQueuePolicy=null, maxSize=0, size=0}", newInstanceResult.toString());
     assertTrue(newInstanceResult.isEmpty());
   }
 }

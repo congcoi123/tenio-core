@@ -24,7 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.network.netty.websocket;
 
-import com.tenio.common.data.utility.ZeroUtility;
+import com.tenio.common.data.DataType;
+import com.tenio.common.data.DataUtility;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.data.ServerMessage;
@@ -52,22 +53,24 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   private final SessionManager sessionManager;
   private final ConnectionFilter connectionFilter;
   private final NetworkReaderStatistic networkReaderStatistic;
+  private final DataType dataType;
   private final PrivateLogger logger;
 
   private NettyWsHandler(EventManager eventManager, SessionManager sessionManager,
-                         ConnectionFilter connectionFilter,
+                         ConnectionFilter connectionFilter, DataType dataType,
                          NetworkReaderStatistic networkReaderStatistic) {
     this.eventManager = eventManager;
     this.sessionManager = sessionManager;
     this.connectionFilter = connectionFilter;
+    this.dataType = dataType;
     this.networkReaderStatistic = networkReaderStatistic;
     logger = new PrivateLogger();
   }
 
   public static NettyWsHandler newInstance(EventManager eventManager, SessionManager sessionManager,
-                                           ConnectionFilter connectionFilter,
+                                           ConnectionFilter connectionFilter, DataType dataType,
                                            NetworkReaderStatistic networkReaderStatistic) {
-    return new NettyWsHandler(eventManager, sessionManager, connectionFilter,
+    return new NettyWsHandler(eventManager, sessionManager, connectionFilter, dataType,
         networkReaderStatistic);
   }
 
@@ -125,7 +128,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       networkReaderStatistic.updateReadBytes(binary.length);
       networkReaderStatistic.updateReadPackets(1);
 
-      var data = ZeroUtility.binaryToCollection(binary);
+      var data = DataUtility.binaryToCollection(dataType, binary);
       var message = ServerMessage.newInstance().setData(data);
 
       if (!session.isConnected()) {

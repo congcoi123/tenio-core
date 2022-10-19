@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.server.service;
 
+import com.tenio.common.data.DataType;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.configuration.kcp.KcpConfiguration;
 import com.tenio.core.controller.AbstractController;
@@ -68,6 +69,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
   private NetworkReaderStatistic networkReaderStatistic;
   private NetworkWriterStatistic networkWriterStatistic;
+  private DataType dataType;
   private PlayerManager playerManager;
   private KcpIoHandler kcpIoHandler;
   private AtomicInteger kcpConvId;
@@ -88,6 +90,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     super.initialize();
     if (enabledKcp) {
       kcpIoHandler = KcpIoHandlerImpl.newInstance(eventManager);
+      kcpIoHandler.setDataType(dataType);
       kcpConvId = new AtomicInteger(0);
     }
   }
@@ -140,6 +143,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
       return null;
     });
+  }
+
+  @Override
+  public void setDataType(DataType dataType) {
+    this.dataType = dataType;
   }
 
   private Request createRequest(ServerEvent event, Session session) {
