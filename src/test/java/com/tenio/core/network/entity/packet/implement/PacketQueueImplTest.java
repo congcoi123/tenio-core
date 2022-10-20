@@ -15,7 +15,6 @@ class PacketQueueImplTest {
     actualNewInstanceResult.setPacketQueuePolicy(mock(PacketQueuePolicy.class));
     assertEquals(3, actualNewInstanceResult.getMaxSize());
     assertEquals(0, actualNewInstanceResult.getSize());
-    assertEquals("PacketQueue{queue=[], packetQueuePolicy=Mock for PacketQueuePolicy, hashCode: 1124360095, maxSize=3, size=0}", actualNewInstanceResult.toString());
   }
 
   @Test

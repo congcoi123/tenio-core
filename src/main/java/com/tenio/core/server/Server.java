@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.server;
 
+import com.tenio.common.data.DataType;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.bootstrap.Bootstrapper;
@@ -91,6 +92,13 @@ public interface Server {
    * @return an instance of {@link UdpChannelManager}
    */
   UdpChannelManager getUdpChannelManager();
+
+  /**
+   * Retrieves the data serialization type.
+   *
+   * @return the {@link DataType} value
+   */
+  DataType getDataType();
 
   /**
    * Writes down data to socket/channel to send them to client sides.

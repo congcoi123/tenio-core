@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.server;
 
 import com.tenio.common.configuration.Configuration;
-import com.tenio.common.constant.Trademark;
+import com.tenio.core.configuration.constant.Trademark;
 import com.tenio.common.data.DataType;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.api.ServerApi;
@@ -81,6 +81,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final ScheduleService scheduleService;
   private final NetworkService networkService;
   private final ServerApi serverApi;
+  private DataType dataType;
   private String serverName;
 
   private ServerImpl() {
@@ -124,6 +125,8 @@ public final class ServerImpl extends SystemLogger implements Server {
     var configuration = bootstrapHandler.getConfigurationHandler().getConfiguration();
     configuration.load(file);
 
+    dataType =
+        DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION));
     serverName = configuration.getString(CoreConfigurationType.SERVER_NAME);
 
     // show system information
@@ -361,6 +364,11 @@ public final class ServerImpl extends SystemLogger implements Server {
   @Override
   public UdpChannelManager getUdpChannelManager() {
     return udpChannelManager;
+  }
+
+  @Override
+  public DataType getDataType() {
+    return dataType;
   }
 
   @Override
