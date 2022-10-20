@@ -94,7 +94,7 @@ public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> 
       pipeline.addLast("ssl", new SslHandler(engine));
     }
 
-    // add http-codec for TCP handshaker
+    // add http-codec for TCP handshake
     pipeline.addLast("httpServerCodec", new HttpServerCodec());
 
     // the logic handler

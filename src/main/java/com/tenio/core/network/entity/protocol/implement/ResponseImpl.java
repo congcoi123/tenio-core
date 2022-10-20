@@ -232,7 +232,7 @@ public final class ResponseImpl implements Response {
   @Override
   public String toString() {
     return "Response{" +
-        "content(bytes)=" + content.length +
+        "content(bytes)=" + (Objects.nonNull(content) ? content.length : "null") +
         ", players=" + players +
         ", nonSessionPlayers=" + nonSessionPlayers +
         ", socketSessions=" + socketSessions +

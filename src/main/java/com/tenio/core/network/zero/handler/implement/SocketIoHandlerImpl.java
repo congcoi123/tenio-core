@@ -30,6 +30,7 @@ import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.exception.RefusedConnectionAddressException;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.decoder.PacketDecoderResultListener;
@@ -105,7 +106,10 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
 
   @Override
   public void channelException(SocketChannel socketChannel, Exception exception) {
-    // do nothing, the exception was already logged
+    // handle refused connection, it should send to the client the reason before closing connection
+    if (exception instanceof RefusedConnectionAddressException) {
+
+    }
   }
 
   @Override

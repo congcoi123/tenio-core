@@ -199,13 +199,13 @@ public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
     return "Packet{" +
         "id=" + id +
         ", createdTime=" + createdTime +
-        ", data(bytes)=" + data.length +
+        ", data(bytes)=" + (Objects.nonNull(data) ? data.length : "null") +
         ", priority=" + priority +
         ", encrypted=" + encrypted +
         ", transportType=" + transportType +
         ", originalSize=" + originalSize +
         ", recipients=" + recipients +
-        ", fragmentBuffer(bytes)=" + fragmentBuffer.length +
+        ", fragmentBuffer(bytes)=" + (Objects.nonNull(fragmentBuffer) ? fragmentBuffer.length : "null") +
         '}';
   }
 

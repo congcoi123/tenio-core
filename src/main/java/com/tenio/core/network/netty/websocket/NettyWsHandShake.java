@@ -34,6 +34,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import java.util.Objects;
+import javax.annotation.Nonnull;
 
 /**
  * <a href="https://en.wikipedia.org/wiki/WebSocket">WebSocket</a> is distinct
@@ -73,11 +74,11 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void channelRead(ChannelHandlerContext ctx, Object msgRaw) {
+  public void channelRead(@Nonnull ChannelHandlerContext ctx, @Nonnull Object raw) {
 
     // check the request for handshake
-    if (msgRaw instanceof HttpRequest) {
-      var httpRequest = (HttpRequest) msgRaw;
+    if (raw instanceof HttpRequest) {
+      var httpRequest = (HttpRequest) raw;
       var headers = httpRequest.headers();
 
       if (headers.get("Connection").equalsIgnoreCase("Upgrade")
@@ -109,11 +110,11 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
      Once the connection is established, communication switches to a bidirectional
      binary protocol which does not conform to the HTTP protocol.
      */
-    var handshaker = wsFactory.newHandshaker(req);
-    if (Objects.isNull(handshaker)) {
+    var handshake = wsFactory.newHandshaker(req);
+    if (Objects.isNull(handshake)) {
       WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
     } else {
-      handshaker.handshake(ctx.channel(), req);
+      handshake.handshake(ctx.channel(), req);
     }
   }
 

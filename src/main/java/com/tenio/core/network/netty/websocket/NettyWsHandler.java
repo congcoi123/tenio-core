@@ -76,18 +76,6 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void channelActive(ChannelHandlerContext ctx) {
-    try {
-      var address = ctx.channel().remoteAddress().toString();
-      connectionFilter.validateAndAddAddress(address);
-    } catch (RefusedConnectionAddressException e) {
-      // TODO: Creates an orphan session for a new event
-      logger.error(e, "Refused connection with address: ", e.getMessage());
-      ctx.channel().close();
-    }
-  }
-
-  @Override
   public void channelInactive(ChannelHandlerContext ctx) {
     var session = sessionManager.getSessionByWebSocket(ctx.channel());
     if (Objects.isNull(session)) {
@@ -115,9 +103,16 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       var session = sessionManager.getSessionByWebSocket(ctx.channel());
 
       if (Objects.isNull(session)) {
+        try {
+          var address = ctx.channel().remoteAddress().toString();
+          connectionFilter.validateAndAddAddress(address);
+        } catch (RefusedConnectionAddressException e) {
+          logger.error(e, "Refused connection with address: ", e.getMessage());
+          ctx.channel().close();
+        }
+
         session = sessionManager.createWebSocketSession(ctx.channel());
         eventManager.emit(ServerEvent.SESSION_CREATED, session);
-        return;
       }
 
       session.addReadBytes(binary.length);

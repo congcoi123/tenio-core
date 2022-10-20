@@ -87,7 +87,7 @@ public final class ProcessedPacket {
   public String toString() {
     return "ProcessedPacket{" +
         "packetReadState=" + packetReadState +
-        ", binary(bytes)=" + binary.length +
+        ", binary(bytes)=" + (Objects.nonNull(binary) ? binary.length : "null") +
         '}';
   }
 }
