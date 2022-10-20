@@ -41,6 +41,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import java.io.IOException;
 import java.util.Objects;
+import javax.annotation.Nonnull;
 
 /**
  * Receive all messages sent from clients side. It converts serialize data to a system's object
@@ -79,13 +80,9 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
     try {
       var address = ctx.channel().remoteAddress().toString();
       connectionFilter.validateAndAddAddress(address);
-
-      var session = sessionManager.createWebSocketSession(ctx.channel());
-      eventManager.emit(ServerEvent.SESSION_CREATED, session);
     } catch (RefusedConnectionAddressException e) {
       // TODO: Creates an orphan session for a new event
       logger.error(e, "Refused connection with address: ", e.getMessage());
-
       ctx.channel().close();
     }
   }
@@ -106,11 +103,11 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void channelRead(ChannelHandlerContext ctx, Object msgRaw) {
+  public void channelRead(@Nonnull ChannelHandlerContext ctx, @Nonnull Object raw) {
     // only allow this type of frame
-    if (msgRaw instanceof BinaryWebSocketFrame) {
+    if (raw instanceof BinaryWebSocketFrame) {
       // convert the BinaryWebSocketFrame to bytes' array
-      var buffer = ((BinaryWebSocketFrame) msgRaw).content();
+      var buffer = ((BinaryWebSocketFrame) raw).content();
       var binary = new byte[buffer.readableBytes()];
       buffer.getBytes(buffer.readerIndex(), binary);
       buffer.release();
@@ -118,9 +115,8 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       var session = sessionManager.getSessionByWebSocket(ctx.channel());
 
       if (Objects.isNull(session)) {
-        logger.debug("WEBSOCKET READ CHANNEL",
-            "Reader handle a null session with the web socket channel: ",
-            ctx.channel().toString());
+        session = sessionManager.createWebSocketSession(ctx.channel());
+        eventManager.emit(ServerEvent.SESSION_CREATED, session);
         return;
       }
 

@@ -162,7 +162,7 @@ public final class PlayerImpl implements Player {
 
   @Override
   public boolean isInRoom() {
-    return playerSlotInCurrentRoom >= RoomImpl.NIL_SLOT;
+    return playerSlotInCurrentRoom > RoomImpl.NIL_SLOT;
   }
 
   @Override

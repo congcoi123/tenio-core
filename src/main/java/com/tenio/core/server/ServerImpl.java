@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.server;
 
 import com.tenio.common.configuration.Configuration;
+import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.configuration.constant.Trademark;
 import com.tenio.common.data.DataType;
 import com.tenio.common.logger.SystemLogger;
@@ -82,6 +83,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final NetworkService networkService;
   private final ServerApi serverApi;
   private DataType dataType;
+  private long startedTime;
   private String serverName;
 
   private ServerImpl() {
@@ -114,6 +116,8 @@ public final class ServerImpl extends SystemLogger implements Server {
 
   @Override
   public void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception {
+    // record the started time
+    startedTime = TimeUtility.currentTimeMillis();
 
     // get the file path
     var file = params.length == 0 ? null : params[0];
@@ -369,6 +373,16 @@ public final class ServerImpl extends SystemLogger implements Server {
   @Override
   public DataType getDataType() {
     return dataType;
+  }
+
+  @Override
+  public long getStartedTime() {
+    return startedTime;
+  }
+
+  @Override
+  public long getUptime() {
+    return TimeUtility.currentTimeMillis() - startedTime;
   }
 
   @Override

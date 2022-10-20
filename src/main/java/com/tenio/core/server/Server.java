@@ -101,6 +101,20 @@ public interface Server {
   DataType getDataType();
 
   /**
+   * Retrieves the time when server starts in milliseconds.
+   *
+   * @return started time in milliseconds
+   */
+  long getStartedTime();
+
+  /**
+   * Retrieves the current uptime of server in milliseconds.
+   *
+   * @return the current server's uptime in milliseconds
+   */
+  long getUptime();
+
+  /**
    * Writes down data to socket/channel to send them to client sides.
    *
    * @param response an instance of {@link Response} using to carry conveying information
