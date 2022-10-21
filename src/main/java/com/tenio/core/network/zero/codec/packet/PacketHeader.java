@@ -52,6 +52,7 @@ public final class PacketHeader {
    *                   otherwise returns {@code false}
    * @param encrypted  sets to {@code true} if the data is encrypted, otherwise
    *                   {@code false}
+   * @return a new instance of {@link PacketHeader}
    */
   public static PacketHeader newInstance(boolean binary, boolean compressed, boolean bigSized,
                                          boolean encrypted) {

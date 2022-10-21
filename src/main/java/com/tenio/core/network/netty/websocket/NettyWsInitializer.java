@@ -68,6 +68,7 @@ public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> 
    * @param eventManager           the event manager
    * @param sessionManager         the sessin manager
    * @param connectionFilter       the connection filter
+   * @param dataType               the {@link DataType}
    * @param networkReaderStatistic the network reader statistic
    * @param sslContext             the ssl context
    * @param usingSsl               is using ssl or not
