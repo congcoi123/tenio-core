@@ -106,8 +106,10 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
         try {
           var address = ctx.channel().remoteAddress().toString();
           connectionFilter.validateAndAddAddress(address);
-        } catch (RefusedConnectionAddressException e) {
-          logger.error(e, "Refused connection with address: ", e.getMessage());
+        } catch (RefusedConnectionAddressException exception) {
+          logger.error(exception, "Refused connection with address: ", exception.getMessage());
+          // handle refused connection, it should send to the client the reason before closing connection
+          eventManager.emit(ServerEvent.WEBSOCKET_CONNECTION_REFUSED, ctx.channel(), exception);
           ctx.channel().close();
         }
 
@@ -144,4 +146,3 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
 
 class PrivateLogger extends SystemLogger {
 }
-

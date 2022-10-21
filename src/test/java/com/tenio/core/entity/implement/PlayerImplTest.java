@@ -17,7 +17,7 @@ class PlayerImplTest {
     assertTrue(actualNewInstanceResult.getCurrentRoom().isEmpty());
     assertEquals(PlayerRoleInRoom.SPECTATOR, actualNewInstanceResult.getRoleInRoom());
     assertFalse(actualNewInstanceResult.isLoggedIn());
-    assertTrue(actualNewInstanceResult.isInRoom());
+    assertFalse(actualNewInstanceResult.isInRoom());
     assertFalse(actualNewInstanceResult.isActivated());
     assertFalse(actualNewInstanceResult.getSession().isPresent());
     assertEquals("Name", actualNewInstanceResult.getName());
@@ -30,7 +30,7 @@ class PlayerImplTest {
     assertTrue(actualNewInstanceResult.getCurrentRoom().isEmpty());
     assertEquals(PlayerRoleInRoom.SPECTATOR, actualNewInstanceResult.getRoleInRoom());
     assertFalse(actualNewInstanceResult.isLoggedIn());
-    assertTrue(actualNewInstanceResult.isInRoom());
+    assertFalse(actualNewInstanceResult.isInRoom());
     assertFalse(actualNewInstanceResult.isActivated());
     assertEquals("Name", actualNewInstanceResult.getName());
     assertEquals(0L, actualNewInstanceResult.getLastLoggedInTime());
@@ -42,7 +42,7 @@ class PlayerImplTest {
     assertTrue(actualNewInstanceResult.getCurrentRoom().isEmpty());
     assertEquals(PlayerRoleInRoom.SPECTATOR, actualNewInstanceResult.getRoleInRoom());
     assertFalse(actualNewInstanceResult.isLoggedIn());
-    assertTrue(actualNewInstanceResult.isInRoom());
+    assertFalse(actualNewInstanceResult.isInRoom());
     assertFalse(actualNewInstanceResult.isActivated());
     assertFalse(actualNewInstanceResult.getSession().isPresent());
     assertEquals("Name", actualNewInstanceResult.getName());

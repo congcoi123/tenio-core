@@ -108,7 +108,7 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
   public void channelException(SocketChannel socketChannel, Exception exception) {
     // handle refused connection, it should send to the client the reason before closing connection
     if (exception instanceof RefusedConnectionAddressException) {
-
+      eventManager.emit(ServerEvent.SOCKET_CONNECTION_REFUSED, socketChannel, exception);
     }
   }
 
