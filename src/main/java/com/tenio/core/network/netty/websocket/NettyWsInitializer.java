@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.netty.websocket;
 
+import com.tenio.common.data.DataType;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
@@ -43,17 +44,19 @@ public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> 
   private final EventManager eventManager;
   private final SessionManager sessionManager;
   private final ConnectionFilter connectionFilter;
+  private final DataType dataType;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final WebSocketSslContext sslContext;
   private final boolean usingSsl;
 
   private NettyWsInitializer(EventManager eventManager, SessionManager sessionManager,
-                             ConnectionFilter connectionFilter,
+                             ConnectionFilter connectionFilter, DataType dataType,
                              NetworkReaderStatistic networkReaderStatistic,
                              WebSocketSslContext sslContext, boolean usingSsl) {
     this.eventManager = eventManager;
     this.sessionManager = sessionManager;
     this.connectionFilter = connectionFilter;
+    this.dataType = dataType;
     this.networkReaderStatistic = networkReaderStatistic;
     this.sslContext = sslContext;
     this.usingSsl = usingSsl;
@@ -73,11 +76,11 @@ public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> 
   public static NettyWsInitializer newInstance(EventManager eventManager,
                                                SessionManager sessionManager,
                                                ConnectionFilter connectionFilter,
+                                               DataType dataType,
                                                NetworkReaderStatistic networkReaderStatistic,
                                                WebSocketSslContext sslContext, boolean usingSsl) {
-    return new NettyWsInitializer(eventManager, sessionManager, connectionFilter,
-        networkReaderStatistic,
-        sslContext, usingSsl);
+    return new NettyWsInitializer(eventManager, sessionManager, connectionFilter, dataType,
+        networkReaderStatistic, sslContext, usingSsl);
   }
 
   @Override
@@ -91,12 +94,12 @@ public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> 
       pipeline.addLast("ssl", new SslHandler(engine));
     }
 
-    // add http-codec for TCP handshaker
+    // add http-codec for TCP handshake
     pipeline.addLast("httpServerCodec", new HttpServerCodec());
 
     // the logic handler
     pipeline.addLast("http-handshake",
-        NettyWsHandShake.newInstance(eventManager, sessionManager,
-            connectionFilter, networkReaderStatistic));
+        NettyWsHandShake.newInstance(eventManager, sessionManager, connectionFilter,
+            dataType, networkReaderStatistic));
   }
 }
