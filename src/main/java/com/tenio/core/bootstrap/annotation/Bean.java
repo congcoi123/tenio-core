@@ -33,7 +33,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * This annotation can be only used inside a class annotated by {@link Configuration}.
+ * This annotation can be only used inside a class annotated by {@link BeanFactory}.
  *
  * <p>Using this on method level, the method should return an instance of an object that can be
  * autowired by {@link Autowired}.

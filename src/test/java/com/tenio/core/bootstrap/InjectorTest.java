@@ -124,7 +124,7 @@ class InjectorTest {
 
   @Test
   @DisplayName("After scanning the package should retrieve an instance of bean class - a class " +
-      "declared by @Bean and @Configuration annotations")
+      "declared by @Bean and @BeanFactory annotations")
   void scanPackageShouldRetrieveInstanceOfBean()
       throws IOException, ClassNotFoundException, InvocationTargetException, InstantiationException,
       IllegalAccessException, NoSuchMethodException {

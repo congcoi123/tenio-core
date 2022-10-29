@@ -20,4 +20,3 @@ class HttpEventHandlerTest {
     httpEventHandler.initialize(EventManager.newInstance());
   }
 }
-

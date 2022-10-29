@@ -32,11 +32,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Declares this annotation for a class which contains configurations, such as {@link Bean}
- * annotated methods.
+ * Declares this annotation for a class which contains {@link Bean} annotated methods.
+ *
+ * @since 0.4.0
  */
 @Retention(RUNTIME)
 @Target(TYPE)
 @Documented
-public @interface Configuration {
+public @interface BeanFactory {
 }

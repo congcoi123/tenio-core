@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.bootstrap.injector;
 
+import com.tenio.core.bootstrap.annotation.BeanFactory;
 import com.tenio.core.exception.IllegalDefinedAccessControlException;
 import com.tenio.core.exception.IllegalReturnTypeException;
 import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
@@ -34,7 +35,6 @@ import com.tenio.core.bootstrap.annotation.AutowiredAcceptNull;
 import com.tenio.core.bootstrap.annotation.AutowiredQualifier;
 import com.tenio.core.bootstrap.annotation.Bean;
 import com.tenio.core.bootstrap.annotation.Component;
-import com.tenio.core.bootstrap.annotation.Configuration;
 import com.tenio.core.bootstrap.annotation.EventHandler;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -157,7 +157,7 @@ public final class Injector {
         annotation -> implementedClasses.addAll(reflections.getTypesAnnotatedWith(annotation)));
 
     // retrieves all classes those are declared by the @Bean annotation
-    var configurationClasses = reflections.getTypesAnnotatedWith(Configuration.class);
+    var configurationClasses = reflections.getTypesAnnotatedWith(BeanFactory.class);
     for (var configurationClass : configurationClasses) {
       for (var method : configurationClass.getMethods()) {
         if (method.isAnnotationPresent(Bean.class)) {
@@ -204,8 +204,9 @@ public final class Injector {
         // recursively create field instance for this class instance
         autowire(clazz, bean);
       }
+
       // fetches all bean instances and save them to classes map
-      if (clazz.isAnnotationPresent(Configuration.class)) {
+      if (clazz.isAnnotationPresent(BeanFactory.class)) {
         var configurationBean = clazz.getDeclaredConstructor().newInstance();
         for (var method : clazz.getMethods()) {
           if (method.isAnnotationPresent(Bean.class)) {

@@ -25,9 +25,9 @@ THE SOFTWARE.
 package com.tenio.core.bootstrap.bean;
 
 import com.tenio.core.bootstrap.annotation.Bean;
-import com.tenio.core.bootstrap.annotation.Configuration;
+import com.tenio.core.bootstrap.annotation.BeanFactory;
 
-@Configuration
+@BeanFactory
 public class TestConfigurationClass {
 
   @Bean

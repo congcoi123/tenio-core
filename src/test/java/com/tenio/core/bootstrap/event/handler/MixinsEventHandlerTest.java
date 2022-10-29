@@ -24,4 +24,3 @@ class MixinsEventHandlerTest {
     mixinsEventHandler.initialize(EventManager.newInstance());
   }
 }
-

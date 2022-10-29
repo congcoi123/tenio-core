@@ -24,4 +24,3 @@ class PlayerEventHandlerTest {
     playerEventHandler.initialize(EventManager.newInstance());
   }
 }
-

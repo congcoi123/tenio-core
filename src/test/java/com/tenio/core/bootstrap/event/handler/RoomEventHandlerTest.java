@@ -25,4 +25,3 @@ class RoomEventHandlerTest {
     roomEventHandler.initialize(EventManager.newInstance());
   }
 }
-

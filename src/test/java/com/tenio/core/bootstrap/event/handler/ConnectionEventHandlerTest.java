@@ -22,4 +22,3 @@ class ConnectionEventHandlerTest {
     connectionEventHandler.initialize(EventManager.newInstance());
   }
 }
-
