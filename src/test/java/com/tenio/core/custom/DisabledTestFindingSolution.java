@@ -22,40 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap;
+package com.tenio.core.custom;
 
-import com.tenio.core.bootstrap.annotation.Autowired;
-import com.tenio.core.bootstrap.annotation.Component;
-import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
-import com.tenio.core.bootstrap.event.EventHandler;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-/**
- * This class provides instances for the events handler and the configuration setups.
- */
-@Component
-public final class BootstrapHandler {
-
-  @Autowired
-  private EventHandler eventHandler;
-
-  @Autowired
-  private ConfigurationHandler configurationHandler;
-
-  /**
-   * Retrieves an events handler.
-   *
-   * @return the {@link EventHandler} instance
-   */
-  public EventHandler getEventHandler() {
-    return eventHandler;
-  }
-
-  /**
-   * Retrieves a configuration setups.
-   *
-   * @return the {@link ConfigurationHandler} instance
-   */
-  public ConfigurationHandler getConfigurationHandler() {
-    return configurationHandler;
-  }
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Test
+@Disabled("Disabled until finding solutions")
+public @interface DisabledTestFindingSolution {
 }

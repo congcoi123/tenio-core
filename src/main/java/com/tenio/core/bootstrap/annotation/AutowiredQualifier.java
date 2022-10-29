@@ -22,40 +22,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap;
+package com.tenio.core.bootstrap.annotation;
 
-import com.tenio.core.bootstrap.annotation.Autowired;
-import com.tenio.core.bootstrap.annotation.Component;
-import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
-import com.tenio.core.bootstrap.event.EventHandler;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 /**
- * This class provides instances for the events handler and the configuration setups.
+ * Using <code>AutowiredQualifier</code> annotation with {@link Autowired}
+ * or {@link AutowiredAcceptNull} annotation.
+ *
+ * <p>This annotation can be used to avoid conflict if there are multiple
+ * implementations of a same interface.
  */
-@Component
-public final class BootstrapHandler {
-
-  @Autowired
-  private EventHandler eventHandler;
-
-  @Autowired
-  private ConfigurationHandler configurationHandler;
+@Target({FIELD})
+@Retention(RUNTIME)
+@Documented
+public @interface AutowiredQualifier {
 
   /**
-   * Retrieves an events handler.
+   * Declares the name should be used to distinguish implementations, otherwise, it will use the
+   * implementation class name.
    *
-   * @return the {@link EventHandler} instance
+   * @return the qualifier name for an implementation
    */
-  public EventHandler getEventHandler() {
-    return eventHandler;
-  }
-
-  /**
-   * Retrieves a configuration setups.
-   *
-   * @return the {@link ConfigurationHandler} instance
-   */
-  public ConfigurationHandler getConfigurationHandler() {
-    return configurationHandler;
-  }
+  String value() default "";
 }

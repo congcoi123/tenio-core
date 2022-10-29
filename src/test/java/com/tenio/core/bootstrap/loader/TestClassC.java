@@ -22,40 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap;
+package com.tenio.core.bootstrap.loader;
 
-import com.tenio.core.bootstrap.annotation.Autowired;
 import com.tenio.core.bootstrap.annotation.Component;
-import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
-import com.tenio.core.bootstrap.event.EventHandler;
+import com.tenio.core.bootstrap.test.inf.TestInterfaceC;
 
-/**
- * This class provides instances for the events handler and the configuration setups.
- */
 @Component
-public final class BootstrapHandler {
-
-  @Autowired
-  private EventHandler eventHandler;
-
-  @Autowired
-  private ConfigurationHandler configurationHandler;
-
-  /**
-   * Retrieves an events handler.
-   *
-   * @return the {@link EventHandler} instance
-   */
-  public EventHandler getEventHandler() {
-    return eventHandler;
-  }
-
-  /**
-   * Retrieves a configuration setups.
-   *
-   * @return the {@link ConfigurationHandler} instance
-   */
-  public ConfigurationHandler getConfigurationHandler() {
-    return configurationHandler;
-  }
+public class TestClassC implements TestInterfaceC {
 }

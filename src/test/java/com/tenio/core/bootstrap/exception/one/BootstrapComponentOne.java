@@ -22,48 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap.event;
+package com.tenio.core.bootstrap.exception.one;
 
 import com.tenio.core.bootstrap.annotation.Autowired;
 import com.tenio.core.bootstrap.annotation.Component;
-import com.tenio.core.bootstrap.event.handler.ConnectionEventHandler;
-import com.tenio.core.bootstrap.event.handler.HttpEventHandler;
-import com.tenio.core.bootstrap.event.handler.MixinsEventHandler;
-import com.tenio.core.bootstrap.event.handler.PlayerEventHandler;
-import com.tenio.core.bootstrap.event.handler.RoomEventHandler;
-import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.bootstrap.test.inf.TestInterfaceD;
 
-/**
- * Dispatching all events in the server.
- */
 @Component
-public final class EventHandler {
+public class BootstrapComponentOne {
 
   @Autowired
-  private ConnectionEventHandler connectionEventHandler;
-
-  @Autowired
-  private PlayerEventHandler playerEventHandler;
-
-  @Autowired
-  private RoomEventHandler roomEventHandler;
-
-  @Autowired
-  private HttpEventHandler httpEventHandler;
-
-  @Autowired
-  private MixinsEventHandler mixinsEventHandler;
-
-  /**
-   * Initialization.
-   *
-   * @param eventManager the event manager
-   */
-  public void initialize(EventManager eventManager) {
-    connectionEventHandler.initialize(eventManager);
-    playerEventHandler.initialize(eventManager);
-    roomEventHandler.initialize(eventManager);
-    httpEventHandler.initialize(eventManager);
-    mixinsEventHandler.initialize(eventManager);
-  }
+  public TestInterfaceD d;
 }

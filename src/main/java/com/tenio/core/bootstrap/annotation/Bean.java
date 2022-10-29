@@ -22,40 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap;
+package com.tenio.core.bootstrap.annotation;
 
-import com.tenio.core.bootstrap.annotation.Autowired;
-import com.tenio.core.bootstrap.annotation.Component;
-import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
-import com.tenio.core.bootstrap.event.EventHandler;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import com.tenio.core.exception.IllegalReturnTypeException;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 /**
- * This class provides instances for the events handler and the configuration setups.
+ * This annotation can be only used inside a class annotated by {@link Configuration}.
+ *
+ * <p>Using this on method level, the method should return an instance of an object that can be
+ * autowired by {@link Autowired}.
+ *
+ * <p>A method annotated by this annotation must not return any types of <b>primitive</b>
+ * or <b>void</b>, otherwise an exception {@link IllegalReturnTypeException} will be thrown.
  */
-@Component
-public final class BootstrapHandler {
-
-  @Autowired
-  private EventHandler eventHandler;
-
-  @Autowired
-  private ConfigurationHandler configurationHandler;
-
-  /**
-   * Retrieves an events handler.
-   *
-   * @return the {@link EventHandler} instance
-   */
-  public EventHandler getEventHandler() {
-    return eventHandler;
-  }
-
-  /**
-   * Retrieves a configuration setups.
-   *
-   * @return the {@link ConfigurationHandler} instance
-   */
-  public ConfigurationHandler getConfigurationHandler() {
-    return configurationHandler;
-  }
+@Target({METHOD})
+@Retention(RUNTIME)
+@Documented
+public @interface Bean {
 }

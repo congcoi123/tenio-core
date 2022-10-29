@@ -24,8 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.bootstrap.event.handler;
 
-import com.tenio.common.bootstrap.annotation.AutowiredAcceptNull;
-import com.tenio.common.bootstrap.annotation.Component;
+import com.tenio.core.bootstrap.annotation.AutowiredAcceptNull;
+import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;

@@ -22,40 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap;
+package com.tenio.core.bootstrap.annotation;
 
-import com.tenio.core.bootstrap.annotation.Autowired;
-import com.tenio.core.bootstrap.annotation.Component;
-import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
-import com.tenio.core.bootstrap.event.EventHandler;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 /**
- * This class provides instances for the events handler and the configuration setups.
+ * <b>Autowiring</b> feature enables you to inject the object dependency implicitly, and it
+ * internally uses <b>setter</b> or <b>constructor</b> injection.
+ *
+ * <p><b>Autowiring</b> cannot be used to inject <b>primitive</b> and <b>string values</b> because
+ * it works with <b>reference</b> only.
  */
-@Component
-public final class BootstrapHandler {
-
-  @Autowired
-  private EventHandler eventHandler;
-
-  @Autowired
-  private ConfigurationHandler configurationHandler;
-
-  /**
-   * Retrieves an events handler.
-   *
-   * @return the {@link EventHandler} instance
-   */
-  public EventHandler getEventHandler() {
-    return eventHandler;
-  }
-
-  /**
-   * Retrieves a configuration setups.
-   *
-   * @return the {@link ConfigurationHandler} instance
-   */
-  public ConfigurationHandler getConfigurationHandler() {
-    return configurationHandler;
-  }
+@Target({FIELD})
+@Retention(RUNTIME)
+@Documented
+public @interface Autowired {
 }

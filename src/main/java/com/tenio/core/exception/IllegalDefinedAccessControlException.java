@@ -22,40 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap;
+package com.tenio.core.exception;
 
-import com.tenio.core.bootstrap.annotation.Autowired;
-import com.tenio.core.bootstrap.annotation.Component;
-import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
-import com.tenio.core.bootstrap.event.EventHandler;
+
+import com.tenio.core.bootstrap.annotation.Bean;
+import com.tenio.core.bootstrap.injector.Injector;
 
 /**
- * This class provides instances for the events handler and the configuration setups.
+ * The method annotated by {@link Bean} annotation but is not defined as <code>public</code> access.
+ *
+ * @see Injector
+ * @see Bean
  */
-@Component
-public final class BootstrapHandler {
+public final class IllegalDefinedAccessControlException extends RuntimeException {
 
-  @Autowired
-  private EventHandler eventHandler;
-
-  @Autowired
-  private ConfigurationHandler configurationHandler;
-
-  /**
-   * Retrieves an events handler.
-   *
-   * @return the {@link EventHandler} instance
-   */
-  public EventHandler getEventHandler() {
-    return eventHandler;
-  }
-
-  /**
-   * Retrieves a configuration setups.
-   *
-   * @return the {@link ConfigurationHandler} instance
-   */
-  public ConfigurationHandler getConfigurationHandler() {
-    return configurationHandler;
-  }
+  private static final long serialVersionUID = -3263083948979983L;
 }

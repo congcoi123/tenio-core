@@ -22,40 +22,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap;
+package com.tenio.core.custom;
 
-import com.tenio.core.bootstrap.annotation.Autowired;
-import com.tenio.core.bootstrap.annotation.Component;
-import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
-import com.tenio.core.bootstrap.event.EventHandler;
+import org.junit.jupiter.params.converter.ArgumentConversionException;
+import org.junit.jupiter.params.converter.SimpleArgumentConverter;
 
-/**
- * This class provides instances for the events handler and the configuration setups.
- */
-@Component
-public final class BootstrapHandler {
+public class StringArrayConverter extends SimpleArgumentConverter {
 
-  @Autowired
-  private EventHandler eventHandler;
-
-  @Autowired
-  private ConfigurationHandler configurationHandler;
-
-  /**
-   * Retrieves an events handler.
-   *
-   * @return the {@link EventHandler} instance
-   */
-  public EventHandler getEventHandler() {
-    return eventHandler;
-  }
-
-  /**
-   * Retrieves a configuration setups.
-   *
-   * @return the {@link ConfigurationHandler} instance
-   */
-  public ConfigurationHandler getConfigurationHandler() {
-    return configurationHandler;
+  @Override
+  protected Object convert(Object source, Class<?> targetType) throws ArgumentConversionException {
+    if (source instanceof String && String[].class.isAssignableFrom(targetType)) {
+      return ((String) source).split("\\s*,\\s*");
+    } else {
+      throw new IllegalArgumentException("Conversion from " + source.getClass() + " to "
+          + targetType + " not supported.");
+    }
   }
 }

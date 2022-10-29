@@ -22,40 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap;
+package com.tenio.core.exception;
 
-import com.tenio.core.bootstrap.annotation.Autowired;
 import com.tenio.core.bootstrap.annotation.Component;
-import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
-import com.tenio.core.bootstrap.event.EventHandler;
 
 /**
- * This class provides instances for the events handler and the configuration setups.
+ * This exception should be thrown when there is no {@link Component} annotation associated class
+ * found for the corresponding declared field in a class.
  */
-@Component
-public final class BootstrapHandler {
+public final class NoImplementedClassFoundException extends RuntimeException {
 
-  @Autowired
-  private EventHandler eventHandler;
-
-  @Autowired
-  private ConfigurationHandler configurationHandler;
+  private static final long serialVersionUID = -2836756456705984458L;
 
   /**
-   * Retrieves an events handler.
+   * Creates a new instance.
    *
-   * @return the {@link EventHandler} instance
+   * @param clazz the interface of which there is no implementation
    */
-  public EventHandler getEventHandler() {
-    return eventHandler;
-  }
-
-  /**
-   * Retrieves a configuration setups.
-   *
-   * @return the {@link ConfigurationHandler} instance
-   */
-  public ConfigurationHandler getConfigurationHandler() {
-    return configurationHandler;
+  public NoImplementedClassFoundException(Class<?> clazz) {
+    super(String.format("Unable to find any implementation for the class: %s", clazz.getName()));
   }
 }

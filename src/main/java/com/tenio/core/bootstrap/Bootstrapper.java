@@ -24,8 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.bootstrap;
 
-import com.tenio.common.bootstrap.annotation.Bootstrap;
-import com.tenio.common.bootstrap.injector.Injector;
+import com.tenio.core.bootstrap.annotation.Bootstrap;
+import com.tenio.core.bootstrap.injector.Injector;
 import com.tenio.common.logger.SystemLogger;
 import java.util.Objects;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine;

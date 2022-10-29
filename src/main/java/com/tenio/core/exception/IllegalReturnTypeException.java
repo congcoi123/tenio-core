@@ -22,40 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap;
+package com.tenio.core.exception;
 
-import com.tenio.core.bootstrap.annotation.Autowired;
-import com.tenio.core.bootstrap.annotation.Component;
-import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
-import com.tenio.core.bootstrap.event.EventHandler;
+import com.tenio.core.bootstrap.annotation.Bean;
+import com.tenio.core.bootstrap.injector.Injector;
 
 /**
- * This class provides instances for the events handler and the configuration setups.
+ * The method annotated by {@link Bean} annotation but returns <b>primitive</b> or
+ * <code>void</code>.
+ *
+ * @see Injector
+ * @see Bean
  */
-@Component
-public final class BootstrapHandler {
+public final class IllegalReturnTypeException extends RuntimeException {
 
-  @Autowired
-  private EventHandler eventHandler;
-
-  @Autowired
-  private ConfigurationHandler configurationHandler;
-
-  /**
-   * Retrieves an events handler.
-   *
-   * @return the {@link EventHandler} instance
-   */
-  public EventHandler getEventHandler() {
-    return eventHandler;
-  }
-
-  /**
-   * Retrieves a configuration setups.
-   *
-   * @return the {@link ConfigurationHandler} instance
-   */
-  public ConfigurationHandler getConfigurationHandler() {
-    return configurationHandler;
-  }
+  private static final long serialVersionUID = 4084969089509262613L;
 }

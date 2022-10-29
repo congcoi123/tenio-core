@@ -22,48 +22,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap.event;
+package com.tenio.core.bootstrap.test;
 
 import com.tenio.core.bootstrap.annotation.Autowired;
+import com.tenio.core.bootstrap.annotation.AutowiredAcceptNull;
+import com.tenio.core.bootstrap.annotation.AutowiredQualifier;
 import com.tenio.core.bootstrap.annotation.Component;
-import com.tenio.core.bootstrap.event.handler.ConnectionEventHandler;
-import com.tenio.core.bootstrap.event.handler.HttpEventHandler;
-import com.tenio.core.bootstrap.event.handler.MixinsEventHandler;
-import com.tenio.core.bootstrap.event.handler.PlayerEventHandler;
-import com.tenio.core.bootstrap.event.handler.RoomEventHandler;
-import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.bootstrap.bean.TestBeanClass;
+import com.tenio.core.bootstrap.test.impl.TestClassAlone;
+import com.tenio.core.bootstrap.test.inf.TestInterfaceA;
+import com.tenio.core.bootstrap.test.inf.TestInterfaceB;
+import com.tenio.core.bootstrap.test.inf.TestInterfaceC;
 
-/**
- * Dispatching all events in the server.
- */
 @Component
-public final class EventHandler {
+public class BootstrapComponent {
 
   @Autowired
-  private ConnectionEventHandler connectionEventHandler;
-
-  @Autowired
-  private PlayerEventHandler playerEventHandler;
-
-  @Autowired
-  private RoomEventHandler roomEventHandler;
-
-  @Autowired
-  private HttpEventHandler httpEventHandler;
-
-  @Autowired
-  private MixinsEventHandler mixinsEventHandler;
-
+  public TestInterfaceA a;
   /**
-   * Initialization.
-   *
-   * @param eventManager the event manager
+   * This declaration should not throw any exceptions while scanning packages
    */
-  public void initialize(EventManager eventManager) {
-    connectionEventHandler.initialize(eventManager);
-    playerEventHandler.initialize(eventManager);
-    roomEventHandler.initialize(eventManager);
-    httpEventHandler.initialize(eventManager);
-    mixinsEventHandler.initialize(eventManager);
-  }
+  @AutowiredAcceptNull
+  public TestInterfaceB b;
+  @Autowired
+  @AutowiredQualifier(
+      value = "TestClassCCopy"
+  )
+  public TestInterfaceC c;
+  @Autowired
+  public TestClassAlone alone;
+  @Autowired
+  public TestBeanClass bean;
 }
