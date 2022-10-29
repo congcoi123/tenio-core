@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.bootstrap.injector;
 
 import com.tenio.core.bootstrap.annotation.BeanFactory;
+import com.tenio.core.bootstrap.annotation.Configured;
 import com.tenio.core.exception.IllegalDefinedAccessControlException;
 import com.tenio.core.exception.IllegalReturnTypeException;
 import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
@@ -150,7 +151,8 @@ public final class Injector {
     // in here
     var listAnnotations = new Class[] {
         Component.class,
-        EventHandler.class
+        EventHandler.class,
+        Configured.class
     };
     var implementedClasses = new HashSet<Class<?>>();
     Arrays.stream(listAnnotations).forEach(
@@ -198,7 +200,7 @@ public final class Injector {
     for (var clazz : classes) {
       // in case you need to create a bean with another annotation, put it in here
       // but notices to put it in "implementedClasses" first
-      if (clazz.isAnnotationPresent(Component.class) || clazz.isAnnotationPresent(EventHandler.class)) {
+      if (isClassAnnotated(clazz, listAnnotations)) {
         var bean = clazz.getDeclaredConstructor().newInstance();
         classBeansMap.put(clazz, bean);
         // recursively create field instance for this class instance
@@ -294,6 +296,15 @@ public final class Injector {
 
       return null;
     }
+  }
+
+  private boolean isClassAnnotated(Class<?> clazz, Class<?>[] annotations) {
+    for (Class annotation : annotations) {
+      if (clazz.isAnnotationPresent(annotation)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private Class<?> getImplementedClass(Class<?> classInterface, String fieldName,
