@@ -27,7 +27,7 @@ package com.tenio.core.bootstrap;
 import com.tenio.core.bootstrap.annotation.Autowired;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
-import com.tenio.core.bootstrap.event.EventHandler;
+import com.tenio.core.event.handler.EventHandler;
 
 /**
  * This class provides instances for the events handler and the configuration setups.
