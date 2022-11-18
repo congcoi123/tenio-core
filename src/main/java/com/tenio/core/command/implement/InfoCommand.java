@@ -29,15 +29,33 @@ import com.tenio.core.command.AbstractCommandHandler;
 import com.tenio.core.command.CommandUtility;
 import java.util.List;
 
-@Command(label = "room", usage = {
-    "add <name>",
-    "remove <name>",
-    "list"
-}, description = "Allow managing rooms on the game server")
-public final class RoomCommand extends AbstractCommandHandler {
+@Command(label = "info", usage = {
+    "player",
+    "room"
+}, description = "Provides brief information about players and rooms on the server")
+public final class InfoCommand extends AbstractCommandHandler {
 
   @Override
   public void execute(List<String> args) {
-    CommandUtility.INSTANCE.showConsoleMessage("The feature is not available at the moment.");
+    var action = args.get(0);
+
+    switch (action) {
+      case "player":
+        CommandUtility.INSTANCE.showConsoleMessage(
+            "There are " + api().getPlayerCount() + " players > The first 10 entities > " +
+                api().getReadonlyPlayersList().subList(0, Math.min(api().getPlayerCount(), 10)));
+        break;
+
+      case "room":
+        var rooms = api().getReadonlyRoomsList();
+        CommandUtility.INSTANCE.showConsoleMessage(
+            "There are " + rooms.size() + " rooms > The first 10 entities > " +
+                rooms.subList(0, Math.min(rooms.size(), 10)));
+        break;
+
+      default:
+        CommandUtility.INSTANCE.showConsoleMessage("The feature is not available at the moment.");
+        break;
+    }
   }
 }

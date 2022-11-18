@@ -32,7 +32,7 @@ import java.util.List;
 @Command(label = "server", usage = {
     "stop",
     "restart",
-}, description = "Allow stopping or restarting the server")
+}, description = "Allows stopping or restarting the server", isBackgroundRunning = true)
 public final class ServerCommand extends AbstractCommandHandler {
 
   @Override

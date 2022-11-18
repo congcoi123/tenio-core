@@ -33,7 +33,7 @@ import java.util.Objects;
 
 @Command(label = "help", usage = {
     "[<command>,<command>,<command>]"
-})
+}, description = "Shows all supporting commands")
 public final class HelpCommand extends AbstractCommandHandler {
 
   private String createCommandDetails(AbstractCommandHandler command) {
@@ -64,8 +64,6 @@ public final class HelpCommand extends AbstractCommandHandler {
         }
       }
     }
-    System.out.println("======= HELP =======");
     commands.forEach(System.out::println);
-    System.out.println("====================");
   }
 }

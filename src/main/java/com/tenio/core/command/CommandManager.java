@@ -34,7 +34,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TreeMap;
 import org.reflections.Reflections;
 
@@ -45,115 +44,107 @@ public final class CommandManager extends SystemLogger {
   private final Map<String, Command> annotations = new TreeMap<>();
 
   /**
-   * Register a command handler.
+   * Registers a command handler.
    *
-   * @param label   The command label.
-   * @param command The command handler.
-   * @return Instance chaining.
+   * @param label   The command label
+   * @param command The command handler
    */
-  public CommandManager registerCommand(String label, AbstractCommandHandler command) {
-    debug("COMMAND", "Registered command: " + label);
+  public void registerCommand(String label, AbstractCommandHandler command) {
+    debug("COMMAND", "Registered command > " + label);
     label = label.toLowerCase();
 
-    // Check availability
+    // checks availability
     if (commands.containsKey(label)) {
-      throw new RuntimeException("Duplicated Command: " + label + " > " + commands.get(label).getClass().getName());
+      throw new RuntimeException(
+          "Could not register a duplicated command {" + label + "}, which is available > " +
+              commands.get(label));
     }
 
-    // Get command data.
+    // gets command data
     var annotation = command.getClass().getAnnotation(Command.class);
-    this.annotations.put(label, annotation);
-    this.commands.put(label, command);
+    annotations.put(label, annotation);
+    commands.put(label, command);
 
-    return this;
   }
 
   /**
    * Removes a registered command handler.
    *
-   * @param label The command label.
-   * @return Instance chaining.
+   * @param label The command label
    */
-  public CommandManager unregisterCommand(String label) {
+  public void unregisterCommand(String label) {
     debug("COMMAND", "Unregistered command: " + label);
 
-    AbstractCommandHandler handler = this.commands.get(label);
-    if (handler == null) {
-      return this;
-    }
-
-    var annotation = handler.getClass().getAnnotation(Command.class);
-    this.annotations.remove(label);
-    this.commands.remove(label);
-
-    return this;
+    annotations.remove(label);
+    commands.remove(label);
   }
 
   public List<Command> getAnnotationsAsList() {
-    return new LinkedList<>(this.annotations.values());
+    return new LinkedList<>(annotations.values());
   }
 
   public Map<String, Command> getAnnotations() {
-    return new LinkedHashMap<>(this.annotations);
+    return new LinkedHashMap<>(annotations);
   }
 
   /**
    * Returns a list of all registered commands.
    *
-   * @return All command handlers as a list.
+   * @return all command handlers as a list
    */
   public List<AbstractCommandHandler> getHandlersAsList() {
-    return new LinkedList<>(this.commands.values());
+    return new LinkedList<>(commands.values());
   }
 
   public Map<String, AbstractCommandHandler> getHandlers() {
-    return this.commands;
+    return commands;
   }
 
   /**
-   * Returns a handler by label/alias.
+   * Returns a handler by its label
    *
-   * @param label The command label.
-   * @return The command handler.
+   * @param label The command label
+   * @return the command handler
    */
   public AbstractCommandHandler getHandler(String label) {
-    return this.commands.get(label);
+    return commands.get(label);
   }
 
   /**
-   * Invoke a command handler with the given arguments.
+   * Invokes a command handler with given arguments.
    *
-   * @param rawMessage The messaged used to invoke the command.
+   * @param rawMessage The messaged used to invoke the command
    */
   public void invoke(String rawMessage) {
-    // The console outputs in-game command
-    debug("COMMAND", "Command used by server console: " + rawMessage);
+    // the console outputs in-game command
+    CommandUtility.INSTANCE.showConsoleMessage("Input command > " + rawMessage);
 
     rawMessage = rawMessage.trim();
-    if (rawMessage.length() == 0) {
+    if (rawMessage.isBlank()) {
       return;
     }
 
-    // Parse message.
-    String[] split = rawMessage.split(" ");
-    List<String> args = new LinkedList<>(Arrays.asList(split));
-    String label = args.remove(0).toLowerCase();
+    // parses message
+    var split = rawMessage.split(" ");
+    var args = new LinkedList<>(Arrays.asList(split));
+    var label = args.remove(0).toLowerCase();
 
-    // Get command handler.
+    // gets command handler
     var handler = getHandler(label);
 
-    // Check if the handler is null.
-    if (handler == null) {
+    // checks if the handler is null
+    if (Objects.isNull(handler)) {
       return;
     }
 
-    // Get the command's annotation.
-    var annotation = this.annotations.get(label);
+    // gets the command's annotation.
+    var annotation = annotations.get(label);
 
-    // Invoke execute method for handler.
+    // invokes execute method for handler.
     Runnable runnable = () -> handler.execute(args);
     if (annotation.isBackgroundRunning()) {
       new Thread(runnable).start();
+      CommandUtility.INSTANCE.showConsoleMessage("The process is running in background.");
     } else {
       runnable.run();
     }
@@ -161,11 +152,18 @@ public final class CommandManager extends SystemLogger {
 
   /**
    * Scans for all classes annotated with {@link Command} and registers them.
+   *
+   * @param entryClass the root class which should be located in the parent package of other
+   *                   class' packages
+   * @param packages   a list of packages' names. It allows to define the scanning packages by
+   *                   their names
+   * @throws IllegalArgumentException it is related to the illegal argument exception
+   * @throws SecurityException        it is related to the security exception
    */
   public void scanPackages(Class<?> entryClass, String... packages)
       throws IllegalArgumentException, SecurityException {
 
-    // clean first
+    // clean maps data first
     commands.clear();
     annotations.clear();
 
@@ -187,19 +185,19 @@ public final class CommandManager extends SystemLogger {
       reflections.merge(reflectionPackage);
     }
 
-    Set<Class<?>> classes = reflections.getTypesAnnotatedWith(Command.class);
+    var classes = reflections.getTypesAnnotatedWith(Command.class);
 
     classes.forEach(annotated -> {
       try {
-        Command cmdData = annotated.getAnnotation(Command.class);
-        Object object = annotated.getDeclaredConstructor().newInstance();
+        var commandData = annotated.getAnnotation(Command.class);
+        var object = annotated.getDeclaredConstructor().newInstance();
         if (object instanceof AbstractCommandHandler) {
           var command = (AbstractCommandHandler) object;
-          command.setCommandInjector(this);
-          this.registerCommand(cmdData.label(), command);
+          command.setCommandManager(this);
+          this.registerCommand(commandData.label(), command);
         } else {
           error(new IllegalArgumentException("Class " + annotated.getName() + " is not a " +
-              "CommandHandler!"));
+              "AbstractCommandHandler"));
         }
       } catch (Exception exception) {
         error(exception, "Failed to register command handler for " + annotated.getSimpleName());

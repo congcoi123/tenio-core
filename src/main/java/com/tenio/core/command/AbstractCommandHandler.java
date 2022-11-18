@@ -53,12 +53,12 @@ public abstract class AbstractCommandHandler extends AbstractHandler {
     return commandManager;
   }
 
-  public void setCommandInjector(CommandManager commandManager) {
+  public void setCommandManager(CommandManager commandManager) {
     this.commandManager = commandManager;
   }
 
   /**
-   * Called when the server invokes a command.
+   * It is called when the server invokes a command.
    *
    * @param args The arguments to the command
    */

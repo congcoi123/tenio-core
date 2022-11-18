@@ -29,9 +29,9 @@ import com.tenio.core.command.AbstractCommandHandler;
 import com.tenio.core.command.CommandUtility;
 import java.util.List;
 
-@Command(label = "help", usage = {
+@Command(label = "unban", usage = {
     "[<address>,<command>,<command>]"
-}, description = "Allow removing banned Ip addresses from the ban list")
+}, description = "Allows removing banned Ip addresses from the ban list")
 public final class UnBanAddressCommand extends AbstractCommandHandler {
 
   @Override
