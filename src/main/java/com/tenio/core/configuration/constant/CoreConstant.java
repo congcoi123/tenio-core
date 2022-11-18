@@ -63,7 +63,8 @@ public final class CoreConstant {
    *
    * @see Bootstrapper
    */
-  public static final String DEFAULT_EXTENSION_EVENT_PACKAGE = "com.tenio.core.extension.events";
+  public static final String DEFAULT_EVENT_PACKAGE = "com.tenio.core.event";
+  public static final String DEFAULT_COMMAND_PACKAGE = "com.tenio.core.command";
 
   private CoreConstant() {
     throw new UnsupportedOperationException("This class does not support to create a new instance");

@@ -29,12 +29,10 @@ import com.tenio.core.command.AbstractCommandHandler;
 import com.tenio.core.command.CommandUtility;
 import java.util.List;
 
-@Command(label = "room", usage = {
-    "add <name>",
-    "remove <name>",
-    "list"
-}, description = "Allow managing rooms on the game server")
-public final class RoomCommand extends AbstractCommandHandler {
+@Command(label = "help", usage = {
+    "[<address>,<command>,<command>]"
+}, description = "Allow removing banned Ip addresses from the ban list")
+public final class UnBanAddressCommand extends AbstractCommandHandler {
 
   @Override
   public void execute(List<String> args) {

@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.bootstrap;
 
 import com.tenio.core.bootstrap.annotation.Bootstrap;
+import com.tenio.core.command.CommandManager;
 import com.tenio.core.bootstrap.injector.Injector;
 import com.tenio.common.logger.SystemLogger;
 import java.util.Objects;
@@ -70,6 +71,7 @@ public final class Bootstrapper extends SystemLogger {
     if (hasExtApplicationAnnotation) {
       start(entryClass, packages);
       bootstrapHandler = injector.getBean(BootstrapHandler.class);
+      bootstrapHandler.getCommandManager().scanPackages(entryClass, packages);
       return true;
     } else {
       return false;

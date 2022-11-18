@@ -27,6 +27,7 @@ package com.tenio.core.bootstrap;
 import com.tenio.core.bootstrap.annotation.Autowired;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
+import com.tenio.core.command.CommandManager;
 import com.tenio.core.event.handler.EventHandler;
 
 /**
@@ -39,6 +40,9 @@ public final class BootstrapHandler {
   private EventHandler eventHandler;
 
   @Autowired
+  private CommandManager commandManager;
+
+  @Autowired
   private ConfigurationHandler configurationHandler;
 
   /**
@@ -48,6 +52,10 @@ public final class BootstrapHandler {
    */
   public EventHandler getEventHandler() {
     return eventHandler;
+  }
+
+  public CommandManager getCommandManager() {
+    return commandManager;
   }
 
   /**

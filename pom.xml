@@ -45,6 +45,7 @@
         <org.eclipse.jetty.version>9.4.38.v20210224</org.eclipse.jetty.version>
         <javax.servlet.version>2.5</javax.servlet.version>
         <org.json.version>20220320</org.json.version>
+        <org.jline.version>3.21.0</org.jline.version>
 
         <logging.log4j.version>2.17.2</logging.log4j.version>
 
@@ -109,6 +110,16 @@
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>${org.json.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline</artifactId>
+            <version>${org.jline.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline-terminal-jna</artifactId>
+            <version>${org.jline.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

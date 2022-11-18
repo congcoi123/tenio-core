@@ -22,22 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.command.implement;
+package com.tenio.core.command;
 
-import com.tenio.core.bootstrap.annotation.Command;
-import com.tenio.core.command.AbstractCommandHandler;
-import com.tenio.core.command.CommandUtility;
-import java.util.List;
+public enum CommandUtility {
+  INSTANCE;
 
-@Command(label = "room", usage = {
-    "add <name>",
-    "remove <name>",
-    "list"
-}, description = "Allow managing rooms on the game server")
-public final class RoomCommand extends AbstractCommandHandler {
-
-  @Override
-  public void execute(List<String> args) {
-    CommandUtility.INSTANCE.showConsoleMessage("The feature is not available at the moment.");
+  public void showConsoleMessage(String text) {
+    System.out.println("> " + text);
   }
 }

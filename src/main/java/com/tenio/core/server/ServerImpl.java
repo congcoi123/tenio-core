@@ -25,14 +25,15 @@ THE SOFTWARE.
 package com.tenio.core.server;
 
 import com.tenio.common.configuration.Configuration;
-import com.tenio.common.utility.TimeUtility;
-import com.tenio.core.configuration.constant.Trademark;
 import com.tenio.common.data.DataType;
 import com.tenio.common.logger.SystemLogger;
+import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.bootstrap.BootstrapHandler;
+import com.tenio.core.command.CommandManager;
 import com.tenio.core.configuration.constant.CoreConstant;
+import com.tenio.core.configuration.constant.Trademark;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.manager.PlayerManager;
@@ -58,12 +59,19 @@ import com.tenio.core.schedule.ScheduleServiceImpl;
 import com.tenio.core.server.service.InternalProcessorService;
 import com.tenio.core.server.service.InternalProcessorServiceImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
+import java.io.IOError;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
 import org.apache.logging.log4j.util.Strings;
+import org.jline.reader.EndOfFileException;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.UserInterruptException;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 /**
  * This class manages the workflow of the current server. The instruction's
@@ -166,6 +174,8 @@ public final class ServerImpl extends SystemLogger implements Server {
     eventManager.emit(ServerEvent.SERVER_INITIALIZATION, serverName, configuration);
 
     info("SERVER", serverName, "Started");
+
+    startConsole(bootstrapHandler.getCommandManager());
   }
 
   private void initializeServices() {
@@ -328,6 +338,52 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     internalProcessorService.setNetworkReaderStatistic(networkService.getNetworkReaderStatistic());
     internalProcessorService.setNetworkWriterStatistic(networkService.getNetworkWriterStatistic());
+  }
+
+  private void startConsole(CommandManager commandManager) {
+    Terminal terminal = null;
+    try {
+      terminal = TerminalBuilder.builder().jna(true).build();
+    } catch (Exception e) {
+      try {
+        // Fallback to a dumb jline terminal.
+        terminal = TerminalBuilder.builder().dumb(true).build();
+      } catch (Exception ignored) {
+        // When dumb is true, build() never throws.
+      }
+    }
+    LineReader consoleLineReader = LineReaderBuilder.builder()
+        .terminal(terminal)
+        .build();
+
+    String input = null;
+    boolean isLastInterrupted = false;
+    while (true) {
+      try {
+        input = consoleLineReader.readLine("> ");
+      } catch (UserInterruptException e) {
+        if (!isLastInterrupted) {
+          isLastInterrupted = true;
+          info("COMMAND", "Press Ctrl-C again to shutdown.");
+          continue;
+        } else {
+          Runtime.getRuntime().exit(0);
+        }
+      } catch (EndOfFileException e) {
+        info("COMMAND", "EOF detected.");
+        continue;
+      } catch (IOError e) {
+        error(e, "An IO error occurred.");
+        continue;
+      }
+
+      isLastInterrupted = false;
+      try {
+        commandManager.invoke(input);
+      } catch (Exception e) {
+        error(e);
+      }
+    }
   }
 
   @Override
