@@ -29,8 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
-import com.tenio.core.exception.NoImplementedClassFoundException;
 import com.tenio.core.bootstrap.bean.TestBeanClass;
 import com.tenio.core.bootstrap.injector.Injector;
 import com.tenio.core.bootstrap.test.BootstrapComponent;
@@ -40,7 +38,8 @@ import com.tenio.core.bootstrap.test.impl.TestClassCCopy;
 import com.tenio.core.bootstrap.test.inf.TestInterfaceA;
 import com.tenio.core.bootstrap.test.inf.TestInterfaceC;
 import com.tenio.core.custom.DisabledTestFindingSolution;
-import java.io.IOException;
+import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
+import com.tenio.core.exception.NoImplementedClassFoundException;
 import java.lang.reflect.InvocationTargetException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,7 +52,7 @@ class InjectorTest {
   @Test
   @DisplayName("After scanning the package should retrieve an instance of A")
   void scanPackageShouldRetrieveInstanceOfA()
-      throws IOException, ClassNotFoundException, InvocationTargetException, InstantiationException,
+      throws ClassNotFoundException, InvocationTargetException, InstantiationException,
       IllegalAccessException, NoSuchMethodException {
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
 
@@ -67,7 +66,7 @@ class InjectorTest {
   @Test
   @DisplayName("After scanning the package should not retrieve an instance of B (null)")
   void scanPackageShouldRetrieveNullInstanceOfB()
-      throws IOException, ClassNotFoundException, InvocationTargetException, InstantiationException,
+      throws ClassNotFoundException, InvocationTargetException, InstantiationException,
       IllegalAccessException, NoSuchMethodException {
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
 
@@ -79,7 +78,7 @@ class InjectorTest {
   @DisplayName("After scanning the package should retrieve an instance of C because of using " +
       "@AutowiredQualifier in BootstrapComponent class")
   void scanPackageShouldRetrieveInstanceOfC()
-      throws IOException, ClassNotFoundException, InvocationTargetException, InstantiationException,
+      throws ClassNotFoundException, InvocationTargetException, InstantiationException,
       IllegalAccessException, NoSuchMethodException {
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
 
@@ -94,7 +93,7 @@ class InjectorTest {
   @DisplayName("After scanning the package should retrieve an instance of alone - a class with " +
       "@Component and without implementing any interface")
   void scanPackageShouldRetrieveInstanceOfAlone()
-      throws IOException, ClassNotFoundException, InvocationTargetException, InstantiationException,
+      throws ClassNotFoundException, InvocationTargetException, InstantiationException,
       IllegalAccessException, NoSuchMethodException {
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
 
@@ -126,7 +125,7 @@ class InjectorTest {
   @DisplayName("After scanning the package should retrieve an instance of bean class - a class " +
       "declared by @Bean and @BeanFactory annotations")
   void scanPackageShouldRetrieveInstanceOfBean()
-      throws IOException, ClassNotFoundException, InvocationTargetException, InstantiationException,
+      throws ClassNotFoundException, InvocationTargetException, InstantiationException,
       IllegalAccessException, NoSuchMethodException {
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
 

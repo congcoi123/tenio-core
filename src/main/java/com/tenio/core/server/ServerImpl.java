@@ -36,6 +36,7 @@ import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.constant.Trademark;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.configuration.setting.Setting;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.manager.implement.PlayerManagerImpl;
@@ -175,7 +176,10 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     info("SERVER", serverName, "Started");
 
-    startConsole(bootstrapHandler.getCommandManager());
+    if (((Setting) configuration.get(CoreConfigurationType.SERVER_SETTING)).getCommand()
+        .isEnabled()) {
+      startConsole(bootstrapHandler.getCommandManager());
+    }
   }
 
   private void initializeServices() {
