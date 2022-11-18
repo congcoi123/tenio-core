@@ -32,6 +32,7 @@ import com.tenio.core.api.ServerApi;
 import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.command.CommandManager;
+import com.tenio.core.command.CommandUtility;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.constant.Trademark;
 import com.tenio.core.configuration.define.CoreConfigurationType;
@@ -68,7 +69,6 @@ import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
 import org.apache.logging.log4j.util.Strings;
 import org.jline.reader.EndOfFileException;
-import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
@@ -350,15 +350,13 @@ public final class ServerImpl extends SystemLogger implements Server {
       terminal = TerminalBuilder.builder().jna(true).build();
     } catch (Exception e) {
       try {
-        // Fallback to a dumb jline terminal.
+        // fallback to a dumb jline terminal
         terminal = TerminalBuilder.builder().dumb(true).build();
       } catch (Exception ignored) {
-        // When dumb is true, build() never throws.
+        // when dumb is true, build() never throws
       }
     }
-    LineReader consoleLineReader = LineReaderBuilder.builder()
-        .terminal(terminal)
-        .build();
+    var consoleLineReader = LineReaderBuilder.builder().terminal(terminal).build();
 
     String input = null;
     boolean isLastInterrupted = false;
@@ -368,24 +366,24 @@ public final class ServerImpl extends SystemLogger implements Server {
       } catch (UserInterruptException e) {
         if (!isLastInterrupted) {
           isLastInterrupted = true;
-          info("COMMAND", "Press Ctrl-C again to shutdown.");
+          CommandUtility.INSTANCE.showConsoleMessage("Press Ctrl-C again to shutdown.");
           continue;
         } else {
           Runtime.getRuntime().exit(0);
         }
-      } catch (EndOfFileException e) {
-        info("COMMAND", "EOF detected.");
+      } catch (EndOfFileException exception) {
+        CommandUtility.INSTANCE.showConsoleMessage("EOF detected.");
         continue;
-      } catch (IOError e) {
-        error(e, "An IO error occurred.");
+      } catch (IOError exception) {
+        CommandUtility.INSTANCE.showConsoleMessage("An IO error occurred.");
         continue;
       }
 
       isLastInterrupted = false;
       try {
         commandManager.invoke(input);
-      } catch (Exception e) {
-        error(e);
+      } catch (Exception exception) {
+        CommandUtility.INSTANCE.showConsoleMessage("Exception > " + exception.getMessage());
       }
     }
   }

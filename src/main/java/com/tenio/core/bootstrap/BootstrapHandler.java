@@ -54,6 +54,12 @@ public final class BootstrapHandler {
     return eventHandler;
   }
 
+  /**
+   * Retrieves a commands' manager.
+   *
+   * @return the {@link CommandManager} instance
+   * @since 0.4.0
+   */
   public CommandManager getCommandManager() {
     return commandManager;
   }

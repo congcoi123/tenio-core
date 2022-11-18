@@ -60,11 +60,6 @@ public abstract class CoreConfiguration extends CommonConfiguration {
   private final List<HttpConfig> httpConfigs;
 
   /**
-   * Server's core setting.
-   */
-  private Setting setting;
-
-  /**
    * The constructor.
    */
   public CoreConfiguration() {
