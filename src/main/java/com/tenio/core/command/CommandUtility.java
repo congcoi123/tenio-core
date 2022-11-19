@@ -24,9 +24,19 @@ THE SOFTWARE.
 
 package com.tenio.core.command;
 
+/**
+ * The class provides utility methods to work with commands.
+ *
+ * @since 0.4.0
+ */
 public enum CommandUtility {
   INSTANCE;
 
+  /**
+   * Displays text on console.
+   *
+   * @param text the displayed {@link String}
+   */
   public void showConsoleMessage(String text) {
     System.out.println("> " + text);
   }

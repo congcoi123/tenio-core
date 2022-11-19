@@ -31,6 +31,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Show all supporting commands.
+ *
+ * @since 0.4.0
+ */
 @Command(label = "help", usage = {
     "[<command>,<command>,<command>]"
 }, description = "Shows all supporting commands")

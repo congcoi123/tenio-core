@@ -27,6 +27,7 @@ package com.tenio.core.command;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.annotation.Command;
 import com.tenio.core.bootstrap.annotation.Component;
+import com.tenio.core.exception.AddedDuplicatedCommandException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -37,6 +38,11 @@ import java.util.Objects;
 import java.util.TreeMap;
 import org.reflections.Reflections;
 
+/**
+ * The commands' management class.
+ *
+ * @since 0.4.0
+ */
 @Component
 public final class CommandManager extends SystemLogger {
 
@@ -55,16 +61,13 @@ public final class CommandManager extends SystemLogger {
 
     // checks availability
     if (commands.containsKey(label)) {
-      throw new RuntimeException(
-          "Could not register a duplicated command {" + label + "}, which is available > " +
-              commands.get(label));
+      throw new AddedDuplicatedCommandException(label, commands.get(label));
     }
 
     // gets command data
     var annotation = command.getClass().getAnnotation(Command.class);
     annotations.put(label, annotation);
     commands.put(label, command);
-
   }
 
   /**
@@ -137,10 +140,10 @@ public final class CommandManager extends SystemLogger {
       return;
     }
 
-    // gets the command's annotation.
+    // gets the command's annotation
     var annotation = annotations.get(label);
 
-    // invokes execute method for handler.
+    // invokes execute method for handler
     Runnable runnable = () -> handler.execute(args);
     if (annotation.isBackgroundRunning()) {
       new Thread(runnable).start();
@@ -186,7 +189,6 @@ public final class CommandManager extends SystemLogger {
     }
 
     var classes = reflections.getTypesAnnotatedWith(Command.class);
-
     classes.forEach(annotated -> {
       try {
         var commandData = annotated.getAnnotation(Command.class);
@@ -194,7 +196,7 @@ public final class CommandManager extends SystemLogger {
         if (object instanceof AbstractCommandHandler) {
           var command = (AbstractCommandHandler) object;
           command.setCommandManager(this);
-          this.registerCommand(commandData.label(), command);
+          registerCommand(commandData.label(), command);
         } else {
           error(new IllegalArgumentException("Class " + annotated.getName() + " is not a " +
               "AbstractCommandHandler"));

@@ -27,20 +27,52 @@ package com.tenio.core.bootstrap.annotation;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.tenio.core.command.AbstractCommandHandler;
+import com.tenio.core.command.CommandManager;
+import com.tenio.core.exception.AddedDuplicatedCommandException;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+/**
+ * A class annotated by this annotation will allow modifying the server's behavior.
+ *
+ * @see AbstractCommandHandler
+ * @see CommandManager
+ * @since 0.4.0
+ */
 @Retention(RUNTIME)
 @Target(TYPE)
 @Documented
 public @interface Command {
 
+  /**
+   * Retrieves the label of command, that should be unique, otherwise, an exception will be thrown.
+   *
+   * @return the {@link String} label of command
+   * @see AddedDuplicatedCommandException
+   */
   String label() default "";
 
+  /**
+   * Retrieves a list of usage for the command.
+   *
+   * @return a list of {@link String} instructions that the command is supporting
+   */
   String[] usage() default {""};
 
+  /**
+   * Retrieves the command's description.
+   *
+   * @return the {@link String} command's description
+   */
   String description() default "";
 
+  /**
+   * Whether the command will be run in background.
+   *
+   * @return {@code true} when the command will be run in a separated thread, otherwise, returns
+   * {@code false}
+   */
   boolean isBackgroundRunning() default false;
 }

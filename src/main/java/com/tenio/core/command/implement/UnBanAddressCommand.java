@@ -29,6 +29,11 @@ import com.tenio.core.command.AbstractCommandHandler;
 import com.tenio.core.command.CommandUtility;
 import java.util.List;
 
+/**
+ * Allows removing banned Ip addresses from the ban list.
+ *
+ * @since 0.4.0
+ */
 @Command(label = "unban", usage = {
     "[<address>,<command>,<command>]"
 }, description = "Allows removing banned Ip addresses from the ban list")

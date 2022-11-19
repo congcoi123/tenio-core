@@ -29,6 +29,11 @@ import com.tenio.core.command.AbstractCommandHandler;
 import com.tenio.core.command.CommandUtility;
 import java.util.List;
 
+/**
+ * Provides brief information about players and rooms on the server.
+ *
+ * @since 0.4.0
+ */
 @Command(label = "info", usage = {
     "player",
     "room"

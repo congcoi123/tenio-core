@@ -29,6 +29,11 @@ import com.tenio.core.handler.AbstractHandler;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * The base class for all self defined commands.
+ *
+ * @since 0.4.0
+ */
 public abstract class AbstractCommandHandler extends AbstractHandler {
 
   private CommandManager commandManager;
