@@ -24,6 +24,11 @@ THE SOFTWARE.
 
 package com.tenio.core.configuration.setting;
 
+/**
+ * A mapping class which references to this {@code setting.json} file.
+ *
+ * @since 0.4.0
+ */
 public final class Setting {
 
   private Command command;
