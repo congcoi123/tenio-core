@@ -26,7 +26,7 @@ package com.tenio.core.command.implement;
 
 import com.tenio.core.bootstrap.annotation.Command;
 import com.tenio.core.command.AbstractCommandHandler;
-import com.tenio.core.command.CommandUtility;
+import com.tenio.core.utility.CommandUtility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

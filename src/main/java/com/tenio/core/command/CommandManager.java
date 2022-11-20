@@ -28,6 +28,7 @@ import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.annotation.Command;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.exception.AddedDuplicatedCommandException;
+import com.tenio.core.utility.CommandUtility;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;

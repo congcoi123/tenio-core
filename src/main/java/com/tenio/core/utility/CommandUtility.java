@@ -22,28 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap.annotation;
-
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import com.tenio.common.configuration.Configuration;
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+package com.tenio.core.utility;
 
 /**
- * This annotation is specific to server' configuration, it is also considered as a candidate for
- * the <b>auto-detection</b> when using <b>annotation-based</b> configuration and <b>classpath
- * scanning</b>.
+ * The class provides utility methods to work with commands.
  *
- * <p>An instance of the class can be retrieved by using the annotation {@link Autowired}.
- *
- * @see Configuration
  * @since 0.4.0
  */
-@Retention(RUNTIME)
-@Target(TYPE)
-@Documented
-public @interface Configured {
+public enum CommandUtility {
+  INSTANCE;
+
+  /**
+   * Displays text on console.
+   *
+   * @param text the displayed {@link String}
+   */
+  public void showConsoleMessage(String text) {
+    System.out.println("> " + text);
+  }
 }

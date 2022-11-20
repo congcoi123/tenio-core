@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.bootstrap.injector;
 
 import com.tenio.core.bootstrap.annotation.BeanFactory;
-import com.tenio.core.bootstrap.annotation.Configured;
+import com.tenio.core.bootstrap.annotation.Setting;
 import com.tenio.core.exception.IllegalDefinedAccessControlException;
 import com.tenio.core.exception.IllegalReturnTypeException;
 import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
@@ -152,7 +152,7 @@ public final class Injector {
     var listAnnotations = new Class[] {
         Component.class,
         EventHandler.class,
-        Configured.class
+        Setting.class
     };
     var implementedClasses = new HashSet<Class<?>>();
     Arrays.stream(listAnnotations).forEach(
