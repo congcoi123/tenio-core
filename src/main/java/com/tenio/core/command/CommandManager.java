@@ -120,9 +120,6 @@ public final class CommandManager extends SystemLogger {
    * @param rawMessage The messaged used to invoke the command
    */
   public void invoke(String rawMessage) {
-    // the console outputs in-game command
-    CommandUtility.INSTANCE.showConsoleMessage("Input command > " + rawMessage);
-
     rawMessage = rawMessage.trim();
     if (rawMessage.isBlank()) {
       return;

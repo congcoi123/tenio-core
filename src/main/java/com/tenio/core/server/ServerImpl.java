@@ -362,7 +362,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     boolean isLastInterrupted = false;
     while (true) {
       try {
-        input = consoleLineReader.readLine("> ");
+        input = consoleLineReader.readLine("$ ");
       } catch (UserInterruptException e) {
         if (!isLastInterrupted) {
           isLastInterrupted = true;
