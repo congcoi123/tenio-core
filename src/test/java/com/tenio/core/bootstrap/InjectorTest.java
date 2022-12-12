@@ -41,6 +41,7 @@ import com.tenio.core.custom.DisabledTestFindingSolution;
 import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
 import com.tenio.core.exception.NoImplementedClassFoundException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -48,6 +49,17 @@ import org.junit.jupiter.api.Test;
 class InjectorTest {
 
   private final Injector injector = Injector.newInstance();
+
+  @Test
+  @DisplayName("Throw an exception when the class's instance is attempted creating again")
+  void createNewInstanceShouldThrowException() throws NoSuchMethodException {
+    var constructor = Injector.class.getDeclaredConstructor();
+    assertTrue(Modifier.isPrivate(constructor.getModifiers()));
+    assertThrows(InvocationTargetException.class, () -> {
+      constructor.setAccessible(true);
+      constructor.newInstance();
+    });
+  }
 
   @Test
   @DisplayName("After scanning the package should retrieve an instance of A")
