@@ -32,7 +32,6 @@ import com.tenio.core.api.ServerApi;
 import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.command.CommandManager;
-import com.tenio.core.utility.CommandUtility;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.constant.Trademark;
 import com.tenio.core.configuration.define.CoreConfigurationType;
@@ -61,6 +60,7 @@ import com.tenio.core.schedule.ScheduleServiceImpl;
 import com.tenio.core.server.service.InternalProcessorService;
 import com.tenio.core.server.service.InternalProcessorServiceImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
+import com.tenio.core.utility.CommandUtility;
 import java.io.IOError;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -91,6 +91,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final ScheduleService scheduleService;
   private final NetworkService networkService;
   private final ServerApi serverApi;
+  private Configuration configuration;
   private DataType dataType;
   private long startedTime;
   private String serverName;
@@ -138,6 +139,8 @@ public final class ServerImpl extends SystemLogger implements Server {
     var configuration = bootstrapHandler.getConfigurationHandler().getConfiguration();
     configuration.load(file);
 
+    this.configuration = configuration;
+
     dataType =
         DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION));
     serverName = configuration.getString(CoreConfigurationType.SERVER_NAME);
@@ -170,6 +173,9 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     initializeServices();
     startServices();
+
+    // it should wait for a while to let everything settles down
+    Thread.sleep(1000);
 
     // emit "server started" event
     eventManager.emit(ServerEvent.SERVER_INITIALIZATION, serverName, configuration);
@@ -426,6 +432,11 @@ public final class ServerImpl extends SystemLogger implements Server {
   @Override
   public UdpChannelManager getUdpChannelManager() {
     return udpChannelManager;
+  }
+
+  @Override
+  public Configuration getConfiguration() {
+    return configuration;
   }
 
   @Override

@@ -185,8 +185,6 @@ public final class JettyHttpService extends AbstractManager implements Service, 
   }
 
   private void destroy() {
-    server = null;
-    executorService = null;
   }
 
   @Override

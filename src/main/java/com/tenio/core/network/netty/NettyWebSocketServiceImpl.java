@@ -165,9 +165,6 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
   }
 
   private void cleanup() {
-    serverWebsockets = null;
-    websocketAcceptors = null;
-    websocketWorkers = null;
   }
 
   /**

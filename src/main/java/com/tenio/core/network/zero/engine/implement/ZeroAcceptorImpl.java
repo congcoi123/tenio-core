@@ -158,6 +158,9 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     acceptableSelector.select();
 
     synchronized (acceptableSelector) {
+      if (!acceptableSelector.isOpen()) {
+        return;
+      }
       // retrieves a set of selected keys
       var selectedKeys = acceptableSelector.selectedKeys();
       var keyIterator = selectedKeys.iterator();
@@ -248,7 +251,6 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   }
 
   private void cleanup() {
-    acceptableSelector = null;
   }
 
   @Override

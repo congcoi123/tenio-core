@@ -148,12 +148,6 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   private void destroy() {
-    httpService = null;
-    webSocketService = null;
-    socketService = null;
-
-    networkReaderStatistic = null;
-    networkWriterStatistic = null;
   }
 
   @Override

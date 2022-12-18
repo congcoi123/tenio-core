@@ -24,19 +24,20 @@ THE SOFTWARE.
 
 package com.tenio.core.bootstrap.injector;
 
-import com.tenio.core.bootstrap.annotation.BeanFactory;
-import com.tenio.core.bootstrap.annotation.Setting;
-import com.tenio.core.exception.IllegalDefinedAccessControlException;
-import com.tenio.core.exception.IllegalReturnTypeException;
-import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
-import com.tenio.core.exception.NoImplementedClassFoundException;
+import com.tenio.common.logger.SystemLogger;
 import com.tenio.common.utility.ClassLoaderUtility;
 import com.tenio.core.bootstrap.annotation.Autowired;
 import com.tenio.core.bootstrap.annotation.AutowiredAcceptNull;
 import com.tenio.core.bootstrap.annotation.AutowiredQualifier;
 import com.tenio.core.bootstrap.annotation.Bean;
+import com.tenio.core.bootstrap.annotation.BeanFactory;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.annotation.EventHandler;
+import com.tenio.core.bootstrap.annotation.Setting;
+import com.tenio.core.exception.IllegalDefinedAccessControlException;
+import com.tenio.core.exception.IllegalReturnTypeException;
+import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
+import com.tenio.core.exception.NoImplementedClassFoundException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -58,7 +59,7 @@ import org.reflections.Reflections;
  * @see ClassLoaderUtility
  */
 @ThreadSafe
-public final class Injector {
+public final class Injector extends SystemLogger {
 
   private static final Injector instance = new Injector();
 
@@ -77,6 +78,12 @@ public final class Injector {
    */
   @GuardedBy("this")
   private final Map<Class<?>, Object> classBeansMap;
+  /**
+   * A set of classes that are created by {@link Bean} and {@link BeanFactory} annotations.
+   * This map is protected by the class instance to ensure thread-safe.
+   */
+  @GuardedBy("this")
+  private final Set<Class<?>> manualBeansSet;
 
   private Injector() {
     if (Objects.nonNull(instance)) {
@@ -85,6 +92,7 @@ public final class Injector {
 
     classesMap = new HashMap<>();
     classBeansMap = new HashMap<>();
+    manualBeansSet = new HashSet<>();
   }
 
   /**
@@ -170,6 +178,7 @@ public final class Injector {
             } else if (clazz.equals(Void.TYPE)) {
               throw new IllegalReturnTypeException();
             } else {
+              manualBeansSet.add(clazz);
               implementedClasses.add(clazz);
             }
           } else {
@@ -203,12 +212,8 @@ public final class Injector {
       if (isClassAnnotated(clazz, listAnnotations)) {
         var bean = clazz.getDeclaredConstructor().newInstance();
         classBeansMap.put(clazz, bean);
-        // recursively create field instance for this class instance
-        autowire(clazz, bean);
-      }
-
-      // fetches all bean instances and save them to classes map
-      if (clazz.isAnnotationPresent(BeanFactory.class)) {
+      } else if (clazz.isAnnotationPresent(BeanFactory.class)) {
+        // fetches all bean instances and save them to classes map
         var configurationBean = clazz.getDeclaredConstructor().newInstance();
         for (var method : clazz.getMethods()) {
           if (method.isAnnotationPresent(Bean.class)) {
@@ -221,8 +226,6 @@ public final class Injector {
               } else {
                 var bean = method.invoke(configurationBean);
                 classBeansMap.put(methodClazz, bean);
-                // recursively create field instance for this class instance
-                autowire(methodClazz, bean);
               }
             } else {
               throw new IllegalDefinedAccessControlException();
@@ -231,6 +234,15 @@ public final class Injector {
         }
       }
     }
+
+    // recursively create field instance for this class instance
+    classBeansMap.forEach((clazz, bean) -> {
+      try {
+        autowire(clazz, bean);
+      } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException exception) {
+        error(exception.getCause());
+      }
+    });
   }
 
   /**
@@ -288,7 +300,7 @@ public final class Injector {
         return classBeansMap.get(implementedClass);
       }
 
-      if (Objects.nonNull(implementedClass)) {
+      if (Objects.nonNull(implementedClass) && !manualBeansSet.contains(implementedClass)) {
         var bean = implementedClass.getDeclaredConstructor().newInstance();
         classBeansMap.put(implementedClass, bean);
         return bean;
@@ -407,6 +419,7 @@ public final class Injector {
     synchronized (this) {
       classesMap.clear();
       classBeansMap.clear();
+      manualBeansSet.clear();
     }
   }
 }

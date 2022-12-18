@@ -133,9 +133,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
   }
 
   private void destroy() {
-    executorService = null;
     requestQueue.clear();
-    requestQueue = null;
     onDestroyed();
   }
 

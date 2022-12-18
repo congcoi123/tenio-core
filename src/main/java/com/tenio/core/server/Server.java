@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.server;
 
+import com.tenio.common.configuration.Configuration;
 import com.tenio.common.data.DataType;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.bootstrap.BootstrapHandler;
@@ -92,6 +93,14 @@ public interface Server {
    * @return an instance of {@link UdpChannelManager}
    */
   UdpChannelManager getUdpChannelManager();
+
+  /**
+   * Retrieves the current server's configuration.
+   *
+   * @return the current {@link Configuration} of server
+   * @since 0.4.0
+   */
+  Configuration getConfiguration();
 
   /**
    * Retrieves the data serialization type.

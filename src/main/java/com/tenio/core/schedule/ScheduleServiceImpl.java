@@ -124,13 +124,6 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
   }
 
   private void cleanup() {
-    autoDisconnectPlayerTask = null;
-    autoRemoveRoomTask = null;
-    ccuReportTask = null;
-    deadlockScanTask = null;
-    systemMonitoringTask = null;
-    trafficCounterTask = null;
-    kcpUpdateTask = null;
   }
 
   @Override

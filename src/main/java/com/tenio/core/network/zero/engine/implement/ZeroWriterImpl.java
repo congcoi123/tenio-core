@@ -242,6 +242,5 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
 
   @Override
   public void onDestroyed() {
-    sessionTicketsQueue = null;
   }
 }

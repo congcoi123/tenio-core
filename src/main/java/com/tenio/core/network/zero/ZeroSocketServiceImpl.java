@@ -139,12 +139,6 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   }
 
   private void destroy() {
-    datagramIoHandler = null;
-    socketIoHandler = null;
-
-    acceptorEngine = null;
-    readerEngine = null;
-    writerEngine = null;
   }
 
   @Override

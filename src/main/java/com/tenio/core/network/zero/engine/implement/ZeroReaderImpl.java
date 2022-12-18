@@ -328,6 +328,5 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
   @Override
   public void onDestroyed() {
-    readableSelector = null;
   }
 }
