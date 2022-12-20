@@ -33,7 +33,6 @@ import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.command.CommandManager;
 import com.tenio.core.configuration.constant.CoreConstant;
-import com.tenio.core.configuration.constant.Trademark;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.configuration.setting.Setting;
@@ -42,7 +41,6 @@ import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.manager.implement.PlayerManagerImpl;
 import com.tenio.core.entity.manager.implement.RoomManagerImpl;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.monitoring.system.SystemInfo;
 import com.tenio.core.network.NetworkService;
 import com.tenio.core.network.NetworkServiceImpl;
 import com.tenio.core.network.define.data.HttpConfig;
@@ -63,11 +61,9 @@ import com.tenio.core.server.setting.ConfigurationAssessment;
 import com.tenio.core.utility.CommandUtility;
 import java.io.IOError;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
-import org.apache.logging.log4j.util.Strings;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
@@ -105,10 +101,6 @@ public final class ServerImpl extends SystemLogger implements Server {
     internalProcessorService = InternalProcessorServiceImpl.newInstance(eventManager);
     scheduleService = ScheduleServiceImpl.newInstance(eventManager);
     serverApi = ServerApiImpl.newInstance(this);
-
-    // print out the framework's preface
-    var trademark = String.format("\n\n%s\n", Strings.join(Arrays.asList(Trademark.CONTENT), '\n'));
-    info("HAPPY CODING", trademark);
   } // prevent creation manually
 
   /**
@@ -144,12 +136,6 @@ public final class ServerImpl extends SystemLogger implements Server {
     dataType =
         DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION));
     serverName = configuration.getString(CoreConfigurationType.SERVER_NAME);
-
-    // show system information
-    var systemInfo = new SystemInfo();
-    systemInfo.logSystemInfo();
-    systemInfo.logNetCardsInfo();
-    systemInfo.logDiskInfo();
 
     info("SERVER", serverName, "Starting ...");
 
