@@ -356,7 +356,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
   @Override
   public void onShutdown() {
-    // do nothing
+    // TODO: prevent any emitting events
   }
 
   @Override

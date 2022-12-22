@@ -24,29 +24,31 @@ THE SOFTWARE.
 
 package com.tenio.core.network.jetty.servlet;
 
-import com.tenio.common.data.common.CommonMap;
 import com.tenio.common.logger.AbstractLogger;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.define.RestMethod;
 import com.tenio.core.network.define.data.PathConfig;
+import com.tenio.core.network.jetty.response.ApiResponse;
 import com.tenio.core.network.jetty.servlet.support.BaseProcessServlet;
-import com.tenio.core.network.jetty.servlet.support.BaseServlet;
 import java.io.IOException;
+import java.io.Serial;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.json.JSONObject;
 
 /**
  * The servlet manager.
  */
 @ThreadSafe
-public final class ServletManager extends BaseServlet {
+public final class ServletManager extends HttpServlet {
 
+  @Serial
   private static final long serialVersionUID = -1971993446960398293L;
 
   /**
@@ -87,20 +89,12 @@ public final class ServletManager extends BaseServlet {
     logger = new PrivateLogger();
     for (var pathConfig : pathConfigs) {
       switch (pathConfig.getMethod()) {
-        case POST:
-          processPost = new ProcessPost();
-          break;
-        case PUT:
-          processPut = new ProcessPut();
-          break;
-        case GET:
-          processGet = new ProcessGet();
-          break;
-        case DELETE:
-          processDelete = new ProcessDelete();
-          break;
-        default:
-          break;
+        case POST -> processPost = new ProcessPost();
+        case PUT -> processPut = new ProcessPut();
+        case GET -> processGet = new ProcessGet();
+        case DELETE -> processDelete = new ProcessDelete();
+        default -> {
+        }
       }
     }
   }
@@ -144,9 +138,7 @@ public final class ServletManager extends BaseServlet {
   private void sendUnsupportedMethod(HttpServletResponse response) {
     response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
     try {
-      var json = new JSONObject();
-      CommonMap.newInstance().add("status", "failed").add("message", "405 Method Not Allowed")
-          .forEach(json::put);
+      var json = ApiResponse.error(Map.of("message", "405 Method Not Allowed"));
       response.getWriter().println(json);
     } catch (IOException e) {
       logger.error(e);

@@ -22,26 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.jetty.servlet.support;
+package com.tenio.core.network.jetty.response;
 
-import com.tenio.common.logger.AbstractLogger;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
- * The base response for HTTP request.
+ * This class helps create an empty json object, and is most used while forming a new response.
+ *
+ * @see ApiResponse
+ * @since 0.5.0
  */
-public abstract class BaseResponse extends AbstractLogger {
-
-  /**
-   * Processes a request from client side and returns a response.
-   *
-   * @param requestedAgent {@link String} value, a requested agent
-   * @param request        an instance of {@link HttpServletRequest}
-   * @param body           a {@link JSONObject} request's body
-   * @param response       the {@link HttpServletResponse} from the server
-   */
-  public abstract void process(String requestedAgent, HttpServletRequest request, JSONObject body,
-                               HttpServletResponse response);
+@JsonSerialize
+public class NoContent {
 }

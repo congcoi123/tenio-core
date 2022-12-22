@@ -42,6 +42,9 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.IPAccessHandler;
+import org.eclipse.jetty.server.handler.InetAccessHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -101,10 +104,20 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     }
 
     // Create a Jetty server
-    server = new Server(port);
+    server = new Server();
+    ServerConnector connector = new ServerConnector(server);
+    connector.setPort(port);
+    server.addConnector(connector);
+
+    InetAccessHandler inetAccessHandler = new InetAccessHandler();
+    inetAccessHandler.include("127.0.0.1");
+    inetAccessHandler.include("192.168.1.1");
+    inetAccessHandler.exclude("192.168.1.132");
+    server.setHandler(inetAccessHandler);
 
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
     context.setContextPath("/");
+    inetAccessHandler.setHandler(context);
 
     // Configuration
     context.addServlet(new ServletHolder(new PingServlet()), CoreConstant.PING_PATH);

@@ -22,23 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.jetty.servlet.support;
+package com.tenio.core.utility;
 
 import com.tenio.common.logger.AbstractLogger;
 import com.tenio.common.logger.SystemLogger;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Objects;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import org.json.JSONObject;
 
 /**
- * The base HTTP servlet.
+ * The class provides utility methods to work with http request/response.
+ *
+ * @since 0.5.0
  */
-public abstract class BaseServlet extends HttpServlet {
-
-  private static final long serialVersionUID = -5030886807666928581L;
+public enum HttpUtility {
+  INSTANCE;
 
   /**
    * The class cannot extend {@link AbstractLogger} for logging, so it is necessary to create a
@@ -54,7 +54,7 @@ public abstract class BaseServlet extends HttpServlet {
    * @return {@code true} if the key is available in the request's header,
    * {@code false} otherwise
    */
-  protected boolean hasHeaderKey(HttpServletRequest request, String key) {
+  public boolean hasHeaderKey(HttpServletRequest request, String key) {
     var headerNames = request.getHeaderNames();
     if (Objects.nonNull(headerNames)) {
       while (headerNames.hasMoreElements()) {
@@ -72,7 +72,7 @@ public abstract class BaseServlet extends HttpServlet {
    * @param request a coming {@link HttpServletRequest}
    * @return a {@link JSONObject} taken from the request
    */
-  protected JSONObject getBody(HttpServletRequest request) {
+  public JSONObject getBody(HttpServletRequest request) {
     var body = "{}";
     if (request.getMethod().equals("POST") || request.getMethod().equals("PUT")
         || request.getMethod().equals("DELETE")) {

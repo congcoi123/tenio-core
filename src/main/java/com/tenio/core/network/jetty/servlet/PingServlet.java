@@ -24,19 +24,21 @@ THE SOFTWARE.
 
 package com.tenio.core.network.jetty.servlet;
 
-import com.tenio.common.data.common.CommonMap;
+import com.tenio.core.network.jetty.response.ApiResponse;
 import com.tenio.core.network.jetty.servlet.support.BaseProcessServlet;
 import java.io.IOException;
+import java.io.Serial;
+import java.util.Map;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.json.JSONObject;
 
 /**
  * The default servlet to let client checks if the HTTP server is available or not.
  */
 public final class PingServlet extends HttpServlet {
 
+  @Serial
   private static final long serialVersionUID = 5999711002391728401L;
 
   /**
@@ -61,9 +63,7 @@ class Process extends BaseProcessServlet {
   protected void handleImpl(HttpServletRequest request, HttpServletResponse response) {
     response.setStatus(HttpServletResponse.SC_OK);
     try {
-      var json = new JSONObject();
-      CommonMap.newInstance().add("status", "ok").add("message", "PING PONG")
-          .forEach(json::put);
+      var json = ApiResponse.ok(Map.of("message", "PING PONG"));
       response.getWriter().println(json);
     } catch (IOException e) {
       error(e);
