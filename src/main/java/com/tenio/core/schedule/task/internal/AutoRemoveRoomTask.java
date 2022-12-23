@@ -27,14 +27,14 @@ package com.tenio.core.schedule.task.internal;
 import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.schedule.task.AbstractTask;
+import com.tenio.core.schedule.task.AbstractSystemTask;
 import java.util.concurrent.ScheduledFuture;
 
 /**
  * To remove the empty room (a room without any players) in period time. You can
  * configure this time in your own configurations, see {@link CoreConfiguration}
  */
-public final class AutoRemoveRoomTask extends AbstractTask {
+public final class AutoRemoveRoomTask extends AbstractSystemTask {
 
   private AutoRemoveRoomTask(EventManager eventManager) {
     super(eventManager);

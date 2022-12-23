@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.api.implement;
 
-import com.tenio.common.configuration.Configuration;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.configuration.define.ServerEvent;
@@ -281,14 +280,8 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     return server.getUptime();
   }
 
-  @Override
-  public EventManager getEventManager() {
+  private EventManager getEventManager() {
     return server.getEventManager();
-  }
-
-  @Override
-  public Configuration getConfiguration() {
-    return server.getConfiguration();
   }
 
   private PlayerManager getPlayerManager() {

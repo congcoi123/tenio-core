@@ -26,7 +26,7 @@ package com.tenio.core.schedule.task.kcp;
 
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.session.manager.SessionManager;
-import com.tenio.core.schedule.task.AbstractTask;
+import com.tenio.core.schedule.task.AbstractSystemTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  * This task takes responsibility to update every KCP channel frequently.
  * @since 0.3.0
  */
-public final class KcpUpdateTask extends AbstractTask {
+public final class KcpUpdateTask extends AbstractSystemTask {
 
   private SessionManager sessionManager;
 

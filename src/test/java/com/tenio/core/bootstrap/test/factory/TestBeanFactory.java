@@ -22,40 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.schedule.task;
+package com.tenio.core.bootstrap.test.factory;
 
-import com.tenio.common.logger.AbstractLogger;
-import com.tenio.common.task.Task;
+import com.tenio.core.bootstrap.annotation.Bean;
+import com.tenio.core.bootstrap.annotation.BeanFactory;
 
-/**
- * The abstract task.
- *
- * @since 0.5.0
- */
-public abstract class AbstractTask extends AbstractLogger implements Task {
+@BeanFactory
+public class TestBeanFactory {
 
-  private static final int DEFAULT_INTERVAL_IN_SECONDS = 60;
-
-  /**
-   * The interval value.
-   */
-  protected int interval;
-
-  /**
-   * Initialization.
-   *
-   * @param eventManager the event manager
-   */
-  protected AbstractTask() {
-    interval = DEFAULT_INTERVAL_IN_SECONDS;
+  @Bean
+  public TestBeanCommon getBeanCommon() {
+    return new TestBeanCommon("common");
   }
 
-  /**
-   * Set the interval.
-   *
-   * @param interval the value
-   */
-  public void setInterval(int interval) {
-    this.interval = interval;
+  @Bean("commonA")
+  public TestBeanCommon getBeanCommonA() {
+    return new TestBeanCommon("common a");
+  }
+
+  @Bean("commonB")
+  public TestBeanCommon getBeanCommonB() {
+    return new TestBeanCommon("common b");
   }
 }

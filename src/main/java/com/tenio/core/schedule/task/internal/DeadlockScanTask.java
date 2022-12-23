@@ -26,7 +26,7 @@ package com.tenio.core.schedule.task.internal;
 
 import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.schedule.task.AbstractTask;
+import com.tenio.core.schedule.task.AbstractSystemTask;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
  * To detect deadlock in period time. You can configure this time in your own
  * configurations, see {@link CoreConfiguration}
  */
-public final class DeadlockScanTask extends AbstractTask {
+public final class DeadlockScanTask extends AbstractSystemTask {
 
   private final ThreadMXBean threadMxBean;
 

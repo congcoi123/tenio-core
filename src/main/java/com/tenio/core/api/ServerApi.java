@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.api;
 
-import com.tenio.common.configuration.Configuration;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.data.ServerMessage;
@@ -35,7 +34,6 @@ import com.tenio.core.entity.implement.RoomImpl;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.setting.InitialRoomSetting;
-import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.handler.event.EventPlayerLoggedinResult;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Iterator;
@@ -313,20 +311,4 @@ public interface ServerApi {
    * @since 0.3.1
    */
   long getUptime();
-
-  /**
-   * Retrieves the current event manager instance.
-   *
-   * @return the current {@link EventManager} instance
-   * @since 0.4.0
-   */
-  EventManager getEventManager();
-
-  /**
-   * Retrieves the current server's configuration.
-   *
-   * @return the current {@link Configuration} of server
-   * @since 0.4.0
-   */
-  Configuration getConfiguration();
 }

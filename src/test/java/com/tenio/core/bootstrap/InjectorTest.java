@@ -26,6 +26,7 @@ package com.tenio.core.bootstrap;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -62,6 +63,27 @@ class InjectorTest {
   }
 
   @Test
+  @DisplayName("All variables in the BootstrapComponent class should have expected values")
+  void scanPackageShouldRetrieveExpectedValues()
+      throws ClassNotFoundException, InvocationTargetException, InstantiationException,
+      IllegalAccessException, NoSuchMethodException {
+    injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.test.impl",
+        "com.tenio.core.bootstrap.test.inf", "com.tenio.core.bootstrap.test.factory",
+        "com.tenio.core.bootstrap.bean");
+    var bean = injector.getBean(BootstrapComponent.class);
+    assertAll("scanPackageShouldRetrieveExpectedValues",
+        () -> assertTrue(bean.a instanceof TestClassA),
+        () -> assertNull(bean.b),
+        () -> assertTrue(bean.c instanceof TestClassCCopy),
+        () -> assertTrue(bean.alone instanceof TestClassAlone),
+        () -> assertTrue(bean.bean instanceof TestBeanClass),
+        () -> assertEquals("common", bean.beanCommon.text()),
+        () -> assertEquals("common a", bean.beanCommonA.text()),
+        () -> assertEquals("common b", bean.beanCommonB.text())
+    );
+  }
+
+  @Test
   @DisplayName("After scanning the package should retrieve an instance of A")
   void scanPackageShouldRetrieveInstanceOfA()
       throws ClassNotFoundException, InvocationTargetException, InstantiationException,
@@ -83,7 +105,7 @@ class InjectorTest {
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
 
     var bean = injector.getBean(BootstrapComponent.class).b;
-    assertEquals(bean, null);
+    assertNull(bean);
   }
 
   @Test
@@ -118,7 +140,7 @@ class InjectorTest {
       "2 classes implement same interface without @AutowiredQualifier declaration")
   void scanPackageShouldThrowExceptionInInstanceOfD() {
     assertThrows(MultipleImplementedClassForInterfaceException.class, () -> {
-      injector.scanPackages(null, "com.tenio.core.bootstrap.test.impl", "com.tenio.common" +
+      injector.scanPackages(null, "com.tenio.core.bootstrap.test.impl", "com.tenio.core" +
           ".bootstrap.test.inf", "com.tenio.core.bootstrap.exception.one");
     });
   }
@@ -128,7 +150,7 @@ class InjectorTest {
       "implement declared interface")
   void scanPackageShouldThrowExceptionInInstanceOfE() {
     assertThrows(NoImplementedClassFoundException.class, () -> {
-      injector.scanPackages(null, "com.tenio.core.bootstrap.test.impl", "com.tenio.common" +
+      injector.scanPackages(null, "com.tenio.core.bootstrap.test.impl", "com.tenio.core" +
           ".bootstrap.test.inf", "com.tenio.core.bootstrap.exception.two");
     });
   }

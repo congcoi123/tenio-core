@@ -28,7 +28,7 @@ import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.monitoring.system.SystemMonitoring;
-import com.tenio.core.schedule.task.AbstractTask;
+import com.tenio.core.schedule.task.AbstractSystemTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
  * To retrieve the current system information in period time. You can configure
  * this time in your own configurations, see {@link CoreConfiguration}
  */
-public final class SystemMonitoringTask extends AbstractTask {
+public final class SystemMonitoringTask extends AbstractSystemTask {
 
   private final SystemMonitoring systemMonitoring;
 

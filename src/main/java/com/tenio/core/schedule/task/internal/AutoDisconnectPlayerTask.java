@@ -26,7 +26,7 @@ package com.tenio.core.schedule.task.internal;
 
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.schedule.task.AbstractTask;
+import com.tenio.core.schedule.task.AbstractSystemTask;
 import java.util.concurrent.ScheduledFuture;
 
 /**
@@ -35,7 +35,7 @@ import java.util.concurrent.ScheduledFuture;
  * will scan those IDLE players in period time and force them to log out. Those
  * players got a "timeout" error.
  */
-public final class AutoDisconnectPlayerTask extends AbstractTask {
+public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
 
   private AutoDisconnectPlayerTask(EventManager eventManager) {
     super(eventManager);

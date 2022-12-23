@@ -191,8 +191,7 @@ public final class CommandManager extends SystemLogger {
       try {
         var commandData = annotated.getAnnotation(Command.class);
         var object = annotated.getDeclaredConstructor().newInstance();
-        if (object instanceof AbstractCommandHandler) {
-          var command = (AbstractCommandHandler) object;
+        if (object instanceof AbstractCommandHandler command) {
           command.setCommandManager(this);
           registerCommand(commandData.label(), command);
         } else {

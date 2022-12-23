@@ -50,14 +50,14 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
 
   private TaskManager taskManager;
 
-  private AutoDisconnectPlayerTask autoDisconnectPlayerTask;
-  private AutoRemoveRoomTask autoRemoveRoomTask;
-  private CcuReportTask ccuReportTask;
-  private DeadlockScanTask deadlockScanTask;
-  private SystemMonitoringTask systemMonitoringTask;
-  private TrafficCounterTask trafficCounterTask;
+  private final AutoDisconnectPlayerTask autoDisconnectPlayerTask;
+  private final AutoRemoveRoomTask autoRemoveRoomTask;
+  private final CcuReportTask ccuReportTask;
+  private final DeadlockScanTask deadlockScanTask;
+  private final SystemMonitoringTask systemMonitoringTask;
+  private final TrafficCounterTask trafficCounterTask;
 
-  private KcpUpdateTask kcpUpdateTask;
+  private final KcpUpdateTask kcpUpdateTask;
 
   private boolean enabledKcp;
   private boolean initialized;
