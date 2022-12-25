@@ -50,11 +50,6 @@ import org.w3c.dom.Node;
 public abstract class CoreConfiguration extends CommonConfiguration {
 
   /**
-   * All ports in sockets zone.
-   */
-  private final List<SocketConfig> socketConfigs;
-
-  /**
    * All ports in HTTPs zone.
    */
   private final List<HttpConfig> httpConfigs;
@@ -63,7 +58,6 @@ public abstract class CoreConfiguration extends CommonConfiguration {
    * The constructor.
    */
   public CoreConfiguration() {
-    socketConfigs = new ArrayList<>();
     httpConfigs = new ArrayList<>();
   }
 
@@ -108,14 +102,19 @@ public abstract class CoreConfiguration extends CommonConfiguration {
     var attrNetworkSockets = XmlUtility.getNodeList(root, "//Server/Network/Sockets/Port");
     for (int j = 0; j < attrNetworkSockets.getLength(); j++) {
       var dataNode = attrNetworkSockets.item(j);
-      var port = new SocketConfig(dataNode.getAttributes().getNamedItem("name").getTextContent(),
-          TransportType.getByValue(dataNode.getAttributes().getNamedItem("type").getTextContent()),
-          Integer.parseInt(dataNode.getTextContent()));
+      var socketConfig =
+          new SocketConfig(dataNode.getAttributes().getNamedItem("name").getTextContent(),
+              TransportType.getByValue(
+                  dataNode.getAttributes().getNamedItem("type").getTextContent()),
+              Integer.parseInt(dataNode.getTextContent()));
 
-      socketConfigs.add(port);
+      if (socketConfig.getType() == TransportType.TCP) {
+        push(CoreConfigurationType.NETWORK_SOCKET, socketConfig);
+      } else if (socketConfig.getType() == TransportType.WEB_SOCKET) {
+        push(CoreConfigurationType.NETWORK_WEBSOCKET, socketConfig);
+      }
     }
-    push(CoreConfigurationType.NETWORK_SOCKET_CONFIGS, socketConfigs);
-    // Network HTTPs
+    // Network HTTP
     var attrNetworkHttps = XmlUtility.getNodeList(root, "//Server/Network/Http/Port");
     for (int i = 0; i < attrNetworkHttps.getLength(); i++) {
       var portNode = attrNetworkHttps.item(i);

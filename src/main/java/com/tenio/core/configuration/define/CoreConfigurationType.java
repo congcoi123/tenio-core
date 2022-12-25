@@ -261,9 +261,17 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   NETWORK_PROP_ENABLED_KCP("enabled-kcp"),
   /**
-   * The list of socket configurations in the server configuration.
+   * Socket in the server configuration.
+   *
+   * @since 0.5.0
    */
-  NETWORK_SOCKET_CONFIGS("socket-configs"),
+  NETWORK_SOCKET("socket-configuration"),
+  /**
+   * WebSocket in the server configuration.
+   *
+   * @since 0.5.0
+   */
+  NETWORK_WEBSOCKET("websocket-configuration"),
   /**
    * The list of HTTP configurations in the server configuration.
    */

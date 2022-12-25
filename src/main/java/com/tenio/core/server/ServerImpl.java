@@ -243,7 +243,8 @@ public final class ServerImpl extends SystemLogger implements Server {
         configuration.getInt(CoreConfigurationType.WORKER_SOCKET_ACCEPTOR));
 
     networkService.setSocketConfigs(
-        (List<SocketConfig>) configuration.get(CoreConfigurationType.NETWORK_SOCKET_CONFIGS));
+        (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_SOCKET),
+        (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET));
 
     networkService.setSocketReaderBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_READER_BUFFER_SIZE));

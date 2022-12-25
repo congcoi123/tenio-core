@@ -30,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.define.data.SocketConfig;
-import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,21 +55,14 @@ class ConfigurationTest {
 
   @SuppressWarnings("unchecked")
   @Test
-  public void getConfigurationSocketPortsShouldReturnTrueValue() {
-    var listSockets =
-        (List<SocketConfig>) (configuration.get(CoreConfigurationType.NETWORK_SOCKET_CONFIGS));
-    assertAll("getSocketPortsConfiguration", () -> assertEquals(8032, listSockets.get(0).getPort()),
-        () -> assertEquals(8033, listSockets.get(1).getPort()));
-  }
-
-  @SuppressWarnings("unchecked")
-  @Test
-  public void getConfigurationSocketPortsTypeShouldReturnTrueType() {
-    var listSockets =
-        (List<SocketConfig>) (configuration.get(CoreConfigurationType.NETWORK_SOCKET_CONFIGS));
-    assertAll("getSocketPortsTypeConfiguration",
-        () -> assertEquals(TransportType.TCP, listSockets.get(0).getType()),
-        () -> assertEquals(TransportType.WEB_SOCKET, listSockets.get(1).getType())
+  public void getConfigurationSocketsShouldReturnTrueValue() {
+    var socket = (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_SOCKET);
+    var webSocket = (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET);
+    assertAll("getSocketPortsConfiguration",
+        () -> assertEquals(8032, socket.getPort()),
+        () -> assertEquals(8033, webSocket.getPort()),
+        () -> assertEquals(TransportType.TCP, socket.getType()),
+        () -> assertEquals(TransportType.WEB_SOCKET, webSocket.getType())
     );
   }
 

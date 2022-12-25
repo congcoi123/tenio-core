@@ -37,9 +37,7 @@ import com.tenio.core.handler.event.EventHttpRequestHandle;
 import com.tenio.core.handler.event.EventHttpRequestValidation;
 import com.tenio.core.handler.event.EventPlayerReconnectRequestHandle;
 import com.tenio.core.handler.event.EventPlayerReconnectedResult;
-import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.define.data.HttpConfig;
-import com.tenio.core.network.define.data.SocketConfig;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -122,10 +120,7 @@ public final class ConfigurationAssessment {
 
   @SuppressWarnings("unchecked")
   private boolean containsTcpSocketConfig() {
-    var socketConfigs =
-        (List<SocketConfig>) configuration.get(CoreConfigurationType.NETWORK_SOCKET_CONFIGS);
-    return socketConfigs.stream()
-        .anyMatch(socketConfig -> socketConfig.getType() == TransportType.TCP);
+    return Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_SOCKET));
   }
 
   @SuppressWarnings("unchecked")

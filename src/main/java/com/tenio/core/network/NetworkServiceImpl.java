@@ -63,12 +63,12 @@ import java.util.Objects;
 public final class NetworkServiceImpl extends AbstractManager implements NetworkService {
 
   private final SessionManager sessionManager;
-  private JettyHttpService httpService;
-  private NettyWebSocketService webSocketService;
-  private ZeroSocketService socketService;
+  private final JettyHttpService httpService;
+  private final NettyWebSocketService webSocketService;
+  private final ZeroSocketService socketService;
   private DataType dataType;
-  private NetworkReaderStatistic networkReaderStatistic;
-  private NetworkWriterStatistic networkWriterStatistic;
+  private final NetworkReaderStatistic networkReaderStatistic;
+  private final NetworkWriterStatistic networkWriterStatistic;
 
   private boolean initialized;
 
@@ -263,29 +263,21 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void setSocketConfigs(List<SocketConfig> socketConfigs) {
-    if (containsSocketPort(socketConfigs)) {
+  public void setSocketConfigs(SocketConfig socketConfig, SocketConfig webSocketConfig) {
+    if (Objects.nonNull(socketConfig)) {
       socketServiceInitialized = true;
-      socketService.setSocketConfigs(socketConfigs);
+      socketService.setSocketConfig(socketConfig);
     }
 
-    if (containsWebSocketPort(socketConfigs)) {
+    if (Objects.nonNull(webSocketConfig)) {
       webSocketServiceInitialized = true;
-      webSocketService.setWebSocketConfig(socketConfigs.stream()
-          .filter(socketConfig -> socketConfig.getType() == TransportType.WEB_SOCKET).findFirst()
-          .get());
+      webSocketService.setWebSocketConfig(webSocketConfig);
     }
   }
 
   @Override
   public void setSessionEnabledKcp(boolean enabledKcp) {
     sessionManager.setEnabledKcp(enabledKcp);
-  }
-
-  private boolean containsSocketPort(List<SocketConfig> socketConfigs) {
-    return socketConfigs.stream()
-        .anyMatch(socketConfig -> socketConfig.getType() == TransportType.TCP
-            || socketConfig.getType() == TransportType.UDP);
   }
 
   private boolean containsWebSocketPort(List<SocketConfig> socketConfigs) {

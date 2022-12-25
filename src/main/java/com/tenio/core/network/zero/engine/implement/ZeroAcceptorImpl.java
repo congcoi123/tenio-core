@@ -64,7 +64,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   private String serverAddress;
   private int amountUdpWorkers;
   private boolean enabledKcp;
-  private List<SocketConfig> socketConfigs;
+  private SocketConfig socketConfig;
 
   private ZeroAcceptorImpl(EventManager eventManager) {
     super(eventManager);
@@ -88,9 +88,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     }
 
     // each socket configuration constructs a server socket or an udp datagram
-    for (var socketConfig : socketConfigs) {
-      bindSocket(socketConfig);
-    }
+    bindSocket(socketConfig);
   }
 
   private void bindSocket(SocketConfig socketConfig) throws ServiceRuntimeException {
@@ -340,8 +338,8 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   }
 
   @Override
-  public void setSocketConfigs(List<SocketConfig> socketConfigs) {
-    this.socketConfigs = socketConfigs;
+  public void setSocketConfig(SocketConfig socketConfig) {
+    this.socketConfig = socketConfig;
   }
 
   @Override

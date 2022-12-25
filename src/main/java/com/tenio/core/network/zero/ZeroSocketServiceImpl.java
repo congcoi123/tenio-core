@@ -48,7 +48,6 @@ import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
 import com.tenio.core.network.zero.handler.implement.DatagramIoHandlerImpl;
 import com.tenio.core.network.zero.handler.implement.SocketIoHandlerImpl;
-import java.util.List;
 
 /**
  * The implementation for the socket service manager.
@@ -57,12 +56,12 @@ import java.util.List;
  */
 public final class ZeroSocketServiceImpl extends AbstractManager implements ZeroSocketService {
 
-  private ZeroAcceptor acceptorEngine;
-  private ZeroReader readerEngine;
-  private ZeroWriter writerEngine;
+  private final ZeroAcceptor acceptorEngine;
+  private final ZeroReader readerEngine;
+  private final ZeroWriter writerEngine;
 
-  private DatagramIoHandler datagramIoHandler;
-  private SocketIoHandler socketIoHandler;
+  private final DatagramIoHandler datagramIoHandler;
+  private final SocketIoHandler socketIoHandler;
 
   private boolean initialized;
 
@@ -230,8 +229,8 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   }
 
   @Override
-  public void setSocketConfigs(List<SocketConfig> socketConfigs) {
-    acceptorEngine.setSocketConfigs(socketConfigs);
+  public void setSocketConfig(SocketConfig socketConfig) {
+    acceptorEngine.setSocketConfig(socketConfig);
   }
 
   @Override

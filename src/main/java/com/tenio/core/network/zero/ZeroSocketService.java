@@ -35,7 +35,6 @@ import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.service.Service;
 import java.nio.ByteBuffer;
-import java.util.List;
 
 /**
  * All APIs designed for working with sockets (TCP/UDP).
@@ -145,12 +144,11 @@ public interface ZeroSocketService extends Service {
   void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic);
 
   /**
-   * Declares a list of socket configurations for the network.
+   * Declares socket (TCP) configuration for the network.
    *
-   * @param socketConfigs a list of {@link SocketConfig}
-   * @see List
+   * @param socketConfig an instance of {@link SocketConfig}
    */
-  void setSocketConfigs(List<SocketConfig> socketConfigs);
+  void setSocketConfig(SocketConfig socketConfig);
 
   /**
    * Sets an instance of packet encoder to encode packets for sending to clients side via the

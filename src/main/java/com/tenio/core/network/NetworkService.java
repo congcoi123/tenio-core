@@ -197,12 +197,12 @@ public interface NetworkService extends Service {
   void setSocketWriterBufferSize(int bufferSize);
 
   /**
-   * Declares a list of socket configurations for the network.
+   * Declares socket configurations for the network.
    *
-   * @param socketConfigs a list of {@link SocketConfig}
-   * @see List
+   * @param socketConfig    a {@link SocketConfig} instance for TCP
+   * @param webSocketConfig a {@link SocketConfig} instance for WebSocket
    */
-  void setSocketConfigs(List<SocketConfig> socketConfigs);
+  void setSocketConfigs(SocketConfig socketConfig, SocketConfig webSocketConfig);
 
   /**
    * Determines if UDP channels can use KCP transportation for communication.
