@@ -22,32 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.jetty.servlet.support;
+package com.tenio.core.network.jetty.servlet;
 
-import com.tenio.common.logger.AbstractLogger;
-import com.tenio.core.configuration.constant.CoreConstant;
-import com.tenio.core.network.jetty.servlet.ServletHandler;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.Serial;
+import javax.servlet.http.HttpServlet;
 
 /**
- * The base process servlet.
+ * The default servlet to for customized implementation.
  */
-public abstract class BaseProcessServlet extends AbstractLogger implements ServletHandler {
+public class RestServlet extends HttpServlet {
 
-  @Override
-  public void handle(HttpServletRequest request, HttpServletResponse response) {
-    response.setContentType(CoreConstant.CONTENT_TYPE_JSON);
-    response.setContentType(CoreConstant.CONTENT_TYPE_TEXT);
-    response.setCharacterEncoding(CoreConstant.UTF_8);
-    handleImpl(request, response);
-  }
-
-  /**
-   * Implements handling.
-   *
-   * @param request  the {@link HttpServletRequest}
-   * @param response the {@link HttpServletResponse}
-   */
-  protected abstract void handleImpl(HttpServletRequest request, HttpServletResponse response);
+  @Serial
+  private static final long serialVersionUID = -1L;
 }

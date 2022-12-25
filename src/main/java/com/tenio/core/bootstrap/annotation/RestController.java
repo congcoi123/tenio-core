@@ -22,21 +22,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.jetty.servlet;
+package com.tenio.core.bootstrap.annotation;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 /**
- * The abstract servlet handler.
+ * @since 0.5.0
  */
-public interface ServletHandler {
+@Retention(RUNTIME)
+@Target(TYPE)
+@Documented
+public @interface RestController {
 
   /**
-   * Handles a servlet.
-   *
-   * @param request  the {@link HttpServletRequest}
-   * @param response the {@link HttpServletResponse}
+   * @since 0.5.0
    */
-  void handle(HttpServletRequest request, HttpServletResponse response);
+  String value() default "";
 }

@@ -22,26 +22,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.jetty.servlet.support;
+package com.tenio.core.bootstrap.annotation;
 
-import com.tenio.common.logger.AbstractLogger;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.json.JSONObject;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 /**
- * The base response for HTTP request.
+ * @since 0.5.0
  */
-public abstract class BaseResponse extends AbstractLogger {
+@Target({METHOD})
+@Retention(RUNTIME)
+@Documented
+public @interface RestMapping {
 
   /**
-   * Processes a request from client side and returns a response.
-   *
-   * @param requestedAgent {@link String} value, a requested agent
-   * @param request        an instance of {@link HttpServletRequest}
-   * @param body           a {@link JSONObject} request's body
-   * @param response       the {@link HttpServletResponse} from the server
+   * @since 0.5.0
    */
-  public abstract void process(String requestedAgent, HttpServletRequest request, JSONObject body,
-                               HttpServletResponse response);
+  String value() default "";
 }

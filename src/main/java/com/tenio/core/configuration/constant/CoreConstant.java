@@ -44,11 +44,6 @@ public final class CoreConstant {
    */
   public static final String CONTENT_TYPE_TEXT = "text/html";
   /**
-   * The default URI path when the HTTP service was started (To confirm if the service
-   * was started or not).
-   */
-  public static final String PING_PATH = "/ping";
-  /**
    * The server's default configuration file name.
    */
   public static final String DEFAULT_CONFIGURATION_FILE = "configuration.xml";
@@ -68,6 +63,11 @@ public final class CoreConstant {
    * The default commands package.
    */
   public static final String DEFAULT_COMMAND_PACKAGE = "com.tenio.core.command";
+  /**
+   * The default restful controllers package.
+   */
+  public static final String DEFAULT_REST_CONTROLLER_PACKAGE = "com.tenio.core.network.jetty" +
+      ".controller";
 
   private CoreConstant() {
     throw new UnsupportedOperationException("This class does not support to create a new instance");

@@ -85,7 +85,8 @@ public final class ApplicationLauncher extends SystemLogger {
       bootstrap = Bootstrapper.newInstance();
       try {
         bootstrap.run(entryClass, CoreConstant.DEFAULT_BOOTSTRAP_PACKAGE,
-            CoreConstant.DEFAULT_EVENT_PACKAGE, CoreConstant.DEFAULT_COMMAND_PACKAGE);
+            CoreConstant.DEFAULT_EVENT_PACKAGE, CoreConstant.DEFAULT_COMMAND_PACKAGE,
+            CoreConstant.DEFAULT_REST_CONTROLLER_PACKAGE);
       } catch (Exception e) {
         error(e, "The application started with exceptions occurred: ", e.getMessage());
         System.exit(1);

@@ -26,6 +26,7 @@ package com.tenio.core.bootstrap.injector;
 
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.common.utility.ClassLoaderUtility;
+import com.tenio.common.utility.StringUtility;
 import com.tenio.core.bootstrap.annotation.Autowired;
 import com.tenio.core.bootstrap.annotation.AutowiredAcceptNull;
 import com.tenio.core.bootstrap.annotation.AutowiredQualifier;
@@ -33,12 +34,15 @@ import com.tenio.core.bootstrap.annotation.Bean;
 import com.tenio.core.bootstrap.annotation.BeanFactory;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.annotation.EventHandler;
+import com.tenio.core.bootstrap.annotation.RestController;
+import com.tenio.core.bootstrap.annotation.RestMapping;
 import com.tenio.core.bootstrap.annotation.Setting;
 import com.tenio.core.exception.DuplicatedBeanCreationException;
 import com.tenio.core.exception.IllegalDefinedAccessControlException;
 import com.tenio.core.exception.IllegalReturnTypeException;
 import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
 import com.tenio.core.exception.NoImplementedClassFoundException;
+import com.tenio.core.network.jetty.servlet.RestServlet;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -86,6 +90,9 @@ public final class Injector extends SystemLogger {
   @GuardedBy("this")
   private final Set<Class<?>> manualClassesSet;
 
+  @GuardedBy("this")
+  private final Map<String, RestServlet> servletBeansMap;
+
   private Injector() {
     if (Objects.nonNull(instance)) {
       throw new ExceptionInInitializerError("Could not re-create the class instance");
@@ -94,6 +101,7 @@ public final class Injector extends SystemLogger {
     classesMap = new HashMap<>();
     manualClassesSet = new HashSet<>();
     classBeansMap = new HashMap<>();
+    servletBeansMap = new HashMap<>();
   }
 
   /**
@@ -156,6 +164,7 @@ public final class Injector extends SystemLogger {
       reflections.merge(reflectionPackage);
     }
 
+    // Step 1: We collect classes
     // The implemented class is defined with the "Component" annotation declared inside it
     // in case you need more annotations with the same effect with this one, you should put them
     // in here
@@ -187,8 +196,8 @@ public final class Injector extends SystemLogger {
 
     // Retrieves all classes those are declared by the @Bean annotation
     var implementedBeanClasses = new HashSet<Class<?>>();
-    var configurationClasses = reflections.getTypesAnnotatedWith(BeanFactory.class);
-    for (var configurationClass : configurationClasses) {
+    var beanFactoryClasses = reflections.getTypesAnnotatedWith(BeanFactory.class);
+    for (var configurationClass : beanFactoryClasses) {
       for (var method : configurationClass.getMethods()) {
         if (method.isAnnotationPresent(Bean.class)) {
           if (Modifier.isPublic(method.getModifiers())) {
@@ -212,6 +221,7 @@ public final class Injector extends SystemLogger {
       classesMap.put(implementedClass, implementedClass);
     }
 
+    // Step 2: We create instances
     // create beans (class instances) based on annotations
     for (var clazz : classes) {
       // in case you need to create a bean with another annotation, put it in here
@@ -228,7 +238,7 @@ public final class Injector extends SystemLogger {
         // create beans manually
       } else if (clazz.isAnnotationPresent(BeanFactory.class)) {
         // fetches all bean instances and save them to classes map
-        var configurationBean = clazz.getDeclaredConstructor().newInstance();
+        var beanFactoryInstance = clazz.getDeclaredConstructor().newInstance();
         for (var method : clazz.getMethods()) {
           if (method.isAnnotationPresent(Bean.class)) {
             if (Modifier.isPublic(method.getModifiers())) {
@@ -243,8 +253,36 @@ public final class Injector extends SystemLogger {
                 if (classBeansMap.containsKey(beanClass)) {
                   throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
                 }
-                var bean = method.invoke(configurationBean);
+                var bean = method.invoke(beanFactoryInstance);
                 classBeansMap.put(beanClass, bean);
+              }
+            } else {
+              throw new IllegalDefinedAccessControlException();
+            }
+          }
+        }
+      } else if (clazz.isAnnotationPresent(RestController.class)) {
+        // fetches all bean instances and save them to rest controller map
+        var restControllerInstance = clazz.getDeclaredConstructor().newInstance();
+        for (var method : clazz.getMethods()) {
+          if (method.isAnnotationPresent(RestMapping.class)) {
+            if (Modifier.isPublic(method.getModifiers())) {
+              var methodClazz = method.getReturnType();
+              if (!methodClazz.equals(RestServlet.class)) {
+                throw new IllegalReturnTypeException();
+              } else {
+                String uri = String.join("/", StringUtility.trimStringByString(
+                        clazz.getAnnotation(RestController.class).value(), "/"),
+                    StringUtility.trimStringByString(
+                        method.getAnnotation(RestMapping.class).value(), "/"));
+                uri = StringUtility.trimStringByString(uri, "/");
+
+                var beanClass = new BeanClass(methodClazz, uri);
+                if (servletBeansMap.containsKey(uri)) {
+                  throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
+                }
+                var bean = method.invoke(restControllerInstance);
+                servletBeansMap.put(uri, (RestServlet) bean);
               }
             } else {
               throw new IllegalDefinedAccessControlException();
@@ -254,6 +292,7 @@ public final class Injector extends SystemLogger {
       }
     }
 
+    // Step 3: Make mapping between classes and their instances
     // recursively create field instance for this class instance
     classBeansMap.forEach((clazz, bean) -> {
       try {
@@ -279,6 +318,10 @@ public final class Injector extends SystemLogger {
     return optional.map(
             classClassEntry -> (T) classBeansMap.get(new BeanClass(classClassEntry.getKey(), "")))
         .orElse(null);
+  }
+
+  public Map<String, RestServlet> getServletBeansMap() {
+    return servletBeansMap;
   }
 
   /**

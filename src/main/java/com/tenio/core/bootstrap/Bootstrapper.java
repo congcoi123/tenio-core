@@ -71,6 +71,7 @@ public final class Bootstrapper extends SystemLogger {
     if (hasExtApplicationAnnotation) {
       start(entryClass, packages);
       bootstrapHandler = injector.getBean(BootstrapHandler.class);
+      bootstrapHandler.setServletMap(injector.getServletBeansMap());
       bootstrapHandler.getCommandManager().scanPackages(entryClass, packages);
       return true;
     } else {

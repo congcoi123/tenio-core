@@ -29,6 +29,8 @@ import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
 import com.tenio.core.command.CommandManager;
 import com.tenio.core.event.handler.EventHandler;
+import com.tenio.core.network.jetty.servlet.RestServlet;
+import java.util.Map;
 
 /**
  * This class provides instances for the events handler and the configuration setups.
@@ -44,6 +46,8 @@ public final class BootstrapHandler {
 
   @Autowired
   private ConfigurationHandler configurationHandler;
+
+  private Map<String, RestServlet> servletMap;
 
   /**
    * Retrieves an events handler.
@@ -71,5 +75,13 @@ public final class BootstrapHandler {
    */
   public ConfigurationHandler getConfigurationHandler() {
     return configurationHandler;
+  }
+
+  public Map<String, RestServlet> getServletMap() {
+    return servletMap;
+  }
+
+  public void setServletMap(Map<String, RestServlet> servletMap) {
+    this.servletMap = servletMap;
   }
 }

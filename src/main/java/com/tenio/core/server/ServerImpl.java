@@ -47,6 +47,7 @@ import com.tenio.core.network.define.data.HttpConfig;
 import com.tenio.core.network.define.data.SocketConfig;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.protocol.Response;
+import com.tenio.core.network.jetty.servlet.RestServlet;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
@@ -62,6 +63,7 @@ import com.tenio.core.utility.CommandUtility;
 import java.io.IOError;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
 import org.jline.reader.EndOfFileException;
@@ -131,6 +133,9 @@ public final class ServerImpl extends SystemLogger implements Server {
     var configuration = bootstrapHandler.getConfigurationHandler().getConfiguration();
     configuration.load(file);
 
+    // Put the current configurations to the logger
+    info("CONFIGURATION", configuration.toString());
+
     this.configuration = configuration;
 
     dataType =
@@ -150,10 +155,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     var assessment = ConfigurationAssessment.newInstance(eventManager, configuration);
     assessment.assess();
 
-    // Put the current configurations to the logger
-    info("CONFIGURATION", configuration.toString());
-
-    setupNetworkService(configuration);
+    setupNetworkService(configuration, bootstrapHandler.getServletMap());
     setupInternalProcessorService(configuration);
     setupScheduleService(configuration);
 
@@ -213,7 +215,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   @SuppressWarnings("unchecked")
-  private void setupNetworkService(Configuration configuration)
+  private void setupNetworkService(Configuration configuration, Map<String, RestServlet> servletMap)
       throws ClassNotFoundException, InstantiationException, IllegalAccessException,
       IllegalArgumentException,
       InvocationTargetException, NoSuchMethodException, SecurityException {
@@ -227,7 +229,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     final var httpConfig =
         (List<HttpConfig>) configuration.get(CoreConfigurationType.NETWORK_HTTP_CONFIGS);
     networkService.setHttpPort(!httpConfig.isEmpty() ? httpConfig.get(0).getPort() : 0);
-    networkService.setHttpPathConfigs(!httpConfig.isEmpty() ? httpConfig.get(0).getPaths() : null);
+    networkService.setHttpServletConfigs(!httpConfig.isEmpty() ? servletMap : null);
 
     networkService.setSocketAcceptorServerAddress(
         configuration.getString(CoreConfigurationType.SERVER_ADDRESS));

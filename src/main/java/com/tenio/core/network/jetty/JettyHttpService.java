@@ -24,19 +24,10 @@ THE SOFTWARE.
 
 package com.tenio.core.network.jetty;
 
-import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exception.DuplicatedUriAndMethodException;
-import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.manager.AbstractManager;
-import com.tenio.core.network.define.RestMethod;
-import com.tenio.core.network.define.data.PathConfig;
-import com.tenio.core.network.jetty.servlet.PingServlet;
-import com.tenio.core.network.jetty.servlet.ServletManager;
+import com.tenio.core.network.jetty.servlet.RestServlet;
 import com.tenio.core.service.Service;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -54,7 +45,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
   private Server server;
   private ExecutorService executorService;
   private int port;
-  private List<PathConfig> pathConfigs;
+  private Map<String, RestServlet> servletMap;
   private boolean initialized;
 
   private JettyHttpService(EventManager eventManager) {
@@ -73,34 +64,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     return new JettyHttpService(eventManager);
   }
 
-  private void setup() throws DuplicatedUriAndMethodException {
-    // Collect the same URI path for one servlet
-    Map<String, List<PathConfig>> servlets = new HashMap<>();
-    for (var path : pathConfigs) {
-      if (!servlets.containsKey(path.getUri())) {
-        var servlet = new ArrayList<PathConfig>();
-        servlet.add(path);
-        servlets.put(path.getUri(), servlet);
-      } else {
-        servlets.get(path.getUri()).add(path);
-      }
-    }
-
-    for (var entry : servlets.entrySet()) {
-      if (isUriHasDuplicatedMethod(RestMethod.POST, entry.getValue())) {
-        throw new DuplicatedUriAndMethodException(RestMethod.POST, entry.getValue());
-      }
-      if (isUriHasDuplicatedMethod(RestMethod.PUT, entry.getValue())) {
-        throw new DuplicatedUriAndMethodException(RestMethod.PUT, entry.getValue());
-      }
-      if (isUriHasDuplicatedMethod(RestMethod.GET, entry.getValue())) {
-        throw new DuplicatedUriAndMethodException(RestMethod.GET, entry.getValue());
-      }
-      if (isUriHasDuplicatedMethod(RestMethod.DELETE, entry.getValue())) {
-        throw new DuplicatedUriAndMethodException(RestMethod.DELETE, entry.getValue());
-      }
-    }
-
+  private void setup() {
     // Create a Jetty server
     server = new Server();
     var connector = new ServerConnector(server);
@@ -111,10 +75,8 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     context.setContextPath("/");
 
     // Configuration
-    context.addServlet(new ServletHolder(new PingServlet()), CoreConstant.PING_PATH);
-    servlets.forEach(
-        (uri, list) -> context.addServlet(new ServletHolder(new ServletManager(eventManager, list)),
-            uri));
+    servletMap.forEach(
+        (uri, servlet) -> context.addServlet(new ServletHolder(servlet), "/" + uri));
 
     server.setHandler(context);
   }
@@ -125,7 +87,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
       info("START SERVICE", buildgen(getName(), " (", 1, ")"));
 
       info("Http Info",
-          buildgen("Started at port: ", port, ", Configuration: ", pathConfigs.toString()));
+          buildgen("Started at port: ", port, ", Configuration: ", servletMap.keySet().toString()));
 
       server.start();
       server.join();
@@ -134,19 +96,10 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     }
   }
 
-  private boolean isUriHasDuplicatedMethod(RestMethod method, List<PathConfig> pathConfigs) {
-    return
-        pathConfigs.stream().filter(pathConfig -> pathConfig.getMethod().equals(method))
-            .count() > 1;
-  }
 
   @Override
   public void initialize() {
-    try {
-      setup();
-    } catch (DuplicatedUriAndMethodException e) {
-      throw new ServiceRuntimeException(e.getMessage());
-    }
+    setup();
     initialized = true;
   }
 
@@ -163,8 +116,8 @@ public final class JettyHttpService extends AbstractManager implements Service, 
       if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
         try {
           shutdown();
-        } catch (Exception e) {
-          error(e);
+        } catch (Exception exception) {
+          error(exception);
         }
       }
     }));
@@ -210,7 +163,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     this.port = port;
   }
 
-  public void setPathConfigs(List<PathConfig> pathConfigs) {
-    this.pathConfigs = pathConfigs;
+  public void setServletMap(Map<String, RestServlet> servletMap) {
+    this.servletMap = servletMap;
   }
 }

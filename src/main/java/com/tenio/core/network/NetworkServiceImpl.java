@@ -41,6 +41,7 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.entity.session.manager.SessionManagerImpl;
 import com.tenio.core.network.jetty.JettyHttpService;
+import com.tenio.core.network.jetty.servlet.RestServlet;
 import com.tenio.core.network.netty.NettyWebSocketService;
 import com.tenio.core.network.netty.NettyWebSocketServiceImpl;
 import com.tenio.core.network.security.filter.ConnectionFilter;
@@ -53,6 +54,7 @@ import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -171,11 +173,11 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void setHttpPathConfigs(List<PathConfig> pathConfigs) {
-    if (Objects.isNull(pathConfigs)) {
+  public void setHttpServletConfigs(Map<String, RestServlet> servletMap) {
+    if (Objects.isNull(servletMap)) {
       return;
     }
-    httpService.setPathConfigs(pathConfigs);
+    httpService.setServletMap(servletMap);
     httpServiceInitialized = true;
   }
 
