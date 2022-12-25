@@ -133,16 +133,9 @@ public final class EventManager extends SystemLogger {
   }
 
   private boolean isEventForTracing(ServerEvent event) {
-    switch (event) {
-      case HTTP_REQUEST_HANDLE:
-      case HTTP_REQUEST_VALIDATION:
-      case DATAGRAM_CHANNEL_READ_MESSAGE:
-      case RECEIVED_MESSAGE_FROM_PLAYER:
-      case SESSION_READ_MESSAGE:
-      case SEND_MESSAGE_TO_PLAYER:
-        return true;
-      default:
-        return false;
-    }
+    return switch (event) {
+      case DATAGRAM_CHANNEL_READ_MESSAGE, RECEIVED_MESSAGE_FROM_PLAYER, SESSION_READ_MESSAGE, SEND_MESSAGE_TO_PLAYER -> true;
+      default -> false;
+    };
   }
 }

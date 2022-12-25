@@ -31,8 +31,6 @@ import com.tenio.core.handler.event.EventDisconnectConnection;
 import com.tenio.core.handler.event.EventDisconnectPlayer;
 import com.tenio.core.handler.event.EventFetchedBandwidthInfo;
 import com.tenio.core.handler.event.EventFetchedCcuInfo;
-import com.tenio.core.handler.event.EventHttpRequestHandle;
-import com.tenio.core.handler.event.EventHttpRequestValidation;
 import com.tenio.core.handler.event.EventPlayerAfterLeftRoom;
 import com.tenio.core.handler.event.EventPlayerBeforeLeaveRoom;
 import com.tenio.core.handler.event.EventPlayerJoinedRoomResult;
@@ -230,18 +228,6 @@ public enum ServerEvent {
    * @see EventSystemMonitoring
    */
   SYSTEM_MONITORING,
-  /**
-   * When the server validates an HTTP request from a player.
-   *
-   * @see EventHttpRequestValidation
-   */
-  HTTP_REQUEST_VALIDATION,
-  /**
-   * When the server handles an HTTP request from a player.
-   *
-   * @see EventHttpRequestHandle
-   */
-  HTTP_REQUEST_HANDLE,
   /**
    * When there is any exception occurs on the server.
    *

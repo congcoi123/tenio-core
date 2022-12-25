@@ -33,8 +33,6 @@ import com.tenio.core.exception.ConfigurationException;
 import com.tenio.core.exception.NotDefinedSubscribersException;
 import com.tenio.core.handler.event.EventAttachConnectionRequestValidation;
 import com.tenio.core.handler.event.EventAttachedConnectionResult;
-import com.tenio.core.handler.event.EventHttpRequestHandle;
-import com.tenio.core.handler.event.EventHttpRequestValidation;
 import com.tenio.core.handler.event.EventPlayerReconnectRequestHandle;
 import com.tenio.core.handler.event.EventPlayerReconnectedResult;
 import com.tenio.core.network.define.data.HttpConfig;
@@ -71,7 +69,6 @@ public final class ConfigurationAssessment {
     checkSubscriberReconnection();
     checkSubscriberConnectionAttach();
     checkDefinedMainSocketConnection();
-    checkSubscriberHttpHandler();
   }
 
   private void checkDataSerialization() {
@@ -106,15 +103,6 @@ public final class ConfigurationAssessment {
   private void checkDefinedMainSocketConnection() throws ConfigurationException {
     if (!containsTcpSocketConfig() && containsUdpSocketConfig()) {
       throw new ConfigurationException("TCP connection was not defined");
-    }
-  }
-
-  private void checkSubscriberHttpHandler() throws NotDefinedSubscribersException {
-    if (containsHttpPathConfigs()
-        && (!eventManager.hasSubscriber(ServerEvent.HTTP_REQUEST_VALIDATION)
-        || !eventManager.hasSubscriber(ServerEvent.HTTP_REQUEST_HANDLE))) {
-      throw new NotDefinedSubscribersException(EventHttpRequestValidation.class,
-          EventHttpRequestHandle.class);
     }
   }
 
