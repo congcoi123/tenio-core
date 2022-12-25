@@ -216,8 +216,16 @@ public final class Injector extends SystemLogger {
         }
       }
     }
-    // scans all interfaces with their implemented classes
+    // append all classes
     for (var implementedClass : implementedBeanClasses) {
+      classesMap.put(implementedClass, implementedClass);
+    }
+
+    // Add all classes annotated by @RestController
+    var implementedRestClasses =
+        new HashSet<>(reflections.getTypesAnnotatedWith(RestController.class));
+    // append all classes
+    for (var implementedClass : implementedRestClasses) {
       classesMap.put(implementedClass, implementedClass);
     }
 
@@ -264,6 +272,12 @@ public final class Injector extends SystemLogger {
       } else if (clazz.isAnnotationPresent(RestController.class)) {
         // fetches all bean instances and save them to rest controller map
         var restControllerInstance = clazz.getDeclaredConstructor().newInstance();
+        var beanClass =
+            new BeanClass(clazz, clazz.getAnnotation(RestController.class).value());
+        if (classBeansMap.containsKey(beanClass)) {
+          throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
+        }
+        classBeansMap.put(beanClass, restControllerInstance);
         for (var method : clazz.getMethods()) {
           if (method.isAnnotationPresent(RestMapping.class)) {
             if (Modifier.isPublic(method.getModifiers())) {
@@ -277,7 +291,7 @@ public final class Injector extends SystemLogger {
                         method.getAnnotation(RestMapping.class).value(), "/"));
                 uri = StringUtility.trimStringByString(uri, "/");
 
-                var beanClass = new BeanClass(methodClazz, uri);
+                beanClass = new BeanClass(methodClazz, uri);
                 if (servletBeansMap.containsKey(uri)) {
                   throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
                 }

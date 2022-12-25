@@ -72,7 +72,7 @@ public enum HttpUtility {
    * @param request a coming {@link HttpServletRequest}
    * @return a {@link JSONObject} taken from the request
    */
-  public JSONObject getBody(HttpServletRequest request) {
+  public JSONObject getBodyJson(HttpServletRequest request) {
     var body = "{}";
     if (request.getMethod().equals("POST") || request.getMethod().equals("PUT")
         || request.getMethod().equals("DELETE")) {
@@ -102,6 +102,38 @@ public enum HttpUtility {
       body = builder.toString();
     }
     return new JSONObject(body);
+  }
+
+  public String getBodyText(HttpServletRequest request) {
+    var body = "";
+    if (request.getMethod().equals("POST") || request.getMethod().equals("PUT")
+        || request.getMethod().equals("DELETE")) {
+      var builder = new StringBuilder();
+      BufferedReader bufferedReader = null;
+
+      try {
+        bufferedReader = request.getReader();
+        char[] charBuffer = new char[1024];
+        int bytesRead;
+        while ((bytesRead = bufferedReader.read(charBuffer)) != -1) {
+          builder.append(charBuffer, 0, bytesRead);
+        }
+      } catch (IOException e) {
+        // swallow silently -- can't get body, won't
+        logger.error(e);
+      } finally {
+        if (Objects.nonNull(bufferedReader)) {
+          try {
+            bufferedReader.close();
+          } catch (IOException e) {
+            // swallow silently -- can't get body, won't
+            logger.error(e);
+          }
+        }
+      }
+      body = builder.toString();
+    }
+    return body;
   }
 }
 

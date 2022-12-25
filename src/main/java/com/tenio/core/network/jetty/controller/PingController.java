@@ -71,7 +71,7 @@ public class PingController extends SystemLogger {
       private static final long serialVersionUID = 2310114412199639230L;
 
       @Override
-      protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+      protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         response.setContentType(CoreConstant.CONTENT_TYPE_JSON);
         response.setStatus(HttpServletResponse.SC_OK);
         try {
