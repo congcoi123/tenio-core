@@ -24,29 +24,30 @@ THE SOFTWARE.
 
 package com.tenio.core.exception;
 
-import com.tenio.core.network.define.RestMethod;
-import com.tenio.core.network.define.data.PathConfig;
+import com.tenio.core.bootstrap.annotation.AutowiredQualifier;
+import com.tenio.core.bootstrap.annotation.Bean;
 import java.io.Serial;
-import java.util.List;
 
 /**
- * When an existing Uri method on the HTTP service is defined again.
+ * When it is adding a duplicated bean, which share the same class type and name.
+ *
+ * @see Bean
+ * @see AutowiredQualifier
+ * @since 0.5.0
  */
-public final class DuplicatedUriAndMethodException extends RuntimeException {
+public final class DuplicatedBeanCreationException extends Exception {
 
   @Serial
-  private static final long serialVersionUID = -5226506274080400540L;
+  private static final long serialVersionUID = -2167364908295120478L;
 
   /**
    * Initialization.
    *
-   * @param method      a {@link RestMethod}
-   * @param pathConfigs a list of {@link PathConfig}
-   * @see List
+   * @param clazz the bean's {@link Class} type
+   * @param name  the bean's {@link String} name
    */
-  public DuplicatedUriAndMethodException(RestMethod method, List<PathConfig> pathConfigs) {
-    super(String.format("Duplicated REST method: %s, with the list of configurations: %s",
-        method.toString(),
-        pathConfigs.toString()));
+  public DuplicatedBeanCreationException(Class<?> clazz, String name) {
+    super(String.format("Duplicated bean creation with type: %s, and name: %s",
+        clazz.getSimpleName(), name));
   }
 }

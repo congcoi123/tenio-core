@@ -39,6 +39,7 @@ import com.tenio.core.bootstrap.test.impl.TestClassCCopy;
 import com.tenio.core.bootstrap.test.inf.TestInterfaceA;
 import com.tenio.core.bootstrap.test.inf.TestInterfaceC;
 import com.tenio.core.custom.DisabledTestFindingSolution;
+import com.tenio.core.exception.DuplicatedBeanCreationException;
 import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
 import com.tenio.core.exception.NoImplementedClassFoundException;
 import java.lang.reflect.InvocationTargetException;
@@ -66,7 +67,7 @@ class InjectorTest {
   @DisplayName("All variables in the BootstrapComponent class should have expected values")
   void scanPackageShouldRetrieveExpectedValues()
       throws ClassNotFoundException, InvocationTargetException, InstantiationException,
-      IllegalAccessException, NoSuchMethodException {
+      IllegalAccessException, NoSuchMethodException, DuplicatedBeanCreationException {
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.test.impl",
         "com.tenio.core.bootstrap.test.inf", "com.tenio.core.bootstrap.test.factory",
         "com.tenio.core.bootstrap.bean");
@@ -87,7 +88,7 @@ class InjectorTest {
   @DisplayName("After scanning the package should retrieve an instance of A")
   void scanPackageShouldRetrieveInstanceOfA()
       throws ClassNotFoundException, InvocationTargetException, InstantiationException,
-      IllegalAccessException, NoSuchMethodException {
+      IllegalAccessException, NoSuchMethodException, DuplicatedBeanCreationException {
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
 
     var bean = injector.getBean(BootstrapComponent.class).a;
@@ -101,7 +102,7 @@ class InjectorTest {
   @DisplayName("After scanning the package should not retrieve an instance of B (null)")
   void scanPackageShouldRetrieveNullInstanceOfB()
       throws ClassNotFoundException, InvocationTargetException, InstantiationException,
-      IllegalAccessException, NoSuchMethodException {
+      IllegalAccessException, NoSuchMethodException, DuplicatedBeanCreationException {
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
 
     var bean = injector.getBean(BootstrapComponent.class).b;
@@ -113,7 +114,7 @@ class InjectorTest {
       "@AutowiredQualifier in BootstrapComponent class")
   void scanPackageShouldRetrieveInstanceOfC()
       throws ClassNotFoundException, InvocationTargetException, InstantiationException,
-      IllegalAccessException, NoSuchMethodException {
+      IllegalAccessException, NoSuchMethodException, DuplicatedBeanCreationException {
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
 
     var bean = injector.getBean(BootstrapComponent.class).c;
@@ -128,7 +129,7 @@ class InjectorTest {
       "@Component and without implementing any interface")
   void scanPackageShouldRetrieveInstanceOfAlone()
       throws ClassNotFoundException, InvocationTargetException, InstantiationException,
-      IllegalAccessException, NoSuchMethodException {
+      IllegalAccessException, NoSuchMethodException, DuplicatedBeanCreationException {
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
 
     var bean = injector.getBean(BootstrapComponent.class).alone;
@@ -160,7 +161,7 @@ class InjectorTest {
       "declared by @Bean and @BeanFactory annotations")
   void scanPackageShouldRetrieveInstanceOfBean()
       throws ClassNotFoundException, InvocationTargetException, InstantiationException,
-      IllegalAccessException, NoSuchMethodException {
+      IllegalAccessException, NoSuchMethodException, DuplicatedBeanCreationException {
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
 
     var bean = injector.getBean(BootstrapComponent.class).bean;
