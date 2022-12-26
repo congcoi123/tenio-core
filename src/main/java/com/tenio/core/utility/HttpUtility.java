@@ -26,10 +26,12 @@ package com.tenio.core.utility;
 
 import com.tenio.common.logger.AbstractLogger;
 import com.tenio.common.logger.SystemLogger;
+import com.tenio.core.configuration.constant.CoreConstant;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
 
 /**
@@ -134,6 +136,16 @@ public enum HttpUtility {
       body = builder.toString();
     }
     return body;
+  }
+
+  public void sendResponseJson(HttpServletResponse response, int statusCode, String payload) {
+    response.setContentType(CoreConstant.CONTENT_TYPE_JSON);
+    response.setStatus(statusCode);
+    try {
+      response.getWriter().println(payload);
+    } catch (IOException exception) {
+      logger.error(exception);
+    }
   }
 }
 

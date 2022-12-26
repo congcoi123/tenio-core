@@ -35,9 +35,7 @@ import com.tenio.core.handler.event.EventAttachConnectionRequestValidation;
 import com.tenio.core.handler.event.EventAttachedConnectionResult;
 import com.tenio.core.handler.event.EventPlayerReconnectRequestHandle;
 import com.tenio.core.handler.event.EventPlayerReconnectedResult;
-import com.tenio.core.network.define.data.HttpConfig;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -114,12 +112,5 @@ public final class ConfigurationAssessment {
   @SuppressWarnings("unchecked")
   private boolean containsUdpSocketConfig() {
     return configuration.getInt(CoreConfigurationType.WORKER_UDP_WORKER) > 0;
-  }
-
-  @SuppressWarnings("unchecked")
-  private boolean containsHttpPathConfigs() {
-    var httpConfigs =
-        (List<HttpConfig>) configuration.get(CoreConfigurationType.NETWORK_HTTP_CONFIGS);
-    return !httpConfigs.isEmpty();
   }
 }

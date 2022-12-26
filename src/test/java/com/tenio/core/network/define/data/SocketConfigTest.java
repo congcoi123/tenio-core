@@ -10,10 +10,11 @@ class SocketConfigTest {
   void testConstructor() {
     SocketConfig actualSocketConfig = new SocketConfig("Name", TransportType.UNKNOWN, 8080);
 
-    assertEquals("Name", actualSocketConfig.getName());
-    assertEquals(8080, actualSocketConfig.getPort());
-    assertEquals(TransportType.UNKNOWN, actualSocketConfig.getType());
-    assertEquals("SocketConfig{name='Name', type=UNKNOWN, port=8080}", actualSocketConfig.toString());
+    assertEquals("Name", actualSocketConfig.name());
+    assertEquals(8080, actualSocketConfig.port());
+    assertEquals(TransportType.UNKNOWN, actualSocketConfig.type());
+    assertEquals("SocketConfig[name=Name, type=UNKNOWN, port=8080]",
+        actualSocketConfig.toString());
   }
 }
 

@@ -24,79 +24,11 @@ THE SOFTWARE.
 
 package com.tenio.core.network.define.data;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Holds configurations for the HTTP service.
  */
 @ThreadSafe
-public final class HttpConfig {
-
-  private final String name;
-  private final int port;
-  private final List<PathConfig> paths;
-
-  /**
-   * Initialization.
-   *
-   * @param name a {@link String} configuration name
-   * @param port an associated port ({@code integer} value)
-   */
-  public HttpConfig(String name, int port) {
-    paths = new ArrayList<>();
-    this.name = name;
-    this.port = port;
-  }
-
-  /**
-   * Retrieves the configuration name.
-   *
-   * @return a {@link String} name for the configuration
-   */
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * Retrieves paths associated with the configuration.
-   *
-   * @return a list of {@link PathConfig}
-   * @see List
-   */
-  public List<PathConfig> getPaths() {
-    synchronized (paths) {
-      return paths;
-    }
-  }
-
-  /**
-   * Adds a new path to the paths' list.
-   *
-   * @param path the new {@link PathConfig}
-   */
-  public void addPath(PathConfig path) {
-    synchronized (paths) {
-      paths.add(path);
-    }
-  }
-
-  /**
-   * Retrieves the port number.
-   *
-   * @return the port number ({@code integer} value)
-   */
-  public int getPort() {
-    return port;
-  }
-
-  @Override
-  public String toString() {
-    return "HttpConfig{" +
-        "name='" + name + '\'' +
-        ", port=" + port +
-        ", paths=" + paths +
-        '}';
-  }
+public record HttpConfig(String name, int port) {
 }

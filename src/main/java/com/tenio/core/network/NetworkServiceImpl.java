@@ -31,7 +31,6 @@ import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.define.TransportType;
-import com.tenio.core.network.define.data.PathConfig;
 import com.tenio.core.network.define.data.SocketConfig;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.implement.PacketImpl;
@@ -53,7 +52,6 @@ import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -68,10 +66,9 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   private final JettyHttpService httpService;
   private final NettyWebSocketService webSocketService;
   private final ZeroSocketService socketService;
-  private DataType dataType;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final NetworkWriterStatistic networkWriterStatistic;
-
+  private DataType dataType;
   private boolean initialized;
 
   private boolean httpServiceInitialized;
@@ -280,11 +277,6 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   @Override
   public void setSessionEnabledKcp(boolean enabledKcp) {
     sessionManager.setEnabledKcp(enabledKcp);
-  }
-
-  private boolean containsWebSocketPort(List<SocketConfig> socketConfigs) {
-    return socketConfigs.stream()
-        .anyMatch(socketConfig -> socketConfig.getType() == TransportType.WEB_SOCKET);
   }
 
   @Override

@@ -30,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.define.data.SocketConfig;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,15 +58,10 @@ class ConfigurationTest {
     var socket = (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_SOCKET);
     var webSocket = (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET);
     assertAll("getSocketPortsConfiguration",
-        () -> assertEquals(8032, socket.getPort()),
-        () -> assertEquals(8033, webSocket.getPort()),
-        () -> assertEquals(TransportType.TCP, socket.getType()),
-        () -> assertEquals(TransportType.WEB_SOCKET, webSocket.getType())
+        () -> assertEquals(8032, socket.port()),
+        () -> assertEquals(8033, webSocket.port()),
+        () -> assertEquals(TransportType.TCP, socket.type()),
+        () -> assertEquals(TransportType.WEB_SOCKET, webSocket.type())
     );
-  }
-
-  @AfterEach
-  public void tearDown() {
-    // do nothing
   }
 }

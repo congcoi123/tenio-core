@@ -132,16 +132,16 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
             NettyWsInitializer.newInstance(eventManager, sessionManager, connectionFilter, dataType,
                 networkReaderStatistic, sslContext, usingSsl));
 
-    var channelFuture = bootstrap.bind(socketConfig.getPort()).sync()
+    var channelFuture = bootstrap.bind(socketConfig.port()).sync()
         .addListener(future -> {
           if (!future.isSuccess()) {
             error(future.cause());
-            throw new IOException(String.valueOf(socketConfig.getPort()));
+            throw new IOException(String.valueOf(socketConfig.port()));
           }
         });
     serverWebsockets.add(channelFuture.channel());
 
-    info("WEB SOCKET", buildgen("Started at port: ", socketConfig.getPort()));
+    info("WEB SOCKET", buildgen("Started at port: ", socketConfig.port()));
   }
 
   private synchronized void attemptToShutdown() {

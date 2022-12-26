@@ -92,8 +92,8 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   }
 
   private void bindSocket(SocketConfig socketConfig) throws ServiceRuntimeException {
-    if (socketConfig.getType() == TransportType.TCP) {
-      bindTcpSocket(socketConfig.getPort());
+    if (socketConfig.type() == TransportType.TCP) {
+      bindTcpSocket(socketConfig.port());
     }
     if (amountUdpWorkers > 0) {
       bindUdpSocket();

@@ -29,58 +29,5 @@ import com.tenio.core.network.define.TransportType;
 /**
  * A configuration for a socket.
  */
-public final class SocketConfig {
-
-  private final String name;
-  private final TransportType type;
-  private final int port;
-
-  /**
-   * Initialization.
-   *
-   * @param name the {@link String} configuration name
-   * @param type the {@link TransportType}
-   * @param port the opened port ({@code integer} value)
-   */
-  public SocketConfig(String name, TransportType type, int port) {
-    this.name = name;
-    this.type = type;
-    this.port = port;
-  }
-
-  /**
-   * Retrieves the socket's name.
-   *
-   * @return the {@link String} socket's name
-   */
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * Retrieves the socket's transportation type.
-   *
-   * @return the {@link TransportType} of socket
-   */
-  public TransportType getType() {
-    return type;
-  }
-
-  /**
-   * Retrieves the socket's port number.
-   *
-   * @return the socket's port number ({@code integer} value)
-   */
-  public int getPort() {
-    return port;
-  }
-
-  @Override
-  public String toString() {
-    return "SocketConfig{" +
-        "name='" + name + '\'' +
-        ", type=" + type +
-        ", port=" + port +
-        '}';
-  }
+public record SocketConfig(String name, TransportType type, int port) {
 }

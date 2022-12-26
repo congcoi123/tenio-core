@@ -62,7 +62,6 @@ import com.tenio.core.server.setting.ConfigurationAssessment;
 import com.tenio.core.utility.CommandUtility;
 import java.io.IOError;
 import java.lang.reflect.InvocationTargetException;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
@@ -226,10 +225,9 @@ public final class ServerImpl extends SystemLogger implements Server {
         (Class<? extends ConnectionFilter>) connectionFilterClazz,
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_MAX_CONNECTIONS_PER_IP));
 
-    final var httpConfig =
-        (List<HttpConfig>) configuration.get(CoreConfigurationType.NETWORK_HTTP_CONFIGS);
-    networkService.setHttpPort(!httpConfig.isEmpty() ? httpConfig.get(0).getPort() : 0);
-    networkService.setHttpServletConfigs(!httpConfig.isEmpty() ? servletMap : null);
+    var httpConfig = configuration.get(CoreConfigurationType.NETWORK_HTTP);
+    networkService.setHttpPort(Objects.nonNull(httpConfig) ? ((HttpConfig) httpConfig).port() : 0);
+    networkService.setHttpServletConfigs(Objects.nonNull(httpConfig) ? servletMap : null);
 
     networkService.setSocketAcceptorServerAddress(
         configuration.getString(CoreConfigurationType.SERVER_ADDRESS));
@@ -244,9 +242,12 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.setSocketAcceptorWorkers(
         configuration.getInt(CoreConfigurationType.WORKER_SOCKET_ACCEPTOR));
 
+
     networkService.setSocketConfigs(
-        (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_SOCKET),
-        (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET));
+        (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_SOCKET)) ?
+            (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_SOCKET) : null),
+        (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET)) ?
+            (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) : null));
 
     networkService.setSocketReaderBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_READER_BUFFER_SIZE));

@@ -273,13 +273,14 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   NETWORK_WEBSOCKET("websocket-configuration"),
   /**
-   * The list of HTTP configurations in the server configuration.
+   * HTTP in the server configuration.
+   *
+   * @since 0.5.0
    */
-  NETWORK_HTTP_CONFIGS("http-configs");
+  NETWORK_HTTP("http-configuration");
 
   // Reverse-lookup map for getting a type from a value
-  private static final Map<String, CoreConfigurationType> lookup =
-      new HashMap<>();
+  private static final Map<String, CoreConfigurationType> lookup = new HashMap<>();
 
   static {
     for (var configurationType : CoreConfigurationType.values()) {

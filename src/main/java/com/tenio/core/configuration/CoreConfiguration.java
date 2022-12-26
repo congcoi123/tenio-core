@@ -29,15 +29,11 @@ import com.tenio.common.configuration.CommonConfiguration;
 import com.tenio.common.utility.XmlUtility;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.configuration.setting.Setting;
-import com.tenio.core.network.define.RestMethod;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.define.data.HttpConfig;
-import com.tenio.core.network.define.data.PathConfig;
 import com.tenio.core.network.define.data.SocketConfig;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -48,18 +44,6 @@ import org.w3c.dom.Node;
  * configuration values.
  */
 public abstract class CoreConfiguration extends CommonConfiguration {
-
-  /**
-   * All ports in HTTPs zone.
-   */
-  private final List<HttpConfig> httpConfigs;
-
-  /**
-   * The constructor.
-   */
-  public CoreConfiguration() {
-    httpConfigs = new ArrayList<>();
-  }
 
   /**
    * Reads file content and converts it to configuration values.
@@ -108,9 +92,9 @@ public abstract class CoreConfiguration extends CommonConfiguration {
                   dataNode.getAttributes().getNamedItem("type").getTextContent()),
               Integer.parseInt(dataNode.getTextContent()));
 
-      if (socketConfig.getType() == TransportType.TCP) {
+      if (socketConfig.type() == TransportType.TCP) {
         push(CoreConfigurationType.NETWORK_SOCKET, socketConfig);
-      } else if (socketConfig.getType() == TransportType.WEB_SOCKET) {
+      } else if (socketConfig.type() == TransportType.WEB_SOCKET) {
         push(CoreConfigurationType.NETWORK_WEBSOCKET, socketConfig);
       }
     }
@@ -118,25 +102,11 @@ public abstract class CoreConfiguration extends CommonConfiguration {
     var attrNetworkHttps = XmlUtility.getNodeList(root, "//Server/Network/Http/Port");
     for (int i = 0; i < attrNetworkHttps.getLength(); i++) {
       var portNode = attrNetworkHttps.item(i);
-      var port = new HttpConfig(portNode.getAttributes().getNamedItem("name").getTextContent(),
-          Integer.parseInt(portNode.getAttributes().getNamedItem("value").getTextContent()));
-
-      var attrHttpPaths = XmlUtility.getNodeList(attrNetworkHttps.item(i), "//Path");
-      for (int j = 0; j < attrHttpPaths.getLength(); j++) {
-        var pathNode = attrHttpPaths.item(j);
-        var path = new PathConfig(pathNode.getAttributes().getNamedItem("name").getTextContent(),
-            RestMethod.getByValue(
-                pathNode.getAttributes().getNamedItem("method").getTextContent()),
-            pathNode.getTextContent(),
-            pathNode.getAttributes().getNamedItem("desc").getTextContent(),
-            Integer.parseInt(pathNode.getAttributes().getNamedItem("version").getTextContent()));
-
-        port.addPath(path);
-      }
-
-      httpConfigs.add(port);
+      var httpConfig =
+          new HttpConfig(portNode.getAttributes().getNamedItem("name").getTextContent(),
+              Integer.parseInt(portNode.getAttributes().getNamedItem("value").getTextContent()));
+      push(CoreConfigurationType.NETWORK_HTTP, httpConfig);
     }
-    push(CoreConfigurationType.NETWORK_HTTP_CONFIGS, httpConfigs);
 
     // Implemented Classes
     var attrImplementedClasses = XmlUtility.getNodeList(root, "//Server/Implements/Class");
