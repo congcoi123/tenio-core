@@ -28,7 +28,7 @@ import com.tenio.common.data.DataType;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.manager.AbstractManager;
-import com.tenio.core.network.define.data.SocketConfig;
+import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.netty.websocket.NettyWsInitializer;
@@ -84,7 +84,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
   private SessionManager sessionManager;
   private NetworkReaderStatistic networkReaderStatistic;
   private NetworkWriterStatistic networkWriterStatistic;
-  private SocketConfig socketConfig;
+  private SocketConfiguration socketConfiguration;
   private boolean usingSsl;
 
   private boolean initialized;
@@ -132,16 +132,16 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
             NettyWsInitializer.newInstance(eventManager, sessionManager, connectionFilter, dataType,
                 networkReaderStatistic, sslContext, usingSsl));
 
-    var channelFuture = bootstrap.bind(socketConfig.port()).sync()
+    var channelFuture = bootstrap.bind(socketConfiguration.port()).sync()
         .addListener(future -> {
           if (!future.isSuccess()) {
             error(future.cause());
-            throw new IOException(String.valueOf(socketConfig.port()));
+            throw new IOException(String.valueOf(socketConfiguration.port()));
           }
         });
     serverWebsockets.add(channelFuture.channel());
 
-    info("WEB SOCKET", buildgen("Started at port: ", socketConfig.port()));
+    info("WEB SOCKET", buildgen("Started at port: ", socketConfiguration.port()));
   }
 
   private synchronized void attemptToShutdown() {
@@ -278,8 +278,8 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
   }
 
   @Override
-  public void setWebSocketConfig(SocketConfig socketConfig) {
-    this.socketConfig = socketConfig;
+  public void setWebSocketConfig(SocketConfiguration socketConfiguration) {
+    this.socketConfiguration = socketConfiguration;
   }
 
   @Override

@@ -517,6 +517,7 @@ public final class Injector extends SystemLogger {
       classesMap.clear();
       classBeansMap.clear();
       manualClassesSet.clear();
+      servletBeansMap.clear();
     }
   }
 }

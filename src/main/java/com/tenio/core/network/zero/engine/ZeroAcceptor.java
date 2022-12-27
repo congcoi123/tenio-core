@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine;
 
-import com.tenio.core.network.define.data.SocketConfig;
+import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
 
@@ -72,7 +72,7 @@ public interface ZeroAcceptor extends ZeroEngine {
   /**
    * Declares socket (TCP) configurations for the network.
    *
-   * @param socketConfig an instance of {@link SocketConfig}
+   * @param socketConfiguration an instance of {@link SocketConfiguration}
    */
-  void setSocketConfig(SocketConfig socketConfig);
+  void setSocketConfig(SocketConfiguration socketConfiguration);
 }

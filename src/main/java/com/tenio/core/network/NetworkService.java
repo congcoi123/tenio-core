@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.network;
 
 import com.tenio.common.data.DataType;
-import com.tenio.core.network.define.data.SocketConfig;
+import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.packet.policy.DefaultPacketQueuePolicy;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
@@ -49,19 +49,13 @@ import java.util.Map;
 public interface NetworkService extends Service {
 
   /**
-   * Assigns a port number for the HTTP service.
-   *
-   * @param port the number ({@code integer} value) for the HTTP service
-   */
-  void setHttpPort(int port);
-
-  /**
    * Declares a collection of path configurations for the HTTP service.
    *
+   * @param port       the number ({@code integer} value) for the HTTP service
    * @param servletMap a collection of {@link RestServlet}
    * @see Map
    */
-  void setHttpServletConfigs(Map<String, RestServlet> servletMap);
+  void setHttpConfiguration(int port, Map<String, RestServlet> servletMap);
 
   /**
    * Sets an implementation class for the connection filter.
@@ -198,10 +192,11 @@ public interface NetworkService extends Service {
   /**
    * Declares socket configurations for the network.
    *
-   * @param socketConfig    a {@link SocketConfig} instance for TCP
-   * @param webSocketConfig a {@link SocketConfig} instance for WebSocket
+   * @param socketConfiguration    a {@link SocketConfiguration} instance for TCP
+   * @param webSocketConfiguration a {@link SocketConfiguration} instance for WebSocket
    */
-  void setSocketConfigs(SocketConfig socketConfig, SocketConfig webSocketConfig);
+  void setSocketConfiguration(SocketConfiguration socketConfiguration,
+                              SocketConfiguration webSocketConfiguration);
 
   /**
    * Determines if UDP channels can use KCP transportation for communication.

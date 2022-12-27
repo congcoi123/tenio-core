@@ -22,12 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.define.data;
+package com.tenio.core.network.configuration;
 
 import com.tenio.core.network.define.TransportType;
 
 /**
  * A configuration for a socket.
  */
-public record SocketConfig(String name, TransportType type, int port) {
+public record SocketConfiguration(String name, TransportType type, int port) {
 }

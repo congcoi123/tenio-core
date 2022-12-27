@@ -29,7 +29,7 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RefusedConnectionAddressException;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.network.define.TransportType;
-import com.tenio.core.network.define.data.SocketConfig;
+import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.engine.ZeroAcceptor;
 import com.tenio.core.network.zero.engine.listener.ZeroAcceptorListener;
@@ -64,7 +64,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   private String serverAddress;
   private int amountUdpWorkers;
   private boolean enabledKcp;
-  private SocketConfig socketConfig;
+  private SocketConfiguration socketConfiguration;
 
   private ZeroAcceptorImpl(EventManager eventManager) {
     super(eventManager);
@@ -88,12 +88,12 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     }
 
     // each socket configuration constructs a server socket or an udp datagram
-    bindSocket(socketConfig);
+    bindSocket(socketConfiguration);
   }
 
-  private void bindSocket(SocketConfig socketConfig) throws ServiceRuntimeException {
-    if (socketConfig.type() == TransportType.TCP) {
-      bindTcpSocket(socketConfig.port());
+  private void bindSocket(SocketConfiguration socketConfiguration) throws ServiceRuntimeException {
+    if (socketConfiguration.type() == TransportType.TCP) {
+      bindTcpSocket(socketConfiguration.port());
     }
     if (amountUdpWorkers > 0) {
       bindUdpSocket();
@@ -338,8 +338,8 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
   }
 
   @Override
-  public void setSocketConfig(SocketConfig socketConfig) {
-    this.socketConfig = socketConfig;
+  public void setSocketConfig(SocketConfiguration socketConfiguration) {
+    this.socketConfiguration = socketConfiguration;
   }
 
   @Override

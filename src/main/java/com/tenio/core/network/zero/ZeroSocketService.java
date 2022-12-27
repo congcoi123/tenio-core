@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.network.zero;
 
 import com.tenio.common.data.DataType;
-import com.tenio.core.network.define.data.SocketConfig;
+import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
@@ -146,9 +146,9 @@ public interface ZeroSocketService extends Service {
   /**
    * Declares socket (TCP) configuration for the network.
    *
-   * @param socketConfig an instance of {@link SocketConfig}
+   * @param socketConfiguration an instance of {@link SocketConfiguration}
    */
-  void setSocketConfig(SocketConfig socketConfig);
+  void setSocketConfig(SocketConfiguration socketConfiguration);
 
   /**
    * Sets an instance of packet encoder to encode packets for sending to clients side via the

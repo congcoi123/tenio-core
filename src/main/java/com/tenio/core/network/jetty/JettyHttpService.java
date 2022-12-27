@@ -87,7 +87,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
       info("START SERVICE", buildgen(getName(), " (", 1, ")"));
 
       info("Http Info",
-          buildgen("Started at port: ", port, ", Configuration: ", servletMap.keySet().toString()));
+          buildgen("Started at port: ", port, ", Endpoints: ", servletMap.keySet().toString()));
 
       server.start();
       server.join();

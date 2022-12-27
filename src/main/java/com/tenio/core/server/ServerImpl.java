@@ -43,8 +43,7 @@ import com.tenio.core.entity.manager.implement.RoomManagerImpl;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.NetworkService;
 import com.tenio.core.network.NetworkServiceImpl;
-import com.tenio.core.network.define.data.HttpConfig;
-import com.tenio.core.network.define.data.SocketConfig;
+import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.protocol.Response;
 import com.tenio.core.network.jetty.servlet.RestServlet;
@@ -225,9 +224,10 @@ public final class ServerImpl extends SystemLogger implements Server {
         (Class<? extends ConnectionFilter>) connectionFilterClazz,
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_MAX_CONNECTIONS_PER_IP));
 
-    var httpConfig = configuration.get(CoreConfigurationType.NETWORK_HTTP);
-    networkService.setHttpPort(Objects.nonNull(httpConfig) ? ((HttpConfig) httpConfig).port() : 0);
-    networkService.setHttpServletConfigs(Objects.nonNull(httpConfig) ? servletMap : null);
+    var httpConfiguration = configuration.get(CoreConfigurationType.NETWORK_HTTP);
+    networkService.setHttpConfiguration(Objects.nonNull(httpConfiguration) ?
+            ((SocketConfiguration) httpConfiguration).port() : 0,
+        Objects.nonNull(httpConfiguration) ? servletMap : null);
 
     networkService.setSocketAcceptorServerAddress(
         configuration.getString(CoreConfigurationType.SERVER_ADDRESS));
@@ -243,11 +243,12 @@ public final class ServerImpl extends SystemLogger implements Server {
         configuration.getInt(CoreConfigurationType.WORKER_SOCKET_ACCEPTOR));
 
 
-    networkService.setSocketConfigs(
+    networkService.setSocketConfiguration(
         (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_SOCKET)) ?
-            (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_SOCKET) : null),
+            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_SOCKET) : null),
         (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET)) ?
-            (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) : null));
+            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) :
+            null));
 
     networkService.setSocketReaderBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_READER_BUFFER_SIZE));

@@ -30,8 +30,8 @@ import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
+import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.define.TransportType;
-import com.tenio.core.network.define.data.SocketConfig;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.implement.PacketImpl;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
@@ -165,15 +165,8 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void setHttpPort(int port) {
+  public void setHttpConfiguration(int port, Map<String, RestServlet> servletMap) {
     httpService.setPort(port);
-  }
-
-  @Override
-  public void setHttpServletConfigs(Map<String, RestServlet> servletMap) {
-    if (Objects.isNull(servletMap)) {
-      return;
-    }
     httpService.setServletMap(servletMap);
     httpServiceInitialized = true;
   }
@@ -262,15 +255,16 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void setSocketConfigs(SocketConfig socketConfig, SocketConfig webSocketConfig) {
-    if (Objects.nonNull(socketConfig)) {
+  public void setSocketConfiguration(SocketConfiguration socketConfiguration,
+                                     SocketConfiguration webSocketConfiguration) {
+    if (Objects.nonNull(socketConfiguration)) {
       socketServiceInitialized = true;
-      socketService.setSocketConfig(socketConfig);
+      socketService.setSocketConfig(socketConfiguration);
     }
 
-    if (Objects.nonNull(webSocketConfig)) {
+    if (Objects.nonNull(webSocketConfiguration)) {
       webSocketServiceInitialized = true;
-      webSocketService.setWebSocketConfig(webSocketConfig);
+      webSocketService.setWebSocketConfig(webSocketConfiguration);
     }
   }
 

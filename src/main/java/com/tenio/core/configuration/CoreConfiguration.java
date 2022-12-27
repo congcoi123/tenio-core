@@ -29,9 +29,8 @@ import com.tenio.common.configuration.CommonConfiguration;
 import com.tenio.common.utility.XmlUtility;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.configuration.setting.Setting;
+import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.define.TransportType;
-import com.tenio.core.network.define.data.HttpConfig;
-import com.tenio.core.network.define.data.SocketConfig;
 import java.io.File;
 import java.util.HashMap;
 import org.w3c.dom.Document;
@@ -86,26 +85,19 @@ public abstract class CoreConfiguration extends CommonConfiguration {
     var attrNetworkSockets = XmlUtility.getNodeList(root, "//Server/Network/Sockets/Port");
     for (int j = 0; j < attrNetworkSockets.getLength(); j++) {
       var dataNode = attrNetworkSockets.item(j);
-      var socketConfig =
-          new SocketConfig(dataNode.getAttributes().getNamedItem("name").getTextContent(),
+      var socketConfiguration =
+          new SocketConfiguration(dataNode.getAttributes().getNamedItem("name").getTextContent(),
               TransportType.getByValue(
                   dataNode.getAttributes().getNamedItem("type").getTextContent()),
               Integer.parseInt(dataNode.getTextContent()));
 
-      if (socketConfig.type() == TransportType.TCP) {
-        push(CoreConfigurationType.NETWORK_SOCKET, socketConfig);
-      } else if (socketConfig.type() == TransportType.WEB_SOCKET) {
-        push(CoreConfigurationType.NETWORK_WEBSOCKET, socketConfig);
+      if (socketConfiguration.type() == TransportType.TCP) {
+        push(CoreConfigurationType.NETWORK_SOCKET, socketConfiguration);
+      } else if (socketConfiguration.type() == TransportType.WEB_SOCKET) {
+        push(CoreConfigurationType.NETWORK_WEBSOCKET, socketConfiguration);
+      } else if (socketConfiguration.type() == TransportType.HTTP) {
+        push(CoreConfigurationType.NETWORK_HTTP, socketConfiguration);
       }
-    }
-    // Network HTTP
-    var attrNetworkHttps = XmlUtility.getNodeList(root, "//Server/Network/Http/Port");
-    for (int i = 0; i < attrNetworkHttps.getLength(); i++) {
-      var portNode = attrNetworkHttps.item(i);
-      var httpConfig =
-          new HttpConfig(portNode.getAttributes().getNamedItem("name").getTextContent(),
-              Integer.parseInt(portNode.getAttributes().getNamedItem("value").getTextContent()));
-      push(CoreConfigurationType.NETWORK_HTTP, httpConfig);
     }
 
     // Implemented Classes

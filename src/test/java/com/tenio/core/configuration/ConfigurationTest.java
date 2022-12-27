@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.network.define.TransportType;
-import com.tenio.core.network.define.data.SocketConfig;
+import com.tenio.core.network.configuration.SocketConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -55,8 +55,8 @@ class ConfigurationTest {
   @SuppressWarnings("unchecked")
   @Test
   public void getConfigurationSocketsShouldReturnTrueValue() {
-    var socket = (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_SOCKET);
-    var webSocket = (SocketConfig) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET);
+    var socket = (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_SOCKET);
+    var webSocket = (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET);
     assertAll("getSocketPortsConfiguration",
         () -> assertEquals(8032, socket.port()),
         () -> assertEquals(8033, webSocket.port()),

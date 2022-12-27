@@ -27,7 +27,7 @@ package com.tenio.core.network.zero;
 import com.tenio.common.data.DataType;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
-import com.tenio.core.network.define.data.SocketConfig;
+import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
@@ -229,8 +229,8 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   }
 
   @Override
-  public void setSocketConfig(SocketConfig socketConfig) {
-    acceptorEngine.setSocketConfig(socketConfig);
+  public void setSocketConfig(SocketConfiguration socketConfiguration) {
+    acceptorEngine.setSocketConfig(socketConfiguration);
   }
 
   @Override
