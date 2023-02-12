@@ -234,6 +234,9 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
   private void processSessionReadMessage(Request request) {
     var session = request.getSender();
+    if (!session.isActivated()) {
+      return;
+    }
 
     var player = playerManager.getPlayerBySession(session);
     if (Objects.isNull(player)) {

@@ -48,7 +48,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public final class ZeroWriterImpl extends AbstractZeroEngine
     implements ZeroWriter, ZeroWriterListener {
 
-  private BlockingQueue<Session> sessionTicketsQueue;
+  private final BlockingQueue<Session> sessionTicketsQueue;
   private NetworkWriterStatistic networkWriterStatistic;
   private BinaryPacketEncoder binaryPacketEncoder;
 

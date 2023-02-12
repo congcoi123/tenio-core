@@ -292,12 +292,13 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
     var iterator = packet.getRecipients().iterator();
     while (iterator.hasNext()) {
       var session = iterator.next();
-      session.getWebSocketChannel()
-          .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(packet.getData())));
-
-      session.addWrittenBytes(packet.getOriginalSize());
-      networkWriterStatistic.updateWrittenBytes(packet.getOriginalSize());
-      networkWriterStatistic.updateWrittenPackets(1);
+      if (session.isActivated()) {
+        session.getWebSocketChannel()
+            .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(packet.getData())));
+        session.addWrittenBytes(packet.getOriginalSize());
+        networkWriterStatistic.updateWrittenBytes(packet.getOriginalSize());
+        networkWriterStatistic.updateWrittenPackets(1);
+      }
     }
   }
 }

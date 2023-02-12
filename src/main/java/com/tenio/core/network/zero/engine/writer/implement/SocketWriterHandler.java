@@ -87,7 +87,7 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
       // update statistic data for the session too
       session.addWrittenBytes(realWrittenBytes);
 
-      // the left unwritten bytes should be remain to the queue for next process
+      // the left unwritten bytes should be remained to the queue for next process
       if (realWrittenBytes < expectedWritingBytes) {
         // create new bytes array to hold the left unsent bytes
         byte[] leftUnwrittenBytes = new byte[getBuffer().remaining()];

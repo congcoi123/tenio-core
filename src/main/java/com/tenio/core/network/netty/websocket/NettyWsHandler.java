@@ -117,6 +117,10 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
         eventManager.emit(ServerEvent.SESSION_CREATED, session);
       }
 
+      if (!session.isActivated()) {
+        return;
+      }
+
       session.addReadBytes(binary.length);
       networkReaderStatistic.updateReadBytes(binary.length);
       networkReaderStatistic.updateReadPackets(1);

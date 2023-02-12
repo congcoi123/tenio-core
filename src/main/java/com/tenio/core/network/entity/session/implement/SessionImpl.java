@@ -230,8 +230,8 @@ public final class SessionImpl implements Session {
 
       InetSocketAddress socketAddress =
           (InetSocketAddress) this.socketChannel.socket().getRemoteSocketAddress();
-      InetAddress remoteAdress = socketAddress.getAddress();
-      clientAddress = remoteAdress.getHostAddress();
+      InetAddress remoteAddress = socketAddress.getAddress();
+      clientAddress = remoteAddress.getHostAddress();
       clientPort = socketAddress.getPort();
     }
   }
@@ -337,7 +337,6 @@ public final class SessionImpl implements Session {
       clientAddress = remoteAddress.getHostAddress();
       clientPort = socketAddress.getPort();
     }
-
   }
 
   @Override
@@ -501,6 +500,11 @@ public final class SessionImpl implements Session {
   public void close(ConnectionDisconnectMode connectionDisconnectMode,
                     PlayerDisconnectMode playerDisconnectMode)
       throws IOException {
+    if (!isActivated()) {
+      return;
+    }
+    deactivate();
+
     if (Objects.nonNull(packetQueue)) {
       packetQueue.clear();
       packetQueue = null;
@@ -538,9 +542,7 @@ public final class SessionImpl implements Session {
         break;
     }
 
-    deactivate();
     setConnected(false);
-
     sessionManager.removeSession(this);
   }
 
