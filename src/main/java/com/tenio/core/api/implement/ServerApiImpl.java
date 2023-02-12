@@ -81,9 +81,9 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,
           PlayerLoggedInResult.SUCCESS);
-    } catch (AddedDuplicatedPlayerException e) {
-      error(e, "Logged in with same player name: ", playerName);
-      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, null,
+    } catch (AddedDuplicatedPlayerException exception) {
+      error(exception, "Logged in with same player name: ", playerName);
+      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, exception.getPlayer(),
           PlayerLoggedInResult.DUPLICATED_PLAYER);
     }
   }
@@ -91,20 +91,20 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   @Override
   public void login(String playerName, Session session) {
     try {
-      final var player = getPlayerManager().createPlayerWithSession(playerName, session);
+      Player player = getPlayerManager().createPlayerWithSession(playerName, session);
       session.setName(playerName);
       session.setConnected(true);
       session.activate();
 
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,
           PlayerLoggedInResult.SUCCESS);
-    } catch (NullPointerException e) {
-      error(e, "Unable to find session when logged in with the player name: ", playerName);
+    } catch (NullPointerException exception) {
+      error(exception, "Unable to find session when logged in with the player name: ", playerName);
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, null,
           PlayerLoggedInResult.SESSION_NOT_FOUND);
-    } catch (AddedDuplicatedPlayerException e) {
-      error(e, "Logged in with same player name: ", playerName);
-      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, null,
+    } catch (AddedDuplicatedPlayerException exception) {
+      error(exception, "Logged in with same player name: ", playerName);
+      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, exception.getPlayer(),
           PlayerLoggedInResult.DUPLICATED_PLAYER);
     }
   }
@@ -218,12 +218,11 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       player.setCurrentRoom(room);
       getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
           PlayerJoinedRoomResult.SUCCESS);
-    } catch (PlayerJoinedRoomException e) {
-      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room, e.getResult());
-    } catch (AddedDuplicatedPlayerException e) {
-      error(e, e.getMessage());
-      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
-          PlayerJoinedRoomResult.DUPLICATED_PLAYER);
+    } catch (PlayerJoinedRoomException exception) {
+      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room, exception.getResult());
+    } catch (AddedDuplicatedPlayerException exception) {
+      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, exception.getPlayer(),
+          exception.getRoom(), PlayerJoinedRoomResult.DUPLICATED_PLAYER);
     }
   }
 

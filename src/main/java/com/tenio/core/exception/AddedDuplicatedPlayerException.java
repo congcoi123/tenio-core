@@ -26,6 +26,7 @@ package com.tenio.core.exception;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
+import java.io.Serial;
 import java.util.Objects;
 
 /**
@@ -33,7 +34,11 @@ import java.util.Objects;
  */
 public final class AddedDuplicatedPlayerException extends RuntimeException {
 
+  @Serial
   private static final long serialVersionUID = 1303721781114060707L;
+
+  private final Player player;
+  private final Room room;
 
   /**
    * Initialization.
@@ -46,5 +51,15 @@ public final class AddedDuplicatedPlayerException extends RuntimeException {
         ? String.format("Unable to add player: %s, it already exists", player.getName())
         : String.format("Unable to add player: %s, it already exists in room: %s", player.getName(),
         room.getName()));
+    this.player = player;
+    this.room = room;
+  }
+
+  public Player getPlayer() {
+    return player;
+  }
+
+  public Room getRoom() {
+    return room;
   }
 }
