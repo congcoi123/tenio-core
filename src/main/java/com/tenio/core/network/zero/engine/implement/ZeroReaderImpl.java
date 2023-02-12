@@ -142,16 +142,16 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
       return;
     }
 
-    // when a socket channel is writable, should make it highest priority
+    // when a socket channel is writable, should make it the highest priority
     // manipulation
-    if (selectionKey.isWritable()) {
+    if (selectionKey.isValid() && selectionKey.isWritable()) {
       // should continue put this session for sending all left packets first
       zeroWriterListener.continueWriteInterestOp(session);
       // now we should set it back to interest in OP_READ
       selectionKey.interestOps(SelectionKey.OP_READ);
     }
 
-    if (selectionKey.isReadable()) {
+    if (selectionKey.isValid() && selectionKey.isReadable()) {
       // prepares the buffer first
       readerBuffer.clear();
       // reads data from socket and write them to buffer
@@ -201,7 +201,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
     Session session = null;
 
-    if (selectionKey.isReadable()) {
+    if (selectionKey.isValid() && selectionKey.isReadable()) {
       // prepares the buffer first
       readerBuffer.clear();
       // reads data from socket and write them to buffer
@@ -249,7 +249,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
       }
     }
 
-    if (selectionKey.isWritable() && Objects.nonNull(session)) {
+    if (selectionKey.isValid() && selectionKey.isWritable() && Objects.nonNull(session)) {
       // should continue put this session for sending all left packets first
       zeroWriterListener.continueWriteInterestOp(session);
       // now we should set it back to interest in OP_READ

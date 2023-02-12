@@ -251,10 +251,6 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   NETWORK_PROP_MAX_CONNECTIONS_PER_IP("max-connections-per-ip"),
   /**
-   * Allows a player can log in a different session then the new session will replace the old one.
-   */
-  NETWORK_PROP_ALLOW_CHANGE_SESSION("allow-change-session"),
-  /**
    * Allows using KCP transportation in UDP channels.
    *
    * @since 0.3.0

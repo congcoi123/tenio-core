@@ -31,6 +31,7 @@ import com.tenio.common.data.zero.ZeroArray;
 import com.tenio.common.data.zero.ZeroMap;
 import com.tenio.common.data.zero.utility.ZeroUtility;
 import com.tenio.common.logger.AbstractLogger;
+import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.entity.setting.InitialRoomSetting;
 import com.tenio.core.exception.UnsupportedDataTypeInUseException;
@@ -42,7 +43,7 @@ import com.tenio.core.server.ServerImpl;
 /**
  * This class provides all the necessary APIs for a logic game handling.
  */
-public abstract class AbstractHandler extends AbstractLogger {
+public abstract class AbstractHandler extends SystemLogger {
 
   private final Server server = ServerImpl.getInstance();
 

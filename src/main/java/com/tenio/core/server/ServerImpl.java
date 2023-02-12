@@ -335,7 +335,7 @@ public final class ServerImpl extends SystemLogger implements Server {
         configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP
         ));
     internalProcessorService.setKeepPlayerOnDisconnection(
-        !configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ALLOW_CHANGE_SESSION));
+        configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION));
 
     internalProcessorService.setNetworkReaderStatistic(networkService.getNetworkReaderStatistic());
     internalProcessorService.setNetworkWriterStatistic(networkService.getNetworkWriterStatistic());
