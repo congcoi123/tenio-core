@@ -47,14 +47,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
 import org.reflections.Reflections;
 
@@ -73,7 +72,6 @@ public final class Injector extends SystemLogger {
    *
    * <p>This map is protected by the class instance to ensure thread-safe.
    */
-  @GuardedBy("this")
   private final Map<Class<?>, Class<?>> classesMap;
   /**
    * A map has keys are {@link #classesMap}'s key implemented classes and the value are keys'
@@ -81,16 +79,12 @@ public final class Injector extends SystemLogger {
    *
    * <p>This map is protected by the class instance to ensure thread-safe.
    */
-  @GuardedBy("this")
   private final Map<BeanClass, Object> classBeansMap;
   /**
    * A set of classes that are created by {@link Bean} and {@link BeanFactory} annotations.
    * This map is protected by the class instance to ensure thread-safe.
    */
-  @GuardedBy("this")
   private final Set<Class<?>> manualClassesSet;
-
-  @GuardedBy("this")
   private final Map<String, RestServlet> servletBeansMap;
 
   private Injector() {
@@ -98,10 +92,10 @@ public final class Injector extends SystemLogger {
       throw new ExceptionInInitializerError("Could not re-create the class instance");
     }
 
-    classesMap = new HashMap<>();
-    manualClassesSet = new HashSet<>();
-    classBeansMap = new HashMap<>();
-    servletBeansMap = new HashMap<>();
+    classesMap = new ConcurrentHashMap<>();
+    manualClassesSet = new ConcurrentHashMap<Class<?>, Boolean>().newKeySet();
+    classBeansMap = new ConcurrentHashMap<>();
+    servletBeansMap = new ConcurrentHashMap<>();
   }
 
   /**
@@ -375,23 +369,21 @@ public final class Injector extends SystemLogger {
     // check classes annotated by @Component and fields annotated by @Autowired
     var implementedClass = getImplementedClass(classInterface, fieldName, classQualifier);
 
-    synchronized (classBeansMap) {
-      var beanClass = new BeanClass(implementedClass, nameQualifier);
-      if (classBeansMap.containsKey(beanClass)) {
-        return classBeansMap.get(beanClass);
-      }
-
-      if (Objects.nonNull(implementedClass) && !manualClassesSet.contains(beanClass)) {
-        if (classBeansMap.containsKey(beanClass)) {
-          throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
-        }
-        var bean = implementedClass.getDeclaredConstructor().newInstance();
-        classBeansMap.put(beanClass, bean);
-        return bean;
-      }
-
-      return null;
+    var beanClass = new BeanClass(implementedClass, nameQualifier);
+    if (classBeansMap.containsKey(beanClass)) {
+      return classBeansMap.get(beanClass);
     }
+
+    if (Objects.nonNull(implementedClass) && !manualClassesSet.contains(beanClass)) {
+      if (classBeansMap.containsKey(beanClass)) {
+        throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
+      }
+      var bean = implementedClass.getDeclaredConstructor().newInstance();
+      classBeansMap.put(beanClass, bean);
+      return bean;
+    }
+
+    return null;
   }
 
   private boolean isClassAnnotated(Class<?> clazz, Class<?>[] annotations) {
@@ -513,12 +505,10 @@ public final class Injector extends SystemLogger {
    * Clear all references and beans created by the injector.
    */
   private void reset() {
-    synchronized (this) {
-      classesMap.clear();
-      classBeansMap.clear();
-      manualClassesSet.clear();
-      servletBeansMap.clear();
-    }
+    classesMap.clear();
+    classBeansMap.clear();
+    manualClassesSet.clear();
+    servletBeansMap.clear();
   }
 }
 

@@ -392,6 +392,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     eventManager.emit(ServerEvent.SERVER_TEARDOWN, serverName);
     shutdownServices();
     info("SERVER", serverName, "Stopped");
+    Runtime.getRuntime().halt(0);
   }
 
   private void shutdownServices() {
