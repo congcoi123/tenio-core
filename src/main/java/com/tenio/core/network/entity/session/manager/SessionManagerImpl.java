@@ -32,6 +32,7 @@ import com.tenio.core.network.entity.packet.implement.PacketQueueImpl;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.implement.SessionImpl;
+import com.tenio.core.network.security.filter.ConnectionFilter;
 import io.netty.channel.Channel;
 import java.lang.reflect.InvocationTargetException;
 import java.net.SocketAddress;
@@ -61,9 +62,11 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   @GuardedBy("this")
   private final Map<SocketAddress, Session> sessionByDatagrams;
   private PacketQueuePolicy packetQueuePolicy;
+  private ConnectionFilter connectionFilter;
   private int packetQueueSize;
   private boolean enabledKcp;
   private volatile int sessionCount;
+  private int maxIdleTime;
 
   private SessionManagerImpl(EventManager eventManager) {
     super(eventManager);
@@ -76,6 +79,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     sessionCount = 0;
     packetQueueSize = DEFAULT_PACKET_QUEUE_SIZE;
     packetQueuePolicy = null;
+    connectionFilter = null;
   }
 
   public static SessionManager newInstance(EventManager eventManager) {
@@ -96,7 +100,9 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     session.setSelectionKey(selectionKey);
     session.setSessionManager(this);
     session.setPacketQueue(createNewPacketQueue());
+    session.setConnectionFilter(connectionFilter);
     session.setEnabledKcp(enabledKcp);
+    session.setMaxIdleTimeInSeconds(maxIdleTime);
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
       sessionBySockets.put(session.getSocketChannel(), session);
@@ -140,11 +146,18 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   }
 
   @Override
+  public void setConnectionFilter(ConnectionFilter connectionFilter) {
+    this.connectionFilter = connectionFilter;
+  }
+
+  @Override
   public Session createWebSocketSession(Channel webSocketChannel) {
     var session = SessionImpl.newInstance();
     session.setWebSocketChannel(webSocketChannel);
     session.setSessionManager(this);
     session.setPacketQueue(createNewPacketQueue());
+    session.setConnectionFilter(connectionFilter);
+    session.setMaxIdleTimeInSeconds(maxIdleTime);
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
       sessionByWebSockets.put(webSocketChannel, session);
@@ -224,5 +237,10 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   @Override
   public void setEnabledKcp(boolean enabledKcp) {
     this.enabledKcp = enabledKcp;
+  }
+
+  @Override
+  public void setMaxIdleTimeInSeconds(int seconds) {
+    maxIdleTime = seconds;
   }
 }

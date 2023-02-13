@@ -33,6 +33,7 @@ import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.packet.policy.DefaultPacketQueuePolicy;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.network.security.filter.ConnectionFilter;
 import io.netty.channel.Channel;
 import java.lang.reflect.InvocationTargetException;
 import java.net.SocketAddress;
@@ -129,6 +130,13 @@ public interface SessionManager extends Manager {
   Session getSessionByDatagram(SocketAddress remoteAddress);
 
   /**
+   * Sets an instance for the connection filter.
+   *
+   * @param connectionFilter an instance of {@link ConnectionFilter}
+   */
+  void setConnectionFilter(ConnectionFilter connectionFilter);
+
+  /**
    * Emits an event on the server.
    *
    * @param event  the valid {@link ServerEvent} is using on the server
@@ -191,4 +199,13 @@ public interface SessionManager extends Manager {
    * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}
    */
   void setEnabledKcp(boolean enabledKcp);
+
+  /**
+   * Sets the maximum time in seconds which allows the session to get in IDLE state (Do not
+   * perform any action, such as reading or writing data).
+   *
+   * @param seconds the maximum time in seconds ({@code integer} value) which allows the
+   *                session to get in IDLE state
+   */
+  void setMaxIdleTimeInSeconds(int seconds);
 }

@@ -30,6 +30,7 @@ import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.entity.kcp.Ukcp;
+import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.codec.packet.PacketReadState;
 import com.tenio.core.network.zero.codec.packet.PendingPacket;
 import com.tenio.core.network.zero.codec.packet.ProcessedPacket;
@@ -273,6 +274,13 @@ public interface Session {
    */
   void setWebSocketChannel(Channel webSocketChannel)
       throws IllegalArgumentException, IllegalCallerException;
+
+  /**
+   * Sets an instance for the connection filter.
+   *
+   * @param connectionFilter an instance of {@link ConnectionFilter}
+   */
+  void setConnectionFilter(ConnectionFilter connectionFilter);
 
   /**
    * Retrieves the creation time of session.

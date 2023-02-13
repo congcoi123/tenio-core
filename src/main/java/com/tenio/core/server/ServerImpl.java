@@ -287,6 +287,8 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     networkService.setSessionEnabledKcp(
         configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP));
+    networkService.setSessionMaxIdleTimeInSeconds(
+        configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
 
     final var binaryPacketCompressorClazz = Class
         .forName(configuration.getString(CoreConfigurationType.CLASS_PACKET_COMPRESSOR).strip());

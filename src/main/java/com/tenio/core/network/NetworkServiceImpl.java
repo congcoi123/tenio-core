@@ -182,6 +182,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
 
     webSocketService.setConnectionFilter(connectionFilter);
     socketService.setConnectionFilter(connectionFilter);
+    sessionManager.setConnectionFilter(connectionFilter);
   }
 
   @Override
@@ -271,6 +272,11 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   @Override
   public void setSessionEnabledKcp(boolean enabledKcp) {
     sessionManager.setEnabledKcp(enabledKcp);
+  }
+
+  @Override
+  public void setSessionMaxIdleTimeInSeconds(int seconds) {
+    sessionManager.setMaxIdleTimeInSeconds(seconds);
   }
 
   @Override

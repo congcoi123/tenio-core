@@ -57,6 +57,6 @@ public final class SystemMonitoringTask extends AbstractSystemTask {
         () -> eventManager.emit(ServerEvent.SYSTEM_MONITORING, systemMonitoring.getCpuUsage(),
             systemMonitoring.getTotalMemory(), systemMonitoring.getUsedMemory(),
             systemMonitoring.getFreeMemory(),
-            systemMonitoring.countRunningThreads()), 0, interval, TimeUnit.SECONDS);
+            systemMonitoring.countRunningThreads()), initialDelay, interval, TimeUnit.SECONDS);
   }
 }

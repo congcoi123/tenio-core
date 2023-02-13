@@ -206,6 +206,15 @@ public interface NetworkService extends Service {
   void setSessionEnabledKcp(boolean enabledKcp);
 
   /**
+   * Sets the maximum time in seconds which allows the session to get in IDLE state (Do not
+   * perform any action, such as reading or writing data).
+   *
+   * @param seconds the maximum time in seconds ({@code integer} value) which allows the
+   *                session to get in IDLE state
+   */
+  void setSessionMaxIdleTimeInSeconds(int seconds);
+
+  /**
    * Sets a packet queue policy class for the network.
    *
    * @param clazz the implementation class of {@link PacketQueuePolicy} used to apply rules for

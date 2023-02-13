@@ -24,10 +24,16 @@ THE SOFTWARE.
 
 package com.tenio.core.schedule.task.internal;
 
+import com.tenio.core.entity.Player;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.schedule.task.AbstractSystemTask;
+import com.tenio.core.server.ServerImpl;
+import java.util.Iterator;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * For a player which is in IDLE mode, that means for a long time without
@@ -36,6 +42,8 @@ import java.util.concurrent.ScheduledFuture;
  * players got a "timeout" error.
  */
 public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
+
+  private PlayerManager playerManager;
 
   private AutoDisconnectPlayerTask(EventManager eventManager) {
     super(eventManager);
@@ -47,7 +55,19 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    return null;
+    return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+        () -> {
+          Iterator<Player> iterator = playerManager.getPlayerIterator();
+          while (iterator.hasNext()) {
+            Player player = iterator.next();
+            if (player.containsSession()) {
+              Session session = player.getSession().get();
+              if (session.isIdle()) {
+                ServerImpl.getInstance().getApi().logout(player);
+              }
+            }
+          }
+        }, initialDelay, interval, TimeUnit.SECONDS);
   }
 
   /**
@@ -56,5 +76,6 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
    * @param playerManager the player manager
    */
   public void setPlayerManager(PlayerManager playerManager) {
+    this.playerManager = playerManager;
   }
 }

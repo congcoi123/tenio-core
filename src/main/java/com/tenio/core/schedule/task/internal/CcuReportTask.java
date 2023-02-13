@@ -52,7 +52,7 @@ public final class CcuReportTask extends AbstractSystemTask {
   @Override
   public ScheduledFuture<?> run() {
     return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-        () -> eventManager.emit(ServerEvent.FETCHED_CCU_INFO, playerManager.getPlayerCount()), 0,
+        () -> eventManager.emit(ServerEvent.FETCHED_CCU_INFO, playerManager.getPlayerCount()), initialDelay,
         interval, TimeUnit.SECONDS);
   }
 

@@ -34,6 +34,7 @@ import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.entity.kcp.Ukcp;
+import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.codec.packet.PacketReadState;
 import com.tenio.core.network.zero.codec.packet.PendingPacket;
 import com.tenio.core.network.zero.codec.packet.ProcessedPacket;
@@ -67,6 +68,7 @@ public final class SessionImpl implements Session {
   private DatagramChannel datagramChannel;
   private Ukcp ukcp;
   private Channel webSocketChannel;
+  private ConnectionFilter connectionFilter;
 
   private TransportType transportType;
   private PacketReadState packetReadState;
@@ -104,6 +106,7 @@ public final class SessionImpl implements Session {
 
     transportType = TransportType.UNKNOWN;
     packetQueue = null;
+    connectionFilter = null;
 
     readBytes = new AtomicLong(0L);
     writtenBytes = new AtomicLong(0L);
@@ -340,6 +343,11 @@ public final class SessionImpl implements Session {
   }
 
   @Override
+  public void setConnectionFilter(ConnectionFilter connectionFilter) {
+    this.connectionFilter = connectionFilter;
+  }
+
+  @Override
   public long getCreatedTime() {
     return createdTime;
   }
@@ -431,7 +439,6 @@ public final class SessionImpl implements Session {
       long elapsedSinceLastActivity = TimeUtility.currentTimeMillis() - getLastActivityTime();
       return elapsedSinceLastActivity / 1000L > (long) getMaxIdleTimeInSeconds();
     }
-
     return false;
   }
 
@@ -505,14 +512,15 @@ public final class SessionImpl implements Session {
     }
     deactivate();
 
+    connectionFilter.removeAddress(clientAddress);
+
     if (Objects.nonNull(packetQueue)) {
       packetQueue.clear();
       packetQueue = null;
     }
 
     getSessionManager().emitEvent(ServerEvent.SESSION_WILL_BE_CLOSED, this,
-        connectionDisconnectMode,
-        playerDisconnectMode);
+        connectionDisconnectMode, playerDisconnectMode);
 
     if (hasKcp) {
       ukcp.getKcpIoHandler().channelInactiveIn(this);

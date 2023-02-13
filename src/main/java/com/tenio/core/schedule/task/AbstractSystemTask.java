@@ -33,6 +33,7 @@ import com.tenio.core.event.implement.EventManager;
  */
 public abstract class AbstractSystemTask extends SystemLogger implements Task {
 
+  private static final int DEFAULT_INITIAL_DELAY_IN_SECONDS = 60;
   private static final int DEFAULT_INTERVAL_IN_SECONDS = 60;
 
   /**
@@ -43,6 +44,10 @@ public abstract class AbstractSystemTask extends SystemLogger implements Task {
    * The interval value.
    */
   protected int interval;
+  /**
+   * The initial delay time. The task should wait a little until the system becomes stable.
+   */
+  protected int initialDelay;
 
   /**
    * Initialization.
@@ -52,6 +57,7 @@ public abstract class AbstractSystemTask extends SystemLogger implements Task {
   protected AbstractSystemTask(EventManager eventManager) {
     this.eventManager = eventManager;
     interval = DEFAULT_INTERVAL_IN_SECONDS;
+    initialDelay = DEFAULT_INITIAL_DELAY_IN_SECONDS;
   }
 
   /**

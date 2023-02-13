@@ -56,7 +56,7 @@ public final class DeadlockScanTask extends AbstractSystemTask {
   @Override
   public ScheduledFuture<?> run() {
     return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-        this::checkForDeadlockedThreads, 0, interval, TimeUnit.SECONDS);
+        this::checkForDeadlockedThreads, initialDelay, interval, TimeUnit.SECONDS);
   }
 
   private void checkForDeadlockedThreads() {

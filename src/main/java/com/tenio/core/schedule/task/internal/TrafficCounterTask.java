@@ -58,7 +58,7 @@ public final class TrafficCounterTask extends AbstractSystemTask {
             networkReaderStatistic.getReadDroppedPackets(),
             networkWriterStatistic.getWrittenBytes(), networkWriterStatistic.getWrittenPackets(),
             networkWriterStatistic.getWrittenDroppedPacketsByPolicy(),
-            networkWriterStatistic.getWrittenDroppedPacketsByFull()), 0, interval,
+            networkWriterStatistic.getWrittenDroppedPacketsByFull()), initialDelay, interval,
         TimeUnit.SECONDS);
   }
 
