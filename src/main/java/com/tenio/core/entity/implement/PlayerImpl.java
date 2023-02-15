@@ -53,7 +53,6 @@ public final class PlayerImpl implements Player {
 
   private volatile boolean loggedIn;
   private volatile boolean activated;
-  private volatile boolean hasSession;
 
   private PlayerImpl(String name) {
     this(name, null);
@@ -99,7 +98,7 @@ public final class PlayerImpl implements Player {
 
   @Override
   public boolean containsSession() {
-    return hasSession;
+    return Objects.nonNull(session);
   }
 
   @Override
@@ -157,7 +156,6 @@ public final class PlayerImpl implements Player {
   @Override
   public void setSession(Session session) {
     this.session = session;
-    hasSession = Objects.nonNull(this.session);
   }
 
   @Override
@@ -245,10 +243,9 @@ public final class PlayerImpl implements Player {
 
   @Override
   public boolean equals(Object object) {
-    if (!(object instanceof Player)) {
+    if (!(object instanceof Player player)) {
       return false;
     } else {
-      var player = (Player) object;
       return getName().equals(player.getName());
     }
   }
@@ -275,7 +272,6 @@ public final class PlayerImpl implements Player {
         ", playerSlotInCurrentRoom=" + playerSlotInCurrentRoom +
         ", loggedIn=" + loggedIn +
         ", activated=" + activated +
-        ", hasSession=" + hasSession +
         '}';
   }
 }

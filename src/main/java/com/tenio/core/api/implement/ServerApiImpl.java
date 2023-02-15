@@ -98,14 +98,16 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,
           PlayerLoggedInResult.SUCCESS);
-    } catch (NullPointerException exception) {
-      error(exception, "Unable to find session when logged in with the player name: ", playerName);
-      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, null,
-          PlayerLoggedInResult.SESSION_NOT_FOUND);
-    } catch (AddedDuplicatedPlayerException exception) {
-      error(exception, "Logged in with same player name: ", playerName);
-      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, exception.getPlayer(),
-          PlayerLoggedInResult.DUPLICATED_PLAYER);
+    } catch (Exception exception) {
+      if (exception instanceof AddedDuplicatedPlayerException duplicatedPlayerException) {
+        error(exception, "Logged in with same player name: ", playerName);
+        getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, duplicatedPlayerException.getPlayer(),
+            PlayerLoggedInResult.DUPLICATED_PLAYER);
+        return;
+      }
+      error(exception, "On the player: " + playerName);
+      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT,
+          getPlayerByName(playerName).orElse(null), PlayerLoggedInResult.EXCEPTION);
     }
   }
 

@@ -165,7 +165,7 @@ class ServerApiTest {
     serverApi.login(loginName, loginSession);
     Mockito.verify(eventManager, Mockito.times(1))
         .emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, null,
-            PlayerLoggedInResult.SESSION_NOT_FOUND);
+            PlayerLoggedInResult.EXCEPTION);
   }
 
   @Test
