@@ -22,26 +22,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.command.implement;
+package com.tenio.core.exception;
 
-import com.tenio.core.bootstrap.annotation.Command;
-import com.tenio.core.command.AbstractCommandHandler;
-import com.tenio.core.utility.CommandUtility;
-import java.util.List;
+import com.tenio.core.command.client.AbstractClientCommandHandler;
+import com.tenio.core.command.system.AbstractCommandHandler;
+import java.io.Serial;
 
 /**
- * Allows stopping or restarting the server.
- *
- * @since 0.4.0
+ * When a command which existed on the server is added again.
  */
-@Command(label = "server", usage = {
-    "stop",
-    "restart",
-}, description = "Allows stopping or restarting the server", isBackgroundRunning = true)
-public final class ServerCommand extends AbstractCommandHandler {
+public final class AddedDuplicatedClientCommandException extends RuntimeException {
 
-  @Override
-  public void execute(List<String> args) {
-    CommandUtility.INSTANCE.showConsoleMessage("The feature is not available at the moment.");
+  @Serial
+  private static final long serialVersionUID = -7382760841366549333L;
+
+  /**
+   * When a command which existed on the server is added again.
+   *
+   * @param code           the unique command's label
+   * @param commandHandler the available {@link AbstractCommandHandler} instance
+   */
+  public AddedDuplicatedClientCommandException(Short code,
+                                               AbstractClientCommandHandler commandHandler) {
+    super(
+        String.format("Unable to add label {%d}, it already exists > {%s}",
+            code, commandHandler.toString()));
   }
 }

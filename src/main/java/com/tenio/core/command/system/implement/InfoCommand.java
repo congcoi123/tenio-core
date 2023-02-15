@@ -22,10 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.command.implement;
+package com.tenio.core.command.system.implement;
 
 import com.tenio.core.bootstrap.annotation.Command;
-import com.tenio.core.command.AbstractCommandHandler;
+import com.tenio.core.command.system.AbstractCommandHandler;
 import com.tenio.core.utility.CommandUtility;
 import java.util.List;
 

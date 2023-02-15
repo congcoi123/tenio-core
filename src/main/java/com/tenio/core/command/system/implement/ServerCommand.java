@@ -22,27 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.exception;
+package com.tenio.core.command.system.implement;
 
+import com.tenio.core.bootstrap.annotation.Command;
 import com.tenio.core.command.system.AbstractCommandHandler;
-import java.io.Serial;
+import com.tenio.core.utility.CommandUtility;
+import java.util.List;
 
 /**
- * When a command which existed on the server is added again.
+ * Allows stopping or restarting the server.
+ *
+ * @since 0.4.0
  */
-public final class AddedDuplicatedCommandException extends RuntimeException {
+@Command(label = "server", usage = {
+    "stop",
+    "restart",
+}, description = "Allows stopping or restarting the server", isBackgroundRunning = true)
+public final class ServerCommand extends AbstractCommandHandler {
 
-  @Serial
-  private static final long serialVersionUID = -6883613310996390619L;
-
-  /**
-   * When a command which existed on the server is added again.
-   *
-   * @param label          the unique command's label
-   * @param commandHandler the available {@link AbstractCommandHandler} instance
-   */
-  public AddedDuplicatedCommandException(String label, AbstractCommandHandler commandHandler) {
-    super(
-        String.format("Unable to add label {%s}, it already exists > {%s}", label, commandHandler.toString()));
+  @Override
+  public void execute(List<String> args) {
+    CommandUtility.INSTANCE.showConsoleMessage("The feature is not available at the moment.");
   }
 }

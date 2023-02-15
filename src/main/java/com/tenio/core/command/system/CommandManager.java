@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.command;
+package com.tenio.core.command.system;
 
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.annotation.Command;
@@ -30,14 +30,12 @@ import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.exception.AddedDuplicatedCommandException;
 import com.tenio.core.utility.CommandUtility;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import org.reflections.Reflections;
 
 /**
  * The commands' management class.
@@ -151,56 +149,7 @@ public final class CommandManager extends SystemLogger {
     }
   }
 
-  /**
-   * Scans for all classes annotated with {@link Command} and registers them.
-   *
-   * @param entryClass the root class which should be located in the parent package of other
-   *                   class' packages
-   * @param packages   a list of packages' names. It allows to define the scanning packages by
-   *                   their names
-   * @throws IllegalArgumentException it is related to the illegal argument exception
-   * @throws SecurityException        it is related to the security exception
-   */
-  public void scanPackages(Class<?> entryClass, String... packages)
-      throws IllegalArgumentException, SecurityException {
-
-    // clean maps data first
+  public void clear() {
     commands.clear();
-    annotations.clear();
-
-    // start scanning
-    var setPackageNames = new HashSet<String>();
-
-    if (Objects.nonNull(entryClass)) {
-      setPackageNames.add(entryClass.getPackage().getName());
-    }
-
-    if (Objects.nonNull(packages)) {
-      setPackageNames.addAll(Arrays.asList(packages));
-    }
-
-    // declares a reflection object based on the package of root class
-    var reflections = new Reflections();
-    for (var packageName : setPackageNames) {
-      var reflectionPackage = new Reflections(packageName);
-      reflections.merge(reflectionPackage);
-    }
-
-    var classes = reflections.getTypesAnnotatedWith(Command.class);
-    classes.forEach(annotated -> {
-      try {
-        var commandData = annotated.getAnnotation(Command.class);
-        var object = annotated.getDeclaredConstructor().newInstance();
-        if (object instanceof AbstractCommandHandler command) {
-          command.setCommandManager(this);
-          registerCommand(commandData.label(), command);
-        } else {
-          error(new IllegalArgumentException("Class " + annotated.getName() + " is not a " +
-              "AbstractCommandHandler"));
-        }
-      } catch (Exception exception) {
-        error(exception, "Failed to register command handler for " + annotated.getSimpleName());
-      }
-    });
   }
 }

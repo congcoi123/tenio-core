@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.command;
+package com.tenio.core.command.system;
 
 import com.tenio.core.bootstrap.annotation.Command;
 import com.tenio.core.handler.AbstractHandler;

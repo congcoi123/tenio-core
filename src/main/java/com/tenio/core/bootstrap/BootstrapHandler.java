@@ -27,7 +27,7 @@ package com.tenio.core.bootstrap;
 import com.tenio.core.bootstrap.annotation.Autowired;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
-import com.tenio.core.command.CommandManager;
+import com.tenio.core.command.system.CommandManager;
 import com.tenio.core.event.handler.EventHandler;
 import com.tenio.core.network.jetty.servlet.RestServlet;
 import java.util.Map;
@@ -83,5 +83,9 @@ public final class BootstrapHandler {
 
   public void setServletMap(Map<String, RestServlet> servletMap) {
     this.servletMap = servletMap;
+  }
+
+  public void setCommandManager(CommandManager commandManager) {
+    this.commandManager = commandManager;
   }
 }

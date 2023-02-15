@@ -32,11 +32,14 @@ import com.tenio.core.bootstrap.annotation.AutowiredAcceptNull;
 import com.tenio.core.bootstrap.annotation.AutowiredQualifier;
 import com.tenio.core.bootstrap.annotation.Bean;
 import com.tenio.core.bootstrap.annotation.BeanFactory;
+import com.tenio.core.bootstrap.annotation.Command;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.annotation.EventHandler;
 import com.tenio.core.bootstrap.annotation.RestController;
 import com.tenio.core.bootstrap.annotation.RestMapping;
 import com.tenio.core.bootstrap.annotation.Setting;
+import com.tenio.core.command.system.AbstractCommandHandler;
+import com.tenio.core.command.system.CommandManager;
 import com.tenio.core.exception.DuplicatedBeanCreationException;
 import com.tenio.core.exception.IllegalDefinedAccessControlException;
 import com.tenio.core.exception.IllegalReturnTypeException;
@@ -85,7 +88,14 @@ public final class Injector extends SystemLogger {
    * This map is protected by the class instance to ensure thread-safe.
    */
   private final Set<Class<?>> manualClassesSet;
+  /**
+   * A map is using to initialize restful servlets.
+   */
   private final Map<String, RestServlet> servletBeansMap;
+  /**
+   * The object manages all supported system commands.
+   */
+  private final CommandManager commandManager;
 
   private Injector() {
     if (Objects.nonNull(instance)) {
@@ -93,9 +103,10 @@ public final class Injector extends SystemLogger {
     }
 
     classesMap = new ConcurrentHashMap<>();
-    manualClassesSet = new ConcurrentHashMap<Class<?>, Boolean>().newKeySet();
+    manualClassesSet = ConcurrentHashMap.newKeySet();
     classBeansMap = new ConcurrentHashMap<>();
     servletBeansMap = new ConcurrentHashMap<>();
+    commandManager = new CommandManager();
   }
 
   /**
@@ -297,6 +308,20 @@ public final class Injector extends SystemLogger {
             }
           }
         }
+      } else if (clazz.isAnnotationPresent(Command.class)) {
+        try {
+          var commandData = clazz.getAnnotation(Command.class);
+          var object = clazz.getDeclaredConstructor().newInstance();
+          if (object instanceof AbstractCommandHandler command) {
+            command.setCommandManager(commandManager);
+            commandManager.registerCommand(commandData.label(), command);
+          } else {
+            error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
+                "AbstractCommandHandler"));
+          }
+        } catch (Exception exception) {
+          error(exception, "Failed to register command handler for " + clazz.getSimpleName());
+        }
       }
     }
 
@@ -330,6 +355,10 @@ public final class Injector extends SystemLogger {
 
   public Map<String, RestServlet> getServletBeansMap() {
     return servletBeansMap;
+  }
+
+  public CommandManager getCommandManager() {
+    return commandManager;
   }
 
   /**
@@ -509,6 +538,7 @@ public final class Injector extends SystemLogger {
     classBeansMap.clear();
     manualClassesSet.clear();
     servletBeansMap.clear();
+    commandManager.clear();
   }
 }
 

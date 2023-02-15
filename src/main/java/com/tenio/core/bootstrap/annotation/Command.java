@@ -27,8 +27,8 @@ package com.tenio.core.bootstrap.annotation;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import com.tenio.core.command.AbstractCommandHandler;
-import com.tenio.core.command.CommandManager;
+import com.tenio.core.command.system.AbstractCommandHandler;
+import com.tenio.core.command.system.CommandManager;
 import com.tenio.core.exception.AddedDuplicatedCommandException;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;

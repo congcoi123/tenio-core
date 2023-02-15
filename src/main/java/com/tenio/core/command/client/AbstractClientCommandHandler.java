@@ -22,25 +22,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.command.implement;
+package com.tenio.core.command.client;
 
-import com.tenio.core.bootstrap.annotation.Command;
-import com.tenio.core.command.AbstractCommandHandler;
-import com.tenio.core.utility.CommandUtility;
-import java.util.List;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.data.ServerMessage;
+import com.tenio.core.handler.AbstractHandler;
 
 /**
- * Allows removing banned Ip addresses from the ban list.
+ * The base class for all self defined commands.
  *
  * @since 0.4.0
  */
-@Command(label = "unban", usage = {
-    "[<address>,<command>,<command>]"
-}, description = "Allows removing banned Ip addresses from the ban list")
-public final class UnBanAddressCommand extends AbstractCommandHandler {
+public abstract class AbstractClientCommandHandler extends AbstractHandler {
 
-  @Override
-  public void execute(List<String> args) {
-    CommandUtility.INSTANCE.showConsoleMessage("The feature is not available at the moment.");
+  private ClientCommandManager clientCommandManager;
+
+  public ClientCommandManager getCommandManager() {
+    return clientCommandManager;
   }
+
+  public void setCommandManager(ClientCommandManager clientCommandManager) {
+    this.clientCommandManager = clientCommandManager;
+  }
+
+  /**
+   * It is called when the server invokes a command.
+   *
+   * @param args The arguments to the command
+   */
+  public abstract void execute(Player player, ServerMessage message);
 }
