@@ -152,11 +152,11 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       }
       getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, room, setting,
           RoomCreatedResult.SUCCESS);
-    } catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException exception) {
       getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, setting,
           RoomCreatedResult.INVALID_NAME_OR_PASSWORD);
-    } catch (CreatedRoomException e) {
-      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, setting, e.getResult());
+    } catch (CreatedRoomException exception) {
+      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, setting, exception.getResult());
     }
 
     return room;

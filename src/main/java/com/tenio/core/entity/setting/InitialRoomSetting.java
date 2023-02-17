@@ -32,6 +32,7 @@ import com.tenio.core.entity.setting.strategy.implement.DefaultRoomCredentialVal
 import com.tenio.core.entity.setting.strategy.implement.DefaultRoomPlayerSlotGeneratedStrategy;
 import com.tenio.core.schedule.task.internal.AutoRemoveRoomTask;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -47,6 +48,7 @@ public final class InitialRoomSetting {
   private final RoomRemoveMode roomRemoveMode;
   private final RoomCredentialValidatedStrategy roomCredentialValidatedStrategy;
   private final RoomPlayerSlotGeneratedStrategy roomPlayerSlotGeneratedStrategy;
+  private final Map<String, Object> properties;
 
   private InitialRoomSetting(Builder builder) {
     name = builder.name;
@@ -57,7 +59,7 @@ public final class InitialRoomSetting {
     roomRemoveMode = builder.removeMode;
     roomCredentialValidatedStrategy = builder.credentialValidatedStrategy;
     roomPlayerSlotGeneratedStrategy = builder.playerSlotGeneratedStrategy;
-
+    properties = builder.properties;
   }
 
   /**
@@ -132,6 +134,15 @@ public final class InitialRoomSetting {
     return roomPlayerSlotGeneratedStrategy;
   }
 
+  /**
+   * Retrieves default properties for the room.
+   *
+   * @return a {@link Map} of room's properties
+   */
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
+
   @Override
   public String toString() {
     return "InitialRoomSetting{" +
@@ -143,6 +154,7 @@ public final class InitialRoomSetting {
         ", roomRemoveMode=" + roomRemoveMode +
         ", roomCredentialValidatedStrategy=" + roomCredentialValidatedStrategy +
         ", roomPlayerSlotGeneratedStrategy=" + roomPlayerSlotGeneratedStrategy +
+        ", properties=" + properties +
         '}';
   }
 
@@ -159,6 +171,7 @@ public final class InitialRoomSetting {
     private RoomRemoveMode removeMode;
     private RoomCredentialValidatedStrategy credentialValidatedStrategy;
     private RoomPlayerSlotGeneratedStrategy playerSlotGeneratedStrategy;
+    private Map<String, Object> properties;
 
     private Builder() {
       name = null;
@@ -169,6 +182,7 @@ public final class InitialRoomSetting {
       removeMode = RoomRemoveMode.DEFAULT;
       credentialValidatedStrategy = null;
       playerSlotGeneratedStrategy = null;
+      properties = null;
     }
 
     /**
@@ -271,6 +285,17 @@ public final class InitialRoomSetting {
     public Builder setRoomPlayerSlotGeneratedStrategy(
         Class<? extends RoomPlayerSlotGeneratedStrategy> clazz) {
       playerSlotGeneratedStrategy = (RoomPlayerSlotGeneratedStrategy) createNewInstance(clazz);
+      return this;
+    }
+
+    /**
+     * Sets default properties for room.
+     *
+     * @param properties a {@link Map} of properties
+     * @return the pointer of builder
+     */
+    public Builder setProperties(Map<String, Object> properties) {
+      this.properties = properties;
       return this;
     }
 

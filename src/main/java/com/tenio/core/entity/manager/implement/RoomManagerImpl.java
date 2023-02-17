@@ -89,20 +89,21 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
           RoomCreatedResult.REACHED_MAX_ROOMS);
     }
 
-    var newRoom = RoomImpl.newInstance();
-    newRoom.setPlayerSlotGeneratedStrategy(roomSetting.getRoomPlayerSlotGeneratedStrategy());
-    newRoom.setRoomCredentialValidatedStrategy(roomSetting.getRoomCredentialValidatedStrategy());
-    newRoom.setRoomRemoveMode(roomSetting.getRoomRemoveMode());
-    newRoom.setName(roomSetting.getName());
-    newRoom.setPassword(roomSetting.getPassword());
-    newRoom.setActivated(roomSetting.isActivated());
-    newRoom.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
-    newRoom.setOwner(player);
-    newRoom.setPlayerManager(PlayerManagerImpl.newInstance(eventManager));
+    var room = RoomImpl.newInstance();
+    room.setPlayerSlotGeneratedStrategy(roomSetting.getRoomPlayerSlotGeneratedStrategy());
+    room.setRoomCredentialValidatedStrategy(roomSetting.getRoomCredentialValidatedStrategy());
+    room.setRoomRemoveMode(roomSetting.getRoomRemoveMode());
+    room.setName(roomSetting.getName());
+    room.setPassword(roomSetting.getPassword());
+    room.setActivated(roomSetting.isActivated());
+    room.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
+    room.setOwner(player);
+    room.setPlayerManager(PlayerManagerImpl.newInstance(eventManager));
+    roomSetting.getProperties().forEach(room::setProperty);
 
-    addRoom(newRoom);
+    addRoom(room);
 
-    return newRoom;
+    return room;
   }
 
   @Override
