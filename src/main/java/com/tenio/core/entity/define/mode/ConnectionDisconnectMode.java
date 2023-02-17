@@ -56,6 +56,12 @@ public enum ConnectionDisconnectMode {
    */
   BAN,
   /**
+   * When the connection is orphan and is cleaned up by schedule tasks.
+   *
+   * @since 0.5.0
+   */
+  ORPHAN,
+  /**
    * Disconnected by other reasons.
    */
   UNKNOWN;

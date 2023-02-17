@@ -24,8 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.command.system.implement;
 
-import com.tenio.core.bootstrap.annotation.Command;
-import com.tenio.core.command.system.AbstractCommandHandler;
+import com.tenio.core.bootstrap.annotation.SystemCommand;
+import com.tenio.core.command.system.AbstractSystemCommandHandler;
 import com.tenio.core.utility.CommandUtility;
 import java.util.List;
 
@@ -34,10 +34,10 @@ import java.util.List;
  *
  * @since 0.4.0
  */
-@Command(label = "unban", usage = {
+@SystemCommand(label = "unban", usage = {
     "[<address>,<command>,<command>]"
 }, description = "Allows removing banned Ip addresses from the ban list")
-public final class UnBanAddressCommand extends AbstractCommandHandler {
+public final class UnBanAddressCommand extends AbstractSystemCommandHandler {
 
   @Override
   public void execute(List<String> args) {

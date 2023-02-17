@@ -31,7 +31,7 @@ import com.tenio.core.handler.AbstractHandler;
 /**
  * The base class for all self defined commands.
  *
- * @since 0.4.0
+ * @since 0.5.0
  */
 public abstract class AbstractClientCommandHandler extends AbstractHandler {
 
@@ -48,7 +48,8 @@ public abstract class AbstractClientCommandHandler extends AbstractHandler {
   /**
    * It is called when the server invokes a command.
    *
-   * @param args The arguments to the command
+   * @param player  The receiver which gets command from its client
+   * @param message The message as command
    */
   public abstract void execute(Player player, ServerMessage message);
 }

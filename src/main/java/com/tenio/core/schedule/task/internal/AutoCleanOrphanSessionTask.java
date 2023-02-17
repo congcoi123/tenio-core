@@ -24,19 +24,29 @@ THE SOFTWARE.
 
 package com.tenio.core.schedule.task.internal;
 
-import com.tenio.core.entity.manager.PlayerManager;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.schedule.task.AbstractSystemTask;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * For a session which is in IDLE mode and no longer associated to any player, that means for a
  * long time without receiving or sending any data from the server or from a client. This task
  * will scan those IDLE sessions in period time and force them to disconnect. Those
  * sessions got a "timeout" error.
+ *
+ * @since 0.5.0
  */
 public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
+
+  private SessionManager sessionManager;
 
   private AutoCleanOrphanSessionTask(EventManager eventManager) {
     super(eventManager);
@@ -48,7 +58,20 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    return null;
+    return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+        () -> {
+          Iterator<Session> iterator = sessionManager.getSessionIterator();
+          while (iterator.hasNext()) {
+            Session session = iterator.next();
+            if (session.isOrphan()) {
+              try {
+                session.close(ConnectionDisconnectMode.ORPHAN, PlayerDisconnectMode.DEFAULT);
+              } catch (IOException exception) {
+                error(exception, session.toString());
+              }
+            }
+          }
+        }, initialDelay, interval, TimeUnit.SECONDS);
   }
 
   /**
@@ -57,5 +80,6 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
    * @param sessionManager the session manager
    */
   public void setSessionManager(SessionManager sessionManager) {
+    this.sessionManager = sessionManager;
   }
 }

@@ -24,8 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.command.system.implement;
 
-import com.tenio.core.bootstrap.annotation.Command;
-import com.tenio.core.command.system.AbstractCommandHandler;
+import com.tenio.core.bootstrap.annotation.SystemCommand;
+import com.tenio.core.command.system.AbstractSystemCommandHandler;
 import com.tenio.core.utility.CommandUtility;
 import java.util.List;
 
@@ -34,11 +34,11 @@ import java.util.List;
  *
  * @since 0.4.0
  */
-@Command(label = "info", usage = {
+@SystemCommand(label = "info", usage = {
     "player",
     "room"
 }, description = "Provides brief information about players and rooms on the server")
-public final class InfoCommand extends AbstractCommandHandler {
+public final class InfoCommand extends AbstractSystemCommandHandler {
 
   @Override
   public void execute(List<String> args) {

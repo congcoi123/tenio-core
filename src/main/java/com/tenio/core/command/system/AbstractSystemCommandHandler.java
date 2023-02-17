@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.command.system;
 
-import com.tenio.core.bootstrap.annotation.Command;
+import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.handler.AbstractHandler;
 import java.util.Arrays;
 import java.util.List;
@@ -34,32 +34,32 @@ import java.util.List;
  *
  * @since 0.4.0
  */
-public abstract class AbstractCommandHandler extends AbstractHandler {
+public abstract class AbstractSystemCommandHandler extends AbstractHandler {
 
-  private CommandManager commandManager;
+  private SystemCommandManager systemCommandManager;
 
   public String getLabel() {
-    return getClass().getAnnotation(Command.class).label();
+    return getClass().getAnnotation(SystemCommand.class).label();
   }
 
   public String[] getUsage() {
-    return getClass().getAnnotation(Command.class).usage();
+    return getClass().getAnnotation(SystemCommand.class).usage();
   }
 
   public String getDescription() {
-    return getClass().getAnnotation(Command.class).description();
+    return getClass().getAnnotation(SystemCommand.class).description();
   }
 
   public boolean isRunningBackground() {
-    return getClass().getAnnotation(Command.class).isBackgroundRunning();
+    return getClass().getAnnotation(SystemCommand.class).isBackgroundRunning();
   }
 
-  public CommandManager getCommandManager() {
-    return commandManager;
+  public SystemCommandManager getCommandManager() {
+    return systemCommandManager;
   }
 
-  public void setCommandManager(CommandManager commandManager) {
-    this.commandManager = commandManager;
+  public void setCommandManager(SystemCommandManager systemCommandManager) {
+    this.systemCommandManager = systemCommandManager;
   }
 
   /**

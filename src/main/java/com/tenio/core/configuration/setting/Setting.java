@@ -72,7 +72,7 @@ public final class Setting {
 
     @Override
     public String toString() {
-      return "Command{" +
+      return "SystemCommand{" +
           "enabled=" + enabled +
           '}';
     }

@@ -12,7 +12,7 @@ class SessionImplTest {
   @Test
   void testNewInstance() {
     Session actualNewInstanceResult = SessionImpl.newInstance();
-    assertFalse(actualNewInstanceResult.isConnected());
+    assertFalse(actualNewInstanceResult.isAssociatedToPlayer());
     assertFalse(actualNewInstanceResult.isActivated());
     assertEquals(0L, actualNewInstanceResult.getWrittenBytes());
     assertEquals(TransportType.UNKNOWN, actualNewInstanceResult.getTransportType());

@@ -32,7 +32,6 @@ import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.exception.AddedDuplicatedClientCommandException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -43,18 +42,17 @@ import org.reflections.Reflections;
 /**
  * The commands' management class.
  *
- * @since 0.4.0
+ * @since 0.5.0
  */
 @Component
 public final class ClientCommandManager extends SystemLogger {
 
   private final Map<Short, AbstractClientCommandHandler> commands = new TreeMap<>();
-  private final Map<Short, ClientCommand> annotations = new TreeMap<>();
 
   /**
    * Registers a command handler.
    *
-   * @param code   The command code
+   * @param code    The command code
    * @param command The command handler
    */
   public void registerCommand(Short code, AbstractClientCommandHandler command) {
@@ -67,7 +65,6 @@ public final class ClientCommandManager extends SystemLogger {
 
     // gets command data
     var annotation = command.getClass().getAnnotation(ClientCommand.class);
-    annotations.put(code, annotation);
     commands.put(code, command);
   }
 
@@ -77,18 +74,8 @@ public final class ClientCommandManager extends SystemLogger {
    * @param code The command code
    */
   public void unregisterCommand(Short code) {
-    debug("COMMAND", "Unregistered command: " + code);
-
-    annotations.remove(code);
+    debug("CLIENT_COMMAND", "Unregistered command > " + code);
     commands.remove(code);
-  }
-
-  public List<ClientCommand> getAnnotationsAsList() {
-    return new LinkedList<>(annotations.values());
-  }
-
-  public Map<Short, ClientCommand> getAnnotations() {
-    return new LinkedHashMap<>(annotations);
   }
 
   /**
@@ -117,7 +104,9 @@ public final class ClientCommandManager extends SystemLogger {
   /**
    * Invokes a command handler with given arguments.
    *
-   * @param code The messaged used to invoke the command
+   * @param code    The messaged used to invoke the command
+   * @param player  The receiver which gets command from its client
+   * @param message The message as command
    */
   public void invoke(Short code, Player player, ServerMessage message) {
     // gets command handler
@@ -127,9 +116,6 @@ public final class ClientCommandManager extends SystemLogger {
     if (Objects.isNull(handler)) {
       return;
     }
-
-    // gets the command's annotation
-    var annotation = annotations.get(code);
 
     // invokes execute method for handler
     Runnable runnable = () -> handler.execute(player, message);
@@ -149,7 +135,6 @@ public final class ClientCommandManager extends SystemLogger {
 
     // clean maps data first
     commands.clear();
-    annotations.clear();
 
     // start scanning
     var setPackageNames = new HashSet<String>();
@@ -168,11 +153,11 @@ public final class ClientCommandManager extends SystemLogger {
     var classes = reflections.getTypesAnnotatedWith(ClientCommand.class);
     classes.forEach(annotated -> {
       try {
-        var commandData = annotated.getAnnotation(ClientCommand.class);
+        var clientCommand = annotated.getAnnotation(ClientCommand.class);
         var object = annotated.getDeclaredConstructor().newInstance();
-        if (object instanceof AbstractClientCommandHandler command) {
-          command.setCommandManager(this);
-          registerCommand(commandData.value(), command);
+        if (object instanceof AbstractClientCommandHandler handler) {
+          handler.setCommandManager(this);
+          registerCommand(clientCommand.value(), handler);
         } else {
           error(new IllegalArgumentException("Class " + annotated.getName() + " is not a " +
               "AbstractClientCommandHandler"));

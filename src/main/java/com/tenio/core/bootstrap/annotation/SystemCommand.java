@@ -27,8 +27,8 @@ package com.tenio.core.bootstrap.annotation;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import com.tenio.core.command.system.AbstractCommandHandler;
-import com.tenio.core.command.system.CommandManager;
+import com.tenio.core.command.system.AbstractSystemCommandHandler;
+import com.tenio.core.command.system.SystemCommandManager;
 import com.tenio.core.exception.AddedDuplicatedCommandException;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -37,14 +37,14 @@ import java.lang.annotation.Target;
 /**
  * A class annotated by this annotation will allow modifying the server's behavior.
  *
- * @see AbstractCommandHandler
- * @see CommandManager
+ * @see AbstractSystemCommandHandler
+ * @see SystemCommandManager
  * @since 0.4.0
  */
 @Retention(RUNTIME)
 @Target(TYPE)
 @Documented
-public @interface Command {
+public @interface SystemCommand {
 
   /**
    * Retrieves the label of command, that should be unique, otherwise, an exception will be thrown.

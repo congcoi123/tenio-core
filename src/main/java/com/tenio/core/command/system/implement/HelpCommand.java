@@ -24,8 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.command.system.implement;
 
-import com.tenio.core.bootstrap.annotation.Command;
-import com.tenio.core.command.system.AbstractCommandHandler;
+import com.tenio.core.bootstrap.annotation.SystemCommand;
+import com.tenio.core.command.system.AbstractSystemCommandHandler;
 import com.tenio.core.utility.CommandUtility;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,12 +36,12 @@ import java.util.Objects;
  *
  * @since 0.4.0
  */
-@Command(label = "help", usage = {
+@SystemCommand(label = "help", usage = {
     "[<command>,<command>,<command>]"
 }, description = "Shows all supporting commands")
-public final class HelpCommand extends AbstractCommandHandler {
+public final class HelpCommand extends AbstractSystemCommandHandler {
 
-  private String createCommandDetails(AbstractCommandHandler command) {
+  private String createCommandDetails(AbstractSystemCommandHandler command) {
     return command.getLabel() +
         " - " +
         (command.getDescription().isBlank() ? "Non Description" : command.getDescription()) +
@@ -62,7 +62,7 @@ public final class HelpCommand extends AbstractCommandHandler {
         var command = commandManager.getHandler(label);
         if (Objects.isNull(command)) {
           CommandUtility.INSTANCE.showConsoleMessage(
-              "Command {" + label + "} does not exist.");
+              "SystemCommand {" + label + "} does not exist.");
           return;
         } else {
           commands.add(createCommandDetails(command));

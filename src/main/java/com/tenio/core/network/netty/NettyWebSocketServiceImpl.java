@@ -25,6 +25,8 @@ THE SOFTWARE.
 package com.tenio.core.network.netty;
 
 import com.tenio.common.data.DataType;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.manager.AbstractManager;
@@ -292,6 +294,14 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
     var iterator = packet.getRecipients().iterator();
     while (iterator.hasNext()) {
       var session = iterator.next();
+      if (packet.isMarkedAsLast()) {
+        try {
+          session.close(ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
+        } catch (IOException exception) {
+          error(exception, session.toString());
+        }
+        return;
+      }
       if (session.isActivated()) {
         session.getWebSocketChannel()
             .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(packet.getData())));

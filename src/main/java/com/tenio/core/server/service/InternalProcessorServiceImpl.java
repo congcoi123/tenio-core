@@ -98,7 +98,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
   @Override
   public void subscribe() {
 
-    eventManager.on(ServerEvent.SESSION_CREATED, params -> null);
+    eventManager.on(ServerEvent.SESSION_CREATED, params -> {
+      var session = (Session) params[0];
+      session.activate();
+      return null;
+    });
 
     eventManager.on(ServerEvent.SESSION_REQUEST_CONNECTION, params -> {
       var request =

@@ -30,10 +30,10 @@ import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.exception.EmptyUdpChannelsException;
 import com.tenio.core.network.define.TransportType;
+import com.tenio.core.network.entity.kcp.Ukcp;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
-import com.tenio.core.network.entity.kcp.Ukcp;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.codec.packet.PacketReadState;
 import com.tenio.core.network.zero.codec.packet.PendingPacket;
@@ -56,12 +56,17 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class SessionImpl implements Session {
 
+  /**
+   * The maximum time that this session is allowed to be orphan.
+   */
+  private static final long ORPHAN_ALLOWANCE_TIME_IN_MILLISECONDS = 3000L;
   private static final AtomicLong ID_COUNTER = new AtomicLong();
 
   private final long id;
-
-  private String name;
-
+  private final AtomicLong readBytes;
+  private final AtomicLong writtenBytes;
+  private final AtomicLong droppedPackets;
+  private volatile String name;
   private SessionManager sessionManager;
   private SocketChannel socketChannel;
   private SelectionKey selectionKey;
@@ -69,22 +74,15 @@ public final class SessionImpl implements Session {
   private Ukcp ukcp;
   private Channel webSocketChannel;
   private ConnectionFilter connectionFilter;
-
   private TransportType transportType;
   private PacketReadState packetReadState;
   private ProcessedPacket processedPacket;
   private PendingPacket pendingPacket;
   private PacketQueue packetQueue;
-
   private volatile long createdTime;
   private volatile long lastReadTime;
   private volatile long lastWriteTime;
   private volatile long lastActivityTime;
-
-  private final AtomicLong readBytes;
-  private final AtomicLong writtenBytes;
-  private final AtomicLong droppedPackets;
-
   private volatile long inactivatedTime;
 
   private volatile SocketAddress datagramRemoteSocketAddress;
@@ -96,7 +94,7 @@ public final class SessionImpl implements Session {
   private int maxIdleTimeInSecond;
 
   private volatile boolean activated;
-  private volatile boolean connected;
+  private volatile boolean associatedToPlayer;
   private volatile boolean hasUdp;
   private volatile boolean enabledKcp;
   private volatile boolean hasKcp;
@@ -114,7 +112,7 @@ public final class SessionImpl implements Session {
 
     inactivatedTime = 0L;
     activated = false;
-    connected = false;
+    associatedToPlayer = false;
     hasUdp = false;
     enabledKcp = false;
     hasKcp = false;
@@ -145,13 +143,19 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public boolean isConnected() {
-    return connected;
+  public boolean isAssociatedToPlayer() {
+    return associatedToPlayer;
   }
 
   @Override
-  public void setConnected(boolean connected) {
-    this.connected = connected;
+  public void setAssociatedToPlayer(boolean associatedToPlayer) {
+    this.associatedToPlayer = associatedToPlayer;
+  }
+
+  @Override
+  public boolean isOrphan() {
+    return (!isAssociatedToPlayer() &&
+        (now() - createdTime) >= ORPHAN_ALLOWANCE_TIME_IN_MILLISECONDS);
   }
 
   @Override
@@ -550,7 +554,7 @@ public final class SessionImpl implements Session {
         break;
     }
 
-    setConnected(false);
+    setAssociatedToPlayer(false);
     sessionManager.removeSession(this);
   }
 
@@ -560,10 +564,9 @@ public final class SessionImpl implements Session {
 
   @Override
   public boolean equals(Object object) {
-    if (!(object instanceof Session)) {
+    if (!(object instanceof Session session)) {
       return false;
     } else {
-      var session = (Session) object;
       return getId() == session.getId();
     }
   }
@@ -604,7 +607,7 @@ public final class SessionImpl implements Session {
         ", serverAddress='" + serverAddress + '\'' +
         ", maxIdleTimeInSecond=" + maxIdleTimeInSecond +
         ", activated=" + activated +
-        ", connected=" + connected +
+        ", associatedToPlayer=" + associatedToPlayer +
         ", hasUdp=" + hasUdp +
         ", enabledKcp=" + enabledKcp +
         ", hasKcp=" + hasKcp +

@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.command.system;
 
 import com.tenio.common.logger.SystemLogger;
-import com.tenio.core.bootstrap.annotation.Command;
+import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.exception.AddedDuplicatedCommandException;
 import com.tenio.core.utility.CommandUtility;
@@ -43,10 +43,10 @@ import java.util.TreeMap;
  * @since 0.4.0
  */
 @Component
-public final class CommandManager extends SystemLogger {
+public final class SystemCommandManager extends SystemLogger {
 
-  private final Map<String, AbstractCommandHandler> commands = new TreeMap<>();
-  private final Map<String, Command> annotations = new TreeMap<>();
+  private final Map<String, AbstractSystemCommandHandler> commands = new TreeMap<>();
+  private final Map<String, SystemCommand> annotations = new TreeMap<>();
 
   /**
    * Registers a command handler.
@@ -54,8 +54,8 @@ public final class CommandManager extends SystemLogger {
    * @param label   The command label
    * @param command The command handler
    */
-  public void registerCommand(String label, AbstractCommandHandler command) {
-    debug("COMMAND", "Registered command > " + label);
+  public void registerCommand(String label, AbstractSystemCommandHandler command) {
+    debug("SYSTEM_COMMAND", "Registered command > " + label);
     label = label.toLowerCase();
 
     // checks availability
@@ -64,7 +64,7 @@ public final class CommandManager extends SystemLogger {
     }
 
     // gets command data
-    var annotation = command.getClass().getAnnotation(Command.class);
+    var annotation = command.getClass().getAnnotation(SystemCommand.class);
     annotations.put(label, annotation);
     commands.put(label, command);
   }
@@ -75,17 +75,17 @@ public final class CommandManager extends SystemLogger {
    * @param label The command label
    */
   public void unregisterCommand(String label) {
-    debug("COMMAND", "Unregistered command: " + label);
+    debug("SYSTEM_COMMAND", "Unregistered command > " + label);
 
     annotations.remove(label);
     commands.remove(label);
   }
 
-  public List<Command> getAnnotationsAsList() {
+  public List<SystemCommand> getAnnotationsAsList() {
     return new LinkedList<>(annotations.values());
   }
 
-  public Map<String, Command> getAnnotations() {
+  public Map<String, SystemCommand> getAnnotations() {
     return new LinkedHashMap<>(annotations);
   }
 
@@ -94,11 +94,11 @@ public final class CommandManager extends SystemLogger {
    *
    * @return all command handlers as a list
    */
-  public List<AbstractCommandHandler> getHandlersAsList() {
+  public List<AbstractSystemCommandHandler> getHandlersAsList() {
     return new LinkedList<>(commands.values());
   }
 
-  public Map<String, AbstractCommandHandler> getHandlers() {
+  public Map<String, AbstractSystemCommandHandler> getHandlers() {
     return commands;
   }
 
@@ -108,7 +108,7 @@ public final class CommandManager extends SystemLogger {
    * @param label The command label
    * @return the command handler
    */
-  public AbstractCommandHandler getHandler(String label) {
+  public AbstractSystemCommandHandler getHandler(String label) {
     return commands.get(label);
   }
 

@@ -127,6 +127,7 @@ public interface Server {
    * Writes down data to socket/channel to send them to client sides.
    *
    * @param response an instance of {@link Response} using to carry conveying information
+   * @param markedAsLast marks as this writing is the last one
    */
-  void write(Response response);
+  void write(Response response, boolean markedAsLast);
 }

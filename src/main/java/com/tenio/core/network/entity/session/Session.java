@@ -24,16 +24,18 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.session;
 
+import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.network.define.TransportType;
+import com.tenio.core.network.entity.kcp.Ukcp;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.manager.SessionManager;
-import com.tenio.core.network.entity.kcp.Ukcp;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.codec.packet.PacketReadState;
 import com.tenio.core.network.zero.codec.packet.PendingPacket;
 import com.tenio.core.network.zero.codec.packet.ProcessedPacket;
+import com.tenio.core.schedule.task.internal.AutoCleanOrphanSessionTask;
 import io.netty.channel.Channel;
 import java.io.IOException;
 import java.net.SocketAddress;
@@ -72,16 +74,27 @@ public interface Session {
    *
    * @return {@code true} if the session connected to the server, otherwise returns {@code false}
    */
-  boolean isConnected();
+  boolean isAssociatedToPlayer();
 
   /**
    * Sets connected state to the session on the server (whether it is ready to associate to a
    * player).
    *
-   * @param connected sets value to {@code true} if the session connected to the server,
-   *                  otherwise returns {@code false}
+   * @param associatedToPlayer sets value to {@code true} if the session connected to the server,
+   *                           otherwise returns {@code false}
    */
-  void setConnected(boolean connected);
+  void setAssociatedToPlayer(boolean associatedToPlayer);
+
+  /**
+   * In allowance period of time, if the session can not be associated to any player, it is
+   * considered as an orphan session and will be removed.
+   *
+   * @return {@code true} if the session is orphan, otherwise returns {@code false}
+   * @see Player
+   * @see AutoCleanOrphanSessionTask
+   * @since 0.5.0
+   */
+  boolean isOrphan();
 
   /**
    * Retrieves a packet queue of session which is using to send messages to clients side.
@@ -424,7 +437,9 @@ public interface Session {
   boolean isActivated();
 
   /**
-   * Activates the session (To be able to perform actions, such as reading or writing data).
+   * Activates the session (To be able to perform actions, such as reading or writing data). This
+   * method should be invoked when the first time session created, because even if that session
+   * is orphan (without associated player), it should still be able to transfer data.
    */
   void activate();
 

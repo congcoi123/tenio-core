@@ -31,7 +31,7 @@ import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.bootstrap.BootstrapHandler;
-import com.tenio.core.command.system.CommandManager;
+import com.tenio.core.command.system.SystemCommandManager;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.configuration.define.ServerEvent;
@@ -343,7 +343,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     internalProcessorService.setNetworkWriterStatistic(networkService.getNetworkWriterStatistic());
   }
 
-  private void startConsole(CommandManager commandManager) {
+  private void startConsole(SystemCommandManager systemCommandManager) {
     Terminal terminal = null;
     try {
       terminal = TerminalBuilder.builder().jna(true).build();
@@ -380,7 +380,7 @@ public final class ServerImpl extends SystemLogger implements Server {
 
       isLastInterrupted = false;
       try {
-        commandManager.invoke(input);
+        systemCommandManager.invoke(input);
       } catch (Exception exception) {
         CommandUtility.INSTANCE.showConsoleMessage("Exception > " + exception.getMessage());
       }
@@ -449,7 +449,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   @Override
-  public void write(Response response) {
-    networkService.write(response);
+  public void write(Response response, boolean markedAsLast) {
+    networkService.write(response, markedAsLast);
   }
 }

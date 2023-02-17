@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.exception;
 
-import com.tenio.core.command.system.AbstractCommandHandler;
+import com.tenio.core.command.system.AbstractSystemCommandHandler;
 import java.io.Serial;
 
 /**
@@ -39,9 +39,9 @@ public final class AddedDuplicatedCommandException extends RuntimeException {
    * When a command which existed on the server is added again.
    *
    * @param label          the unique command's label
-   * @param commandHandler the available {@link AbstractCommandHandler} instance
+   * @param commandHandler the available {@link AbstractSystemCommandHandler} instance
    */
-  public AddedDuplicatedCommandException(String label, AbstractCommandHandler commandHandler) {
+  public AddedDuplicatedCommandException(String label, AbstractSystemCommandHandler commandHandler) {
     super(
         String.format("Unable to add label {%s}, it already exists > {%s}", label, commandHandler.toString()));
   }

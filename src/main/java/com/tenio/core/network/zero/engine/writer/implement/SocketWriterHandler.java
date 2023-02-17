@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.writer.implement;
 
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
@@ -98,8 +100,7 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
         // save those bytes to the packet for next manipulation
         packet.setFragmentBuffer(leftUnwrittenBytes);
 
-        // want to know when the socket can write, which should be noticed on
-        // isWritable() method
+        // want to know when the socket can write, which should be noticed on isWritable() method
         // when that event occurred, re-add the session to the tickets queue
         var selectionKey = session.getSelectionKey();
         if (Objects.nonNull(selectionKey) && selectionKey.isValid()) {
@@ -114,6 +115,12 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
 
         // now the packet can be safely removed
         packetQueue.take();
+
+        // in case this packet is the last one, it closes the session
+        if (packet.isMarkedAsLast()) {
+          session.close(ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
+          return;
+        }
 
         // if the packet queue still contains more packets, then put the session back to
         // the tickets queue

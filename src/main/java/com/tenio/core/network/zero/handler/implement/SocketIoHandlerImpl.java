@@ -61,7 +61,7 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
     var data = DataUtility.binaryToCollection(dataType, binary);
     var message = ServerMessage.newInstance().setData(data);
 
-    if (!session.isConnected()) {
+    if (!session.isAssociatedToPlayer()) {
       eventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, message);
     } else {
       eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, message);

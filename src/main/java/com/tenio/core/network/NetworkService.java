@@ -295,7 +295,8 @@ public interface NetworkService extends Service {
   /**
    * Writes down (binaries) data to socket/channel in order to send them to clients side.
    *
-   * @param response an instance of {@link Response} using to carry conveying information
+   * @param response     an instance of {@link Response} using to carry conveying information
+   * @param markedAsLast marks as this writing is the last one
    */
-  void write(Response response);
+  void write(Response response, boolean markedAsLast);
 }

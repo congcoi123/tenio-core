@@ -25,7 +25,6 @@ THE SOFTWARE.
 package com.tenio.core.exception;
 
 import com.tenio.core.command.client.AbstractClientCommandHandler;
-import com.tenio.core.command.system.AbstractCommandHandler;
 import java.io.Serial;
 
 /**
@@ -40,7 +39,7 @@ public final class AddedDuplicatedClientCommandException extends RuntimeExceptio
    * When a command which existed on the server is added again.
    *
    * @param code           the unique command's label
-   * @param commandHandler the available {@link AbstractCommandHandler} instance
+   * @param commandHandler the available {@link AbstractClientCommandHandler} instance
    */
   public AddedDuplicatedClientCommandException(Short code,
                                                AbstractClientCommandHandler commandHandler) {

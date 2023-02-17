@@ -326,19 +326,22 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void write(Response response) {
+  public void write(Response response, boolean markedAsLast) {
     var data = DataUtility.binaryToCollection(dataType, response.getContent());
     var message = ServerMessage.newInstance().setData(data);
 
-    var playerIterator = response.getRecipientPlayers().iterator();
-    while (playerIterator.hasNext()) {
-      var player = playerIterator.next();
-      eventManager.emit(ServerEvent.SEND_MESSAGE_TO_PLAYER, player, message);
+    var recipientPlayers = response.getRecipientPlayers();
+    if (Objects.nonNull(recipientPlayers) && !recipientPlayers.isEmpty()) {
+      var playerIterator = recipientPlayers.iterator();
+      while (playerIterator.hasNext()) {
+        var player = playerIterator.next();
+        eventManager.emit(ServerEvent.SEND_MESSAGE_TO_PLAYER, player, message);
+      }
     }
 
-    var nonSessionPlayers = response.getNonSessionRecipientPlayers();
-    if (Objects.nonNull(nonSessionPlayers)) {
-      var nonSessionIterator = nonSessionPlayers.iterator();
+    var nonSessionRecipientPlayers = response.getNonSessionRecipientPlayers();
+    if (Objects.nonNull(nonSessionRecipientPlayers) && !nonSessionRecipientPlayers.isEmpty()) {
+      var nonSessionIterator = nonSessionRecipientPlayers.iterator();
       while (nonSessionIterator.hasNext()) {
         var player = nonSessionIterator.next();
         eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
@@ -346,16 +349,15 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
     }
 
     var socketSessions = response.getRecipientSocketSessions();
-    var datagramSessions = response.getRecipientDatagramSessions();
-    var webSocketSessions = response.getRecipientWebSocketSessions();
-
     if (Objects.nonNull(socketSessions)) {
       var packet = createPacket(response, socketSessions, TransportType.TCP);
+      packet.setMarkedAsLast(markedAsLast);
       socketService.write(packet);
       socketSessions.forEach(
           session -> eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet));
     }
 
+    var datagramSessions = response.getRecipientDatagramSessions();
     if (Objects.nonNull(datagramSessions)) {
       var packet = createPacket(response, datagramSessions, TransportType.UDP);
       socketService.write(packet);
@@ -363,8 +365,10 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
           session -> eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet));
     }
 
+    var webSocketSessions = response.getRecipientWebSocketSessions();
     if (Objects.nonNull(webSocketSessions)) {
       var packet = createPacket(response, webSocketSessions, TransportType.WEB_SOCKET);
+      packet.setMarkedAsLast(markedAsLast);
       webSocketService.write(packet);
       webSocketSessions.forEach(
           session -> eventManager.emit(ServerEvent.SESSION_WRITE_MESSAGE, session, packet));

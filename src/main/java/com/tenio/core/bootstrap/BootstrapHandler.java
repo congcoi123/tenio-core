@@ -27,7 +27,7 @@ package com.tenio.core.bootstrap;
 import com.tenio.core.bootstrap.annotation.Autowired;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
-import com.tenio.core.command.system.CommandManager;
+import com.tenio.core.command.system.SystemCommandManager;
 import com.tenio.core.event.handler.EventHandler;
 import com.tenio.core.network.jetty.servlet.RestServlet;
 import java.util.Map;
@@ -42,7 +42,7 @@ public final class BootstrapHandler {
   private EventHandler eventHandler;
 
   @Autowired
-  private CommandManager commandManager;
+  private SystemCommandManager systemCommandManager;
 
   @Autowired
   private ConfigurationHandler configurationHandler;
@@ -61,11 +61,11 @@ public final class BootstrapHandler {
   /**
    * Retrieves a commands' manager.
    *
-   * @return the {@link CommandManager} instance
+   * @return the {@link SystemCommandManager} instance
    * @since 0.4.0
    */
-  public CommandManager getCommandManager() {
-    return commandManager;
+  public SystemCommandManager getCommandManager() {
+    return systemCommandManager;
   }
 
   /**
@@ -85,7 +85,7 @@ public final class BootstrapHandler {
     this.servletMap = servletMap;
   }
 
-  public void setCommandManager(CommandManager commandManager) {
-    this.commandManager = commandManager;
+  public void setCommandManager(SystemCommandManager systemCommandManager) {
+    this.systemCommandManager = systemCommandManager;
   }
 }

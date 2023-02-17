@@ -93,8 +93,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     try {
       Player player = getPlayerManager().createPlayerWithSession(playerName, session);
       session.setName(playerName);
-      session.setConnected(true);
-      session.activate();
+      session.setAssociatedToPlayer(true);
 
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,
           PlayerLoggedInResult.SUCCESS);
