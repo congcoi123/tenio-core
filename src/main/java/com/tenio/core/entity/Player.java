@@ -105,6 +105,74 @@ public interface Player {
   long getLastLoggedInTime();
 
   /**
+   * Retrieves the last activity time of player.
+   *
+   * @return the last activity time in milliseconds ({@code long} value)
+   */
+  long getLastActivityTime();
+
+  /**
+   * Sets the last activity time for the player.
+   *
+   * @param timestamp the last activity time in milliseconds ({@code long} value)
+   */
+  void setLastActivityTime(long timestamp);
+
+  /**
+   * Retrieves the last time when the player receives the last byte of data.
+   *
+   * @return the last reading new data time in milliseconds ({@code long} value)
+   */
+  long getLastReadTime();
+
+  /**
+   * Sets the last time when the player receives the last byte of data.
+   *
+   * @param timestamp the last reading new data time in milliseconds ({@code long} value)
+   */
+  void setLastReadTime(long timestamp);
+
+  /**
+   * Retrieves the last time when player sends the last byte of data.
+   *
+   * @return the last writing data time in milliseconds ({@code long} value)
+   */
+  long getLastWriteTime();
+
+  /**
+   * Sets the last time when the player sends the last byte of data.
+   *
+   * @param timestamp the last writing data time in milliseconds ({@code long} value)
+   */
+  void setLastWriteTime(long timestamp);
+
+  /**
+   * Retrieves the maximum time in seconds which allows the player to get in IDLE state (Do not
+   * perform any action, such as reading or writing data).
+   *
+   * @return the maximum time in seconds ({@code integer} value) which allows the player to
+   * get in IDLE state
+   */
+  int getMaxIdleTimeInSeconds();
+
+  /**
+   * Sets the maximum time in seconds which allows the player to get in IDLE state (Do not
+   * perform any action, such as reading or writing data).
+   *
+   * @param seconds the maximum time in seconds ({@code integer} value) which allows the
+   *                player to get in IDLE state
+   */
+  void setMaxIdleTimeInSeconds(int seconds);
+
+  /**
+   * Determines whether the player got in IDLE state (Do not perform any action, such as reading
+   * or writing data).
+   *
+   * @return {@code true} if the player got in IDLE state, otherwise returns {@code false}
+   */
+  boolean isIdle();
+
+  /**
    * Retrieves the player's session.
    *
    * @return an instance of optional {@link Session}

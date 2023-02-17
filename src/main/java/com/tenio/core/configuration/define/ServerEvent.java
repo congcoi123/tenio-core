@@ -24,10 +24,10 @@ THE SOFTWARE.
 
 package com.tenio.core.configuration.define;
 
+import com.tenio.core.bootstrap.annotation.Asynchronous;
 import com.tenio.core.handler.event.EventAttachConnectionRequestValidation;
 import com.tenio.core.handler.event.EventAttachedConnectionResult;
 import com.tenio.core.handler.event.EventConnectionEstablishedResult;
-import com.tenio.core.handler.event.EventDisconnectConnection;
 import com.tenio.core.handler.event.EventDisconnectPlayer;
 import com.tenio.core.handler.event.EventFetchedBandwidthInfo;
 import com.tenio.core.handler.event.EventFetchedCcuInfo;
@@ -71,12 +71,9 @@ public enum ServerEvent {
    */
   WEBSOCKET_CONNECTION_REFUSED,
   /**
-   * When a new session created in the management list.
-   */
-  SESSION_CREATED,
-  /**
    * When a new session requests to connect to the server.
    */
+  @Asynchronous
   SESSION_REQUEST_CONNECTION,
   /**
    * When there is any issue occurs to a session.
@@ -84,13 +81,13 @@ public enum ServerEvent {
   SESSION_OCCURRED_EXCEPTION,
   /**
    * When a session is going to disconnect to the server.
-   *
-   * @see EventDisconnectConnection
    */
+  @Asynchronous
   SESSION_WILL_BE_CLOSED,
   /**
    * When a message from client side sent to a session.
    */
+  @Asynchronous
   SESSION_READ_MESSAGE,
   /**
    * When a message sent to a session.
@@ -101,6 +98,7 @@ public enum ServerEvent {
   /**
    * When a message sent to the sever from client side via datagram channel.
    */
+  @Asynchronous
   DATAGRAM_CHANNEL_READ_MESSAGE,
   /**
    * When the server finished initialization and is ready.
@@ -192,12 +190,6 @@ public enum ServerEvent {
    * @see EventDisconnectPlayer
    */
   DISCONNECT_PLAYER,
-  /**
-   * When a connection is going to disconnect from the server.
-   *
-   * @see EventDisconnectConnection
-   */
-  DISCONNECT_CONNECTION,
   /**
    * When the server validates a UDP attaching request from a player.
    *

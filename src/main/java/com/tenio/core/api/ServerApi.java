@@ -35,6 +35,7 @@ import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.setting.InitialRoomSetting;
 import com.tenio.core.handler.event.EventPlayerLoggedinResult;
+import com.tenio.core.network.entity.protocol.Response;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Iterator;
 import java.util.List;
@@ -65,9 +66,14 @@ public interface ServerApi {
   void login(String playerName, Session session);
 
   /**
-   * Removes a player from the management list and from the server as well.
+   * Removes a player from the management list and from the server as well. This is a silent
+   * logout, so please do not perform any responding to the client since it may not work as
+   * expected (each command runs in different threads, so it may not get synchronized. In case
+   * you want to send a message to the client before closing connect or logout the player, please
+   * use this method {@link Response#writeThenClose()}
    *
    * @param player the current {@link Player} in the management list, on the server
+   * @see Response
    */
   void logout(Player player);
 
@@ -133,15 +139,6 @@ public interface ServerApi {
    * @see Optional
    */
   Optional<Player> getPlayerByName(String playerName);
-
-  /**
-   * Retrieves a player on the server by using its session (if present).
-   *
-   * @param session a {@link Session} associating to the player on the server
-   * @return a corresponding instance of optional {@link Player}
-   * @see Optional
-   */
-  Optional<Player> getPlayerBySession(Session session);
 
   /**
    * Fetches the current number of players activating on the server.

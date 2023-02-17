@@ -70,11 +70,11 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
       Runtime.getRuntime().availableProcessors() * 2;
 
   @GuardedBy("this")
-  private EventLoopGroup websocketAcceptors;
+  private EventLoopGroup webSocketAcceptors;
   @GuardedBy("this")
-  private EventLoopGroup websocketWorkers;
+  private EventLoopGroup webSocketWorkers;
   @GuardedBy("this")
-  private List<Channel> serverWebsockets;
+  private List<Channel> serverWebSockets;
 
   private int senderBufferSize;
   private int receiverBufferSize;
@@ -114,10 +114,10 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
     var defaultWebsocketThreadFactory =
         new DefaultThreadFactory(PREFIX_WEBSOCKET, true, Thread.NORM_PRIORITY);
 
-    websocketAcceptors =
+    webSocketAcceptors =
         new NioEventLoopGroup(producerWorkerSize, defaultWebsocketThreadFactory);
-    websocketWorkers = new NioEventLoopGroup(consumerWorkerSize, defaultWebsocketThreadFactory);
-    serverWebsockets = new ArrayList<>();
+    webSocketWorkers = new NioEventLoopGroup(consumerWorkerSize, defaultWebsocketThreadFactory);
+    serverWebSockets = new ArrayList<>();
 
     WebSocketSslContext sslContext = null;
     if (usingSsl) {
@@ -125,7 +125,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
     }
 
     var bootstrap = new ServerBootstrap();
-    bootstrap.group(websocketAcceptors, websocketWorkers).channel(NioServerSocketChannel.class)
+    bootstrap.group(webSocketAcceptors, webSocketWorkers).channel(NioServerSocketChannel.class)
         .option(ChannelOption.SO_BACKLOG, 5)
         .childOption(ChannelOption.SO_SNDBUF, senderBufferSize)
         .childOption(ChannelOption.SO_RCVBUF, receiverBufferSize)
@@ -141,22 +141,22 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
             throw new IOException(String.valueOf(socketConfiguration.port()));
           }
         });
-    serverWebsockets.add(channelFuture.channel());
+    serverWebSockets.add(channelFuture.channel());
 
     info("WEB SOCKET", buildgen("Started at port: ", socketConfiguration.port()));
   }
 
   private synchronized void attemptToShutdown() {
-    for (var socket : serverWebsockets) {
+    for (var socket : serverWebSockets) {
       close(socket);
     }
-    serverWebsockets.clear();
+    serverWebSockets.clear();
 
-    if (Objects.nonNull(websocketAcceptors)) {
-      websocketAcceptors.shutdownGracefully();
+    if (Objects.nonNull(webSocketAcceptors)) {
+      webSocketAcceptors.shutdownGracefully();
     }
-    if (Objects.nonNull(websocketWorkers)) {
-      websocketWorkers.shutdownGracefully();
+    if (Objects.nonNull(webSocketWorkers)) {
+      webSocketWorkers.shutdownGracefully();
     }
 
     info("STOPPED SERVICE",
@@ -308,6 +308,8 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
         session.addWrittenBytes(packet.getOriginalSize());
         networkWriterStatistic.updateWrittenBytes(packet.getOriginalSize());
         networkWriterStatistic.updateWrittenPackets(1);
+      } else {
+        debug("READ WEBSOCKET CHANNEL", "Session is inactivated: ", session.toString());
       }
     }
   }

@@ -213,9 +213,9 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
             socketChannel.socket().shutdownOutput();
             socketChannel.close();
           }
-        } catch (IOException e) {
-          getSocketIoHandler().channelException(socketChannel, e);
-          error(e);
+        } catch (IOException exception) {
+          error(exception);
+          getSocketIoHandler().channelException(socketChannel, exception);
         }
       }
     }
@@ -285,30 +285,29 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
                 SelectionKey selectionKey = zeroReaderListener.acceptSocketChannel(socketChannel);
 
                 getSocketIoHandler().channelActive(socketChannel, selectionKey);
-              } catch (RefusedConnectionAddressException e1) {
-                getSocketIoHandler().channelException(socketChannel, e1);
-                error(e1, "Refused connection with address: ", e1.getMessage());
+              } catch (RefusedConnectionAddressException exception1) {
+                error(exception1, "Refused connection with address: ", exception1.getMessage());
+                getSocketIoHandler().channelException(socketChannel, exception1);
 
                 try {
                   getSocketIoHandler().channelInactive(socketChannel);
                   socketChannel.socket().shutdownInput();
                   socketChannel.socket().shutdownOutput();
                   socketChannel.close();
-                } catch (IOException e2) {
-                  getSocketIoHandler().channelException(socketChannel, e2);
-                  error(e2,
+                } catch (IOException exception2) {
+                  error(exception2,
                       "Additional problem with refused connection. "
                           + "Was not able to shut down the channel: ",
-                      e2.getMessage());
+                      exception2.getMessage());
+                  getSocketIoHandler().channelException(socketChannel, exception2);
                 }
-              } catch (IOException e3) {
-                getSocketIoHandler().channelException(socketChannel, e3);
+              } catch (IOException exception3) {
                 var logger = buildgen("Failed accepting connection: ");
                 if (Objects.nonNull(socketChannel.socket())) {
                   logger.append(socketChannel.socket().getInetAddress().getHostAddress());
                 }
-
-                error(e3, logger);
+                error(exception3, logger);
+                getSocketIoHandler().channelException(socketChannel, exception3);
               }
             }
           }

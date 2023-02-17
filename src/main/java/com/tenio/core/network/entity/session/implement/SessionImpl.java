@@ -165,9 +165,6 @@ public final class SessionImpl implements Session {
 
   @Override
   public void setPacketQueue(PacketQueue packetQueue) {
-    if (Objects.nonNull(this.packetQueue)) {
-      throw new IllegalStateException("Unable to reassign the packet queue. Queue already exists");
-    }
     this.packetQueue = packetQueue;
   }
 
@@ -508,6 +505,11 @@ public final class SessionImpl implements Session {
   }
 
   @Override
+  public void remove() {
+    getSessionManager().removeSession(this);
+  }
+
+  @Override
   public void close(ConnectionDisconnectMode connectionDisconnectMode,
                     PlayerDisconnectMode playerDisconnectMode)
       throws IOException {
@@ -520,11 +522,8 @@ public final class SessionImpl implements Session {
 
     if (Objects.nonNull(packetQueue)) {
       packetQueue.clear();
-      packetQueue = null;
+      setPacketQueue(null);
     }
-
-    getSessionManager().emitEvent(ServerEvent.SESSION_WILL_BE_CLOSED, this,
-        connectionDisconnectMode, playerDisconnectMode);
 
     if (hasKcp) {
       ukcp.getKcpIoHandler().channelInactiveIn(this);
@@ -554,8 +553,8 @@ public final class SessionImpl implements Session {
         break;
     }
 
-    setAssociatedToPlayer(false);
-    sessionManager.removeSession(this);
+    getSessionManager().emitEvent(ServerEvent.SESSION_WILL_BE_CLOSED, this,
+        connectionDisconnectMode, playerDisconnectMode);
   }
 
   private long now() {

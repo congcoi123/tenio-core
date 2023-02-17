@@ -36,7 +36,6 @@ import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import com.tenio.core.exception.PlayerJoinedRoomException;
 import com.tenio.core.exception.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.exception.SwitchedPlayerRoleInRoomException;
-import com.tenio.core.network.entity.session.Session;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -277,15 +276,6 @@ public interface Room {
    * @see Optional
    */
   Optional<Player> getPlayerByName(String playerName);
-
-  /**
-   * Retrieves a player on the server by using its session (if present).
-   *
-   * @param session a {@link Session} associating to the player on the server
-   * @return a corresponding instance of optional {@link Player}
-   * @see Optional
-   */
-  Optional<Player> getPlayerBySession(Session session);
 
   /**
    * Retrieves an iterator for a player management list. This method should be used to prevent

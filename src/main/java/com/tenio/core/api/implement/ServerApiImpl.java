@@ -123,8 +123,8 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       }
 
       disconnectPlayer(player);
-    } catch (RemovedNonExistentPlayerFromRoomException | IOException e) {
-      error(e, "Removed player: ", player.getName(), " with issue");
+    } catch (RemovedNonExistentPlayerFromRoomException | IOException exception) {
+      error(exception, "Removed player: ", player.getName(), " with issue");
     }
   }
 
@@ -134,9 +134,11 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
           PlayerDisconnectMode.DEFAULT);
     } else {
       getEventManager().emit(ServerEvent.DISCONNECT_PLAYER, player, PlayerDisconnectMode.DEFAULT);
+      String removedPlayer = player.getName();
       getPlayerManager().removePlayerByName(player.getName());
+      debug("DISCONNECTED PLAYER", "Player " + removedPlayer + " was removed.");
+      player.clean();
     }
-    player.clean();
   }
 
   @Override
@@ -163,11 +165,6 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   @Override
   public Optional<Player> getPlayerByName(String playerName) {
     return Optional.ofNullable(getPlayerManager().getPlayerByName(playerName));
-  }
-
-  @Override
-  public Optional<Player> getPlayerBySession(Session session) {
-    return Optional.ofNullable(getPlayerManager().getPlayerBySession(session));
   }
 
   @Override

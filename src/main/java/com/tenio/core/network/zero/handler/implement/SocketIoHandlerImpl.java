@@ -81,7 +81,7 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
   @Override
   public void channelActive(SocketChannel socketChannel, SelectionKey selectionKey) {
     var session = sessionManager.createSocketSession(socketChannel, selectionKey);
-    eventManager.emit(ServerEvent.SESSION_CREATED, session);
+    session.activate();
   }
 
   @Override

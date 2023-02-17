@@ -66,7 +66,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private int packetQueueSize;
   private boolean enabledKcp;
   private volatile int sessionCount;
-  private int maxIdleTime;
+  private int maxIdleTimeInSeconds;
 
   private SessionManagerImpl(EventManager eventManager) {
     super(eventManager);
@@ -102,7 +102,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     session.setPacketQueue(createNewPacketQueue());
     session.setConnectionFilter(connectionFilter);
     session.setEnabledKcp(enabledKcp);
-    session.setMaxIdleTimeInSeconds(maxIdleTime);
+    session.setMaxIdleTimeInSeconds(maxIdleTimeInSeconds);
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
       sessionBySockets.put(session.getSocketChannel(), session);
@@ -157,7 +157,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     session.setSessionManager(this);
     session.setPacketQueue(createNewPacketQueue());
     session.setConnectionFilter(connectionFilter);
-    session.setMaxIdleTimeInSeconds(maxIdleTime);
+    session.setMaxIdleTimeInSeconds(maxIdleTimeInSeconds);
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
       sessionByWebSockets.put(webSocketChannel, session);
@@ -241,6 +241,6 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public void setMaxIdleTimeInSeconds(int seconds) {
-    maxIdleTime = seconds;
+    maxIdleTimeInSeconds = seconds;
   }
 }

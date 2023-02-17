@@ -33,7 +33,7 @@ import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.schedule.task.internal.AutoCleanOrphanSessionTask;
+import com.tenio.core.schedule.task.internal.AutoCleanSessionTask;
 import com.tenio.core.schedule.task.internal.AutoDisconnectPlayerTask;
 import com.tenio.core.schedule.task.internal.AutoRemoveRoomTask;
 import com.tenio.core.schedule.task.internal.CcuReportTask;
@@ -52,7 +52,7 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
   private TaskManager taskManager;
 
   private final AutoDisconnectPlayerTask autoDisconnectPlayerTask;
-  private final AutoCleanOrphanSessionTask autoCleanOrphanSessionTask;
+  private final AutoCleanSessionTask autoCleanSessionTask;
   private final AutoRemoveRoomTask autoRemoveRoomTask;
   private final CcuReportTask ccuReportTask;
   private final DeadlockScanTask deadlockScanTask;
@@ -68,7 +68,7 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
     super(eventManager);
 
     autoDisconnectPlayerTask = AutoDisconnectPlayerTask.newInstance(this.eventManager);
-    autoCleanOrphanSessionTask = AutoCleanOrphanSessionTask.newInstance(this.eventManager);
+    autoCleanSessionTask = AutoCleanSessionTask.newInstance(this.eventManager);
     autoRemoveRoomTask = AutoRemoveRoomTask.newInstance(this.eventManager);
     ccuReportTask = CcuReportTask.newInstance(this.eventManager);
     deadlockScanTask = DeadlockScanTask.newInstance(this.eventManager);
@@ -99,7 +99,7 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
     info("START SERVICE", buildgen(getName(), " (", 1, ")"));
 
     taskManager.create("auto-disconnect-player", autoDisconnectPlayerTask.run());
-    taskManager.create("auto-clean-orphan-session", autoCleanOrphanSessionTask.run());
+    taskManager.create("auto-clean-session", autoCleanSessionTask.run());
     // taskManager.create("auto-remove-room", autoRemoveRoomTask.run());
     taskManager.create("ccu-report", ccuReportTask.run());
     taskManager.create("dead-lock", deadlockScanTask.run());
@@ -153,6 +153,7 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
   @Override
   public void setDisconnectedPlayerScanInterval(int interval) {
     autoDisconnectPlayerTask.setInterval(interval);
+    autoCleanSessionTask.setInterval(interval);
   }
 
   @Override
@@ -177,7 +178,7 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
 
   @Override
   public void setSessionManager(SessionManager sessionManager) {
-    autoCleanOrphanSessionTask.setSessionManager(sessionManager);
+    autoCleanSessionTask.setSessionManager(sessionManager);
     kcpUpdateTask.setSessionManager(sessionManager);
   }
 

@@ -36,7 +36,6 @@ import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
 import com.tenio.core.exception.PlayerJoinedRoomException;
 import com.tenio.core.exception.SwitchedPlayerRoleInRoomException;
-import com.tenio.core.network.entity.session.Session;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -255,11 +254,6 @@ public final class RoomImpl implements Room {
   @Override
   public Optional<Player> getPlayerByName(String playerName) {
     return Optional.ofNullable(playerManager.getPlayerByName(playerName));
-  }
-
-  @Override
-  public Optional<Player> getPlayerBySession(Session session) {
-    return Optional.ofNullable(playerManager.getPlayerBySession(session));
   }
 
   @Override

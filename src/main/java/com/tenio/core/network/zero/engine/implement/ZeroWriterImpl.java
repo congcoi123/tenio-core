@@ -92,7 +92,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
 
   private void processSessionQueue(Session session, WriterHandler socketWriterHandler,
                                    WriterHandler datagramWriterHandler) {
-    // ignore the null session
+    // ignore a null or inactivated session
     if (Objects.isNull(session)) {
       return;
     }

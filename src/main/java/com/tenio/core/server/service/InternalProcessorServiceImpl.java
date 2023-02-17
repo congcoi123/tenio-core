@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.server.service;
 
 import com.tenio.common.data.DataType;
+import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.configuration.kcp.KcpConfiguration;
 import com.tenio.core.controller.AbstractController;
@@ -98,12 +99,6 @@ public final class InternalProcessorServiceImpl extends AbstractController
   @Override
   public void subscribe() {
 
-    eventManager.on(ServerEvent.SESSION_CREATED, params -> {
-      var session = (Session) params[0];
-      session.activate();
-      return null;
-    });
-
     eventManager.on(ServerEvent.SESSION_REQUEST_CONNECTION, params -> {
       var request =
           createRequest(ServerEvent.SESSION_REQUEST_CONNECTION, (Session) params[0]);
@@ -115,6 +110,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
     eventManager.on(ServerEvent.SESSION_OCCURRED_EXCEPTION, params -> {
       eventManager.emit(ServerEvent.SERVER_EXCEPTION, params);
+
       return null;
     });
 
@@ -128,8 +124,10 @@ public final class InternalProcessorServiceImpl extends AbstractController
     });
 
     eventManager.on(ServerEvent.SESSION_READ_MESSAGE, params -> {
-      var request = createRequest(ServerEvent.SESSION_READ_MESSAGE, (Session) params[0]);
+      var session = (Session) params[0];
+      var request = createRequest(ServerEvent.SESSION_READ_MESSAGE, session);
       request.setAttribute(EVENT_KEY_SERVER_MESSAGE, params[1]);
+      session.setLastReadTime(TimeUtility.currentTimeMillis());
       enqueueRequest(request);
 
       return null;
@@ -158,24 +156,12 @@ public final class InternalProcessorServiceImpl extends AbstractController
   @Override
   public void processRequest(Request request) {
     switch (request.getEvent()) {
-      case SESSION_REQUEST_CONNECTION:
-        processSessionRequestsConnection(request);
-        break;
-
-      case SESSION_WILL_BE_CLOSED:
-        processSessionWillBeClosed(request);
-        break;
-
-      case SESSION_READ_MESSAGE:
-        processSessionReadMessage(request);
-        break;
-
-      case DATAGRAM_CHANNEL_READ_MESSAGE:
-        processDatagramChannelReadMessage(request);
-        break;
-
-      default:
-        break;
+      case SESSION_REQUEST_CONNECTION -> processSessionRequestsConnection(request);
+      case SESSION_WILL_BE_CLOSED -> processSessionWillBeClosed(request);
+      case SESSION_READ_MESSAGE -> processSessionReadMessage(request);
+      case DATAGRAM_CHANNEL_READ_MESSAGE -> processDatagramChannelReadMessage(request);
+      default -> {
+      }
     }
   }
 
@@ -223,38 +209,47 @@ public final class InternalProcessorServiceImpl extends AbstractController
     var playerClosedMode =
         (PlayerDisconnectMode) request.getAttribute(EVENT_KEY_PLAYER_DISCONNECTED_MODE);
 
-    var player = playerManager.getPlayerBySession(session);
-    // the player maybe existed
-    if (Objects.nonNull(player)) {
-      eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerClosedMode);
-      player.setSession(null);
-      if (!keepPlayerOnDisconnection) {
-        playerManager.removePlayerByName(player.getName());
-        player.clean();
+    if (session.isAssociatedToPlayer()) {
+      var player = playerManager.getPlayerByName(session.getName());
+      // the player maybe existed
+      if (Objects.nonNull(player)) {
+        eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerClosedMode);
+        player.setSession(null);
+        if (!keepPlayerOnDisconnection) {
+          String removedPlayer = player.getName();
+          playerManager.removePlayerByName(player.getName());
+          debug("DISCONNECTED PLAYER", "Player " + removedPlayer + " was removed.");
+          player.clean();
+        }
+      } else {
+        debug("SESSION WILL BE REMOVED", "The player " + session.getName() + " should be " +
+            "presented, but it was not.");
       }
     }
-    eventManager.emit(ServerEvent.DISCONNECT_CONNECTION, session, connectionClosedMode);
+    long removedSession = session.getId();
+    session.setName(null);
+    session.setAssociatedToPlayer(false);
+    session.remove();
+    debug("DISCONNECTED SESSION", "Session " + removedSession + " was removed.");
   }
 
+  // In this phase, the session must be bound with a player, a free session can only be accepted
+  // when it is being handled in the connection established phase
   private void processSessionReadMessage(Request request) {
     var session = request.getSender();
-    if (!session.isActivated()) {
-      return;
+
+    if (session.isAssociatedToPlayer()) {
+      var player = playerManager.getPlayerByName(session.getName());
+      if (Objects.isNull(player)) {
+        var illegalValueException = new IllegalArgumentException(
+            String.format("Unable to find player for the session: %s", session.toString()));
+        error(illegalValueException);
+        eventManager.emit(ServerEvent.SERVER_EXCEPTION, illegalValueException);
+        return;
+      }
+      var message = request.getAttribute(EVENT_KEY_SERVER_MESSAGE);
+      eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
     }
-
-    var player = playerManager.getPlayerBySession(session);
-    if (Objects.isNull(player)) {
-      var illegalValueException = new IllegalArgumentException(
-          String.format("Unable to find player for the session: %s", session.toString()));
-      error(illegalValueException);
-      eventManager.emit(ServerEvent.SERVER_EXCEPTION, illegalValueException);
-
-      return;
-    }
-
-    var message = request.getAttribute(EVENT_KEY_SERVER_MESSAGE);
-
-    eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
   }
 
   private void processDatagramChannelReadMessage(Request request) {
@@ -289,7 +284,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
           // TODO: reconnect
 
         } else {
-          // connect
+          // initialize a KCP connection
           initializeKcp(sessionInstance, player);
         }
       } else {
@@ -324,6 +319,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
   @Override
   public void setKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection) {
     this.keepPlayerOnDisconnection = keepPlayerOnDisconnection;
+  }
+
+  @Override
+  public void setPlayerMaxIdleTimeInSeconds(int seconds) {
+    playerManager.setMaxIdleTimeInSeconds(seconds);
   }
 
   @Override
@@ -363,7 +363,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
   @Override
   public void onShutdown() {
-    // TODO: prevent any emitting events
+    // do nothing
   }
 
   @Override

@@ -378,10 +378,6 @@ class ServerApiTest {
     Mockito.when(playerManager.getPlayerByName(playerName)).thenReturn(player);
     Assertions.assertEquals(Optional.ofNullable(player), serverApi.getPlayerByName(playerName));
 
-    // getPlayerBySession(Session session)
-    Mockito.when(playerManager.getPlayerBySession(session)).thenReturn(player);
-    Assertions.assertEquals(Optional.ofNullable(player), serverApi.getPlayerBySession(session));
-
     // getPlayerCount()
     Mockito.when(playerManager.getPlayerCount()).thenReturn(10);
     Assertions.assertEquals(10, serverApi.getPlayerCount());

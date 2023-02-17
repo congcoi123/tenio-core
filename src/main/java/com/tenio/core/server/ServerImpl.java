@@ -163,10 +163,10 @@ public final class ServerImpl extends SystemLogger implements Server {
     // it should wait for a while to let everything settles down
     Thread.sleep(1000);
 
+    info("SERVER", serverName, "Started");
+
     // emit "server started" event
     eventManager.emit(ServerEvent.SERVER_INITIALIZATION, serverName, configuration);
-
-    info("SERVER", serverName, "Started");
 
     if (((Setting) configuration.get(CoreConfigurationType.SERVER_SETTING)).getCommand()
         .isEnabled()) {
@@ -338,6 +338,8 @@ public final class ServerImpl extends SystemLogger implements Server {
         ));
     internalProcessorService.setKeepPlayerOnDisconnection(
         configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION));
+    internalProcessorService.setPlayerMaxIdleTimeInSeconds(
+        configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
 
     internalProcessorService.setNetworkReaderStatistic(networkService.getNetworkReaderStatistic());
     internalProcessorService.setNetworkWriterStatistic(networkService.getNetworkWriterStatistic());

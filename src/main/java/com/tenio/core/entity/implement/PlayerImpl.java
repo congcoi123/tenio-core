@@ -49,6 +49,11 @@ public final class PlayerImpl implements Player {
 
   private volatile long lastLoginTime;
   private volatile long lastJoinedRoomTime;
+  private volatile long lastReadTime;
+  private volatile long lastWriteTime;
+  private volatile long lastActivityTime;
+
+  private int maxIdleTimeInSecond;
   private volatile int playerSlotInCurrentRoom;
 
   private volatile boolean loggedIn;
@@ -68,6 +73,9 @@ public final class PlayerImpl implements Player {
     setSession(session);
     setLoggedIn(false);
     setActivated(false);
+    setLastReadTime(now());
+    setLastWriteTime(now());
+    setLastActivityTime(now());
   }
 
   /**
@@ -142,6 +150,61 @@ public final class PlayerImpl implements Player {
   @Override
   public long getLastLoggedInTime() {
     return lastLoginTime;
+  }
+
+  @Override
+  public long getLastActivityTime() {
+    return lastActivityTime;
+  }
+
+  @Override
+  public void setLastActivityTime(long timestamp) {
+    lastActivityTime = timestamp;
+  }
+
+  @Override
+  public long getLastReadTime() {
+    return lastReadTime;
+  }
+
+  @Override
+  public void setLastReadTime(long timestamp) {
+    lastReadTime = timestamp;
+    setLastActivityTime(lastReadTime);
+  }
+
+  @Override
+  public long getLastWriteTime() {
+    return lastWriteTime;
+  }
+
+  @Override
+  public void setLastWriteTime(long timestamp) {
+    lastWriteTime = timestamp;
+    setLastActivityTime(lastWriteTime);
+  }
+
+  @Override
+  public int getMaxIdleTimeInSeconds() {
+    return maxIdleTimeInSecond;
+  }
+
+  @Override
+  public void setMaxIdleTimeInSeconds(int seconds) {
+    maxIdleTimeInSecond = seconds;
+  }
+
+  @Override
+  public boolean isIdle() {
+    return isConnectionIdle();
+  }
+
+  private boolean isConnectionIdle() {
+    if (getMaxIdleTimeInSeconds() > 0) {
+      long elapsedSinceLastActivity = TimeUtility.currentTimeMillis() - getLastActivityTime();
+      return elapsedSinceLastActivity / 1000L > (long) getMaxIdleTimeInSeconds();
+    }
+    return false;
   }
 
   private void setLastLoggedInTime() {
@@ -241,6 +304,10 @@ public final class PlayerImpl implements Player {
     clearProperties();
   }
 
+  private long now() {
+    return TimeUtility.currentTimeMillis();
+  }
+
   @Override
   public boolean equals(Object object) {
     if (!(object instanceof Player player)) {
@@ -269,6 +336,10 @@ public final class PlayerImpl implements Player {
         ", roleInRoom=" + roleInRoom +
         ", lastLoginTime=" + lastLoginTime +
         ", lastJoinedRoomTime=" + lastJoinedRoomTime +
+        ", lastReadTime=" + lastReadTime +
+        ", lastWriteTime=" + lastWriteTime +
+        ", lastActivityTime=" + lastActivityTime +
+        ", maxIdleTimeInSecond=" + maxIdleTimeInSecond +
         ", playerSlotInCurrentRoom=" + playerSlotInCurrentRoom +
         ", loggedIn=" + loggedIn +
         ", activated=" + activated +

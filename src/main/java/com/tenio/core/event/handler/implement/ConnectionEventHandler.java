@@ -24,12 +24,12 @@ THE SOFTWARE.
 
 package com.tenio.core.event.handler.implement;
 
+import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.bootstrap.annotation.AutowiredAcceptNull;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.data.ServerMessage;
-import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.result.AttachedConnectionResult;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.event.implement.EventManager;
@@ -37,7 +37,6 @@ import com.tenio.core.exception.RefusedConnectionAddressException;
 import com.tenio.core.handler.event.EventAttachConnectionRequestValidation;
 import com.tenio.core.handler.event.EventAttachedConnectionResult;
 import com.tenio.core.handler.event.EventConnectionEstablishedResult;
-import com.tenio.core.handler.event.EventDisconnectConnection;
 import com.tenio.core.handler.event.EventSocketConnectionRefused;
 import com.tenio.core.handler.event.EventWebSocketConnectionRefused;
 import com.tenio.core.handler.event.EventWriteMessageToConnection;
@@ -71,9 +70,6 @@ public final class ConnectionEventHandler {
   @AutowiredAcceptNull
   private EventAttachedConnectionResult eventAttachedConnectionResult;
 
-  @AutowiredAcceptNull
-  private EventDisconnectConnection eventDisconnectConnection;
-
   /**
    * Initialization.
    *
@@ -94,9 +90,6 @@ public final class ConnectionEventHandler {
         Optional.ofNullable(eventAttachConnectionRequestValidation);
     final var eventAttachedConnectionResultOp =
         Optional.ofNullable(eventAttachedConnectionResult);
-
-    final var eventDisconnectConnectionOp =
-        Optional.ofNullable(eventDisconnectConnection);
 
     eventSocketConnectionRefusedOp.ifPresent(
         event -> eventManager.on(ServerEvent.SOCKET_CONNECTION_REFUSED, params -> {
@@ -133,6 +126,7 @@ public final class ConnectionEventHandler {
         event -> eventManager.on(ServerEvent.SESSION_WRITE_MESSAGE, params -> {
           var session = (Session) params[0];
           var packet = (Packet) params[1];
+          session.setLastWriteTime(TimeUtility.currentTimeMillis());
 
           event.handle(session, packet);
 
@@ -153,16 +147,6 @@ public final class ConnectionEventHandler {
           var result = (AttachedConnectionResult) params[2];
 
           event.handle(player, kcpConv, result);
-
-          return null;
-        }));
-
-    eventDisconnectConnectionOp.ifPresent(
-        event -> eventManager.on(ServerEvent.DISCONNECT_CONNECTION, params -> {
-          var session = (Session) params[0];
-          var mode = (ConnectionDisconnectMode) params[1];
-
-          event.handle(session, mode);
 
           return null;
         }));

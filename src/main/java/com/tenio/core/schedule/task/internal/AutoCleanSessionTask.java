@@ -44,16 +44,16 @@ import java.util.concurrent.TimeUnit;
  *
  * @since 0.5.0
  */
-public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
+public final class AutoCleanSessionTask extends AbstractSystemTask {
 
   private SessionManager sessionManager;
 
-  private AutoCleanOrphanSessionTask(EventManager eventManager) {
+  private AutoCleanSessionTask(EventManager eventManager) {
     super(eventManager);
   }
 
-  public static AutoCleanOrphanSessionTask newInstance(EventManager eventManager) {
-    return new AutoCleanOrphanSessionTask(eventManager);
+  public static AutoCleanSessionTask newInstance(EventManager eventManager) {
+    return new AutoCleanSessionTask(eventManager);
   }
 
   @Override
@@ -63,7 +63,7 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
           Iterator<Session> iterator = sessionManager.getSessionIterator();
           while (iterator.hasNext()) {
             Session session = iterator.next();
-            if (session.isOrphan()) {
+            if (session.isOrphan() || session.isIdle()) {
               try {
                 session.close(ConnectionDisconnectMode.ORPHAN, PlayerDisconnectMode.DEFAULT);
               } catch (IOException exception) {

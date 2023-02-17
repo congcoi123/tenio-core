@@ -48,16 +48,14 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   @GuardedBy("this")
   private final Map<String, Player> playerByNames;
-  @GuardedBy("this")
-  private final Map<Session, Player> playerBySessions;
 
   private Room ownerRoom;
   private volatile int playerCount;
+  private int maxIdleTimeInSecond;
 
   private PlayerManagerImpl(EventManager eventManager) {
     super(eventManager);
     playerByNames = new HashMap<>();
-    playerBySessions = new HashMap<>();
     ownerRoom = null;
     playerCount = 0;
   }
@@ -74,22 +72,19 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
     synchronized (this) {
       playerByNames.put(player.getName(), player);
-      if (player.containsSession()) {
-        playerBySessions.put(player.getSession().get(), player);
-      }
       playerCount = playerByNames.size();
     }
   }
 
   @Override
   public Player createPlayer(String name) {
-    var newPlayer = PlayerImpl.newInstance(name);
-    newPlayer.setActivated(true);
-    newPlayer.setLoggedIn(true);
+    var player = PlayerImpl.newInstance(name);
+    player.setActivated(true);
+    player.setLoggedIn(true);
+    player.setMaxIdleTimeInSeconds(maxIdleTimeInSecond);
+    addPlayer(player);
 
-    addPlayer(newPlayer);
-
-    return newPlayer;
+    return player;
   }
 
   @Override
@@ -98,26 +93,19 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
       throw new NullPointerException("Unable to assign a null session for the player");
     }
 
-    var newPlayer = PlayerImpl.newInstance(name, session);
-    newPlayer.setActivated(true);
-    newPlayer.setLoggedIn(true);
+    var player = PlayerImpl.newInstance(name, session);
+    player.setActivated(true);
+    player.setLoggedIn(true);
+    player.setMaxIdleTimeInSeconds(maxIdleTimeInSecond);
+    addPlayer(player);
 
-    addPlayer(newPlayer);
-
-    return newPlayer;
+    return player;
   }
 
   @Override
   public Player getPlayerByName(String playerName) {
     synchronized (playerByNames) {
       return playerByNames.get(playerName);
-    }
-  }
-
-  @Override
-  public Player getPlayerBySession(Session session) {
-    synchronized (playerBySessions) {
-      return playerBySessions.get(session);
     }
   }
 
@@ -136,45 +124,24 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public Iterator<Session> getSessionIterator() {
-    synchronized (this) {
-      return playerBySessions.keySet().iterator();
-    }
-  }
-
-  @Override
-  public List<Session> getReadonlySessionsList() {
-    synchronized (this) {
-      return List.copyOf(playerBySessions.keySet());
-    }
-  }
-
-  @Override
   public void removePlayerByName(String playerName) {
-    var player = getPlayerByName(playerName);
-    if (Objects.isNull(player)) {
+    if (!containsPlayerName(playerName)) {
       throw new RemovedNonExistentPlayerFromRoomException(playerName, ownerRoom);
     }
 
-    removePlayer(player);
-  }
-
-  @Override
-  public void removePlayerBySession(Session session) {
-    var player = getPlayerBySession(session);
-    if (Objects.isNull(player)) {
-      throw new RemovedNonExistentPlayerFromRoomException(session.toString(), ownerRoom);
-    }
-
-    removePlayer(player);
+    removePlayer(playerName);
   }
 
   private void removePlayer(Player player) {
     synchronized (this) {
       playerByNames.remove(player.getName());
-      if (player.containsSession()) {
-        playerBySessions.remove(player.getSession().get());
-      }
+      playerCount = playerByNames.size();
+    }
+  }
+
+  private void removePlayer(String playerName) {
+    synchronized (this) {
+      playerByNames.remove(playerName);
       playerCount = playerByNames.size();
     }
   }
@@ -183,13 +150,6 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   public boolean containsPlayerName(String playerName) {
     synchronized (playerByNames) {
       return playerByNames.containsKey(playerName);
-    }
-  }
-
-  @Override
-  public boolean containsPlayerSession(Session session) {
-    synchronized (playerBySessions) {
-      return playerBySessions.containsKey(session);
     }
   }
 
@@ -206,6 +166,16 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public int getPlayerCount() {
     return playerCount;
+  }
+
+  @Override
+  public int getMaxIdleTimeInSeconds() {
+    return maxIdleTimeInSecond;
+  }
+
+  @Override
+  public void setMaxIdleTimeInSeconds(int seconds) {
+    maxIdleTimeInSecond = seconds;
   }
 
   @Override

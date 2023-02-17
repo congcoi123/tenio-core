@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.event.handler.implement;
 
+import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.bootstrap.annotation.AutowiredAcceptNull;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.configuration.define.ServerEvent;
@@ -124,6 +125,7 @@ public final class PlayerEventHandler {
         event -> eventManager.on(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, params -> {
           var player = (Player) params[0];
           var message = (ServerMessage) params[1];
+          player.setLastReadTime(TimeUtility.currentTimeMillis());
 
           event.handle(player, message);
 
@@ -134,6 +136,7 @@ public final class PlayerEventHandler {
         event -> eventManager.on(ServerEvent.SEND_MESSAGE_TO_PLAYER, params -> {
           var player = (Player) params[0];
           var message = (ServerMessage) params[1];
+          player.setLastWriteTime(TimeUtility.currentTimeMillis());
 
           event.handle(player, message);
 

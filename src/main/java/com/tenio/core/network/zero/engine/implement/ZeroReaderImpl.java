@@ -137,8 +137,13 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     var session = getSessionManager().getSessionBySocket(socketChannel);
 
     if (Objects.isNull(session)) {
-      debug("READ CHANNEL", "Reader handle a null session with the socket channel: ",
+      debug("READ TCP CHANNEL", "Reader handle a null session with the socket channel: ",
           socketChannel.toString());
+      return;
+    }
+
+    if (!session.isActivated()) {
+      debug("READ TCP CHANNEL", "Session is inactivated: ", session.toString());
       return;
     }
 
@@ -160,9 +165,9 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         if (socketChannel.isConnected()) {
           byteCount = socketChannel.read(readerBuffer);
         }
-      } catch (IOException e) {
-        error(e, "An exception was occurred on channel: ", socketChannel.toString());
-        getSocketIoHandler().sessionException(session, e);
+      } catch (IOException exception) {
+        error(exception, "An exception was occurred on channel: ", socketChannel.toString());
+        getSocketIoHandler().sessionException(session, exception);
       }
       // no left data is available, should close the connection
       if (byteCount == -1) {
@@ -190,8 +195,8 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         socketChannel.socket().shutdownInput();
         socketChannel.socket().shutdownOutput();
         socketChannel.close();
-      } catch (IOException e) {
-        error(e, "Error on closing socket channel: ", socketChannel.toString());
+      } catch (IOException exception) {
+        error(exception, "Error on closing socket channel: ", socketChannel.toString());
       }
     }
   }
@@ -240,11 +245,15 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
       if (Objects.isNull(session)) {
         getDatagramIoHandler().channelRead(datagramChannel, remoteAddress, binary);
       } else {
-        session.addReadBytes(byteCount);
-        if (session.containsKcp()) {
-          session.getUkcp().input(binary);
+        if (session.isActivated()) {
+          session.addReadBytes(byteCount);
+          if (session.containsKcp()) {
+            session.getUkcp().input(binary);
+          } else {
+            getDatagramIoHandler().sessionRead(session, binary);
+          }
         } else {
-          getDatagramIoHandler().sessionRead(session, binary);
+          debug("READ UDP CHANNEL", "Session is inactivated: ", session.toString());
         }
       }
     }

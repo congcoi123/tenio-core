@@ -60,11 +60,8 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
           Iterator<Player> iterator = playerManager.getPlayerIterator();
           while (iterator.hasNext()) {
             Player player = iterator.next();
-            if (player.containsSession()) {
-              Session session = player.getSession().get();
-              if (session.isIdle()) {
-                ServerImpl.getInstance().getApi().logout(player);
-              }
+            if (!player.containsSession() && player.isIdle()) {
+              ServerImpl.getInstance().getApi().logout(player);
             }
           }
         }, initialDelay, interval, TimeUnit.SECONDS);
