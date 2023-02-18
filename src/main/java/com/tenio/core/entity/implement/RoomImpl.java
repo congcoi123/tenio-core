@@ -52,10 +52,7 @@ import java.util.stream.Collectors;
  */
 public final class RoomImpl implements Room {
 
-  public static final int NIL_SLOT = -1;
-  public static final int DEFAULT_SLOT = 0;
-
-  private static final AtomicLong ID_COUNTER = new AtomicLong();
+  private static final AtomicLong ID_COUNTER = new AtomicLong(1L);
 
   private final long id;
   private final Lock switchRoleLock;

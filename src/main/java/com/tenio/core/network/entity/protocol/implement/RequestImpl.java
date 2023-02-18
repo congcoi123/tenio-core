@@ -30,7 +30,6 @@ import com.tenio.core.network.define.RequestPriority;
 import com.tenio.core.network.entity.protocol.Request;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -41,7 +40,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class RequestImpl implements Request {
 
-  private static final AtomicLong ID_COUNTER = new AtomicLong();
+  private static final AtomicLong ID_COUNTER = new AtomicLong(1L);
 
   private final long id;
   private final Map<String, Object> attributes;
@@ -120,10 +119,9 @@ public final class RequestImpl implements Request {
 
   @Override
   public boolean equals(Object object) {
-    if (!(object instanceof Request)) {
+    if (!(object instanceof Request request)) {
       return false;
     } else {
-      var request = (Request) object;
       return getId() == request.getId();
     }
   }

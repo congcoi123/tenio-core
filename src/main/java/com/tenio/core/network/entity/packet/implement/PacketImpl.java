@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
 
-  private static final AtomicLong ID_COUNTER = new AtomicLong();
+  private static final AtomicLong ID_COUNTER = new AtomicLong(1L);
 
   private final long id;
   private final long createdTime;

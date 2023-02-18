@@ -62,13 +62,9 @@ public final class InternalProcessorServiceImpl extends AbstractController
     implements InternalProcessorService {
 
   private static final String EVENT_KEY_DATAGRAM_CHANNEL = "datagram-channel";
-  private static final String EVENT_KEY_CONNECTION_DISCONNECTED_MODE =
-      "connection-disconnected-mode";
-  private static final String EVENT_KEY_PLAYER_DISCONNECTED_MODE = "player-disconnected-mode";
   private static final String EVENT_KEY_SERVER_MESSAGE = "server-message";
   private static final String EVENT_KEY_DATAGRAM_REMOTE_ADDRESS = "datagram-remote-address";
 
-  private NetworkReaderStatistic networkReaderStatistic;
   private NetworkWriterStatistic networkWriterStatistic;
   private DataType dataType;
   private PlayerManager playerManager;
@@ -115,10 +111,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
     });
 
     eventManager.on(ServerEvent.SESSION_WILL_BE_CLOSED, params -> {
-      var request = createRequest(ServerEvent.SESSION_WILL_BE_CLOSED, (Session) params[0]);
-      request.setAttribute(EVENT_KEY_CONNECTION_DISCONNECTED_MODE, params[1]);
-      request.setAttribute(EVENT_KEY_PLAYER_DISCONNECTED_MODE, params[2]);
-      enqueueRequest(request);
+      processSessionWillBeClosed((Session) params[0], (ConnectionDisconnectMode) params[1],
+          (PlayerDisconnectMode) params[2]);
 
       return null;
     });
@@ -157,7 +151,6 @@ public final class InternalProcessorServiceImpl extends AbstractController
   public void processRequest(Request request) {
     switch (request.getEvent()) {
       case SESSION_REQUEST_CONNECTION -> processSessionRequestsConnection(request);
-      case SESSION_WILL_BE_CLOSED -> processSessionWillBeClosed(request);
       case SESSION_READ_MESSAGE -> processSessionReadMessage(request);
       case DATAGRAM_CHANNEL_READ_MESSAGE -> processDatagramChannelReadMessage(request);
       default -> {
@@ -202,18 +195,14 @@ public final class InternalProcessorServiceImpl extends AbstractController
     }
   }
 
-  private void processSessionWillBeClosed(Request request) {
-    var session = request.getSender();
-    var connectionClosedMode = (ConnectionDisconnectMode) request
-        .getAttribute(EVENT_KEY_CONNECTION_DISCONNECTED_MODE);
-    var playerClosedMode =
-        (PlayerDisconnectMode) request.getAttribute(EVENT_KEY_PLAYER_DISCONNECTED_MODE);
-
+  private void processSessionWillBeClosed(Session session,
+                                          ConnectionDisconnectMode connectionDisconnectMode,
+                                          PlayerDisconnectMode playerDisconnectMode) {
     if (session.isAssociatedToPlayer()) {
       var player = playerManager.getPlayerByName(session.getName());
       // the player maybe existed
       if (Objects.nonNull(player)) {
-        eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerClosedMode);
+        eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
         player.setSession(null);
         if (!keepPlayerOnDisconnection) {
           String removedPlayer = player.getName();
@@ -230,7 +219,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     session.setName(null);
     session.setAssociatedToPlayer(false);
     session.remove();
-    debug("DISCONNECTED SESSION", "Session " + removedSession + " was removed.");
+    debug("DISCONNECTED SESSION", "Session " + removedSession + " was removed in mode " + connectionDisconnectMode);
   }
 
   // In this phase, the session must be bound with a player, a free session can only be accepted
@@ -338,7 +327,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
   @Override
   public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
-    this.networkReaderStatistic = networkReaderStatistic;
+    // do nothing
   }
 
   @Override

@@ -82,7 +82,6 @@ public enum ServerEvent {
   /**
    * When a session is going to disconnect to the server.
    */
-  @Asynchronous
   SESSION_WILL_BE_CLOSED,
   /**
    * When a message from client side sent to a session.
@@ -94,6 +93,7 @@ public enum ServerEvent {
    *
    * @see EventWriteMessageToConnection
    */
+  @Asynchronous
   SESSION_WRITE_MESSAGE,
   /**
    * When a message sent to the sever from client side via datagram channel.

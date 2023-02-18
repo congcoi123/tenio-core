@@ -43,7 +43,7 @@ public final class PacketQueueImpl implements PacketQueue {
   private volatile int size;
 
   private PacketQueueImpl() {
-    queue = new TreeSet<Packet>();
+    queue = new TreeSet<>();
   }
 
   public static PacketQueueImpl newInstance() {

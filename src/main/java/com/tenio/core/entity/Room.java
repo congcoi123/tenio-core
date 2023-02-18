@@ -45,6 +45,9 @@ import java.util.Optional;
  */
 public interface Room {
 
+  int NIL_SLOT = -1;
+  int DEFAULT_SLOT = 0;
+
   /**
    * Retrieves the room's unique ID in the management list, on the server.
    *

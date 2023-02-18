@@ -60,7 +60,7 @@ public final class SessionImpl implements Session {
    * The maximum time that this session is allowed to be orphan.
    */
   private static final long ORPHAN_ALLOWANCE_TIME_IN_MILLISECONDS = 3000L;
-  private static final AtomicLong ID_COUNTER = new AtomicLong();
+  private static final AtomicLong ID_COUNTER = new AtomicLong(1L);
 
   private final long id;
   private final AtomicLong readBytes;
