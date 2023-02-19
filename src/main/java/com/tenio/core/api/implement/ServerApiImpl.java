@@ -124,7 +124,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
       disconnectPlayer(player);
     } catch (RemovedNonExistentPlayerFromRoomException | IOException exception) {
-      error(exception, "Removed player: ", player.getName(), " with issue");
+      error(exception, "Remove player: ", player.getName(), " with issue");
     }
   }
 

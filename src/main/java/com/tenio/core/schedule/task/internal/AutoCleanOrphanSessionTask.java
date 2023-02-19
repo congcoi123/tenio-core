@@ -37,23 +37,21 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * For a session which is in IDLE mode and no longer associated to any player, that means for a
- * long time without receiving or sending any data from the server or from a client. This task
- * will scan those IDLE sessions in period time and force them to disconnect. Those
- * sessions got a "timeout" error.
+ * For a session which is no longer associated to any player (orphan), this task
+ * will scan in period time and force them to disconnect.
  *
  * @since 0.5.0
  */
-public final class AutoCleanSessionTask extends AbstractSystemTask {
+public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
 
   private SessionManager sessionManager;
 
-  private AutoCleanSessionTask(EventManager eventManager) {
+  private AutoCleanOrphanSessionTask(EventManager eventManager) {
     super(eventManager);
   }
 
-  public static AutoCleanSessionTask newInstance(EventManager eventManager) {
-    return new AutoCleanSessionTask(eventManager);
+  public static AutoCleanOrphanSessionTask newInstance(EventManager eventManager) {
+    return new AutoCleanOrphanSessionTask(eventManager);
   }
 
   @Override
@@ -63,7 +61,7 @@ public final class AutoCleanSessionTask extends AbstractSystemTask {
           Iterator<Session> iterator = sessionManager.getSessionIterator();
           while (iterator.hasNext()) {
             Session session = iterator.next();
-            if (session.isOrphan() || session.isIdle()) {
+            if (session.isOrphan()) {
               try {
                 session.close(ConnectionDisconnectMode.ORPHAN, PlayerDisconnectMode.DEFAULT);
               } catch (IOException exception) {

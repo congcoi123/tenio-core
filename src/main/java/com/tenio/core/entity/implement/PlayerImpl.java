@@ -58,6 +58,7 @@ public final class PlayerImpl implements Player {
 
   private volatile boolean loggedIn;
   private volatile boolean activated;
+  private volatile boolean deportedFlag;
 
   private PlayerImpl(String name) {
     this(name, null);
@@ -76,6 +77,7 @@ public final class PlayerImpl implements Player {
     setLastReadTime(now());
     setLastWriteTime(now());
     setLastActivityTime(now());
+    setNeverDeported(false);
   }
 
   /**
@@ -199,6 +201,16 @@ public final class PlayerImpl implements Player {
     return isConnectionIdle();
   }
 
+  @Override
+  public boolean isNeverDeported() {
+    return deportedFlag;
+  }
+
+  @Override
+  public void setNeverDeported(boolean flag) {
+    deportedFlag = flag;
+  }
+
   private boolean isConnectionIdle() {
     if (getMaxIdleTimeInSeconds() > 0) {
       long elapsedSinceLastActivity = TimeUtility.currentTimeMillis() - getLastActivityTime();
@@ -223,7 +235,7 @@ public final class PlayerImpl implements Player {
 
   @Override
   public boolean isInRoom() {
-    return playerSlotInCurrentRoom > RoomImpl.NIL_SLOT;
+    return Objects.nonNull(currentRoom);
   }
 
   @Override
@@ -245,9 +257,9 @@ public final class PlayerImpl implements Player {
   public void setCurrentRoom(Room room) {
     currentRoom = room;
     if (Objects.isNull(currentRoom)) {
-      playerSlotInCurrentRoom = RoomImpl.NIL_SLOT;
+      playerSlotInCurrentRoom = Room.NIL_SLOT;
     } else {
-      playerSlotInCurrentRoom = RoomImpl.DEFAULT_SLOT;
+      playerSlotInCurrentRoom = Room.DEFAULT_SLOT;
     }
     setLastJoinedRoomTime();
   }
@@ -330,8 +342,7 @@ public final class PlayerImpl implements Player {
     return "Player{" +
         "name='" + name + '\'' +
         ", properties=" + properties +
-        ", session=" + session +
-        ", currentRoom=" + currentRoom +
+        ", currentRoom=" + (Objects.nonNull(currentRoom) ? currentRoom.getId() : "") +
         ", state=" + state +
         ", roleInRoom=" + roleInRoom +
         ", lastLoginTime=" + lastLoginTime +
@@ -343,6 +354,8 @@ public final class PlayerImpl implements Player {
         ", playerSlotInCurrentRoom=" + playerSlotInCurrentRoom +
         ", loggedIn=" + loggedIn +
         ", activated=" + activated +
+        ", deportedFlag=" + deportedFlag +
+        ", session=" + session +
         '}';
   }
 }

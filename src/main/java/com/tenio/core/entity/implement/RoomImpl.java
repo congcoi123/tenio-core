@@ -63,7 +63,7 @@ public final class RoomImpl implements Room {
   private int maxSpectators;
   private volatile int participantCount;
   private volatile int spectatorCount;
-  private Player owner;
+  private volatile Player owner;
   private PlayerManager playerManager;
   private RoomRemoveMode roomRemoveMode;
   private RoomCredentialValidatedStrategy roomCredentialValidatedStrategy;
@@ -300,12 +300,14 @@ public final class RoomImpl implements Room {
 
     if (asSpectator) {
       player.setRoleInRoom(PlayerRoleInRoom.SPECTATOR);
+    } else {
+      player.setRoleInRoom(PlayerRoleInRoom.PARTICIPANT);
     }
 
     updateElementsCounter();
 
     if (asSpectator) {
-      player.setPlayerSlotInCurrentRoom(DEFAULT_SLOT);
+      player.setPlayerSlotInCurrentRoom(NIL_SLOT);
     } else {
       if (targetSlot == DEFAULT_SLOT) {
         player.setPlayerSlotInCurrentRoom(
@@ -314,7 +316,7 @@ public final class RoomImpl implements Room {
         try {
           roomPlayerSlotGeneratedStrategy.tryTakeSlot(targetSlot);
           player.setPlayerSlotInCurrentRoom(targetSlot);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException exception) {
           player.setPlayerSlotInCurrentRoom(DEFAULT_SLOT);
           throw new PlayerJoinedRoomException(String
               .format("Unable to set the target slot: %d for the participant: %s", targetSlot,
@@ -434,14 +436,18 @@ public final class RoomImpl implements Room {
         ", properties=" + properties +
         ", name='" + name + '\'' +
         ", password='" + password + '\'' +
+        ", owner=" + (Objects.nonNull(owner) ? owner.getName() : "") +
+        ", roomRemoveMode=" + roomRemoveMode +
+        ", state=" + state +
+        ", activated=" + activated +
         ", maxParticipants=" + maxParticipants +
         ", maxSpectators=" + maxSpectators +
         ", participantCount=" + participantCount +
         ", spectatorCount=" + spectatorCount +
-        ", owner=" + owner +
-        ", roomRemoveMode=" + roomRemoveMode +
-        ", state=" + state +
-        ", activated=" + activated +
+        ", participants=" + getReadonlyParticipantsList().stream().map(Player::getName).collect(
+        Collectors.toList()) +
+        ", spectators=" + getReadonlySpectatorsList().stream().map(Player::getName).collect(
+        Collectors.toList()) +
         '}';
   }
 

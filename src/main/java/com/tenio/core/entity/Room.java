@@ -250,9 +250,9 @@ public interface Room {
   void setCapacity(int maxParticipants, int maxSpectators) throws IllegalArgumentException;
 
   /**
-   * Retrieves the current number of players in the room.
+   * Retrieves the current number of participants in the room.
    *
-   * @return the current number of players ({@code integer} value)
+   * @return the current number of participants ({@code integer} value)
    */
   int getParticipantCount();
 
@@ -347,7 +347,7 @@ public interface Room {
    */
   default void addPlayer(Player player, boolean asSpectator)
       throws PlayerJoinedRoomException, AddedDuplicatedPlayerException {
-    addPlayer(player, asSpectator, RoomImpl.DEFAULT_SLOT);
+    addPlayer(player, asSpectator, Room.DEFAULT_SLOT);
   }
 
   /**
@@ -399,10 +399,10 @@ public interface Room {
    *
    * @param player the changing {@link Player}
    * @throws SwitchedPlayerRoleInRoomException when the changing could not be done
-   * @see RoomImpl#DEFAULT_SLOT
+   * @see Room#DEFAULT_SLOT
    */
   default void switchSpectatorToParticipant(Player player) throws SwitchedPlayerRoleInRoomException {
-    switchSpectatorToParticipant(player, RoomImpl.DEFAULT_SLOT);
+    switchSpectatorToParticipant(player, Room.DEFAULT_SLOT);
   }
 
   /**

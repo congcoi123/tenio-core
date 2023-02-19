@@ -205,20 +205,20 @@ public interface ServerApi {
    *                     In case of free join, this value would be set to {@code null}
    * @param slotInRoom   the position of player located in the room ({@code integer} value)
    * @param asSpectator  sets by {@code true} if the player operating in the room as a
-   *                     spectator, otherwise returns {@code false}
+   *                     spectator, otherwise sets it {@code false}
    */
   void joinRoom(Player player, Room room, String roomPassword, int slotInRoom, boolean asSpectator);
 
   /**
-   * Allows a player to join a particular room as the role of "player" with the room's password is
-   * not present, and the player position in room is not considered.
+   * Allows a player to join a particular room as the role of "participant" with the room's
+   * password is not present, and the player position in room is not considered.
    *
    * @param player the joining {@link Player}
    * @param room   the current {@link Room}
-   * @see RoomImpl#DEFAULT_SLOT
+   * @see Room#DEFAULT_SLOT
    */
   default void joinRoom(Player player, Room room) {
-    joinRoom(player, room, null, RoomImpl.DEFAULT_SLOT, false);
+    joinRoom(player, room, null, Room.DEFAULT_SLOT, false);
   }
 
   /**

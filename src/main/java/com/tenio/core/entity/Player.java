@@ -26,6 +26,7 @@ package com.tenio.core.entity;
 
 import com.tenio.core.entity.define.room.PlayerRoleInRoom;
 import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.schedule.task.internal.AutoDisconnectPlayerTask;
 import java.util.Optional;
 
 /**
@@ -171,6 +172,25 @@ public interface Player {
    * @return {@code true} if the player got in IDLE state, otherwise returns {@code false}
    */
   boolean isIdle();
+
+  /**
+   * Ensures that the {@link Player} is never deported from the server even it gets timeout.
+   *
+   * @return {@code true} if the player is never considered to be deported, otherwise returns
+   * {@code false}
+   * @see AutoDisconnectPlayerTask
+   * @since 0.5.0
+   */
+  boolean isNeverDeported();
+
+  /**
+   * Allows making a {@link Player} not to be deported from the server.
+   *
+   * @param flag sets it {@code true} to make the player not to be deported
+   * @see AutoDisconnectPlayerTask
+   * @since 0.5.0
+   */
+  void setNeverDeported(boolean flag);
 
   /**
    * Retrieves the player's session.

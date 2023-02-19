@@ -27,7 +27,6 @@ package com.tenio.core.schedule.task.internal;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.schedule.task.AbstractSystemTask;
 import com.tenio.core.server.ServerImpl;
 import java.util.Iterator;
@@ -60,7 +59,9 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
           Iterator<Player> iterator = playerManager.getPlayerIterator();
           while (iterator.hasNext()) {
             Player player = iterator.next();
-            if (!player.containsSession() && player.isIdle()) {
+            if (player.isIdle() && !player.isNeverDeported()) {
+              debug("AUTO DISCONNECT PLAYER", "Player " + player.getName() + " is going to be " +
+                  "forced to remove by the cleaning task");
               ServerImpl.getInstance().getApi().logout(player);
             }
           }

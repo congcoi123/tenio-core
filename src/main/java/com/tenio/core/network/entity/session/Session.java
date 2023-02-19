@@ -35,7 +35,7 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.codec.packet.PacketReadState;
 import com.tenio.core.network.zero.codec.packet.PendingPacket;
 import com.tenio.core.network.zero.codec.packet.ProcessedPacket;
-import com.tenio.core.schedule.task.internal.AutoCleanSessionTask;
+import com.tenio.core.schedule.task.internal.AutoCleanOrphanSessionTask;
 import io.netty.channel.Channel;
 import java.io.IOException;
 import java.net.SocketAddress;
@@ -91,7 +91,7 @@ public interface Session {
    *
    * @return {@code true} if the session is orphan, otherwise returns {@code false}
    * @see Player
-   * @see AutoCleanSessionTask
+   * @see AutoCleanOrphanSessionTask
    * @since 0.5.0
    */
   boolean isOrphan();
