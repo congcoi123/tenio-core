@@ -118,26 +118,18 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     }
 
     try {
-      if (player.isInRoom()) {
-        leaveRoom(player, PlayerLeaveRoomMode.LOG_OUT);
+      if (player.containsSession()) {
+        player.getSession().get().close(ConnectionDisconnectMode.DEFAULT,
+            PlayerDisconnectMode.DEFAULT);
+      } else {
+        getEventManager().emit(ServerEvent.DISCONNECT_PLAYER, player, PlayerDisconnectMode.DEFAULT);
+        String removedPlayer = player.getName();
+        getPlayerManager().removePlayerByName(player.getName());
+        debug("DISCONNECTED PLAYER", "Player " + removedPlayer + " was removed.");
+        player.clean();
       }
-
-      disconnectPlayer(player);
     } catch (RemovedNonExistentPlayerFromRoomException | IOException exception) {
       error(exception, "Remove player: ", player.getName(), " with issue");
-    }
-  }
-
-  private void disconnectPlayer(Player player) throws IOException {
-    if (player.containsSession()) {
-      player.getSession().get().close(ConnectionDisconnectMode.DEFAULT,
-          PlayerDisconnectMode.DEFAULT);
-    } else {
-      getEventManager().emit(ServerEvent.DISCONNECT_PLAYER, player, PlayerDisconnectMode.DEFAULT);
-      String removedPlayer = player.getName();
-      getPlayerManager().removePlayerByName(player.getName());
-      debug("DISCONNECTED PLAYER", "Player " + removedPlayer + " was removed.");
-      player.clean();
     }
   }
 
@@ -233,13 +225,13 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       return;
     }
 
-    var room = player.getCurrentRoom();
+    var room = player.getCurrentRoom().get();
     getEventManager().emit(ServerEvent.PLAYER_BEFORE_LEAVE_ROOM, player, room, leaveRoomMode);
     try {
-      room.get().removePlayer(player);
+      room.removePlayer(player);
       getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,
           PlayerLeftRoomResult.SUCCESS);
-    } catch (RemovedNonExistentPlayerFromRoomException e) {
+    } catch (RemovedNonExistentPlayerFromRoomException exception) {
       getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,
           PlayerLeftRoomResult.PLAYER_ALREADY_LEFT_ROOM);
     }

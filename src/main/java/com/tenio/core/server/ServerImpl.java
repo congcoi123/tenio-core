@@ -98,9 +98,9 @@ public final class ServerImpl extends SystemLogger implements Server {
     playerManager = PlayerManagerImpl.newInstance(eventManager);
     udpChannelManager = UdpChannelManager.newInstance();
     networkService = NetworkServiceImpl.newInstance(eventManager);
-    internalProcessorService = InternalProcessorServiceImpl.newInstance(eventManager);
-    scheduleService = ScheduleServiceImpl.newInstance(eventManager);
     serverApi = ServerApiImpl.newInstance(this);
+    internalProcessorService = InternalProcessorServiceImpl.newInstance(eventManager, serverApi);
+    scheduleService = ScheduleServiceImpl.newInstance(eventManager);
   } // prevent creation manually
 
   /**

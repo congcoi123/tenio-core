@@ -213,14 +213,14 @@ public final class PlayerImpl implements Player {
 
   private boolean isConnectionIdle() {
     if (getMaxIdleTimeInSeconds() > 0) {
-      long elapsedSinceLastActivity = TimeUtility.currentTimeMillis() - getLastActivityTime();
+      long elapsedSinceLastActivity = now() - getLastActivityTime();
       return elapsedSinceLastActivity / 1000L > (long) getMaxIdleTimeInSeconds();
     }
     return false;
   }
 
   private void setLastLoggedInTime() {
-    lastLoginTime = TimeUtility.currentTimeMillis();
+    lastLoginTime = now();
   }
 
   @Override
@@ -270,7 +270,7 @@ public final class PlayerImpl implements Player {
   }
 
   private void setLastJoinedRoomTime() {
-    lastJoinedRoomTime = TimeUtility.currentTimeMillis();
+    lastJoinedRoomTime = now();
   }
 
   @Override

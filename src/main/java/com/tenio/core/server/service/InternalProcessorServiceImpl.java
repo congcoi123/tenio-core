@@ -26,12 +26,14 @@ package com.tenio.core.server.service;
 
 import com.tenio.common.data.DataType;
 import com.tenio.common.utility.TimeUtility;
+import com.tenio.core.api.ServerApi;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.configuration.kcp.KcpConfiguration;
 import com.tenio.core.controller.AbstractController;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
 import com.tenio.core.entity.define.result.AttachedConnectionResult;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.entity.define.result.PlayerReconnectedResult;
@@ -65,6 +67,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
   private static final String EVENT_KEY_SERVER_MESSAGE = "server-message";
   private static final String EVENT_KEY_DATAGRAM_REMOTE_ADDRESS = "datagram-remote-address";
 
+  private final ServerApi serverApi;
   private NetworkWriterStatistic networkWriterStatistic;
   private DataType dataType;
   private PlayerManager playerManager;
@@ -74,12 +77,13 @@ public final class InternalProcessorServiceImpl extends AbstractController
   private int maxNumberPlayers;
   private boolean keepPlayerOnDisconnection;
 
-  private InternalProcessorServiceImpl(EventManager eventManager) {
+  private InternalProcessorServiceImpl(EventManager eventManager, ServerApi serverApi) {
     super(eventManager);
+    this.serverApi = serverApi;
   }
 
-  public static InternalProcessorServiceImpl newInstance(EventManager eventManager) {
-    return new InternalProcessorServiceImpl(eventManager);
+  public static InternalProcessorServiceImpl newInstance(EventManager eventManager, ServerApi serverApi) {
+    return new InternalProcessorServiceImpl(eventManager, serverApi);
   }
 
   @Override
@@ -202,6 +206,10 @@ public final class InternalProcessorServiceImpl extends AbstractController
       var player = playerManager.getPlayerByName(session.getName());
       // the player maybe existed
       if (Objects.nonNull(player)) {
+        // player should leave room (if applicable) first
+        if (player.isInRoom()) {
+          serverApi.leaveRoom(player, PlayerLeaveRoomMode.DEFAULT);
+        }
         eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
         player.setSession(null);
         if (!keepPlayerOnDisconnection) {

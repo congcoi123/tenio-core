@@ -36,6 +36,7 @@ import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
 import com.tenio.core.exception.PlayerJoinedRoomException;
 import com.tenio.core.exception.SwitchedPlayerRoleInRoomException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,9 @@ public final class RoomImpl implements Room {
   private final Map<String, Object> properties;
   private String name;
   private String password;
+  private List<Player> participants;
   private int maxParticipants;
+  private List<Player> spectators;
   private int maxSpectators;
   private volatile int participantCount;
   private volatile int spectatorCount;
@@ -76,7 +79,9 @@ public final class RoomImpl implements Room {
     id = ID_COUNTER.getAndIncrement();
     maxParticipants = 0;
     maxSpectators = 0;
+    spectators = new ArrayList<>();
     spectatorCount = 0;
+    participants = new ArrayList<>();
     participantCount = 0;
     owner = null;
     playerManager = null;
@@ -265,16 +270,12 @@ public final class RoomImpl implements Room {
 
   @Override
   public List<Player> getReadonlyParticipantsList() {
-    return getReadonlyPlayersList().stream()
-        .filter(player -> player.getRoleInRoom() == PlayerRoleInRoom.PARTICIPANT)
-        .collect(Collectors.toList());
+    return participants;
   }
 
   @Override
   public List<Player> getReadonlySpectatorsList() {
-    return getReadonlyPlayersList().stream()
-        .filter(player -> player.getRoleInRoom() == PlayerRoleInRoom.SPECTATOR)
-        .collect(Collectors.toList());
+    return spectators;
   }
 
   @Override
@@ -304,7 +305,7 @@ public final class RoomImpl implements Room {
       player.setRoleInRoom(PlayerRoleInRoom.PARTICIPANT);
     }
 
-    updateElementsCounter();
+    classifyPlayersByRoles();
 
     if (asSpectator) {
       player.setPlayerSlotInCurrentRoom(NIL_SLOT);
@@ -332,7 +333,13 @@ public final class RoomImpl implements Room {
     roomPlayerSlotGeneratedStrategy.freeSlotWhenPlayerLeft(player.getPlayerSlotInCurrentRoom());
     playerManager.removePlayerByName(player.getName());
     player.setCurrentRoom(null);
-    updateElementsCounter();
+    getOwner().ifPresent(owner -> {
+      if (owner.getName().equals(player.getName())) {
+        setOwner(null);
+      }
+    });
+
+    classifyPlayersByRoles();
   }
 
   @Override
@@ -354,7 +361,7 @@ public final class RoomImpl implements Room {
       player.setPlayerSlotInCurrentRoom(DEFAULT_SLOT);
       player.setRoleInRoom(PlayerRoleInRoom.SPECTATOR);
 
-      updateElementsCounter();
+      classifyPlayersByRoles();
     } finally {
       switchRoleLock.unlock();
     }
@@ -391,14 +398,22 @@ public final class RoomImpl implements Room {
               SwitchedPlayerRoleInRoomResult.SLOT_UNAVAILABLE_IN_ROOM);
         }
       }
+
+      classifyPlayersByRoles();
     } finally {
       switchRoleLock.unlock();
     }
   }
 
-  private void updateElementsCounter() {
-    participantCount = getReadonlyParticipantsList().size();
-    spectatorCount = getReadonlySpectatorsList().size();
+  private void classifyPlayersByRoles() {
+    participants = getReadonlyPlayersList().stream()
+        .filter(player -> player.getRoleInRoom() == PlayerRoleInRoom.PARTICIPANT)
+        .collect(Collectors.toList());
+    spectators = getReadonlyPlayersList().stream()
+        .filter(player -> player.getRoleInRoom() == PlayerRoleInRoom.SPECTATOR)
+        .collect(Collectors.toList());
+    participantCount = participants.size();
+    spectatorCount = spectators.size();
   }
 
   @Override
@@ -413,10 +428,9 @@ public final class RoomImpl implements Room {
 
   @Override
   public boolean equals(Object object) {
-    if (!(object instanceof Room)) {
+    if (!(object instanceof Room room)) {
       return false;
     } else {
-      var room = (Room) object;
       return getId() == room.getId();
     }
   }
@@ -444,10 +458,8 @@ public final class RoomImpl implements Room {
         ", maxSpectators=" + maxSpectators +
         ", participantCount=" + participantCount +
         ", spectatorCount=" + spectatorCount +
-        ", participants=" + getReadonlyParticipantsList().stream().map(Player::getName).collect(
-        Collectors.toList()) +
-        ", spectators=" + getReadonlySpectatorsList().stream().map(Player::getName).collect(
-        Collectors.toList()) +
+        ", participants=" + participants.stream().map(Player::getName).collect(Collectors.toList()) +
+        ", spectators=" + spectators.stream().map(Player::getName).collect(Collectors.toList()) +
         '}';
   }
 

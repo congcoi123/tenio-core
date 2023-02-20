@@ -56,6 +56,8 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
   public ScheduledFuture<?> run() {
     return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
         () -> {
+          debug("AUTO DISCONNECT PLAYER",
+              "Checking IDLE players in " + playerManager.getPlayerCount() + " entities");
           Iterator<Player> iterator = playerManager.getPlayerIterator();
           while (iterator.hasNext()) {
             Player player = iterator.next();
