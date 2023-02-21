@@ -52,14 +52,14 @@ public final class TrafficCounterTask extends AbstractSystemTask {
   @Override
   public ScheduledFuture<?> run() {
     return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-        () -> eventManager.emit(ServerEvent.FETCHED_BANDWIDTH_INFO,
+        () -> new Thread(() -> eventManager.emit(ServerEvent.FETCHED_BANDWIDTH_INFO,
             networkReaderStatistic.getReadBytes(),
             networkReaderStatistic.getReadPackets(),
             networkReaderStatistic.getReadDroppedPackets(),
             networkWriterStatistic.getWrittenBytes(), networkWriterStatistic.getWrittenPackets(),
             networkWriterStatistic.getWrittenDroppedPacketsByPolicy(),
-            networkWriterStatistic.getWrittenDroppedPacketsByFull()), initialDelay, interval,
-        TimeUnit.SECONDS);
+            networkWriterStatistic.getWrittenDroppedPacketsByFull())).start(),
+        initialDelay, interval, TimeUnit.SECONDS);
   }
 
   public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {

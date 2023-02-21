@@ -25,12 +25,12 @@ THE SOFTWARE.
 package com.tenio.core.entity.implement;
 
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.define.room.PlayerRoleInRoom;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.RoomState;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 import com.tenio.core.entity.define.result.SwitchedPlayerRoleInRoomResult;
+import com.tenio.core.entity.define.room.PlayerRoleInRoom;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
@@ -279,9 +279,16 @@ public final class RoomImpl implements Room {
   }
 
   @Override
-  public void addPlayer(Player player, boolean asSpectator, int targetSlot) {
-    boolean validated;
+  public void addPlayer(Player player, String password, boolean asSpectator, int targetSlot) {
+    if (Objects.nonNull(this.password) && !this.password.equals(password)) {
+      throw new PlayerJoinedRoomException(
+          String.format(
+              "Unable to add player: %s to room due to invalid password provided",
+              player.getName()),
+          PlayerJoinedRoomResult.INVALID_CREDENTIALS);
+    }
 
+    boolean validated;
     if (asSpectator) {
       validated = getSpectatorCount() < getMaxSpectators();
     } else {
@@ -458,7 +465,8 @@ public final class RoomImpl implements Room {
         ", maxSpectators=" + maxSpectators +
         ", participantCount=" + participantCount +
         ", spectatorCount=" + spectatorCount +
-        ", participants=" + participants.stream().map(Player::getName).collect(Collectors.toList()) +
+        ", participants=" +
+        participants.stream().map(Player::getName).collect(Collectors.toList()) +
         ", spectators=" + spectators.stream().map(Player::getName).collect(Collectors.toList()) +
         '}';
   }

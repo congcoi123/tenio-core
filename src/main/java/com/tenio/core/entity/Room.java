@@ -26,7 +26,6 @@ package com.tenio.core.entity;
 
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.define.room.PlayerRoleInRoom;
-import com.tenio.core.entity.implement.RoomImpl;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
@@ -318,6 +317,24 @@ public interface Room {
    */
   List<Player> getReadonlySpectatorsList();
 
+
+  /**
+   * Adds a player to the room.
+   *
+   * @param player      a joining {@link Player}
+   * @param password    the password value assigned for the room
+   * @param asSpectator sets to {@code true} if the player joins room as a "spectator",
+   *                    otherwise returns {@code false}
+   * @param targetSlot  when the player join the room as role of "participants", then it can
+   *                    occupy a slot position ({@code integer} value)
+   * @throws PlayerJoinedRoomException      any exception occurred when the player tries to join
+   *                                        the room
+   * @throws AddedDuplicatedPlayerException when the player has been already in the room, but it
+   *                                        is forced to join again
+   */
+  void addPlayer(Player player, String password, boolean asSpectator, int targetSlot)
+      throws PlayerJoinedRoomException, AddedDuplicatedPlayerException;
+
   /**
    * Adds a player to the room.
    *
@@ -331,8 +348,11 @@ public interface Room {
    * @throws AddedDuplicatedPlayerException when the player has been already in the room, but it
    *                                        is forced to join again
    */
-  void addPlayer(Player player, boolean asSpectator, int targetSlot)
-      throws PlayerJoinedRoomException, AddedDuplicatedPlayerException;
+  default void addPlayer(Player player, boolean asSpectator, int targetSlot)
+      throws PlayerJoinedRoomException, AddedDuplicatedPlayerException {
+    addPlayer(player, null, asSpectator, targetSlot);
+
+  }
 
   /**
    * Adds a player to the room without indicating any slot position.
@@ -401,7 +421,8 @@ public interface Room {
    * @throws SwitchedPlayerRoleInRoomException when the changing could not be done
    * @see Room#DEFAULT_SLOT
    */
-  default void switchSpectatorToParticipant(Player player) throws SwitchedPlayerRoleInRoomException {
+  default void switchSpectatorToParticipant(Player player)
+      throws SwitchedPlayerRoleInRoomException {
     switchSpectatorToParticipant(player, Room.DEFAULT_SLOT);
   }
 

@@ -54,9 +54,11 @@ public final class SystemMonitoringTask extends AbstractSystemTask {
   @Override
   public ScheduledFuture<?> run() {
     return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-        () -> eventManager.emit(ServerEvent.SYSTEM_MONITORING, systemMonitoring.getCpuUsage(),
-            systemMonitoring.getTotalMemory(), systemMonitoring.getUsedMemory(),
-            systemMonitoring.getFreeMemory(),
-            systemMonitoring.countRunningThreads()), initialDelay, interval, TimeUnit.SECONDS);
+        () -> new Thread(
+            () -> eventManager.emit(ServerEvent.SYSTEM_MONITORING, systemMonitoring.getCpuUsage(),
+                systemMonitoring.getTotalMemory(), systemMonitoring.getUsedMemory(),
+                systemMonitoring.getFreeMemory(),
+                systemMonitoring.countRunningThreads())).start(),
+        initialDelay, interval, TimeUnit.SECONDS);
   }
 }

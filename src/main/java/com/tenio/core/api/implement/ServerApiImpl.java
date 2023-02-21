@@ -205,7 +205,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     }
 
     try {
-      room.addPlayer(player, asSpectator, slotInRoom);
+      room.addPlayer(player, roomPassword, asSpectator, slotInRoom);
       player.setCurrentRoom(room);
       getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
           PlayerJoinedRoomResult.SUCCESS);

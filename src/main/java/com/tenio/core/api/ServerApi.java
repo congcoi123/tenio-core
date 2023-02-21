@@ -196,6 +196,7 @@ public interface ServerApi {
    */
   List<Room> getReadonlyRoomsList();
 
+
   /**
    * Allows a player to join a particular room.
    *
@@ -208,6 +209,18 @@ public interface ServerApi {
    *                     spectator, otherwise sets it {@code false}
    */
   void joinRoom(Player player, Room room, String roomPassword, int slotInRoom, boolean asSpectator);
+
+  /**
+   * Allows a player to join a particular room.
+   *
+   * @param player       the joining {@link Player}
+   * @param room         the current {@link Room}
+   * @param roomPassword a {@link String} credential using for a player to join room.
+   *                     In case of free join, this value would be set to {@code null}
+   */
+  default void joinRoom(Player player, Room room, String roomPassword) {
+    joinRoom(player, room, roomPassword, Room.DEFAULT_SLOT, false);
+  }
 
   /**
    * Allows a player to join a particular room as the role of "participant" with the room's
