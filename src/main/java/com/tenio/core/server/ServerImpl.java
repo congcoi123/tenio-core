@@ -153,6 +153,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     var assessment = ConfigurationAssessment.newInstance(eventManager, configuration);
     assessment.assess();
 
+    setupEntitiesManagementService(configuration);
     setupNetworkService(configuration, bootstrapHandler.getServletMap());
     setupInternalProcessorService(configuration);
     setupScheduleService(configuration);
@@ -184,6 +185,11 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.start();
     internalProcessorService.start();
     scheduleService.start();
+  }
+
+  private void setupEntitiesManagementService(Configuration configuration) {
+    playerManager.setMaxIdleTimeInSeconds(configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
+    roomManager.setMaxRooms(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_ROOMS));
   }
 
   private void setupScheduleService(Configuration configuration) {
@@ -338,8 +344,6 @@ public final class ServerImpl extends SystemLogger implements Server {
         ));
     internalProcessorService.setKeepPlayerOnDisconnection(
         configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION));
-    internalProcessorService.setPlayerMaxIdleTimeInSeconds(
-        configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
 
     internalProcessorService.setNetworkReaderStatistic(networkService.getNetworkReaderStatistic());
     internalProcessorService.setNetworkWriterStatistic(networkService.getNetworkWriterStatistic());
@@ -351,10 +355,10 @@ public final class ServerImpl extends SystemLogger implements Server {
       terminal = TerminalBuilder.builder().jna(true).build();
     } catch (Exception e) {
       try {
-        // fallback to a dumb jline terminal
+        // fallback to a dumb jLine terminal
         terminal = TerminalBuilder.builder().dumb(true).build();
-      } catch (Exception ignored) {
-        // when dumb is true, build() never throws
+      } catch (Exception exception) {
+        // when dumb is true, build() never throws, ignore it
       }
     }
     var consoleLineReader = LineReaderBuilder.builder().terminal(terminal).build();
@@ -396,6 +400,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     eventManager.emit(ServerEvent.SERVER_TEARDOWN, serverName);
     shutdownServices();
     info("SERVER", serverName, "Stopped");
+    // real stop
     Runtime.getRuntime().halt(0);
   }
 

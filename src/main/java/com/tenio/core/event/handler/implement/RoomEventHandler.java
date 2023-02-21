@@ -101,9 +101,10 @@ public final class RoomEventHandler {
         event -> eventManager.on(ServerEvent.PLAYER_AFTER_LEFT_ROOM, params -> {
           var player = (Player) params[0];
           var room = (Room) params[1];
-          var result = (PlayerLeftRoomResult) (params[2]);
+          var mode = (PlayerLeaveRoomMode) (params[2]);
+          var result = (PlayerLeftRoomResult) (params[3]);
 
-          event.handle(player, room, result);
+          event.handle(player, room, mode, result);
 
           return null;
         }));

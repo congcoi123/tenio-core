@@ -58,15 +58,15 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
   public ScheduledFuture<?> run() {
     return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
         () -> {
-          debug("AUTO CLEAN ORPHAN",
+          debug("AUTO CLEAN ORPHAN SESSION",
               "Checking orphan sessions in " + sessionManager.getSessionCount() + " entities");
           Iterator<Session> iterator = sessionManager.getSessionIterator();
           while (iterator.hasNext()) {
             Session session = iterator.next();
             if (session.isOrphan()) {
               try {
-                debug("AUTO CLEAN ORPHAN", "Session " + session.getId() + " is going to be " +
-                    "forced to remove by the cleaning task");
+                debug("AUTO CLEAN ORPHAN SESSION", "Session " + session.getId() + " is going to " +
+                    "be forced to remove by the cleaning task");
                 session.close(ConnectionDisconnectMode.ORPHAN, PlayerDisconnectMode.DEFAULT);
               } catch (IOException exception) {
                 error(exception, session.toString());

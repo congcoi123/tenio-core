@@ -220,7 +220,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   @Override
   public void leaveRoom(Player player, PlayerLeaveRoomMode leaveRoomMode) {
     if (!player.isInRoom()) {
-      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, null,
+      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, null, leaveRoomMode,
           PlayerLeftRoomResult.PLAYER_ALREADY_LEFT_ROOM);
       return;
     }
@@ -229,10 +229,10 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     getEventManager().emit(ServerEvent.PLAYER_BEFORE_LEAVE_ROOM, player, room, leaveRoomMode);
     try {
       room.removePlayer(player);
-      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,
+      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room, leaveRoomMode,
           PlayerLeftRoomResult.SUCCESS);
     } catch (RemovedNonExistentPlayerFromRoomException exception) {
-      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,
+      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room, leaveRoomMode,
           PlayerLeftRoomResult.PLAYER_ALREADY_LEFT_ROOM);
     }
   }

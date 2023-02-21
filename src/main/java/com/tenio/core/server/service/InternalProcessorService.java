@@ -66,15 +66,6 @@ public interface InternalProcessorService extends Controller {
   void setKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection);
 
   /**
-   * Sets the maximum time in seconds which allows the player to get in IDLE state (Do not
-   * perform any action, such as reading or writing data).
-   *
-   * @param seconds the maximum time in seconds ({@code integer} value) which allows the
-   *                player to get in IDLE state
-   */
-  void setPlayerMaxIdleTimeInSeconds(int seconds);
-
-  /**
    * Determines if UDP channels can use KCP transportation for communication.
    *
    * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}

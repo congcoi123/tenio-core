@@ -319,11 +319,6 @@ public final class InternalProcessorServiceImpl extends AbstractController
   }
 
   @Override
-  public void setPlayerMaxIdleTimeInSeconds(int seconds) {
-    playerManager.setMaxIdleTimeInSeconds(seconds);
-  }
-
-  @Override
   public void setEnabledKcp(boolean enabledKcp) {
     this.enabledKcp = enabledKcp;
   }
