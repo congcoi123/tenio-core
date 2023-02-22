@@ -30,14 +30,11 @@ import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.exception.AddedDuplicatedClientCommandException;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import org.reflections.Reflections;
 
 /**
  * The commands' management class.
@@ -55,7 +52,7 @@ public final class ClientCommandManager extends SystemLogger {
    * @param code    The command code
    * @param command The command handler
    */
-  public void registerCommand(Short code, AbstractClientCommandHandler command) {
+  public synchronized void registerCommand(Short code, AbstractClientCommandHandler command) {
     debug("CLIENT_COMMAND", "Registered command > " + code);
 
     // checks availability
@@ -73,7 +70,7 @@ public final class ClientCommandManager extends SystemLogger {
    *
    * @param code The command code
    */
-  public void unregisterCommand(Short code) {
+  public synchronized void unregisterCommand(Short code) {
     debug("CLIENT_COMMAND", "Unregistered command > " + code);
     commands.remove(code);
   }
@@ -83,11 +80,11 @@ public final class ClientCommandManager extends SystemLogger {
    *
    * @return all command handlers as a list
    */
-  public List<AbstractClientCommandHandler> getHandlersAsList() {
+  public synchronized List<AbstractClientCommandHandler> getHandlersAsList() {
     return new LinkedList<>(commands.values());
   }
 
-  public Map<Short, AbstractClientCommandHandler> getHandlers() {
+  public synchronized Map<Short, AbstractClientCommandHandler> getHandlers() {
     return commands;
   }
 
@@ -97,7 +94,7 @@ public final class ClientCommandManager extends SystemLogger {
    * @param code The command code
    * @return the command handler
    */
-  public AbstractClientCommandHandler getHandler(Short code) {
+  public synchronized AbstractClientCommandHandler getHandler(Short code) {
     return commands.get(code);
   }
 
@@ -122,49 +119,7 @@ public final class ClientCommandManager extends SystemLogger {
     runnable.run();
   }
 
-  /**
-   * Scans for all classes annotated with {@link ClientCommand} and registers them.
-   *
-   * @param packages a list of packages' names. It allows to define the scanning packages by
-   *                 their names
-   * @throws IllegalArgumentException it is related to the illegal argument exception
-   * @throws SecurityException        it is related to the security exception
-   */
-  public void scanPackages(String... packages)
-      throws IllegalArgumentException, SecurityException {
-
-    // clean maps data first
+  public synchronized void clear() {
     commands.clear();
-
-    // start scanning
-    var setPackageNames = new HashSet<String>();
-
-    if (Objects.nonNull(packages)) {
-      setPackageNames.addAll(Arrays.asList(packages));
-    }
-
-    // declares a reflection object based on the package of root class
-    var reflections = new Reflections();
-    for (var packageName : setPackageNames) {
-      var reflectionPackage = new Reflections(packageName);
-      reflections.merge(reflectionPackage);
-    }
-
-    var classes = reflections.getTypesAnnotatedWith(ClientCommand.class);
-    classes.forEach(annotated -> {
-      try {
-        var clientCommand = annotated.getAnnotation(ClientCommand.class);
-        var object = annotated.getDeclaredConstructor().newInstance();
-        if (object instanceof AbstractClientCommandHandler handler) {
-          handler.setCommandManager(this);
-          registerCommand(clientCommand.value(), handler);
-        } else {
-          error(new IllegalArgumentException("Class " + annotated.getName() + " is not a " +
-              "AbstractClientCommandHandler"));
-        }
-      } catch (Exception exception) {
-        error(exception, "Failed to register command handler for " + annotated.getSimpleName());
-      }
-    });
   }
 }

@@ -32,12 +32,15 @@ import com.tenio.core.bootstrap.annotation.AutowiredAcceptNull;
 import com.tenio.core.bootstrap.annotation.AutowiredQualifier;
 import com.tenio.core.bootstrap.annotation.Bean;
 import com.tenio.core.bootstrap.annotation.BeanFactory;
+import com.tenio.core.bootstrap.annotation.ClientCommand;
 import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.annotation.EventHandler;
 import com.tenio.core.bootstrap.annotation.RestController;
 import com.tenio.core.bootstrap.annotation.RestMapping;
 import com.tenio.core.bootstrap.annotation.Setting;
+import com.tenio.core.command.client.AbstractClientCommandHandler;
+import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.system.AbstractSystemCommandHandler;
 import com.tenio.core.command.system.SystemCommandManager;
 import com.tenio.core.exception.DuplicatedBeanCreationException;
@@ -96,6 +99,10 @@ public final class Injector extends SystemLogger {
    * The object manages all supported system commands.
    */
   private final SystemCommandManager systemCommandManager;
+  /**
+   * The object manages all self-defined user commands.
+   */
+  private final ClientCommandManager clientCommandManager;
 
   private Injector() {
     if (Objects.nonNull(instance)) {
@@ -107,6 +114,7 @@ public final class Injector extends SystemLogger {
     classBeansMap = new ConcurrentHashMap<>();
     servletBeansMap = new ConcurrentHashMap<>();
     systemCommandManager = new SystemCommandManager();
+    clientCommandManager = new ClientCommandManager();
   }
 
   /**
@@ -322,6 +330,20 @@ public final class Injector extends SystemLogger {
         } catch (Exception exception) {
           error(exception, "Failed to register command handler for " + clazz.getSimpleName());
         }
+      } else if (clazz.isAnnotationPresent(ClientCommand.class)) {
+        try {
+          var clientCommand = clazz.getAnnotation(ClientCommand.class);
+          var object = clazz.getDeclaredConstructor().newInstance();
+          if (object instanceof AbstractClientCommandHandler handler) {
+            handler.setCommandManager(clientCommandManager);
+            clientCommandManager.registerCommand(clientCommand.value(), handler);
+          } else {
+            error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
+                "AbstractClientCommandHandler"));
+          }
+        } catch (Exception exception) {
+          error(exception, "Failed to register command handler for " + clazz.getSimpleName());
+        }
       }
     }
 
@@ -357,8 +379,12 @@ public final class Injector extends SystemLogger {
     return servletBeansMap;
   }
 
-  public SystemCommandManager getCommandManager() {
+  public SystemCommandManager getSystemCommandManager() {
     return systemCommandManager;
+  }
+
+  public ClientCommandManager getClientCommandManager() {
+    return clientCommandManager;
   }
 
   /**

@@ -27,6 +27,7 @@ package com.tenio.core.bootstrap;
 import com.tenio.core.bootstrap.annotation.Autowired;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
+import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.system.SystemCommandManager;
 import com.tenio.core.event.handler.EventHandler;
 import com.tenio.core.network.jetty.servlet.RestServlet;
@@ -45,6 +46,9 @@ public final class BootstrapHandler {
   private SystemCommandManager systemCommandManager;
 
   @Autowired
+  private ClientCommandManager clientCommandManager;
+
+  @Autowired
   private ConfigurationHandler configurationHandler;
 
   private Map<String, RestServlet> servletMap;
@@ -59,13 +63,23 @@ public final class BootstrapHandler {
   }
 
   /**
-   * Retrieves a commands' manager.
+   * Retrieves a system commands' manager.
    *
    * @return the {@link SystemCommandManager} instance
    * @since 0.4.0
    */
-  public SystemCommandManager getCommandManager() {
+  public SystemCommandManager getSystemCommandManager() {
     return systemCommandManager;
+  }
+
+  /**
+   * Retrieves a client commands' manager.
+   *
+   * @return the {@link ClientCommandManager} instance
+   * @since 0.5.0
+   */
+  public ClientCommandManager getClientCommandManager() {
+    return clientCommandManager;
   }
 
   /**
@@ -85,7 +99,11 @@ public final class BootstrapHandler {
     this.servletMap = servletMap;
   }
 
-  public void setCommandManager(SystemCommandManager systemCommandManager) {
+  public void setSystemCommandManager(SystemCommandManager systemCommandManager) {
     this.systemCommandManager = systemCommandManager;
+  }
+
+  public void setClientCommandManager(ClientCommandManager clientCommandManager) {
+    this.clientCommandManager = clientCommandManager;
   }
 }

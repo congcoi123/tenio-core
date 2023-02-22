@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import javax.annotation.concurrent.GuardedBy;
 
 /**
  * The commands' management class.
@@ -45,7 +46,9 @@ import java.util.TreeMap;
 @Component
 public final class SystemCommandManager extends SystemLogger {
 
+  @GuardedBy("this")
   private final Map<String, AbstractSystemCommandHandler> commands = new TreeMap<>();
+  @GuardedBy("this")
   private final Map<String, SystemCommand> annotations = new TreeMap<>();
 
   /**
@@ -54,7 +57,7 @@ public final class SystemCommandManager extends SystemLogger {
    * @param label   The command label
    * @param command The command handler
    */
-  public void registerCommand(String label, AbstractSystemCommandHandler command) {
+  public synchronized void registerCommand(String label, AbstractSystemCommandHandler command) {
     debug("SYSTEM_COMMAND", "Registered command > " + label);
     label = label.toLowerCase();
 
@@ -74,18 +77,18 @@ public final class SystemCommandManager extends SystemLogger {
    *
    * @param label The command label
    */
-  public void unregisterCommand(String label) {
+  public synchronized void unregisterCommand(String label) {
     debug("SYSTEM_COMMAND", "Unregistered command > " + label);
 
     annotations.remove(label);
     commands.remove(label);
   }
 
-  public List<SystemCommand> getAnnotationsAsList() {
+  public synchronized List<SystemCommand> getAnnotationsAsList() {
     return new LinkedList<>(annotations.values());
   }
 
-  public Map<String, SystemCommand> getAnnotations() {
+  public synchronized Map<String, SystemCommand> getAnnotations() {
     return new LinkedHashMap<>(annotations);
   }
 
@@ -98,7 +101,7 @@ public final class SystemCommandManager extends SystemLogger {
     return new LinkedList<>(commands.values());
   }
 
-  public Map<String, AbstractSystemCommandHandler> getHandlers() {
+  public synchronized Map<String, AbstractSystemCommandHandler> getHandlers() {
     return commands;
   }
 
@@ -108,7 +111,7 @@ public final class SystemCommandManager extends SystemLogger {
    * @param label The command label
    * @return the command handler
    */
-  public AbstractSystemCommandHandler getHandler(String label) {
+  public synchronized AbstractSystemCommandHandler getHandler(String label) {
     return commands.get(label);
   }
 
@@ -149,7 +152,8 @@ public final class SystemCommandManager extends SystemLogger {
     }
   }
 
-  public void clear() {
+  public synchronized void clear() {
     commands.clear();
+    annotations.clear();
   }
 }

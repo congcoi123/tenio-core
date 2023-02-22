@@ -38,6 +38,6 @@ class BootstrapHandlerTest {
     BootstrapHandler actualBootstrapHandler = new BootstrapHandler();
     assertNull(actualBootstrapHandler.getConfigurationHandler());
     assertNull(actualBootstrapHandler.getEventHandler());
-    assertNull(actualBootstrapHandler.getCommandManager());
+    assertNull(actualBootstrapHandler.getSystemCommandManager());
   }
 }

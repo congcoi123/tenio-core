@@ -171,7 +171,7 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     if (((Setting) configuration.get(CoreConfigurationType.SERVER_SETTING)).getCommand()
         .isEnabled()) {
-      startConsole(bootstrapHandler.getCommandManager());
+      startConsole(bootstrapHandler.getSystemCommandManager());
     }
   }
 
