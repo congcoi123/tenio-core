@@ -31,6 +31,7 @@ import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.bootstrap.BootstrapHandler;
+import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.system.SystemCommandManager;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.define.CoreConfigurationType;
@@ -87,6 +88,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final ScheduleService scheduleService;
   private final NetworkService networkService;
   private final ServerApi serverApi;
+  private ClientCommandManager clientCommandManager;
   private Configuration configuration;
   private DataType dataType;
   private long startedTime;
@@ -153,6 +155,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     var assessment = ConfigurationAssessment.newInstance(eventManager, configuration);
     assessment.assess();
 
+    setupClientCommands(bootstrapHandler.getClientCommandManager());
     setupEntitiesManagementService(configuration);
     setupNetworkService(configuration, bootstrapHandler.getServletMap());
     setupInternalProcessorService(configuration);
@@ -185,6 +188,10 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.start();
     internalProcessorService.start();
     scheduleService.start();
+  }
+
+  private void setupClientCommands(ClientCommandManager clientCommandManager) {
+    this.clientCommandManager = clientCommandManager;
   }
 
   private void setupEntitiesManagementService(Configuration configuration) {
@@ -413,6 +420,11 @@ public final class ServerImpl extends SystemLogger implements Server {
   @Override
   public ServerApi getApi() {
     return serverApi;
+  }
+
+  @Override
+  public ClientCommandManager getClientCommandManager() {
+    return clientCommandManager;
   }
 
   @Override

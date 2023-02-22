@@ -318,11 +318,19 @@ public final class Injector extends SystemLogger {
         }
       } else if (clazz.isAnnotationPresent(SystemCommand.class)) {
         try {
-          var systemCommand = clazz.getAnnotation(SystemCommand.class);
-          var object = clazz.getDeclaredConstructor().newInstance();
-          if (object instanceof AbstractSystemCommandHandler handler) {
+          var systemCommandAnnotation = clazz.getAnnotation(SystemCommand.class);
+          var systemCommandInstance = clazz.getDeclaredConstructor().newInstance();
+          if (systemCommandInstance instanceof AbstractSystemCommandHandler handler) {
+            // manages by the class bean system
+            var beanClass =
+                new BeanClass(clazz, String.valueOf(systemCommandAnnotation.label()));
+            if (classBeansMap.containsKey(beanClass)) {
+              throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
+            }
+            classBeansMap.put(beanClass, systemCommandInstance);
+            // add to its own management system
             handler.setCommandManager(systemCommandManager);
-            systemCommandManager.registerCommand(systemCommand.label(), handler);
+            systemCommandManager.registerCommand(systemCommandAnnotation.label(), handler);
           } else {
             error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
                 "AbstractSystemCommandHandler"));
@@ -332,11 +340,19 @@ public final class Injector extends SystemLogger {
         }
       } else if (clazz.isAnnotationPresent(ClientCommand.class)) {
         try {
-          var clientCommand = clazz.getAnnotation(ClientCommand.class);
-          var object = clazz.getDeclaredConstructor().newInstance();
-          if (object instanceof AbstractClientCommandHandler handler) {
+          var clientCommandAnnotation = clazz.getAnnotation(ClientCommand.class);
+          var clientCommandInstance = clazz.getDeclaredConstructor().newInstance();
+          if (clientCommandInstance instanceof AbstractClientCommandHandler handler) {
+            // manages by the class bean system
+            var beanClass =
+                new BeanClass(clazz, String.valueOf(clientCommandAnnotation.value()));
+            if (classBeansMap.containsKey(beanClass)) {
+              throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
+            }
+            classBeansMap.put(beanClass, clientCommandInstance);
+            // add to its own management system
             handler.setCommandManager(clientCommandManager);
-            clientCommandManager.registerCommand(clientCommand.value(), handler);
+            clientCommandManager.registerCommand(clientCommandAnnotation.value(), handler);
           } else {
             error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
                 "AbstractClientCommandHandler"));
@@ -565,6 +581,7 @@ public final class Injector extends SystemLogger {
     manualClassesSet.clear();
     servletBeansMap.clear();
     systemCommandManager.clear();
+    clientCommandManager.clear();
   }
 }
 

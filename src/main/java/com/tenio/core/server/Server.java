@@ -29,6 +29,7 @@ import com.tenio.common.data.DataType;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.bootstrap.Bootstrapper;
+import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;
@@ -65,6 +66,14 @@ public interface Server {
    * @return an instance of {@link ServerApi}
    */
   ServerApi getApi();
+
+  /**
+   * Retrieves a management object of self-defined user commands.
+   *
+   * @return an instance of {@link ClientCommandManager}
+   * @since 0.5.0
+   */
+  ClientCommandManager getClientCommandManager();
 
   /**
    * Retrieves a event manager object which manages all events supporting on the server.
