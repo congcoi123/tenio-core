@@ -41,6 +41,7 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * A session manager.
@@ -185,6 +186,15 @@ public interface SessionManager extends Manager {
    * @param session the removing {@link Session}
    */
   void removeSession(Session session);
+
+  /**
+   * Retrieves a fresh copy of current sessions' list.
+   *
+   * @return a fresh copy of list of sessions
+   * @see List
+   * @since 0.5.0
+   */
+  List<Session> getReadonlySessionsList();
 
   /**
    * Retrieves the current number of sessions in the management list.

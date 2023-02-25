@@ -25,16 +25,25 @@ THE SOFTWARE.
 package com.tenio.core.schedule.task.internal;
 
 import com.tenio.core.configuration.CoreConfiguration;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.Room;
+import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.schedule.task.AbstractSystemTask;
+import com.tenio.core.server.ServerImpl;
+import java.util.Iterator;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * To remove the empty room (a room without any players) in period time. You can
  * configure this time in your own configurations, see {@link CoreConfiguration}
  */
 public final class AutoRemoveRoomTask extends AbstractSystemTask {
+
+  private RoomManager roomManager;
 
   private AutoRemoveRoomTask(EventManager eventManager) {
     super(eventManager);
@@ -46,7 +55,22 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    return null;
+    return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+        () -> {
+          debug("AUTO REMOVE ROOM",
+              "Checking empty rooms in " + roomManager.getRoomCount() + " entities");
+          new Thread(() -> {
+            Iterator<Room> iterator = roomManager.getReadonlyRoomsList().listIterator();
+            while (iterator.hasNext()) {
+              Room room = iterator.next();
+              if (room.getRoomRemoveMode() == RoomRemoveMode.WHEN_EMPTY && room.isEmpty()) {
+                debug("AUTO REMOVE ROOM", "Room " + room.getId() + " is going to be " +
+                    "forced to remove by the cleaning task");
+                ServerImpl.getInstance().getApi().removeRoom(room, RoomRemoveMode.WHEN_EMPTY);
+              }
+            }
+          }).start();
+        }, initialDelay, interval, TimeUnit.SECONDS);
   }
 
   /**
@@ -55,5 +79,6 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
    * @param roomManager the room manager
    */
   public void setRoomManager(RoomManager roomManager) {
+    this.roomManager = roomManager;
   }
 }

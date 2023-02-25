@@ -34,11 +34,13 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.AddedDuplicatedRoomException;
 import com.tenio.core.exception.CreatedRoomException;
 import com.tenio.core.manager.AbstractManager;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import javax.annotation.concurrent.GuardedBy;
 
 /**
  * An implemented class is for room management.
@@ -47,13 +49,17 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   private static final int DEFAULT_MAX_ROOMS = 100;
 
-  private final Map<Long, Room> roomByIds;
+  @GuardedBy("this")
+  private final Map<Long, Room> rooms;
+  private List<Room> readonlyRoomsList;
+  private volatile int roomCount;
   private int maxRooms;
 
   private RoomManagerImpl(EventManager eventManager) {
     super(eventManager);
-
-    roomByIds = new ConcurrentHashMap<>();
+    rooms = new HashMap<>();
+    readonlyRoomsList = new ArrayList<>();
+    roomCount = 0;
     maxRooms = DEFAULT_MAX_ROOMS;
   }
 
@@ -76,7 +82,11 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     if (containsRoomId(room.getId())) {
       throw new AddedDuplicatedRoomException(room);
     }
-    roomByIds.put(room.getId(), room);
+    synchronized (this) {
+      rooms.put(room.getId(), room);
+      roomCount = rooms.size();
+      readonlyRoomsList = List.copyOf(rooms.values());
+    }
   }
 
   @Override
@@ -108,38 +118,52 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public boolean containsRoomId(long roomId) {
-    return roomByIds.containsKey(roomId);
+    synchronized (this) {
+      return rooms.containsKey(roomId);
+    }
   }
 
   @Override
   public boolean containsRoomName(String roomName) {
-    return roomByIds.values().stream().anyMatch(room -> room.getName().equals(roomName));
+    synchronized (this) {
+      return rooms.values().stream().anyMatch(room -> room.getName().equals(roomName));
+    }
   }
 
   @Override
   public Room getRoomById(long roomId) {
-    return roomByIds.get(roomId);
+    synchronized (this) {
+      return rooms.get(roomId);
+    }
   }
 
   @Override
   public List<Room> getReadonlyRoomsListByName(String roomName) {
-    return roomByIds.values().stream().filter(room -> room.getName().equals(roomName))
-        .collect(Collectors.toList());
+    synchronized (this) {
+      return rooms.values().stream().filter(room -> room.getName().equals(roomName))
+          .collect(Collectors.toList());
+    }
   }
 
   @Override
   public Iterator<Room> getRoomIterator() {
-    return roomByIds.values().iterator();
+    synchronized (this) {
+      return rooms.values().iterator();
+    }
   }
 
   @Override
   public List<Room> getReadonlyRoomsList() {
-    return List.copyOf(roomByIds.values());
+    return readonlyRoomsList;
   }
 
   @Override
   public void removeRoomById(long roomId) {
-    roomByIds.remove(roomId);
+    synchronized (this) {
+      rooms.remove(roomId);
+      roomCount = rooms.size();
+      readonlyRoomsList = List.copyOf(rooms.values());
+    }
   }
 
   @Override
@@ -172,6 +196,6 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public int getRoomCount() {
-    return roomByIds.size();
+    return roomCount;
   }
 }

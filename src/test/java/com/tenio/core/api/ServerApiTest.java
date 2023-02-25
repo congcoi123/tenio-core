@@ -514,7 +514,7 @@ class ServerApiTest {
   @Test
   @DisplayName("When it tries to remove a null room from from server")
   void itRemoveNullRoomFromServerShouldDoNothing() {
-    serverApi.removeRoom(null, RoomRemoveMode.DEFAULT);
+    serverApi.removeRoom(null, RoomRemoveMode.WHEN_EMPTY);
     Mockito.verifyNoMoreInteractions(roomManager, eventManager);
   }
 
@@ -539,10 +539,10 @@ class ServerApiTest {
     Mockito.when(room.getPlayerIterator()).thenReturn(playerList.iterator());
     Mockito.when(optionalRoom.get()).thenReturn(room);
 
-    serverApi.removeRoom(room, RoomRemoveMode.DEFAULT);
+    serverApi.removeRoom(room, RoomRemoveMode.WHEN_EMPTY);
 
     Mockito.verify(eventManager, Mockito.times(1)).emit(ServerEvent.ROOM_WILL_BE_REMOVED, room,
-        RoomRemoveMode.DEFAULT);
+        RoomRemoveMode.WHEN_EMPTY);
     playerList.forEach(player -> {
       Mockito.verify(eventManager, Mockito.times(1))
           .emit(ServerEvent.PLAYER_BEFORE_LEAVE_ROOM, player, optionalRoom,

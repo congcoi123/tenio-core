@@ -39,8 +39,10 @@ import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -61,6 +63,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private final Map<Channel, Session> sessionByWebSockets;
   @GuardedBy("this")
   private final Map<SocketAddress, Session> sessionByDatagrams;
+  private List<Session> readonlySessionsList;
   private PacketQueuePolicy packetQueuePolicy;
   private ConnectionFilter connectionFilter;
   private int packetQueueSize;
@@ -75,6 +78,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     sessionBySockets = new HashMap<>();
     sessionByWebSockets = new HashMap<>();
     sessionByDatagrams = new HashMap<>();
+    readonlySessionsList = new ArrayList<>();
 
     sessionCount = 0;
     packetQueueSize = DEFAULT_PACKET_QUEUE_SIZE;
@@ -107,6 +111,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
       sessionByIds.put(session.getId(), session);
       sessionBySockets.put(session.getSocketChannel(), session);
       sessionCount = sessionByIds.size();
+      readonlySessionsList = List.copyOf(sessionByIds.values());
     }
     return session;
   }
@@ -162,6 +167,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
       sessionByIds.put(session.getId(), session);
       sessionByWebSockets.put(webSocketChannel, session);
       sessionCount = sessionByIds.size();
+      readonlySessionsList = List.copyOf(sessionByIds.values());
     }
     return session;
   }
@@ -221,7 +227,13 @@ public final class SessionManagerImpl extends AbstractManager implements Session
       }
       sessionByIds.remove(session.getId());
       sessionCount = sessionByIds.size();
+      readonlySessionsList = List.copyOf(sessionByIds.values());
     }
+  }
+
+  @Override
+  public List<Session> getReadonlySessionsList() {
+    return readonlySessionsList;
   }
 
   @Override

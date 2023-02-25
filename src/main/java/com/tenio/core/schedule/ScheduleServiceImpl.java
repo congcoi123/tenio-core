@@ -100,7 +100,7 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
 
     taskManager.create("auto-disconnect-player", autoDisconnectPlayerTask.run());
     taskManager.create("auto-clean-orphan-session", autoCleanOrphanSessionTask.run());
-    // taskManager.create("auto-remove-room", autoRemoveRoomTask.run());
+    taskManager.create("auto-remove-room", autoRemoveRoomTask.run());
     taskManager.create("ccu-report", ccuReportTask.run());
     taskManager.create("dead-lock", deadlockScanTask.run());
     taskManager.create("system-monitoring", systemMonitoringTask.run());

@@ -61,7 +61,7 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
           debug("AUTO CLEAN ORPHAN SESSION",
               "Checking orphan sessions in " + sessionManager.getSessionCount() + " entities");
           new Thread(() -> {
-            Iterator<Session> iterator = sessionManager.getSessionIterator();
+            Iterator<Session> iterator = sessionManager.getReadonlySessionsList().listIterator();
             while (iterator.hasNext()) {
               Session session = iterator.next();
               if (session.isOrphan()) {

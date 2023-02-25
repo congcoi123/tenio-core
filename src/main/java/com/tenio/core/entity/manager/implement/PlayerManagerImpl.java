@@ -47,15 +47,17 @@ import javax.annotation.concurrent.GuardedBy;
 public final class PlayerManagerImpl extends AbstractManager implements PlayerManager {
 
   @GuardedBy("this")
-  private final Map<String, Player> playerByNames;
+  private final Map<String, Player> players;
 
-  private Room ownerRoom;
+  private List<Player> readonlyPlayersList;
+  private volatile Room ownerRoom;
   private volatile int playerCount;
   private int maxIdleTimeInSecond;
 
   private PlayerManagerImpl(EventManager eventManager) {
     super(eventManager);
-    playerByNames = new HashMap<>();
+    players = new HashMap<>();
+    readonlyPlayersList = new ArrayList<>();
     ownerRoom = null;
     playerCount = 0;
   }
@@ -71,8 +73,9 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     }
 
     synchronized (this) {
-      playerByNames.put(player.getName(), player);
-      playerCount = playerByNames.size();
+      players.put(player.getName(), player);
+      playerCount = players.size();
+      readonlyPlayersList = List.copyOf(players.values());
     }
   }
 
@@ -104,23 +107,21 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   @Override
   public Player getPlayerByName(String playerName) {
-    synchronized (playerByNames) {
-      return playerByNames.get(playerName);
+    synchronized (players) {
+      return players.get(playerName);
     }
   }
 
   @Override
   public Iterator<Player> getPlayerIterator() {
     synchronized (this) {
-      return playerByNames.values().iterator();
+      return players.values().iterator();
     }
   }
 
   @Override
   public List<Player> getReadonlyPlayersList() {
-    synchronized (this) {
-      return List.copyOf(playerByNames.values());
-    }
+    return readonlyPlayersList;
   }
 
   @Override
@@ -134,22 +135,24 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   private void removePlayer(Player player) {
     synchronized (this) {
-      playerByNames.remove(player.getName());
-      playerCount = playerByNames.size();
+      players.remove(player.getName());
+      playerCount = players.size();
+      readonlyPlayersList = List.copyOf(players.values());
     }
   }
 
   private void removePlayer(String playerName) {
     synchronized (this) {
-      playerByNames.remove(playerName);
-      playerCount = playerByNames.size();
+      players.remove(playerName);
+      playerCount = players.size();
+      readonlyPlayersList = List.copyOf(players.values());
     }
   }
 
   @Override
   public boolean containsPlayerName(String playerName) {
-    synchronized (playerByNames) {
-      return playerByNames.containsKey(playerName);
+    synchronized (this) {
+      return players.containsKey(playerName);
     }
   }
 
@@ -181,7 +184,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public void clear() {
     synchronized (this) {
-      var iterator = new ArrayList<>(playerByNames.values()).iterator();
+      var iterator = new ArrayList<>(players.values()).iterator();
       while (iterator.hasNext()) {
         var player = iterator.next();
         removePlayer(player);

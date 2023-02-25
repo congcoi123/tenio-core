@@ -88,7 +88,7 @@ public final class RoomImpl implements Room {
     switchRoleLock = new ReentrantLock();
     properties = new ConcurrentHashMap<>();
     activated = false;
-    setRoomRemoveMode(RoomRemoveMode.DEFAULT);
+    setRoomRemoveMode(RoomRemoveMode.WHEN_EMPTY);
   }
 
   /**
@@ -463,6 +463,7 @@ public final class RoomImpl implements Room {
         ", activated=" + activated +
         ", maxParticipants=" + maxParticipants +
         ", maxSpectators=" + maxSpectators +
+        ", playerCount=" + playerManager.getPlayerCount() +
         ", participantCount=" + participantCount +
         ", spectatorCount=" + spectatorCount +
         ", participants=" +

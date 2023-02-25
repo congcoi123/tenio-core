@@ -252,7 +252,9 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       leaveRoom(player, PlayerLeaveRoomMode.ROOM_REMOVED);
     }
 
-    getRoomManager().removeRoomById(room.getId());
+    long roomId = room.getId();
+    getRoomManager().removeRoomById(roomId);
+    debug("REMOVED ROOM", "Room " + roomId + " was removed.");
   }
 
   @Override

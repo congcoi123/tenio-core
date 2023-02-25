@@ -179,7 +179,7 @@ public final class InitialRoomSetting {
       maxParticipants = 0;
       maxSpectators = 0;
       activated = false;
-      removeMode = RoomRemoveMode.DEFAULT;
+      removeMode = RoomRemoveMode.WHEN_EMPTY;
       credentialValidatedStrategy = null;
       playerSlotGeneratedStrategy = null;
       properties = null;
