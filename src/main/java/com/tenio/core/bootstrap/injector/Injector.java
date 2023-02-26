@@ -369,9 +369,21 @@ public final class Injector extends SystemLogger {
       try {
         autowire(clazz, bean);
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException | DuplicatedBeanCreationException exception) {
-        error(exception.getCause());
+        String exceptionDetails =
+            "Initialize class: " + clazz.clazz().getName() + "\n" + getStackTrace(exception);
+        error(exceptionDetails);
       }
     });
+  }
+
+  private String getStackTrace(Exception exception) {
+    StringBuilder stringBuilder = new StringBuilder();
+    StackTraceElement[] stackTraceElements = exception.getStackTrace();
+    stringBuilder.append(exception.getClass().getName()).append(": ").append(exception.getMessage()).append("\n");
+    for (StackTraceElement stackTraceElement : stackTraceElements) {
+      stringBuilder.append("\t at ").append(stackTraceElement.toString()).append("\n");
+    }
+    return stringBuilder.toString();
   }
 
   /**
