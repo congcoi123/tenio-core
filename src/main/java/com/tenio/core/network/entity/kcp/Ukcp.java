@@ -43,7 +43,7 @@ public class Ukcp extends Kcp {
   private final KcpIoHandler kcpIoHandler;
   private final KcpWriter<?> kcpWriter;
   private final NetworkWriterStatistic networkWriterStatistic;
-  private byte[] buffer;
+  private final byte[] buffer;
 
   /**
    * Constructs a new KCP channel.

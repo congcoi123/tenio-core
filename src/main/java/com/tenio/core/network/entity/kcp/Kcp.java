@@ -13,6 +13,7 @@
 package com.tenio.core.network.entity.kcp;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public abstract class Kcp {
@@ -583,8 +584,12 @@ public abstract class Kcp {
         offset = 0;
       }
       // ikcp_ack_get
-      seg.sn = acklist.get(i * 2 + 0);
-      seg.ts = acklist.get(i * 2 + 1);
+      if (Objects.nonNull(acklist.get(i * 2 + 0))) {
+        seg.sn = acklist.get(i * 2 + 0);
+      }
+      if (Objects.nonNull(acklist.get(i * 2 + 1))) {
+        seg.ts = acklist.get(i * 2 + 1);
+      }
       offset += seg.encode(buffer, offset);
     }
     acklist.clear();

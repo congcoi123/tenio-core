@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * An implemented class is for a player using on the server.
@@ -42,6 +43,7 @@ public final class PlayerImpl implements Player {
 
   private final String name;
   private final Map<String, Object> properties;
+  private Consumer<Field> updateConsumer;
   private volatile Session session;
   private volatile Room currentRoom;
   private volatile PlayerState state;
@@ -124,6 +126,9 @@ public final class PlayerImpl implements Player {
   @Override
   public void setState(PlayerState state) {
     this.state = state;
+    if (Objects.nonNull(updateConsumer)) {
+      updateConsumer.accept(Field.STATE);
+    }
   }
 
   @Override
@@ -134,6 +139,9 @@ public final class PlayerImpl implements Player {
   @Override
   public void setActivated(boolean activated) {
     this.activated = activated;
+    if (Objects.nonNull(updateConsumer)) {
+      updateConsumer.accept(Field.ACTIVATION);
+    }
   }
 
   @Override
@@ -209,6 +217,9 @@ public final class PlayerImpl implements Player {
   @Override
   public void setNeverDeported(boolean flag) {
     deportedFlag = flag;
+    if (Objects.nonNull(updateConsumer)) {
+      updateConsumer.accept(Field.DEPORTATION);
+    }
   }
 
   private boolean isConnectionIdle() {
@@ -246,6 +257,9 @@ public final class PlayerImpl implements Player {
   @Override
   public void setRoleInRoom(PlayerRoleInRoom roleInRoom) {
     this.roleInRoom = roleInRoom;
+    if (Objects.nonNull(updateConsumer)) {
+      updateConsumer.accept(Field.ROLE_IN_ROOM);
+    }
   }
 
   @Override
@@ -281,6 +295,9 @@ public final class PlayerImpl implements Player {
   @Override
   public void setPlayerSlotInCurrentRoom(int slot) {
     playerSlotInCurrentRoom = slot;
+    if (Objects.nonNull(updateConsumer)) {
+      updateConsumer.accept(Field.SLOT_IN_ROOM);
+    }
   }
 
   @Override
@@ -291,6 +308,9 @@ public final class PlayerImpl implements Player {
   @Override
   public void setProperty(String key, Object value) {
     properties.put(key, value);
+    if (Objects.nonNull(updateConsumer)) {
+      updateConsumer.accept(Field.PROPERTY);
+    }
   }
 
   @Override
@@ -301,11 +321,22 @@ public final class PlayerImpl implements Player {
   @Override
   public void removeProperty(String key) {
     properties.remove(key);
+    if (Objects.nonNull(updateConsumer)) {
+      updateConsumer.accept(Field.PROPERTY);
+    }
   }
 
   @Override
   public void clearProperties() {
     properties.clear();
+    if (Objects.nonNull(updateConsumer)) {
+      updateConsumer.accept(Field.PROPERTY);
+    }
+  }
+
+  @Override
+  public void onUpdateListener(Consumer<Field> updateConsumer) {
+    this.updateConsumer = updateConsumer;
   }
 
   @Override

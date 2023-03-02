@@ -28,11 +28,21 @@ import com.tenio.core.entity.define.room.PlayerRoleInRoom;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.schedule.task.internal.AutoDisconnectPlayerTask;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * An abstract player entity used on the server.
  */
 public interface Player {
+
+  enum Field {
+    STATE,
+    ACTIVATION,
+    DEPORTATION,
+    ROLE_IN_ROOM,
+    SLOT_IN_ROOM,
+    PROPERTY
+  }
 
   /**
    * Retrieves the player's name which should be unique in the management list and on the server.
@@ -299,6 +309,14 @@ public interface Player {
    * Removes all properties of the player.
    */
   void clearProperties();
+
+  /**
+   * Observes all changes on the player.
+   *
+   * @param updateConsumer action when there is any change on player in {@link Field}
+   * @since 0.5.0
+   */
+  void onUpdateListener(Consumer<Field> updateConsumer);
 
   /**
    * Wipes out all the player's information.

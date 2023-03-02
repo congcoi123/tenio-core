@@ -146,8 +146,8 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
           boundSockets.add(datagramChannel);
         }
       }
-    } catch (IOException e) {
-      throw new ServiceRuntimeException(e.getMessage());
+    } catch (IOException exception) {
+      throw new ServiceRuntimeException(exception.getMessage());
     }
   }
 
