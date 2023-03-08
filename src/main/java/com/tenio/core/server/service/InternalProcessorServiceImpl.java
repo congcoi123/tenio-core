@@ -43,6 +43,7 @@ import com.tenio.core.network.entity.kcp.Ukcp;
 import com.tenio.core.network.entity.protocol.Request;
 import com.tenio.core.network.entity.protocol.implement.RequestImpl;
 import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.engine.writer.implement.KcpWriterHandler;
@@ -70,6 +71,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
   private final ServerApi serverApi;
   private NetworkWriterStatistic networkWriterStatistic;
   private DataType dataType;
+  private SessionManager sessionManager;
   private PlayerManager playerManager;
   private KcpIoHandler kcpIoHandler;
   private AtomicInteger kcpConvId;
@@ -158,6 +160,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
       case SESSION_READ_MESSAGE -> processSessionReadMessage(request);
       case DATAGRAM_CHANNEL_READ_MESSAGE -> processDatagramChannelReadMessage(request);
       default -> {
+        // do nothing
       }
     }
   }
@@ -239,7 +242,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
       var player = playerManager.getPlayerByName(session.getName());
       if (Objects.isNull(player)) {
         var illegalValueException = new IllegalArgumentException(
-            String.format("Unable to find player for the session: %s", session.toString()));
+            String.format("Unable to find player for the session: %s", session));
         error(illegalValueException);
         eventManager.emit(ServerEvent.SERVER_EXCEPTION, illegalValueException);
         return;
@@ -251,6 +254,14 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
   private void processDatagramChannelReadMessage(Request request) {
     var message = request.getAttribute(EVENT_KEY_SERVER_MESSAGE);
+    var remoteAddress = request.getAttribute(EVENT_KEY_DATAGRAM_REMOTE_ADDRESS);
+
+    var session = sessionManager.getSessionByDatagram((SocketAddress) remoteAddress);
+    if (Objects.nonNull(session)) {
+      request.setSender(session);
+      processSessionReadMessage(request);
+      return;
+    }
 
     // a condition for creating sub-connection
     var player =
@@ -268,13 +279,10 @@ public final class InternalProcessorServiceImpl extends AbstractController
           AttachedConnectionResult.INVALID_SESSION_PROTOCOL);
     } else {
       var datagramChannel = request.getAttribute(EVENT_KEY_DATAGRAM_CHANNEL);
-      var remoteAddress = request.getAttribute(EVENT_KEY_DATAGRAM_REMOTE_ADDRESS);
 
-      var session = player.get().getSession();
-      var sessionInstance = session.get();
-      var sessionManager = sessionInstance.getSessionManager();
+      var sessionInstance = player.get().getSession().get();
       sessionManager.addDatagramForSession((DatagramChannel) datagramChannel,
-          (SocketAddress) remoteAddress, session.get());
+          (SocketAddress) remoteAddress, sessionInstance);
 
       if (enabledKcp) {
         if (sessionInstance.containsKcp()) {
@@ -321,6 +329,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
   @Override
   public void setEnabledKcp(boolean enabledKcp) {
     this.enabledKcp = enabledKcp;
+  }
+
+  @Override
+  public void setSessionManager(SessionManager sessionManager) {
+    this.sessionManager = sessionManager;
   }
 
   @Override

@@ -340,6 +340,7 @@ public final class ServerImpl extends SystemLogger implements Server {
         DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION)));
     internalProcessorService
         .setMaxNumberPlayers(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS));
+    internalProcessorService.setSessionManager(networkService.getSessionManager());
     internalProcessorService.setPlayerManager(playerManager);
     internalProcessorService
         .setMaxRequestQueueSize(

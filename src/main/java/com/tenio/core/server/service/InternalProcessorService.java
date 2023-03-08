@@ -27,6 +27,7 @@ package com.tenio.core.server.service;
 import com.tenio.common.data.DataType;
 import com.tenio.core.controller.Controller;
 import com.tenio.core.entity.manager.PlayerManager;
+import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 
@@ -71,6 +72,13 @@ public interface InternalProcessorService extends Controller {
    * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}
    */
   void setEnabledKcp(boolean enabledKcp);
+
+  /**
+   * Sets a session manager instance.
+   *
+   * @param sessionManager a {@link SessionManager} instance
+   */
+  void setSessionManager(SessionManager sessionManager);
 
   /**
    * Sets a player manager for the server which is used to manage all players.

@@ -84,7 +84,6 @@ public final class RequestImpl implements Request {
   @Override
   public Request setSender(Session session) {
     sender = session;
-
     return this;
   }
 
@@ -96,7 +95,6 @@ public final class RequestImpl implements Request {
   @Override
   public Request setPriority(RequestPriority priority) {
     this.priority = priority;
-
     return this;
   }
 
@@ -113,7 +111,6 @@ public final class RequestImpl implements Request {
   @Override
   public Request setEvent(ServerEvent event) {
     this.event = event;
-
     return this;
   }
 
