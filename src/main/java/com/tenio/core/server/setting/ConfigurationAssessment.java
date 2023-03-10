@@ -31,8 +31,8 @@ import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.ConfigurationException;
 import com.tenio.core.exception.NotDefinedSubscribersException;
-import com.tenio.core.handler.event.EventAttachConnectionRequestValidation;
-import com.tenio.core.handler.event.EventAttachedConnectionResult;
+import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidation;
+import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidationResult;
 import com.tenio.core.handler.event.EventPlayerReconnectRequestHandle;
 import com.tenio.core.handler.event.EventPlayerReconnectedResult;
 import java.util.Arrays;
@@ -65,7 +65,7 @@ public final class ConfigurationAssessment {
   public void assess() throws NotDefinedSubscribersException, ConfigurationException {
     checkDataSerialization();
     checkSubscriberReconnection();
-    checkSubscriberConnectionAttach();
+    checkSubscriberRequestAccessingDatagramChannelHandler();
     checkDefinedMainSocketConnection();
   }
 
@@ -88,12 +88,14 @@ public final class ConfigurationAssessment {
     }
   }
 
-  private void checkSubscriberConnectionAttach() throws NotDefinedSubscribersException {
+  private void checkSubscriberRequestAccessingDatagramChannelHandler()
+      throws NotDefinedSubscribersException {
     if (containsTcpSocketConfig() && containsUdpSocketConfig()) {
-      if (!eventManager.hasSubscriber(ServerEvent.ATTACH_CONNECTION_REQUEST_VALIDATION)
-          || !eventManager.hasSubscriber(ServerEvent.ATTACHED_CONNECTION_RESULT)) {
-        throw new NotDefinedSubscribersException(EventAttachConnectionRequestValidation.class,
-            EventAttachedConnectionResult.class);
+      if (!eventManager.hasSubscriber(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION)
+          || !eventManager.hasSubscriber(
+          ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT)) {
+        throw new NotDefinedSubscribersException(EventAccessDatagramChannelRequestValidation.class,
+            EventAccessDatagramChannelRequestValidationResult.class);
       }
     }
   }

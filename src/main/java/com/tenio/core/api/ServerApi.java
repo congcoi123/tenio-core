@@ -24,13 +24,12 @@ THE SOFTWARE.
 
 package com.tenio.core.api;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
-import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.entity.define.mode.PlayerBanMode;
 import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
-import com.tenio.core.entity.implement.RoomImpl;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.setting.InitialRoomSetting;
@@ -279,10 +278,10 @@ public interface ServerApi {
    *
    * @param sender  the sender ({@link Player} instance)
    * @param room    all recipients in the same {@link Room}
-   * @param message the sending {@link ServerMessage}
+   * @param message the sending {@link DataCollection}
    * @throws UnsupportedOperationException the method is not supported at the moment
    */
-  default void sendPublicMessage(Player sender, Room room, ServerMessage message) {
+  default void sendPublicMessage(Player sender, Room room, DataCollection message) {
     throw new UnsupportedOperationException("Unsupported at the moment");
   }
 
@@ -291,10 +290,10 @@ public interface ServerApi {
    *
    * @param sender    the sender ({@link Player} instance)
    * @param recipient the receiver ({@link Player} instance)
-   * @param message   the sending {@link ServerMessage}
+   * @param message   the sending {@link DataCollection}
    * @throws UnsupportedOperationException the method is not supported at the moment
    */
-  default void sendPrivateMessage(Player sender, Player recipient, ServerMessage message) {
+  default void sendPrivateMessage(Player sender, Player recipient, DataCollection message) {
     throw new UnsupportedOperationException("Unsupported at the moment");
   }
 

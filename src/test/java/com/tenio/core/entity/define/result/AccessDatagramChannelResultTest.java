@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-class AttachedConnectionResultTest {
+class AccessDatagramChannelResultTest {
   @Test
   void testValueOf() {
-    assertEquals("SUCCESS", AttachedConnectionResult.valueOf("SUCCESS").toString());
+    assertEquals("SUCCESS", AccessDatagramChannelResult.valueOf("SUCCESS").toString());
   }
 }
 

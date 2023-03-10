@@ -88,6 +88,7 @@ public final class SessionImpl implements Session {
   private volatile SocketAddress datagramRemoteSocketAddress;
   private volatile String clientAddress;
   private volatile int clientPort;
+  private volatile int udpConvey;
   private int serverPort;
   private String serverAddress;
 
@@ -111,6 +112,7 @@ public final class SessionImpl implements Session {
     droppedPackets = new AtomicLong(0L);
 
     inactivatedTime = 0L;
+    udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
     activated = false;
     associatedToPlayer = false;
     hasUdp = false;
@@ -283,15 +285,31 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void setDatagramChannel(DatagramChannel datagramChannel, SocketAddress remoteAddress) {
+  public void setDatagramChannel(DatagramChannel datagramChannel, int udpConvey) {
     this.datagramChannel = datagramChannel;
     if (Objects.isNull(this.datagramChannel)) {
-      datagramRemoteSocketAddress = null;
-      hasUdp = false;
+      this.datagramRemoteSocketAddress = null;
+      this.udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
+      this.hasUdp = false;
     } else {
-      datagramRemoteSocketAddress = remoteAddress;
-      hasUdp = true;
+      this.udpConvey = udpConvey;
+      this.hasUdp = true;
     }
+  }
+
+  @Override
+  public int getUdpConveyId() {
+    return udpConvey;
+  }
+
+  @Override
+  public SocketAddress getDatagramRemoteSocketAddress() {
+    return datagramRemoteSocketAddress;
+  }
+
+  @Override
+  public void setDatagramRemoteSocketAddress(SocketAddress datagramRemoteSocketAddress) {
+    this.datagramRemoteSocketAddress = datagramRemoteSocketAddress;
   }
 
   @Override
@@ -303,11 +321,6 @@ public final class SessionImpl implements Session {
   public void setUkcp(Ukcp ukcp) {
     this.ukcp = ukcp;
     hasKcp = Objects.nonNull(this.ukcp);
-  }
-
-  @Override
-  public SocketAddress getDatagramRemoteSocketAddress() {
-    return datagramRemoteSocketAddress;
   }
 
   @Override
@@ -608,6 +621,7 @@ public final class SessionImpl implements Session {
         ", activated=" + activated +
         ", associatedToPlayer=" + associatedToPlayer +
         ", hasUdp=" + hasUdp +
+        ", udpConvey=" + udpConvey +
         ", enabledKcp=" + enabledKcp +
         ", hasKcp=" + hasKcp +
         '}';

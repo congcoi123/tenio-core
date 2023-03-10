@@ -26,25 +26,30 @@ package com.tenio.core.handler.event;
 
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.data.ServerMessage;
+import com.tenio.core.entity.define.result.AccessDatagramChannelResult;
+import com.tenio.core.network.entity.session.Session;
 import java.util.Optional;
 
 /**
- * When a player attempts to connect to UDP channel to send and receive messages.
+ * When the server responds to the request from client side which requires using the UDP channel.
  */
 @FunctionalInterface
-public interface EventAttachConnectionRequestValidation {
+public interface EventAccessDatagramChannelRequestValidationResult {
 
   /**
-   * When a player attempts to connect to UDP channel to send and receive messages.
+   * When the server responds to the request from client side which requires using the UDP channel.
    *
-   * @param message an instance of {@link ServerMessage} sent by client to identify its
-   *                corresponding player on the server
-   * @return an optional of {@link Player} is present if it qualifies identified conditions,
-   * otherwise is empty
-   * @see ServerEvent#ATTACH_CONNECTION_REQUEST_VALIDATION
-   * @see EventAttachedConnectionResult
+   * @param player  the optional of {@link Player} which requires using UDP channel
+   * @param udpConv the UDP convey ID created when it is successfully accessed to the UDP channel
+   *                , otherwise it can be left as {@link Session#EMPTY_DATAGRAM_CONVEY_ID}
+   * @param kcpConv the KCP convey ID when it is using, otherwise the value is always {@link Session#EMPTY_DATAGRAM_CONVEY_ID}
+   * @param result  the responded {@link AccessDatagramChannelResult} from the server, if the result
+   *                equals to {@link AccessDatagramChannelResult#PLAYER_NOT_FOUND} then the returned
+   *                player is empty, otherwise it is present
+   * @see ServerEvent#ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT
+   * @see EventAccessDatagramChannelRequestValidation
    * @see Optional
    */
-  Optional<Player> handle(ServerMessage message);
+  void handle(Optional<Player> player, int udpConv, int kcpConv,
+              AccessDatagramChannelResult result);
 }

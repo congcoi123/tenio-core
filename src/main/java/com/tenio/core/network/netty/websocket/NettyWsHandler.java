@@ -28,7 +28,6 @@ import com.tenio.common.data.DataType;
 import com.tenio.common.data.DataUtility;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.configuration.define.ServerEvent;
-import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
@@ -126,8 +125,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       networkReaderStatistic.updateReadBytes(binary.length);
       networkReaderStatistic.updateReadPackets(1);
 
-      var data = DataUtility.binaryToCollection(dataType, binary);
-      var message = ServerMessage.newInstance().setData(data);
+      var message = DataUtility.binaryToCollection(dataType, binary);
 
       if (!session.isAssociatedToPlayer()) {
         eventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, message);

@@ -41,8 +41,8 @@ This module provides all the main features for the framework to operate. It cont
 
 ## All supported events
 ```txt
-EventAttachConnectionRequestValidation
-EventAttachedConnectionResult
+EventAccessDatagramChannelRequestValidation
+EventAccessDatagramChannelRequestValidationResult
 EventConnectionEstablishedResult
 EventDisconnectConnection
 EventDisconnectPlayer

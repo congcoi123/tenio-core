@@ -27,22 +27,22 @@ package com.tenio.core.entity.define.result;
 /**
  * The results when a connection tried to associate with a player.
  */
-public enum AttachedConnectionResult {
+public enum AccessDatagramChannelResult {
 
   /**
    * Success.
    */
   SUCCESS,
   /**
-   * Attached connection is failed cause the player was not found.
+   * Accessing to a datagram channel is failed cause the player was not found.
    */
   PLAYER_NOT_FOUND,
   /**
-   * Attached connection is failed cause the session was not found.
+   * Accessing to a datagram channel is failed cause the session was not found.
    */
   SESSION_NOT_FOUND,
   /**
-   * Attached connection is failed cause the session protocol is invalid.
+   * Accessing to a datagram channel is failed cause the session protocol is invalid.
    */
   INVALID_SESSION_PROTOCOL;
 

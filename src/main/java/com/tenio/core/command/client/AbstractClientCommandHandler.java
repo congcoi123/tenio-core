@@ -24,8 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.command.client;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.handler.AbstractHandler;
 
 /**
@@ -51,5 +51,5 @@ public abstract class AbstractClientCommandHandler extends AbstractHandler {
    * @param player  The receiver which gets command from its client
    * @param message The message as command
    */
-  public abstract void execute(Player player, ServerMessage message);
+  public abstract void execute(Player player, DataCollection message);
 }

@@ -247,6 +247,7 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   public void setDataType(DataType dataType) {
     datagramIoHandler.setDataType(dataType);
     socketIoHandler.setDataType(dataType);
+    readerEngine.setDataType(dataType);
   }
 
   @Override

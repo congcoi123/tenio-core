@@ -26,7 +26,6 @@ package com.tenio.core.network.zero.handler.implement;
 
 import com.tenio.common.data.DataUtility;
 import com.tenio.core.configuration.define.ServerEvent;
-import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
@@ -58,8 +57,7 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
 
   @Override
   public void resultFrame(Session session, byte[] binary) {
-    var data = DataUtility.binaryToCollection(dataType, binary);
-    var message = ServerMessage.newInstance().setData(data);
+    var message = DataUtility.binaryToCollection(dataType, binary);
 
     if (!session.isAssociatedToPlayer()) {
       eventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, message);

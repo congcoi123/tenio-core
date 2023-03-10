@@ -24,18 +24,18 @@ THE SOFTWARE.
 
 package com.tenio.core.event.handler.implement;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.bootstrap.annotation.AutowiredAcceptNull;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.data.ServerMessage;
-import com.tenio.core.entity.define.result.AttachedConnectionResult;
+import com.tenio.core.entity.define.result.AccessDatagramChannelResult;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RefusedConnectionAddressException;
-import com.tenio.core.handler.event.EventAttachConnectionRequestValidation;
-import com.tenio.core.handler.event.EventAttachedConnectionResult;
+import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidation;
+import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidationResult;
 import com.tenio.core.handler.event.EventConnectionEstablishedResult;
 import com.tenio.core.handler.event.EventSocketConnectionRefused;
 import com.tenio.core.handler.event.EventWebSocketConnectionRefused;
@@ -65,10 +65,11 @@ public final class ConnectionEventHandler {
   private EventWriteMessageToConnection eventWriteMessageToConnection;
 
   @AutowiredAcceptNull
-  private EventAttachConnectionRequestValidation eventAttachConnectionRequestValidation;
+  private EventAccessDatagramChannelRequestValidation eventAccessDatagramChannelRequestValidation;
 
   @AutowiredAcceptNull
-  private EventAttachedConnectionResult eventAttachedConnectionResult;
+  private EventAccessDatagramChannelRequestValidationResult
+      eventAccessDatagramChannelRequestValidationResult;
 
   /**
    * Initialization.
@@ -86,10 +87,10 @@ public final class ConnectionEventHandler {
     final var eventWriteMessageToConnectionOp =
         Optional.ofNullable(eventWriteMessageToConnection);
 
-    final var eventAttachConnectionRequestValidationOp =
-        Optional.ofNullable(eventAttachConnectionRequestValidation);
-    final var eventAttachedConnectionResultOp =
-        Optional.ofNullable(eventAttachedConnectionResult);
+    final var eventAccessDatagramChannelRequestValidationOp =
+        Optional.ofNullable(eventAccessDatagramChannelRequestValidation);
+    final var eventAccessDatagramChannelRequestValidationResultOp =
+        Optional.ofNullable(this.eventAccessDatagramChannelRequestValidationResult);
 
     eventSocketConnectionRefusedOp.ifPresent(
         event -> eventManager.on(ServerEvent.SOCKET_CONNECTION_REFUSED, params -> {
@@ -114,7 +115,7 @@ public final class ConnectionEventHandler {
     eventConnectionEstablishedResultOp.ifPresent(
         event -> eventManager.on(ServerEvent.CONNECTION_ESTABLISHED_RESULT, params -> {
           var session = (Session) params[0];
-          var message = (ServerMessage) params[1];
+          var message = (DataCollection) params[1];
           var result = (ConnectionEstablishedResult) params[2];
 
           event.handle(session, message, result);
@@ -133,20 +134,21 @@ public final class ConnectionEventHandler {
           return null;
         }));
 
-    eventAttachConnectionRequestValidationOp.ifPresent(
-        event -> eventManager.on(ServerEvent.ATTACH_CONNECTION_REQUEST_VALIDATION, params -> {
-          var message = (ServerMessage) params[0];
+    eventAccessDatagramChannelRequestValidationOp.ifPresent(
+        event -> eventManager.on(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION, params -> {
+          var message = (DataCollection) params[0];
 
           return event.handle(message);
         }));
 
-    eventAttachedConnectionResultOp.ifPresent(
-        event -> eventManager.on(ServerEvent.ATTACHED_CONNECTION_RESULT, params -> {
+    eventAccessDatagramChannelRequestValidationResultOp.ifPresent(
+        event -> eventManager.on(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, params -> {
           var player = (Optional<Player>) params[0];
-          var kcpConv = (int) params[1];
-          var result = (AttachedConnectionResult) params[2];
+          var udpConv = (int) params[1];
+          var kcpConv = (int) params[2];
+          var result = (AccessDatagramChannelResult) params[3];
 
-          event.handle(player, kcpConv, result);
+          event.handle(player, udpConv, kcpConv, result);
 
           return null;
         }));

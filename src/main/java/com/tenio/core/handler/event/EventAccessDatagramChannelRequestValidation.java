@@ -24,28 +24,27 @@ THE SOFTWARE.
 
 package com.tenio.core.handler.event;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.define.result.AttachedConnectionResult;
 import java.util.Optional;
 
 /**
- * When the server responds to the request from client side which requires using the UDP channel.
+ * When a player attempts to connect to UDP channel to send and receive messages.
  */
 @FunctionalInterface
-public interface EventAttachedConnectionResult {
+public interface EventAccessDatagramChannelRequestValidation {
 
   /**
-   * When the server responds to the request from client side which requires using the UDP channel.
+   * When a player attempts to connect to UDP channel to send and receive messages.
    *
-   * @param player  the optional of {@link Player} which requires using UDP channel
-   * @param kcpConv the KCP convey ID when it is using, otherwise the value is always "-1"
-   * @param result  the responded {@link AttachedConnectionResult} from the server, if the result
-   *                equals to {@link AttachedConnectionResult#PLAYER_NOT_FOUND} then the returned
-   *                player is empty, otherwise it is present
-   * @see ServerEvent#ATTACHED_CONNECTION_RESULT
-   * @see EventAttachConnectionRequestValidation
+   * @param message an instance of {@link DataCollection} sent by client to identify its
+   *                corresponding player on the server
+   * @return an optional of {@link Player} is present if it qualifies identified conditions,
+   * otherwise is empty
+   * @see ServerEvent#ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION
+   * @see EventAccessDatagramChannelRequestValidationResult
    * @see Optional
    */
-  void handle(Optional<Player> player, int kcpConv, AttachedConnectionResult result);
+  Optional<Player> handle(DataCollection message);
 }

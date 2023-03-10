@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.server.service;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataType;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.api.ServerApi;
@@ -34,7 +35,7 @@ import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
-import com.tenio.core.entity.define.result.AttachedConnectionResult;
+import com.tenio.core.entity.define.result.AccessDatagramChannelResult;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.entity.define.result.PlayerReconnectedResult;
 import com.tenio.core.entity.manager.PlayerManager;
@@ -64,17 +65,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class InternalProcessorServiceImpl extends AbstractController
     implements InternalProcessorService {
 
-  private static final String EVENT_KEY_DATAGRAM_CHANNEL = "datagram-channel";
-  private static final String EVENT_KEY_SERVER_MESSAGE = "server-message";
-  private static final String EVENT_KEY_DATAGRAM_REMOTE_ADDRESS = "datagram-remote-address";
-
   private final ServerApi serverApi;
   private NetworkWriterStatistic networkWriterStatistic;
   private DataType dataType;
   private SessionManager sessionManager;
   private PlayerManager playerManager;
   private KcpIoHandler kcpIoHandler;
+  private AtomicInteger udpConvId;
   private AtomicInteger kcpConvId;
+  private boolean enabledUdp;
   private boolean enabledKcp;
   private int maxNumberPlayers;
   private boolean keepPlayerOnDisconnection;
@@ -84,17 +83,21 @@ public final class InternalProcessorServiceImpl extends AbstractController
     this.serverApi = serverApi;
   }
 
-  public static InternalProcessorServiceImpl newInstance(EventManager eventManager, ServerApi serverApi) {
+  public static InternalProcessorServiceImpl newInstance(EventManager eventManager,
+                                                         ServerApi serverApi) {
     return new InternalProcessorServiceImpl(eventManager, serverApi);
   }
 
   @Override
   public void initialize() {
     super.initialize();
-    if (enabledKcp) {
-      kcpIoHandler = KcpIoHandlerImpl.newInstance(eventManager);
-      kcpIoHandler.setDataType(dataType);
-      kcpConvId = new AtomicInteger(0);
+    if (enabledUdp) {
+      udpConvId = new AtomicInteger(0);
+      if (enabledKcp) {
+        kcpIoHandler = KcpIoHandlerImpl.newInstance(eventManager);
+        kcpIoHandler.setDataType(dataType);
+        kcpConvId = new AtomicInteger(0);
+      }
     }
   }
 
@@ -104,7 +107,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     eventManager.on(ServerEvent.SESSION_REQUEST_CONNECTION, params -> {
       var request =
           createRequest(ServerEvent.SESSION_REQUEST_CONNECTION, (Session) params[0]);
-      request.setAttribute(EVENT_KEY_SERVER_MESSAGE, params[1]);
+      request.setMessage((DataCollection) params[1]);
       enqueueRequest(request);
 
       return null;
@@ -126,18 +129,18 @@ public final class InternalProcessorServiceImpl extends AbstractController
     eventManager.on(ServerEvent.SESSION_READ_MESSAGE, params -> {
       var session = (Session) params[0];
       var request = createRequest(ServerEvent.SESSION_READ_MESSAGE, session);
-      request.setAttribute(EVENT_KEY_SERVER_MESSAGE, params[1]);
+      request.setMessage((DataCollection) params[1]);
       session.setLastReadTime(TimeUtility.currentTimeMillis());
       enqueueRequest(request);
 
       return null;
     });
 
-    eventManager.on(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE, params -> {
-      var request = createRequest(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE, null);
-      request.setAttribute(EVENT_KEY_DATAGRAM_CHANNEL, params[0]);
-      request.setAttribute(EVENT_KEY_DATAGRAM_REMOTE_ADDRESS, params[1]);
-      request.setAttribute(EVENT_KEY_SERVER_MESSAGE, params[2]);
+    eventManager.on(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME, params -> {
+      var request = createRequest(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME, null);
+      request.setDatagramChannel((DatagramChannel) params[0]);
+      request.setDatagramRemoteSocketAddress((SocketAddress) params[1]);
+      request.setMessage((DataCollection) params[2]);
       enqueueRequest(request);
 
       return null;
@@ -158,7 +161,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
     switch (request.getEvent()) {
       case SESSION_REQUEST_CONNECTION -> processSessionRequestsConnection(request);
       case SESSION_READ_MESSAGE -> processSessionReadMessage(request);
-      case DATAGRAM_CHANNEL_READ_MESSAGE -> processDatagramChannelReadMessage(request);
+      case DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME -> processDatagramChannelReadMessageForTheFirstTime(
+          request);
       default -> {
         // do nothing
       }
@@ -166,9 +170,9 @@ public final class InternalProcessorServiceImpl extends AbstractController
   }
 
   private void processSessionRequestsConnection(Request request) {
-    // check if it's reconnection request first
+    // check if it's a reconnection request first
     var session = request.getSender();
-    var message = request.getAttribute(EVENT_KEY_SERVER_MESSAGE);
+    var message = request.getMessage();
 
     Player player = null;
 
@@ -230,7 +234,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
     session.setName(null);
     session.setAssociatedToPlayer(false);
     session.remove();
-    debug("DISCONNECTED SESSION", "Session " + removedSession + " was removed in mode " + connectionDisconnectMode);
+    debug("DISCONNECTED SESSION",
+        "Session " + removedSession + " was removed in mode " + connectionDisconnectMode);
   }
 
   // In this phase, the session must be bound with a player, a free session can only be accepted
@@ -247,42 +252,38 @@ public final class InternalProcessorServiceImpl extends AbstractController
         eventManager.emit(ServerEvent.SERVER_EXCEPTION, illegalValueException);
         return;
       }
-      var message = request.getAttribute(EVENT_KEY_SERVER_MESSAGE);
+      var message = request.getMessage();
       eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
     }
   }
 
-  private void processDatagramChannelReadMessage(Request request) {
-    var message = request.getAttribute(EVENT_KEY_SERVER_MESSAGE);
-    var remoteAddress = request.getAttribute(EVENT_KEY_DATAGRAM_REMOTE_ADDRESS);
+  private void processDatagramChannelReadMessageForTheFirstTime(Request request) {
+    var message = request.getMessage();
 
-    var session = sessionManager.getSessionByDatagram((SocketAddress) remoteAddress);
-    if (Objects.nonNull(session)) {
-      request.setSender(session);
-      processSessionReadMessage(request);
-      return;
-    }
-
-    // a condition for creating sub-connection
+    // verify the datagram channel accessing request
     var player =
-        (Optional<Player>) eventManager.emit(ServerEvent.ATTACH_CONNECTION_REQUEST_VALIDATION,
+        (Optional<Player>) eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION,
             message);
 
     if (player.isEmpty()) {
-      eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, -1,
-          AttachedConnectionResult.PLAYER_NOT_FOUND);
+      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, player,
+          Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
+          AccessDatagramChannelResult.PLAYER_NOT_FOUND);
     } else if (!player.get().containsSession()) {
-      eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, -1,
-          AttachedConnectionResult.SESSION_NOT_FOUND);
+      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, player,
+          Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
+          AccessDatagramChannelResult.SESSION_NOT_FOUND);
     } else if (!player.get().getSession().get().isTcp()) {
-      eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, -1,
-          AttachedConnectionResult.INVALID_SESSION_PROTOCOL);
+      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, player,
+          Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
+          AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
     } else {
-      var datagramChannel = request.getAttribute(EVENT_KEY_DATAGRAM_CHANNEL);
+      var udpConvey = udpConvId.getAndIncrement();
+      var datagramChannel = request.getDatagramChannel();
 
       var sessionInstance = player.get().getSession().get();
-      sessionManager.addDatagramForSession((DatagramChannel) datagramChannel,
-          (SocketAddress) remoteAddress, sessionInstance);
+      sessionInstance.setDatagramRemoteSocketAddress(request.getDatagramRemoteSocketAddress());
+      sessionManager.addDatagramForSession(datagramChannel, udpConvey, sessionInstance);
 
       if (enabledKcp) {
         if (sessionInstance.containsKcp()) {
@@ -290,25 +291,25 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
         } else {
           // initialize a KCP connection
-          initializeKcp(sessionInstance, player);
+          initializeKcp(sessionInstance, player, udpConvey);
         }
       } else {
-        eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, -1,
-            AttachedConnectionResult.SUCCESS);
+        eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, player, udpConvey,
+            Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.SUCCESS);
       }
     }
   }
 
-  private void initializeKcp(Session session, Optional<Player> player) {
-    var kcpWriter = new KcpWriterHandler(session
-        .getDatagramChannel(), session.getDatagramRemoteSocketAddress());
+  private void initializeKcp(Session session, Optional<Player> player, int udpConvey) {
+    var kcpWriter = new KcpWriterHandler(session.getDatagramChannel(),
+        session.getDatagramRemoteSocketAddress());
     var kcpConv = kcpConvId.getAndIncrement();
     var ukcp = new Ukcp(kcpConv, KcpConfiguration.PROFILE, session, kcpIoHandler, kcpWriter,
         networkWriterStatistic);
     ukcp.getKcpIoHandler().channelActiveIn(session);
 
-    eventManager.emit(ServerEvent.ATTACHED_CONNECTION_RESULT, player, kcpConv,
-        AttachedConnectionResult.SUCCESS);
+    eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, player, udpConvey, kcpConv,
+        AccessDatagramChannelResult.SUCCESS);
   }
 
   @Override
@@ -324,6 +325,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
   @Override
   public void setKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection) {
     this.keepPlayerOnDisconnection = keepPlayerOnDisconnection;
+  }
+
+  @Override
+  public void setEnabledUdp(boolean enabledUdp) {
+    this.enabledUdp = enabledUdp;
   }
 
   @Override

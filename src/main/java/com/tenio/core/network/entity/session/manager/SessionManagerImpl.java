@@ -62,7 +62,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   @GuardedBy("this")
   private final Map<Channel, Session> sessionByWebSockets;
   @GuardedBy("this")
-  private final Map<SocketAddress, Session> sessionByDatagrams;
+  private final Map<Integer, Session> sessionByDatagrams;
   private List<Session> readonlySessionsList;
   private PacketQueuePolicy packetQueuePolicy;
   private ConnectionFilter connectionFilter;
@@ -130,7 +130,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   }
 
   @Override
-  public void addDatagramForSession(DatagramChannel datagramChannel, SocketAddress remoteAddress,
+  public void addDatagramForSession(DatagramChannel datagramChannel, int udpConvey,
                                     Session session) {
     if (!session.isTcp()) {
       throw new IllegalArgumentException(
@@ -138,15 +138,15 @@ public final class SessionManagerImpl extends AbstractManager implements Session
               session));
     }
     synchronized (sessionByDatagrams) {
-      session.setDatagramChannel(datagramChannel, remoteAddress);
-      sessionByDatagrams.put(session.getDatagramRemoteSocketAddress(), session);
+      session.setDatagramChannel(datagramChannel, udpConvey);
+      sessionByDatagrams.put(udpConvey, session);
     }
   }
 
   @Override
-  public Session getSessionByDatagram(SocketAddress remoteAddress) {
+  public Session getSessionByDatagram(int udpConvey) {
     synchronized (sessionByDatagrams) {
-      return sessionByDatagrams.get(remoteAddress);
+      return sessionByDatagrams.get(udpConvey);
     }
   }
 
@@ -210,20 +210,16 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   public void removeSession(Session session) {
     synchronized (this) {
       switch (session.getTransportType()) {
-        case TCP:
+        case TCP -> {
           if (session.containsUdp()) {
-            sessionByDatagrams.remove(session.getDatagramRemoteSocketAddress());
-            session.setDatagramChannel(null, null);
+            sessionByDatagrams.remove(session.getUdpConveyId());
+            session.setDatagramChannel(null, Session.EMPTY_DATAGRAM_CONVEY_ID);
           }
           sessionBySockets.remove(session.getSocketChannel());
-          break;
-
-        case WEB_SOCKET:
-          sessionByWebSockets.remove(session.getWebSocketChannel());
-          break;
-
-        default:
-          break;
+        }
+        case WEB_SOCKET -> sessionByWebSockets.remove(session.getWebSocketChannel());
+        default -> {
+        }
       }
       sessionByIds.remove(session.getId());
       sessionCount = sessionByIds.size();

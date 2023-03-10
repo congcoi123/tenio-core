@@ -25,8 +25,8 @@ THE SOFTWARE.
 package com.tenio.core.configuration.define;
 
 import com.tenio.core.bootstrap.annotation.Asynchronous;
-import com.tenio.core.handler.event.EventAttachConnectionRequestValidation;
-import com.tenio.core.handler.event.EventAttachedConnectionResult;
+import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidation;
+import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidationResult;
 import com.tenio.core.handler.event.EventConnectionEstablishedResult;
 import com.tenio.core.handler.event.EventDisconnectPlayer;
 import com.tenio.core.handler.event.EventFetchedBandwidthInfo;
@@ -50,6 +50,7 @@ import com.tenio.core.handler.event.EventSwitchSpectatorToParticipantResult;
 import com.tenio.core.handler.event.EventSystemMonitoring;
 import com.tenio.core.handler.event.EventWebSocketConnectionRefused;
 import com.tenio.core.handler.event.EventWriteMessageToConnection;
+import com.tenio.core.network.zero.engine.implement.ZeroReaderImpl;
 
 /**
  * All supported events could be emitted on the server.
@@ -96,10 +97,16 @@ public enum ServerEvent {
   @Asynchronous
   SESSION_WRITE_MESSAGE,
   /**
-   * When a message sent to the sever from client side via datagram channel.
+   * When a message sent to the sever from client side via datagram channel at the first time,
+   * this event is triggered. The system will check if the client's datagram channel was already
+   * registered or not to decide which event should be emitted.
+   * The implementation can be found in {@link ZeroReaderImpl#getDatagramIoHandler()}, and it has
+   * {@code channelRead} or {@code sessionRead} for separated purposes.
+   *
+   * @see ZeroReaderImpl
    */
   @Asynchronous
-  DATAGRAM_CHANNEL_READ_MESSAGE,
+  DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME,
   /**
    * When the server finished initialization and is ready.
    *
@@ -191,17 +198,17 @@ public enum ServerEvent {
    */
   DISCONNECT_PLAYER,
   /**
-   * When the server validates a UDP attaching request from a player.
+   * When the server validates a UDP channel accessing request from a player.
    *
-   * @see EventAttachConnectionRequestValidation
+   * @see EventAccessDatagramChannelRequestValidation
    */
-  ATTACH_CONNECTION_REQUEST_VALIDATION,
+  ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION,
   /**
-   * When the server responds a UDP attaching request from a player.
+   * When the server responds a UDP channel accessing request from a player.
    *
-   * @see EventAttachedConnectionResult
+   * @see EventAccessDatagramChannelRequestValidationResult
    */
-  ATTACHED_CONNECTION_RESULT,
+  ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
   /**
    * When the server provides information regarding CCU.
    *

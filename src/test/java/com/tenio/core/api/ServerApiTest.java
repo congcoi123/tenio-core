@@ -24,11 +24,11 @@ THE SOFTWARE.
 
 package com.tenio.core.api;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
-import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerBanMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
@@ -569,9 +569,9 @@ class ServerApiTest {
             Mockito.mock(Room.class), 1));
     Assertions.assertThrows(UnsupportedOperationException.class,
         () -> serverApi.sendPublicMessage(Mockito.mock(Player.class),
-            Mockito.mock(Room.class), Mockito.mock(ServerMessage.class)));
+            Mockito.mock(Room.class), Mockito.mock(DataCollection.class)));
     Assertions.assertThrows(UnsupportedOperationException.class,
         () -> serverApi.sendPrivateMessage(Mockito.mock(Player.class), Mockito.mock(Player.class)
-            , Mockito.mock(ServerMessage.class)));
+            , Mockito.mock(DataCollection.class)));
   }
 }

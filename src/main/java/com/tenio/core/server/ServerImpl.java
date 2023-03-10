@@ -347,9 +347,9 @@ public final class ServerImpl extends SystemLogger implements Server {
             configuration.getInt(CoreConfigurationType.PROP_MAX_REQUEST_QUEUE_SIZE));
     internalProcessorService
         .setThreadPoolSize(configuration.getInt(CoreConfigurationType.WORKER_INTERNAL_PROCESSOR));
+    internalProcessorService.setEnabledUdp(configuration.getInt(CoreConfigurationType.WORKER_UDP_WORKER) > 0);
     internalProcessorService.setEnabledKcp(
-        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP
-        ));
+        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP));
     internalProcessorService.setKeepPlayerOnDisconnection(
         configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION));
 

@@ -24,10 +24,13 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.protocol;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.controller.RequestComparator;
 import com.tenio.core.network.define.RequestPriority;
 import com.tenio.core.network.entity.session.Session;
+import java.net.SocketAddress;
+import java.nio.channels.DatagramChannel;
 
 /**
  * A request created by the server when it received a message from a client.
@@ -40,23 +43,6 @@ public interface Request {
    * @return the unique {@code long} ID of request
    */
   long getId();
-
-  /**
-   * Retrieves additional information of the request.
-   *
-   * @param key the {@link String} value key used to fetch information
-   * @return the corresponding {@link Object} value if available, otherwise {@code null}
-   */
-  Object getAttribute(String key);
-
-  /**
-   * Puts additional information for the request.
-   *
-   * @param key   the {@link String} value key used to fetch information
-   * @param value the {@link Object} value
-   * @return the pointer of request
-   */
-  Request setAttribute(String key, Object value);
 
   /**
    * Retrieves the server event associating to the request.
@@ -87,6 +73,30 @@ public interface Request {
    * @return the pointer of request
    */
   Request setSender(Session session);
+
+  DatagramChannel getDatagramChannel();
+
+  Request setDatagramChannel(DatagramChannel datagramChannel);
+
+  /**
+   * Retrieves the remote address associating to the client side whenever the server receives
+   * message from him.
+   *
+   * @return the remote address associating to the client side
+   */
+  SocketAddress getDatagramRemoteSocketAddress();
+
+  /**
+   * Sets the remote address associating to the client side whenever the server receives
+   * message from him.
+   *
+   * @param datagramRemoteSocketAddress remote address associating to the client side
+   */
+  Request setDatagramRemoteSocketAddress(SocketAddress datagramRemoteSocketAddress);
+
+  DataCollection getMessage();
+
+  Request setMessage(DataCollection message);
 
   /**
    * Retrieves the priority of request.

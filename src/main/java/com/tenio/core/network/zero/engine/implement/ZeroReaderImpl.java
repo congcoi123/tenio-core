@@ -24,6 +24,12 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.implement;
 
+import com.tenio.common.data.DataCollection;
+import com.tenio.common.data.DataType;
+import com.tenio.common.data.DataUtility;
+import com.tenio.common.data.msgpack.element.MsgPackMap;
+import com.tenio.common.data.zero.ZeroMap;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.network.entity.session.Session;
@@ -54,6 +60,7 @@ import javassist.NotFoundException;
 public final class ZeroReaderImpl extends AbstractZeroEngine
     implements ZeroReader, ZeroReaderListener {
 
+  private DataType dataType;
   private ZeroAcceptorListener zeroAcceptorListener;
   private ZeroWriterListener zeroWriterListener;
   private Selector readableSelector;
@@ -120,14 +127,14 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
           }
         }
       }
-    } catch (ClosedSelectorException e1) {
-      error(e1, "Selector is closed: ", e1.getMessage());
-    } catch (CancelledKeyException e2) {
-      error(e2, "Cancelled key: ", e2.getMessage());
-    } catch (IOException e3) {
-      error(e3, "I/O reading/selection error: ", e3.getMessage());
-    } catch (Exception e4) {
-      error(e4, "Generic reading/selection error: ", e4.getMessage());
+    } catch (ClosedSelectorException exception1) {
+      error(exception1, "Selector is closed: ", exception1.getMessage());
+    } catch (CancelledKeyException exception2) {
+      error(exception2, "Cancelled key: ", exception2.getMessage());
+    } catch (IOException exception3) {
+      error(exception3, "I/O reading/selection error: ", exception3.getMessage());
+    } catch (Exception exception4) {
+      error(exception4, "Generic reading/selection error: ", exception4.getMessage());
     }
   }
 
@@ -203,19 +210,19 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
   private void readUpdData(DatagramChannel datagramChannel, SelectionKey selectionKey,
                            ByteBuffer readerBuffer) {
-
     Session session = null;
 
     if (selectionKey.isValid() && selectionKey.isReadable()) {
       // prepares the buffer first
       readerBuffer.clear();
       // reads data from socket and write them to buffer
-      SocketAddress remoteAddress = null;
+      SocketAddress remoteAddress;
       try {
         remoteAddress = datagramChannel.receive(readerBuffer);
-      } catch (IOException e) {
-        error(e, "An exception was occurred on channel: ", datagramChannel.toString());
-        getDatagramIoHandler().channelException(datagramChannel, e);
+      } catch (IOException exception) {
+        error(exception, "An exception was occurred on channel: ", datagramChannel.toString());
+        getDatagramIoHandler().channelException(datagramChannel, exception);
+        return;
       }
 
       if (Objects.isNull(remoteAddress)) {
@@ -237,20 +244,43 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
       byte[] binary = new byte[readerBuffer.limit()];
       readerBuffer.get(binary);
 
+      // convert binary to dataCollection object
+      var dataCollection = DataUtility.binaryToCollection(dataType, binary);
+
       // retrieves session by its datagram channel, hence we are using only one
-      // datagram channel for all sessions, we use incoming request remote address to
+      // datagram channel for all sessions, we use incoming request convey ID to
       // distinguish them
-      session = getSessionManager().getSessionByDatagram(remoteAddress);
+      var udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
+      DataCollection message = null;
+      if (dataCollection instanceof ZeroMap zeroMap) {
+        if (zeroMap.containsKey(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID)) {
+          udpConvey = zeroMap.getInteger(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID);
+        }
+        if (zeroMap.containsKey(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA)) {
+          message = zeroMap.getDataCollection(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA);
+        }
+      } else if (dataCollection instanceof MsgPackMap msgPackMap) {
+        if (msgPackMap.contains(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID)) {
+          udpConvey = msgPackMap.getInteger(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID);
+        }
+        if (msgPackMap.containsKey(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA)) {
+          message = msgPackMap.getMsgPackMap(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA);
+        }
+      }
+
+      session = getSessionManager().getSessionByDatagram(udpConvey);
 
       if (Objects.isNull(session)) {
-        getDatagramIoHandler().channelRead(datagramChannel, remoteAddress, binary);
+        getDatagramIoHandler().channelRead(datagramChannel, remoteAddress, message);
       } else {
         if (session.isActivated()) {
+          session.setDatagramRemoteSocketAddress(remoteAddress);
           session.addReadBytes(byteCount);
           if (session.containsKcp()) {
+            // At this time, UKCP knows who is its session
             session.getUkcp().input(binary);
           } else {
-            getDatagramIoHandler().sessionRead(session, binary);
+            getDatagramIoHandler().sessionRead(session, message);
           }
         } else {
           debug("READ UDP CHANNEL", "Session is inactivated: ", session.toString());
@@ -275,6 +305,11 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   public SelectionKey acceptSocketChannel(SocketChannel socketChannel)
       throws ClosedChannelException {
     return socketChannel.register(readableSelector, SelectionKey.OP_READ);
+  }
+
+  @Override
+  public void setDataType(DataType dataType) {
+    this.dataType = dataType;
   }
 
   @Override

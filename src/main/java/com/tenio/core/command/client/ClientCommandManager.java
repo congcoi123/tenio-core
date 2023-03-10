@@ -24,11 +24,11 @@ THE SOFTWARE.
 
 package com.tenio.core.command.client;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.annotation.ClientCommand;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.data.ServerMessage;
 import com.tenio.core.exception.AddedDuplicatedClientCommandException;
 import java.util.LinkedList;
 import java.util.List;
@@ -105,7 +105,7 @@ public final class ClientCommandManager extends SystemLogger {
    * @param player  The receiver which gets command from its client
    * @param message The message as command
    */
-  public void invoke(Short code, Player player, ServerMessage message) {
+  public void invoke(Short code, Player player, DataCollection message) {
     // gets command handler
     var handler = getHandler(code);
 

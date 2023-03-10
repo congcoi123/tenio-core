@@ -53,7 +53,7 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
       // retrieve the datagram channel instance from session
       var datagramChannel = session.getDatagramChannel();
 
-      // the InetSocketAddress should be saved when the datagram channel receive first
+      // the InetSocketAddress should be saved and updated when the datagram channel receive
       // messages from the client
       var remoteSocketAddress = session.getDatagramRemoteSocketAddress();
 

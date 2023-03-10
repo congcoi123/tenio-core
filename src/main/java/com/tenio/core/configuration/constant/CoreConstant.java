@@ -68,6 +68,8 @@ public final class CoreConstant {
    */
   public static final String DEFAULT_REST_CONTROLLER_PACKAGE = "com.tenio.core.network.jetty" +
       ".controller";
+  public static final String DEFAULT_KEY_UDP_CONVEY_ID = "u";
+  public static final String DEFAULT_KEY_UDP_MESSAGE_DATA = "d";
 
   private CoreConstant() {
     throw new UnsupportedOperationException("This class does not support to create a new instance");
