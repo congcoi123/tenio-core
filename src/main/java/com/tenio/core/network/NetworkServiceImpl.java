@@ -167,7 +167,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   public void setHttpConfiguration(int port, Map<String, RestServlet> servletMap) {
     httpService.setPort(port);
     httpService.setServletMap(servletMap);
-    httpServiceInitialized = true;
+    httpServiceInitialized = (port != 0 && Objects.nonNull(servletMap));
   }
 
   @Override

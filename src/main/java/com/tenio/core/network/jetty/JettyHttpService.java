@@ -91,8 +91,8 @@ public final class JettyHttpService extends AbstractManager implements Service, 
 
       server.start();
       server.join();
-    } catch (Exception e) {
-      error(e);
+    } catch (Exception exception) {
+      error(exception);
     }
   }
 
