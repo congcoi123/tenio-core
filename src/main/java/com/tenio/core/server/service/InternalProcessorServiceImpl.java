@@ -42,7 +42,8 @@ import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.kcp.Ukcp;
 import com.tenio.core.network.entity.protocol.Request;
-import com.tenio.core.network.entity.protocol.implement.RequestImpl;
+import com.tenio.core.network.entity.protocol.implement.DatagramRequestImpl;
+import com.tenio.core.network.entity.protocol.implement.SessionRequestImpl;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
@@ -106,7 +107,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
     eventManager.on(ServerEvent.SESSION_REQUEST_CONNECTION, params -> {
       var request =
-          createRequest(ServerEvent.SESSION_REQUEST_CONNECTION, (Session) params[0]);
+          SessionRequestImpl.newInstance().setEvent(ServerEvent.SESSION_REQUEST_CONNECTION);
+      request.setSender(params[0]);
       request.setMessage((DataCollection) params[1]);
       enqueueRequest(request);
 
@@ -128,7 +130,9 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
     eventManager.on(ServerEvent.SESSION_READ_MESSAGE, params -> {
       var session = (Session) params[0];
-      var request = createRequest(ServerEvent.SESSION_READ_MESSAGE, session);
+      var request =
+          SessionRequestImpl.newInstance().setEvent(ServerEvent.SESSION_READ_MESSAGE);
+      request.setSender(session);
       request.setMessage((DataCollection) params[1]);
       session.setLastReadTime(TimeUtility.currentTimeMillis());
       enqueueRequest(request);
@@ -137,9 +141,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
     });
 
     eventManager.on(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME, params -> {
-      var request = createRequest(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME, null);
-      request.setDatagramChannel((DatagramChannel) params[0]);
-      request.setDatagramRemoteSocketAddress((SocketAddress) params[1]);
+      var request =
+          DatagramRequestImpl.newInstance()
+              .setEvent(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME);
+      request.setSender(params[0]);
+      request.setRemoteSocketAddress((SocketAddress) params[1]);
       request.setMessage((DataCollection) params[2]);
       enqueueRequest(request);
 
@@ -150,10 +156,6 @@ public final class InternalProcessorServiceImpl extends AbstractController
   @Override
   public void setDataType(DataType dataType) {
     this.dataType = dataType;
-  }
-
-  private Request createRequest(ServerEvent event, Session session) {
-    return RequestImpl.newInstance().setEvent(event).setSender(session);
   }
 
   @Override
@@ -171,7 +173,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
   private void processSessionRequestsConnection(Request request) {
     // check if it's a reconnection request first
-    var session = request.getSender();
+    var session = (Session) request.getSender();
     var message = request.getMessage();
 
     Player player = null;
@@ -241,7 +243,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
   // In this phase, the session must be bound with a player, a free session can only be accepted
   // when it is being handled in the connection established phase
   private void processSessionReadMessage(Request request) {
-    var session = request.getSender();
+    var session = (Session) request.getSender();
 
     if (session.isAssociatedToPlayer()) {
       var player = playerManager.getPlayerByName(session.getName());
@@ -261,28 +263,28 @@ public final class InternalProcessorServiceImpl extends AbstractController
     var message = request.getMessage();
 
     // verify the datagram channel accessing request
-    var player =
+    var optionalPlayer =
         (Optional<Player>) eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION,
             message);
 
-    if (player.isEmpty()) {
-      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, player,
+    if (optionalPlayer.isEmpty()) {
+      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, optionalPlayer,
           Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
           AccessDatagramChannelResult.PLAYER_NOT_FOUND);
-    } else if (!player.get().containsSession()) {
-      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, player,
+    } else if (!optionalPlayer.get().containsSession()) {
+      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, optionalPlayer,
           Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
           AccessDatagramChannelResult.SESSION_NOT_FOUND);
-    } else if (!player.get().getSession().get().isTcp()) {
-      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, player,
+    } else if (!optionalPlayer.get().getSession().get().isTcp()) {
+      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, optionalPlayer,
           Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
           AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
     } else {
       var udpConvey = udpConvId.getAndIncrement();
-      var datagramChannel = request.getDatagramChannel();
+      var datagramChannel = (DatagramChannel) request.getSender();
 
-      var sessionInstance = player.get().getSession().get();
-      sessionInstance.setDatagramRemoteSocketAddress(request.getDatagramRemoteSocketAddress());
+      var sessionInstance = optionalPlayer.get().getSession().get();
+      sessionInstance.setDatagramRemoteSocketAddress(request.getRemoteSocketAddress());
       sessionManager.addDatagramForSession(datagramChannel, udpConvey, sessionInstance);
 
       if (enabledKcp) {
@@ -291,16 +293,17 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
         } else {
           // initialize a KCP connection
-          initializeKcp(sessionInstance, player, udpConvey);
+          initializeKcp(sessionInstance, optionalPlayer, udpConvey);
         }
       } else {
-        eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, player, udpConvey,
+        eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, optionalPlayer,
+            udpConvey,
             Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.SUCCESS);
       }
     }
   }
 
-  private void initializeKcp(Session session, Optional<Player> player, int udpConvey) {
+  private void initializeKcp(Session session, Optional<Player> optionalPlayer, int udpConvey) {
     var kcpWriter = new KcpWriterHandler(session.getDatagramChannel(),
         session.getDatagramRemoteSocketAddress());
     var kcpConv = kcpConvId.getAndIncrement();
@@ -308,8 +311,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
         networkWriterStatistic);
     ukcp.getKcpIoHandler().channelActiveIn(session);
 
-    eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, player, udpConvey, kcpConv,
-        AccessDatagramChannelResult.SUCCESS);
+    eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, optionalPlayer,
+        udpConvey, kcpConv, AccessDatagramChannelResult.SUCCESS);
   }
 
   @Override

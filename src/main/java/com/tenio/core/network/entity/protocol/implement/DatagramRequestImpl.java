@@ -29,37 +29,32 @@ import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.network.define.RequestPriority;
 import com.tenio.core.network.entity.protocol.Request;
-import com.tenio.core.network.entity.session.Session;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * The implementation for request.
+ * Request implementation for Datagram channels.
  *
- * @see Request
+ * @since 0.5.0
  */
-public final class RequestImpl implements Request {
-
-  private static final AtomicLong ID_COUNTER = new AtomicLong(1L);
+public class DatagramRequestImpl implements Request {
 
   private final long id;
   private final long timestamp;
   private ServerEvent event;
-  private Session sender;
   private DatagramChannel datagramChannel;
   private SocketAddress datagramRemoteSocketAddress;
   private DataCollection message;
   private RequestPriority priority;
 
-  private RequestImpl() {
+  private DatagramRequestImpl() {
     id = ID_COUNTER.getAndIncrement();
     priority = RequestPriority.NORMAL;
     timestamp = TimeUtility.currentTimeMillis();
   }
 
   public static Request newInstance() {
-    return new RequestImpl();
+    return new DatagramRequestImpl();
   }
 
   @Override
@@ -68,35 +63,24 @@ public final class RequestImpl implements Request {
   }
 
   @Override
-  public Session getSender() {
-    return sender;
-  }
-
-  @Override
-  public Request setSender(Session session) {
-    sender = session;
-    return this;
-  }
-
-  @Override
-  public DatagramChannel getDatagramChannel() {
+  public DatagramChannel getSender() {
     return datagramChannel;
   }
 
   @Override
-  public Request setDatagramChannel(DatagramChannel datagramChannel) {
-    this.datagramChannel = datagramChannel;
+  public Request setSender(Object sender) {
+    datagramChannel = (DatagramChannel) sender;
     return this;
   }
 
   @Override
-  public SocketAddress getDatagramRemoteSocketAddress() {
+  public SocketAddress getRemoteSocketAddress() {
     return datagramRemoteSocketAddress;
   }
 
   @Override
-  public Request setDatagramRemoteSocketAddress(SocketAddress datagramRemoteSocketAddress) {
-    this.datagramRemoteSocketAddress = datagramRemoteSocketAddress;
+  public Request setRemoteSocketAddress(SocketAddress remoteSocketAddress) {
+    this.datagramRemoteSocketAddress = remoteSocketAddress;
     return this;
   }
 
@@ -168,8 +152,8 @@ public final class RequestImpl implements Request {
         "id=" + id +
         ", timestamp=" + timestamp +
         ", event=" + event +
-        ", sender=" + sender +
-        ", datagramRemoteAddress=" + datagramRemoteSocketAddress +
+        ", sender=" + datagramChannel +
+        ", remoteSocketAddress=" + datagramRemoteSocketAddress +
         ", message=" + message +
         ", priority=" + priority +
         '}';

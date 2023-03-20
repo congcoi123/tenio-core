@@ -31,11 +31,15 @@ import com.tenio.core.network.define.RequestPriority;
 import com.tenio.core.network.entity.session.Session;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A request created by the server when it received a message from a client.
  */
 public interface Request {
+
+  AtomicLong ID_COUNTER = new AtomicLong(1L);
 
   /**
    * Retrieves the unique ID of request.
@@ -62,21 +66,17 @@ public interface Request {
   /**
    * Retrieves the sender of request.
    *
-   * @return a {@link Session} that plays as a sender of the request
+   * @return a {@link Object} that plays as a sender of the request
    */
-  Session getSender();
+  Object getSender();
 
   /**
    * Sets the sender of request.
    *
-   * @param session a {@link Session} that plays as a sender of the request
+   * @param sender a {@link Object} that plays as a sender of the request
    * @return the pointer of request
    */
-  Request setSender(Session session);
-
-  DatagramChannel getDatagramChannel();
-
-  Request setDatagramChannel(DatagramChannel datagramChannel);
+  Request setSender(Object sender);
 
   /**
    * Retrieves the remote address associating to the client side whenever the server receives
@@ -84,7 +84,7 @@ public interface Request {
    *
    * @return the remote address associating to the client side
    */
-  SocketAddress getDatagramRemoteSocketAddress();
+  SocketAddress getRemoteSocketAddress();
 
   /**
    * Sets the remote address associating to the client side whenever the server receives
@@ -92,7 +92,7 @@ public interface Request {
    *
    * @param datagramRemoteSocketAddress remote address associating to the client side
    */
-  Request setDatagramRemoteSocketAddress(SocketAddress datagramRemoteSocketAddress);
+  Request setRemoteSocketAddress(SocketAddress remoteSocketAddress);
 
   DataCollection getMessage();
 
