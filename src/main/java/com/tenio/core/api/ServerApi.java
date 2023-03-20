@@ -33,6 +33,7 @@ import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.setting.InitialRoomSetting;
+import com.tenio.core.exception.AddedDuplicatedRoomException;
 import com.tenio.core.handler.event.EventPlayerLoggedinResult;
 import com.tenio.core.network.entity.protocol.Response;
 import com.tenio.core.network.entity.session.Session;
@@ -63,6 +64,17 @@ public interface ServerApi {
    * @see EventPlayerLoggedinResult
    */
   void login(String playerName, Session session);
+
+  /**
+   * Allows creating an instance of a player on the server which could be a custom one.
+   *
+   * @param player a {@link Player} who must have a unique name on the server
+   * @see Session
+   * @see EventPlayerLoggedinResult
+   * @since 0.5.0
+   */
+  void login(Player player);
+
 
   /**
    * Removes a player from the management list and from the server as well. This is a silent
@@ -113,22 +125,34 @@ public interface ServerApi {
   /**
    * Creates a new room on the server without an owner.
    *
-   * @param setting all room {@link InitialRoomSetting} at the time its created
+   * @param roomSetting all room {@link InitialRoomSetting} at the time its created
    * @return a new instance of {@link Room} if available, otherwise {@code null}
    */
-  default Room createRoom(InitialRoomSetting setting) {
-    return createRoom(setting, null);
+  default Room createRoom(InitialRoomSetting roomSetting) {
+    return createRoom(roomSetting, null);
   }
 
   /**
    * Creates a new room on the server.
    *
-   * @param setting all room {@link InitialRoomSetting} at the time its created
-   * @param owner   a {@link Player} owner of this room, owner can also be declared by
-   *                {@code null} value
+   * @param roomSetting all room {@link InitialRoomSetting} at the time its created
+   * @param roomOwner   a {@link Player} owner of this room, owner can also be declared by
+   *                    {@code null} value
    * @return a new instance of {@link Room} if available, otherwise {@code null}
    */
-  Room createRoom(InitialRoomSetting setting, Player owner);
+  Room createRoom(InitialRoomSetting roomSetting, Player roomOwner);
+
+  /**
+   * Adds a new room to the server.
+   *
+   * @param room        an instance of {@link Room}
+   * @param roomSetting all settings created by a {@link InitialRoomSetting} builder
+   * @param roomOwner   a {@link Player} as the room's owner
+   * @throws AddedDuplicatedRoomException when a room is already available on the server, but it
+   *                                      is mentioned again
+   * @since 0.5.0
+   */
+  Room addRoom(Room room, InitialRoomSetting roomSetting, Player roomOwner);
 
   /**
    * Retrieves a player on the server by using its name.

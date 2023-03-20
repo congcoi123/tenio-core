@@ -32,7 +32,7 @@ import com.tenio.core.entity.setting.InitialRoomSetting;
  * Returns the result when the server attempts to create a new room.
  */
 @FunctionalInterface
-public interface EventRoomCreatedResult {
+public interface EventRoomCreatedResult<R extends Room> {
 
   /**
    * Retrieves the result when the server attempts to create a new room.
@@ -44,5 +44,5 @@ public interface EventRoomCreatedResult {
    *                when the result equals to success
    * @see RoomCreatedResult#SUCCESS
    */
-  void handle(Room room, InitialRoomSetting setting, RoomCreatedResult result);
+  void handle(R room, InitialRoomSetting setting, RoomCreatedResult result);
 }

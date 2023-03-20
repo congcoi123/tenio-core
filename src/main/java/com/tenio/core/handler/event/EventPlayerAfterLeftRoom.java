@@ -33,7 +33,7 @@ import com.tenio.core.entity.define.result.PlayerLeftRoomResult;
  * When a player left its current room.
  */
 @FunctionalInterface
-public interface EventPlayerAfterLeftRoom {
+public interface EventPlayerAfterLeftRoom<P extends Player, R extends Room> {
 
   /**
    * When a player has just left its current room.
@@ -47,5 +47,5 @@ public interface EventPlayerAfterLeftRoom {
    * @see PlayerLeftRoomResult#SUCCESS
    * @see EventPlayerBeforeLeaveRoom
    */
-  void handle(Player player, Room room, PlayerLeaveRoomMode mode, PlayerLeftRoomResult result);
+  void handle(P player, R room, PlayerLeaveRoomMode mode, PlayerLeftRoomResult result);
 }

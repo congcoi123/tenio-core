@@ -34,7 +34,7 @@ import java.util.Optional;
  * When the server responds to the request from client side which requires using the UDP channel.
  */
 @FunctionalInterface
-public interface EventAccessDatagramChannelRequestValidationResult {
+public interface EventAccessDatagramChannelRequestValidationResult<P extends Player> {
 
   /**
    * When the server responds to the request from client side which requires using the UDP channel.
@@ -50,6 +50,5 @@ public interface EventAccessDatagramChannelRequestValidationResult {
    * @see EventAccessDatagramChannelRequestValidation
    * @see Optional
    */
-  void handle(Optional<Player> player, int udpConv, int kcpConv,
-              AccessDatagramChannelResult result);
+  void handle(Optional<P> player, int udpConv, int kcpConv, AccessDatagramChannelResult result);
 }

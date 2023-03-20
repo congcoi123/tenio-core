@@ -111,6 +111,23 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
+  public void login(Player player) {
+    try {
+      player.setActivated(true);
+      player.setLoggedIn(true);
+      player.setMaxIdleTimeInSeconds(getPlayerManager().getMaxIdleTimeInSeconds());
+      getPlayerManager().addPlayer(player);
+
+      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,
+          PlayerLoggedInResult.SUCCESS);
+    } catch (AddedDuplicatedPlayerException exception) {
+      error(exception, "Logged in with same player name: ", player.getName());
+      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, exception.getPlayer(),
+          PlayerLoggedInResult.DUPLICATED_PLAYER);
+    }
+  }
+
+  @Override
   public void logout(Player player) {
     if (Objects.isNull(player)) {
       // maybe we needn't do anything
@@ -134,24 +151,40 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
-  public Room createRoom(InitialRoomSetting setting, Player owner) {
+  public Room createRoom(InitialRoomSetting roomSetting, Player roomOwner) {
     Room room = null;
     try {
-      if (Objects.isNull(owner)) {
-        room = getRoomManager().createRoom(setting);
+      if (Objects.isNull(roomOwner)) {
+        room = getRoomManager().createRoom(roomSetting);
       } else {
-        room = getRoomManager().createRoomWithOwner(setting, owner);
+        room = getRoomManager().createRoomWithOwner(roomSetting, roomOwner);
       }
-      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, room, setting,
+      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, room, roomSetting,
           RoomCreatedResult.SUCCESS);
     } catch (IllegalArgumentException exception) {
-      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, setting,
+      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, roomSetting,
           RoomCreatedResult.INVALID_NAME_OR_PASSWORD);
     } catch (CreatedRoomException exception) {
-      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, setting, exception.getResult());
+      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, roomSetting, exception.getResult());
     }
 
     return room;
+  }
+
+  @Override
+  public Room addRoom(Room room, InitialRoomSetting roomSetting, Player roomOwner) {
+    try {
+      getRoomManager().addRoomWithOwner(room, roomSetting, roomOwner);
+      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, room, roomSetting,
+          RoomCreatedResult.SUCCESS);
+      return room;
+    } catch (IllegalArgumentException exception) {
+      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, roomSetting,
+          RoomCreatedResult.INVALID_NAME_OR_PASSWORD);
+    } catch (CreatedRoomException exception) {
+      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, roomSetting, exception.getResult());
+    }
+    return null;
   }
 
   @Override

@@ -31,7 +31,7 @@ import com.tenio.core.entity.Player;
  * When the server sends a message to a player.
  */
 @FunctionalInterface
-public interface EventSendMessageToPlayer {
+public interface EventSendMessageToPlayer<P extends Player> {
 
   /**
    * When the server sends a message to a player.
@@ -39,5 +39,5 @@ public interface EventSendMessageToPlayer {
    * @param player  the {@link Player} which is receiving a message to the server
    * @param message the sending {@link DataCollection}
    */
-  void handle(Player player, DataCollection message);
+  void handle(P player, DataCollection message);
 }

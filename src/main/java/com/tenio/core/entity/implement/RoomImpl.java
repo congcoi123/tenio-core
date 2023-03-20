@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 /**
  * An implemented class is for a room using in the server.
  */
-public final class RoomImpl implements Room {
+public class RoomImpl implements Room {
 
   private static final AtomicLong ID_COUNTER = new AtomicLong(1L);
 
@@ -75,7 +75,7 @@ public final class RoomImpl implements Room {
 
   private volatile boolean activated;
 
-  private RoomImpl() {
+  public RoomImpl() {
     id = ID_COUNTER.getAndIncrement();
     maxParticipants = 0;
     maxSpectators = 0;

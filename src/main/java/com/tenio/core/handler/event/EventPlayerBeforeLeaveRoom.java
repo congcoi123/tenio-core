@@ -32,7 +32,7 @@ import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
  * The event occurs before a player leave its current room.
  */
 @FunctionalInterface
-public interface EventPlayerBeforeLeaveRoom {
+public interface EventPlayerBeforeLeaveRoom<P extends Player, R extends Room> {
 
   /**
    * When a player is going to leave its current room.
@@ -43,5 +43,5 @@ public interface EventPlayerBeforeLeaveRoom {
    *               the room
    * @see EventPlayerAfterLeftRoom
    */
-  void handle(Player player, Room room, PlayerLeaveRoomMode mode);
+  void handle(P player, R room, PlayerLeaveRoomMode mode);
 }

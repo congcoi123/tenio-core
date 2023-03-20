@@ -80,8 +80,8 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public Player createPlayer(String name) {
-    var player = PlayerImpl.newInstance(name);
+  public Player createPlayer(String playerName) {
+    var player = PlayerImpl.newInstance(playerName);
     player.setActivated(true);
     player.setLoggedIn(true);
     player.setMaxIdleTimeInSeconds(maxIdleTimeInSecond);
@@ -91,12 +91,12 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public Player createPlayerWithSession(String name, Session session) {
+  public Player createPlayerWithSession(String playerName, Session session) {
     if (Objects.isNull(session)) {
       throw new NullPointerException("Unable to assign a null session for the player");
     }
 
-    var player = PlayerImpl.newInstance(name, session);
+    var player = PlayerImpl.newInstance(playerName, session);
     player.setActivated(true);
     player.setLoggedIn(true);
     player.setMaxIdleTimeInSeconds(maxIdleTimeInSecond);

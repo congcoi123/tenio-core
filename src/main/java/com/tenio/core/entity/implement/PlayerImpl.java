@@ -39,7 +39,7 @@ import java.util.function.Consumer;
 /**
  * An implemented class is for a player using on the server.
  */
-public final class PlayerImpl implements Player {
+public class PlayerImpl implements Player {
 
   private final String name;
   private final Map<String, Object> properties;
@@ -62,11 +62,11 @@ public final class PlayerImpl implements Player {
   private volatile boolean activated;
   private volatile boolean deportedFlag;
 
-  private PlayerImpl(String name) {
+  public PlayerImpl(String name) {
     this(name, null);
   }
 
-  private PlayerImpl(String name, Session session) {
+  public PlayerImpl(String name, Session session) {
     this.name = name;
     properties = new ConcurrentHashMap<>();
     lastLoginTime = 0L;

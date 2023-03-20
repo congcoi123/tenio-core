@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -90,13 +91,39 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   }
 
   @Override
-  public Room createRoomWithOwner(InitialRoomSetting roomSetting, Player player) {
+  public void addRoomWithOwner(Room room, InitialRoomSetting roomSetting, Player player)
+      throws AddedDuplicatedRoomException {
     int roomCount = getRoomCount();
     if (roomCount >= getMaxRooms()) {
       throw new CreatedRoomException(
           String.format("Unable to create new room, reached limited the maximum room number: %d",
               roomCount),
           RoomCreatedResult.REACHED_MAX_ROOMS);
+    }
+
+    room.setPlayerSlotGeneratedStrategy(roomSetting.getRoomPlayerSlotGeneratedStrategy());
+    room.setRoomCredentialValidatedStrategy(roomSetting.getRoomCredentialValidatedStrategy());
+    room.setRoomRemoveMode(roomSetting.getRoomRemoveMode());
+    room.setName(roomSetting.getName());
+    room.setPassword(roomSetting.getPassword());
+    room.setActivated(roomSetting.isActivated());
+    room.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
+    room.setOwner(player);
+    room.setPlayerManager(PlayerManagerImpl.newInstance(eventManager));
+    if (Objects.nonNull(roomSetting.getProperties())) {
+      roomSetting.getProperties().forEach(room::setProperty);
+    }
+
+    addRoom(room);
+  }
+
+  @Override
+  public Room createRoomWithOwner(InitialRoomSetting roomSetting, Player player) {
+    int roomCount = getRoomCount();
+    if (roomCount >= getMaxRooms()) {
+      throw new CreatedRoomException(
+          String.format("Unable to create new room, reached limited the maximum room number: %d",
+              roomCount), RoomCreatedResult.REACHED_MAX_ROOMS);
     }
 
     var room = RoomImpl.newInstance();
@@ -109,7 +136,9 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     room.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
     room.setOwner(player);
     room.setPlayerManager(PlayerManagerImpl.newInstance(eventManager));
-    roomSetting.getProperties().forEach(room::setProperty);
+    if (Objects.nonNull(roomSetting.getProperties())) {
+      roomSetting.getProperties().forEach(room::setProperty);
+    }
 
     addRoom(room);
 

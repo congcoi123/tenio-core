@@ -51,24 +51,24 @@ public interface PlayerManager extends Manager {
   /**
    * Creates a new player without session and adds it in to the management list.
    *
-   * @param name a unique player's name ({@link String} value) on the server
+   * @param playerName a unique player's name ({@link String} value) on the server
    * @return a new instance of {@link Player}
    * @throws AddedDuplicatedPlayerException when a same player is already available in the
    *                                        management list, but it is mentioned again
    */
-  Player createPlayer(String name) throws AddedDuplicatedPlayerException;
+  Player createPlayer(String playerName) throws AddedDuplicatedPlayerException;
 
   /**
    * Creates a new player with session and adds it in to the management list.
    *
-   * @param name    a unique player's name ({@link String} value) on the server
+   * @param playerName    a unique player's name ({@link String} value) on the server
    * @param session a {@link Session} associated with the player
    * @return a new instance of {@link Player}
    * @throws AddedDuplicatedPlayerException when a same player is already available in the
    *                                        management list, but it is mentioned again
    * @throws NullPointerException           when the attaching session could not be found
    */
-  Player createPlayerWithSession(String name, Session session)
+  Player createPlayerWithSession(String playerName, Session session)
       throws AddedDuplicatedPlayerException, NullPointerException;
 
   /**
