@@ -80,6 +80,10 @@ public class PlayerImpl implements Player {
     setLastWriteTime(now());
     setLastActivityTime(now());
     setNeverDeported(false);
+    if (Objects.nonNull(session)) {
+      session.setName(name);
+      session.setAssociatedToPlayer(true);
+    }
   }
 
   /**
