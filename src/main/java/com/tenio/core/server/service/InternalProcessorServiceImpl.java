@@ -198,8 +198,10 @@ public final class InternalProcessorServiceImpl extends AbstractController
         try {
           session.close(ConnectionDisconnectMode.REACHED_MAX_CONNECTION,
               PlayerDisconnectMode.CONNECTION_LOST);
-        } catch (IOException e) {
-          error(e, "Session closed with error: ", session.toString());
+        } catch (IOException exception) {
+          if (isErrorEnabled()) {
+            error(exception, "Session closed with error: ", session.toString());
+          }
         }
       } else {
         eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
@@ -224,20 +226,26 @@ public final class InternalProcessorServiceImpl extends AbstractController
         if (!keepPlayerOnDisconnection) {
           String removedPlayer = player.getName();
           playerManager.removePlayerByName(player.getName());
-          debug("DISCONNECTED PLAYER", "Player " + removedPlayer + " was removed.");
+          if (isDebugEnabled()) {
+            debug("DISCONNECTED PLAYER", "Player " + removedPlayer + " was removed.");
+          }
           player.clean();
         }
       } else {
-        debug("SESSION WILL BE REMOVED", "The player " + session.getName() + " should be " +
-            "presented, but it was not.");
+        if (isDebugEnabled()) {
+          debug("SESSION WILL BE REMOVED", "The player " + session.getName() + " should be " +
+              "presented, but it was not.");
+        }
       }
     }
     long removedSession = session.getId();
     session.setName(null);
     session.setAssociatedToPlayer(false);
     session.remove();
-    debug("DISCONNECTED SESSION",
-        "Session " + removedSession + " was removed in mode " + connectionDisconnectMode);
+    if (isDebugEnabled()) {
+      debug("DISCONNECTED SESSION",
+          "Session " + removedSession + " was removed in mode " + connectionDisconnectMode);
+    }
   }
 
   // In this phase, the session must be bound with a player, a free session can only be accepted
@@ -250,7 +258,9 @@ public final class InternalProcessorServiceImpl extends AbstractController
       if (Objects.isNull(player)) {
         var illegalValueException = new IllegalArgumentException(
             String.format("Unable to find player for the session: %s", session));
-        error(illegalValueException);
+        if (isErrorEnabled()) {
+          error(illegalValueException);
+        }
         eventManager.emit(ServerEvent.SERVER_EXCEPTION, illegalValueException);
         return;
       }

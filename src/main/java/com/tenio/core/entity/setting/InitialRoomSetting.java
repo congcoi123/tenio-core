@@ -322,8 +322,10 @@ public final class InitialRoomSetting {
         object = clazz.getDeclaredConstructor().newInstance();
       } catch (InstantiationException | IllegalAccessException
           | InvocationTargetException | NoSuchMethodException
-          | SecurityException e) {
-        error(e);
+          | SecurityException exception) {
+        if (isErrorEnabled()) {
+          error(exception);
+        }
       }
       return object;
     }

@@ -56,8 +56,8 @@ public final class ApiResponse {
     apiResponse.data = data;
     try {
       return objectMapper.writeValueAsString(apiResponse);
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException exception) {
+      exception.printStackTrace();
     }
     return null;
   }
@@ -68,8 +68,8 @@ public final class ApiResponse {
     apiResponse.error = error;
     try {
       return objectMapper.writeValueAsString(apiResponse);
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException exception) {
+      exception.printStackTrace();
     }
     return null;
   }
@@ -80,8 +80,8 @@ public final class ApiResponse {
     apiResponse.data = data;
     try {
       return objectMapper.writeValueAsString(apiResponse);
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
+    } catch (JsonProcessingException exception) {
+      exception.printStackTrace();
     }
     return null;
   }

@@ -57,7 +57,9 @@ public class PingController extends SystemLogger {
           var json = ApiResponse.ok(Map.of("message", "PING PONG"));
           response.getWriter().println(json);
         } catch (IOException exception) {
-          error(exception);
+          if (isErrorEnabled()) {
+            error(exception);
+          }
         }
       }
     };
@@ -78,7 +80,9 @@ public class PingController extends SystemLogger {
           var json = ApiResponse.ok(Map.of("message", "PING PONG ANOTHER"));
           response.getWriter().println(json);
         } catch (IOException exception) {
-          error(exception);
+          if (isErrorEnabled()) {
+            error(exception);
+          }
         }
       }
     };

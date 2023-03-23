@@ -175,8 +175,8 @@ public final class ResponseImpl implements Response {
     try {
       TimeUnit.MILLISECONDS.sleep(delayInMilliseconds);
       write();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+    } catch (InterruptedException exception) {
+      exception.printStackTrace();
     }
   }
 

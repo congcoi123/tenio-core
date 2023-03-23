@@ -60,12 +60,16 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
       // the datagram need to be declared first, something went wrong here, need to
       // log the exception content
       if (Objects.isNull(datagramChannel)) {
-        debug("DATAGRAM CHANNEL SEND", "UDP Packet cannot be sent to ", session.toString(),
-            ", no DatagramChannel was set");
+        if (isDebugEnabled()) {
+          debug("DATAGRAM CHANNEL SEND", "UDP Packet cannot be sent to ", session.toString(),
+              ", no DatagramChannel was set");
+        }
         return;
       } else if (Objects.isNull(remoteSocketAddress)) {
-        debug("DATAGRAM CHANNEL SEND", "UDP Packet cannot be sent to ", session.toString(),
-            ", no InetSocketAddress was set");
+        if (isDebugEnabled()) {
+          debug("DATAGRAM CHANNEL SEND", "UDP Packet cannot be sent to ", session.toString(),
+              ", no InetSocketAddress was set");
+        }
         return;
       }
 
@@ -76,8 +80,10 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
       try {
         // buffer size is not enough, need to be allocated more bytes
         if (getBuffer().capacity() < sendingData.length) {
-          debug("DATAGRAM CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(), " to ",
-              sendingData.length, " bytes");
+          if (isDebugEnabled()) {
+            debug("DATAGRAM CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(),
+                " to ", sendingData.length, " bytes");
+          }
           allocateBuffer(sendingData.length);
         }
 
@@ -94,8 +100,10 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
 
         // update statistic data for session
         session.addWrittenBytes(writtenBytes);
-      } catch (IOException e) {
-        error(e, "Error occurred in writing on session: ", session.toString());
+      } catch (IOException exception) {
+        if (isErrorEnabled()) {
+          error(exception, "Error occurred in writing on session: ", session.toString());
+        }
       }
     }
 

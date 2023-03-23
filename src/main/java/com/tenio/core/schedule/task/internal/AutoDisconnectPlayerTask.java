@@ -56,15 +56,19 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
   public ScheduledFuture<?> run() {
     return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
         () -> {
-          debug("AUTO DISCONNECT PLAYER",
-              "Checking IDLE players in " + playerManager.getPlayerCount() + " entities");
+          if (isDebugEnabled()) {
+            debug("AUTO DISCONNECT PLAYER",
+                "Checking IDLE players in " + playerManager.getPlayerCount() + " entities");
+          }
           new Thread(() -> {
             Iterator<Player> iterator = playerManager.getReadonlyPlayersList().listIterator();
             while (iterator.hasNext()) {
               Player player = iterator.next();
               if (player.isIdle() && !player.isNeverDeported()) {
-                debug("AUTO DISCONNECT PLAYER", "Player " + player.getName() + " is going to be " +
-                    "forced to remove by the cleaning task");
+                if (isDebugEnabled()) {
+                  debug("AUTO DISCONNECT PLAYER",
+                      "Player " + player.getName() + " is going to be forced to remove by the cleaning task");
+                }
                 ServerImpl.getInstance().getApi().logout(player);
               }
             }

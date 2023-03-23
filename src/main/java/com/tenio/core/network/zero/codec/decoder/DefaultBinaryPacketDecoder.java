@@ -74,8 +74,8 @@ public final class DefaultBinaryPacketDecoder implements BinaryPacketDecoder {
           data = processedPacket.getData();
         }
       }
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (Exception exception) {
+      exception.printStackTrace();
       readState = PacketReadState.WAIT_NEW_PACKET;
     }
 

@@ -332,11 +332,15 @@ public final class Injector extends SystemLogger {
             handler.setCommandManager(systemCommandManager);
             systemCommandManager.registerCommand(systemCommandAnnotation.label(), handler);
           } else {
-            error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
-                "AbstractSystemCommandHandler"));
+            if (isErrorEnabled()) {
+              error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
+                  "AbstractSystemCommandHandler"));
+            }
           }
         } catch (Exception exception) {
-          error(exception, "Failed to register command handler for " + clazz.getSimpleName());
+          if (isErrorEnabled()) {
+            error(exception, "Failed to register command handler for " + clazz.getSimpleName());
+          }
         }
       } else if (clazz.isAnnotationPresent(ClientCommand.class)) {
         try {
@@ -354,11 +358,15 @@ public final class Injector extends SystemLogger {
             handler.setCommandManager(clientCommandManager);
             clientCommandManager.registerCommand(clientCommandAnnotation.value(), handler);
           } else {
-            error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
-                "AbstractClientCommandHandler"));
+            if (isErrorEnabled()) {
+              error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
+                  "AbstractClientCommandHandler"));
+            }
           }
         } catch (Exception exception) {
-          error(exception, "Failed to register command handler for " + clazz.getSimpleName());
+          if (isErrorEnabled()) {
+            error(exception, "Failed to register command handler for " + clazz.getSimpleName());
+          }
         }
       }
     }
@@ -369,9 +377,11 @@ public final class Injector extends SystemLogger {
       try {
         autowire(clazz, bean);
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException | DuplicatedBeanCreationException exception) {
-        String exceptionDetails =
-            "Initialize class: " + clazz.clazz().getName() + "\n" + getStackTrace(exception);
-        error(exceptionDetails);
+        if (isErrorEnabled()) {
+          String exceptionDetails =
+              "Initialize class: " + clazz.clazz().getName() + "\n" + getStackTrace(exception);
+          error(exceptionDetails);
+        }
       }
     });
   }

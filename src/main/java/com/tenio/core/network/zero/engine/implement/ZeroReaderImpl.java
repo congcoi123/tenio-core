@@ -128,13 +128,21 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         }
       }
     } catch (ClosedSelectorException exception1) {
-      error(exception1, "Selector is closed: ", exception1.getMessage());
+      if (isErrorEnabled()) {
+        error(exception1, "Selector is closed: ", exception1.getMessage());
+      }
     } catch (CancelledKeyException exception2) {
-      error(exception2, "Cancelled key: ", exception2.getMessage());
+      if (isErrorEnabled()) {
+        error(exception2, "Cancelled key: ", exception2.getMessage());
+      }
     } catch (IOException exception3) {
-      error(exception3, "I/O reading/selection error: ", exception3.getMessage());
+      if (isErrorEnabled()) {
+        error(exception3, "I/O reading/selection error: ", exception3.getMessage());
+      }
     } catch (Exception exception4) {
-      error(exception4, "Generic reading/selection error: ", exception4.getMessage());
+      if (isErrorEnabled()) {
+        error(exception4, "Generic reading/selection error: ", exception4.getMessage());
+      }
     }
   }
 
@@ -144,13 +152,17 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     var session = getSessionManager().getSessionBySocket(socketChannel);
 
     if (Objects.isNull(session)) {
-      debug("READ TCP CHANNEL", "Reader handle a null session with the socket channel: ",
-          socketChannel.toString());
+      if (isDebugEnabled()) {
+        debug("READ TCP CHANNEL", "Reader handle a null session with the socket channel: ",
+            socketChannel.toString());
+      }
       return;
     }
 
     if (!session.isActivated()) {
-      debug("READ TCP CHANNEL", "Session is inactivated: ", session.toString());
+      if (isDebugEnabled()) {
+        debug("READ TCP CHANNEL", "Session is inactivated: ", session.toString());
+      }
       return;
     }
 
@@ -173,7 +185,9 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
           byteCount = socketChannel.read(readerBuffer);
         }
       } catch (IOException exception) {
-        error(exception, "An exception was occurred on channel: ", socketChannel.toString());
+        if (isErrorEnabled()) {
+          error(exception, "An exception was occurred on channel: ", socketChannel.toString());
+        }
         getSocketIoHandler().sessionException(session, exception);
       }
       // no left data is available, should close the connection
@@ -203,7 +217,9 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         socketChannel.socket().shutdownOutput();
         socketChannel.close();
       } catch (IOException exception) {
-        error(exception, "Error on closing socket channel: ", socketChannel.toString());
+        if (isErrorEnabled()) {
+          error(exception, "Error on closing socket channel: ", socketChannel.toString());
+        }
       }
     }
   }
@@ -220,7 +236,9 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
       try {
         remoteAddress = datagramChannel.receive(readerBuffer);
       } catch (IOException exception) {
-        error(exception, "An exception was occurred on channel: ", datagramChannel.toString());
+        if (isErrorEnabled()) {
+          error(exception, "An exception was occurred on channel: ", datagramChannel.toString());
+        }
         getDatagramIoHandler().channelException(datagramChannel, exception);
         return;
       }
@@ -228,8 +246,10 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
       if (Objects.isNull(remoteAddress)) {
         var addressNotFoundException =
             new NotFoundException("Remove address for the datagram channel");
-        error(addressNotFoundException, "An exception was occurred on channel: ",
-            datagramChannel.toString());
+        if (isErrorEnabled()) {
+          error(addressNotFoundException, "An exception was occurred on channel: ",
+              datagramChannel.toString());
+        }
         getDatagramIoHandler().channelException(datagramChannel, addressNotFoundException);
         return;
       }
@@ -283,7 +303,9 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
             getDatagramIoHandler().sessionRead(session, message);
           }
         } else {
-          debug("READ UDP CHANNEL", "Session is inactivated: ", session.toString());
+          if (isDebugEnabled()) {
+            debug("READ UDP CHANNEL", "Session is inactivated: ", session.toString());
+          }
         }
       }
     }
@@ -365,8 +387,10 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     try {
       Thread.sleep(500L);
       readableSelector.close();
-    } catch (IOException | InterruptedException e) {
-      error(e, "Exception while closing the selector");
+    } catch (IOException | InterruptedException exception) {
+      if (isErrorEnabled()) {
+        error(exception, "Exception while closing the selector");
+      }
     }
   }
 

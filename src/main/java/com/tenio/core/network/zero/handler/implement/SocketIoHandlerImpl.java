@@ -96,9 +96,11 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
 
     try {
       session.close(ConnectionDisconnectMode.LOST, PlayerDisconnectMode.CONNECTION_LOST);
-    } catch (IOException e) {
-      error(e, "Session closed with error: ", session.toString());
-      eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, e);
+    } catch (IOException exception) {
+      if (isErrorEnabled()) {
+        error(exception, "Session closed with error: ", session.toString());
+      }
+      eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
     }
   }
 

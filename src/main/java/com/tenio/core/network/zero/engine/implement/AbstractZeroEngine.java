@@ -78,8 +78,10 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
     for (int i = 0; i < executorSize; i++) {
       try {
         Thread.sleep(100L);
-      } catch (InterruptedException e) {
-        error(e);
+      } catch (InterruptedException exception) {
+        if (isErrorEnabled()) {
+          error(exception);
+        }
       }
       executorService.execute(this);
     }
@@ -88,8 +90,10 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
       if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
         try {
           halting();
-        } catch (Exception e) {
-          error(e);
+        } catch (Exception exception) {
+          if (isErrorEnabled()) {
+            error(exception);
+          }
         }
       }
     }));
@@ -114,9 +118,13 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   }
 
   private void destroyEngine() {
-    info("STOPPED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    if (isInfoEnabled()) {
+      info("STOPPED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    }
     onDestroyed();
-    info("DESTROYED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    if (isInfoEnabled()) {
+      info("DESTROYED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    }
   }
 
   @Override
@@ -190,7 +198,9 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   public void start() {
     onStarted();
     activated = true;
-    info("START SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    if (isInfoEnabled()) {
+      info("START SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    }
   }
 
   @Override

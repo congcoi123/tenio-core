@@ -52,8 +52,10 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
     // this channel can be deactivated by some reasons, no need to throw an
     // exception here
     if (Objects.isNull(channel)) {
-      debug("SOCKET CHANNEL SEND", "Skipping this packet, found null socket for session: ",
-          session);
+      if (isDebugEnabled()) {
+        debug("SOCKET CHANNEL SEND", "Skipping this packet, found null socket for session: ",
+            session);
+      }
       return;
     }
 
@@ -65,8 +67,10 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
 
     // buffer size is not enough, need to be allocated more bytes
     if (getBuffer().capacity() < sendingData.length) {
-      debug("SOCKET CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(), " to ",
-          sendingData.length, " bytes");
+      if (isDebugEnabled()) {
+        debug("SOCKET CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(), " to ",
+            sendingData.length, " bytes");
+      }
       allocateBuffer(sendingData.length);
     }
 
@@ -106,8 +110,9 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
         if (Objects.nonNull(selectionKey) && selectionKey.isValid()) {
           selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
         } else {
-          debug("SOCKET CHANNEL SEND", "Something went wrong with OP_WRITE key for session: ",
-              session);
+          if (isDebugEnabled()) {
+            debug("SOCKET CHANNEL SEND", "Something went wrong with OP_WRITE key for session: ", session);
+          }
         }
       } else {
         // update the statistic data
@@ -128,8 +133,10 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
           getSessionTicketsQueue().add(session);
         }
       }
-    } catch (IOException e) {
-      error(e, "Error occurred in writing on session: ", session.toString());
+    } catch (IOException exception) {
+      if (isErrorEnabled()) {
+        error(exception, "Error occurred in writing on session: ", session.toString());
+      }
     }
   }
 }

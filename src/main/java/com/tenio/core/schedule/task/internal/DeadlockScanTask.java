@@ -61,6 +61,10 @@ public final class DeadlockScanTask extends AbstractSystemTask {
   }
 
   private void checkForDeadlockedThreads() {
+    if (!isInfoEnabled()) {
+      return;
+    }
+
     long[] threadIds = findDeadlockedThreads();
 
     if (Objects.nonNull(threadIds) && threadIds.length > 0) {
@@ -84,7 +88,9 @@ public final class DeadlockScanTask extends AbstractSystemTask {
         try {
           threads[i] = findMatchingThread(threadInfo);
         } catch (IllegalStateException exception) {
-          error(exception);
+          if (isErrorEnabled()) {
+            error(exception);
+          }
         }
       }
 

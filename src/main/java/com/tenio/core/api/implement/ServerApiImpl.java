@@ -82,7 +82,9 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,
           PlayerLoggedInResult.SUCCESS);
     } catch (AddedDuplicatedPlayerException exception) {
-      error(exception, "Logged in with same player name: ", playerName);
+      if (isErrorEnabled()) {
+        error(exception, "Logged in with same player name: ", playerName);
+      }
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, exception.getPlayer(),
           PlayerLoggedInResult.DUPLICATED_PLAYER);
     }
@@ -97,12 +99,16 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
           PlayerLoggedInResult.SUCCESS);
     } catch (Exception exception) {
       if (exception instanceof AddedDuplicatedPlayerException duplicatedPlayerException) {
-        error(exception, "Logged in with same player name: ", playerName);
+        if (isErrorEnabled()) {
+          error(exception, "Logged in with same player name: ", playerName);
+        }
         getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, duplicatedPlayerException.getPlayer(),
             PlayerLoggedInResult.DUPLICATED_PLAYER);
         return;
       }
-      error(exception, "On the player: " + playerName);
+      if (isErrorEnabled()) {
+        error(exception, "On the player: " + playerName);
+      }
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT,
           getPlayerByName(playerName).orElse(null), PlayerLoggedInResult.EXCEPTION);
     }
@@ -119,7 +125,9 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,
           PlayerLoggedInResult.SUCCESS);
     } catch (AddedDuplicatedPlayerException exception) {
-      error(exception, "Logged in with same player name: ", player.getName());
+      if (isErrorEnabled()) {
+        error(exception, "Logged in with same player name: ", player.getName());
+      }
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, exception.getPlayer(),
           PlayerLoggedInResult.DUPLICATED_PLAYER);
     }
@@ -140,11 +148,15 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
         getEventManager().emit(ServerEvent.DISCONNECT_PLAYER, player, PlayerDisconnectMode.DEFAULT);
         String removedPlayer = player.getName();
         getPlayerManager().removePlayerByName(player.getName());
-        debug("DISCONNECTED PLAYER", "Player " + removedPlayer + " was removed.");
+        if (isDebugEnabled()) {
+          debug("DISCONNECTED PLAYER", "Player " + removedPlayer + " was removed.");
+        }
         player.clean();
       }
     } catch (RemovedNonExistentPlayerFromRoomException | IOException exception) {
-      error(exception, "Remove player: ", player.getName(), " with issue");
+      if (isErrorEnabled()) {
+        error(exception, "Remove player: ", player.getName(), " with issue");
+      }
     }
   }
 
@@ -285,7 +297,9 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
     long roomId = room.getId();
     getRoomManager().removeRoomById(roomId);
-    debug("REMOVED ROOM", "Room " + roomId + " was removed.");
+    if (isDebugEnabled()) {
+      debug("REMOVED ROOM", "Room " + roomId + " was removed.");
+    }
   }
 
   @Override
