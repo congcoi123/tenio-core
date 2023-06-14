@@ -30,8 +30,8 @@ import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
 import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.system.SystemCommandManager;
 import com.tenio.core.event.handler.EventHandler;
-import com.tenio.core.network.jetty.servlet.RestServlet;
 import java.util.Map;
+import javax.servlet.http.HttpServlet;
 
 /**
  * This class provides instances for the events handler and the configuration setups.
@@ -51,7 +51,7 @@ public final class BootstrapHandler {
   @Autowired
   private ConfigurationHandler configurationHandler;
 
-  private Map<String, RestServlet> servletMap;
+  private Map<String, HttpServlet> servletMap;
 
   /**
    * Retrieves an events handler.
@@ -91,11 +91,11 @@ public final class BootstrapHandler {
     return configurationHandler;
   }
 
-  public Map<String, RestServlet> getServletMap() {
+  public Map<String, HttpServlet> getServletMap() {
     return servletMap;
   }
 
-  public void setServletMap(Map<String, RestServlet> servletMap) {
+  public void setServletMap(Map<String, HttpServlet> servletMap) {
     this.servletMap = servletMap;
   }
 

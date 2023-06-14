@@ -29,10 +29,10 @@ import com.tenio.core.bootstrap.annotation.RestController;
 import com.tenio.core.bootstrap.annotation.RestMapping;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.network.jetty.response.ApiResponse;
-import com.tenio.core.network.jetty.servlet.RestServlet;
 import java.io.IOException;
 import java.io.Serial;
 import java.util.Map;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -43,8 +43,8 @@ import javax.servlet.http.HttpServletResponse;
 public class PingController extends SystemLogger {
 
   @RestMapping
-  public RestServlet doPing() {
-    return new RestServlet() {
+  public HttpServlet doPing() {
+    return new HttpServlet() {
 
       @Serial
       private static final long serialVersionUID = 2310114412199639230L;
@@ -66,8 +66,8 @@ public class PingController extends SystemLogger {
   }
 
   @RestMapping("another")
-  public RestServlet doAnotherPing() {
-    return new RestServlet() {
+  public HttpServlet doAnotherPing() {
+    return new HttpServlet() {
 
       @Serial
       private static final long serialVersionUID = 2310114412199639230L;

@@ -48,7 +48,6 @@ import com.tenio.core.exception.IllegalDefinedAccessControlException;
 import com.tenio.core.exception.IllegalReturnTypeException;
 import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
 import com.tenio.core.exception.NoImplementedClassFoundException;
-import com.tenio.core.network.jetty.servlet.RestServlet;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -61,6 +60,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.concurrent.ThreadSafe;
+import javax.servlet.http.HttpServlet;
 import org.reflections.Reflections;
 
 /**
@@ -94,7 +94,7 @@ public final class Injector extends SystemLogger {
   /**
    * A map is using to initialize restful servlets.
    */
-  private final Map<String, RestServlet> servletBeansMap;
+  private final Map<String, HttpServlet> servletBeansMap;
   /**
    * The object manages all supported system commands.
    */
@@ -295,7 +295,7 @@ public final class Injector extends SystemLogger {
           if (method.isAnnotationPresent(RestMapping.class)) {
             if (Modifier.isPublic(method.getModifiers())) {
               var methodClazz = method.getReturnType();
-              if (!methodClazz.equals(RestServlet.class)) {
+              if (!methodClazz.equals(HttpServlet.class)) {
                 throw new IllegalReturnTypeException();
               } else {
                 String uri = String.join("/", StringUtility.trimStringByString(
@@ -309,7 +309,7 @@ public final class Injector extends SystemLogger {
                   throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
                 }
                 var bean = method.invoke(restControllerInstance);
-                servletBeansMap.put(uri, (RestServlet) bean);
+                servletBeansMap.put(uri, (HttpServlet) bean);
               }
             } else {
               throw new IllegalDefinedAccessControlException();
@@ -413,7 +413,7 @@ public final class Injector extends SystemLogger {
         .orElse(null);
   }
 
-  public Map<String, RestServlet> getServletBeansMap() {
+  public Map<String, HttpServlet> getServletBeansMap() {
     return servletBeansMap;
   }
 

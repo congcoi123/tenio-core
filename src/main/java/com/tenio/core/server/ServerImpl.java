@@ -47,7 +47,6 @@ import com.tenio.core.network.NetworkServiceImpl;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.protocol.Response;
-import com.tenio.core.network.jetty.servlet.RestServlet;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
@@ -65,6 +64,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
+import javax.servlet.http.HttpServlet;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
@@ -232,7 +232,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   @SuppressWarnings("unchecked")
-  private void setupNetworkService(Configuration configuration, Map<String, RestServlet> servletMap)
+  private void setupNetworkService(Configuration configuration, Map<String, HttpServlet> servletMap)
       throws ClassNotFoundException, InstantiationException, IllegalAccessException,
       IllegalArgumentException,
       InvocationTargetException, NoSuchMethodException, SecurityException {

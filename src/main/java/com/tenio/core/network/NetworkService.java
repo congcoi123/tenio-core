@@ -31,7 +31,6 @@ import com.tenio.core.network.entity.packet.policy.DefaultPacketQueuePolicy;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.protocol.Response;
 import com.tenio.core.network.entity.session.manager.SessionManager;
-import com.tenio.core.network.jetty.servlet.RestServlet;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.filter.DefaultConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
@@ -42,6 +41,7 @@ import com.tenio.core.service.Service;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.util.Map;
+import javax.servlet.http.HttpServlet;
 
 /**
  * All designed APIs for the network services.
@@ -52,10 +52,10 @@ public interface NetworkService extends Service {
    * Declares a collection of path configurations for the HTTP service.
    *
    * @param port       the number ({@code integer} value) for the HTTP service
-   * @param servletMap a collection of {@link RestServlet}
+   * @param servletMap a collection of {@link HttpServlet}
    * @see Map
    */
-  void setHttpConfiguration(int port, Map<String, RestServlet> servletMap);
+  void setHttpConfiguration(int port, Map<String, HttpServlet> servletMap);
 
   /**
    * Sets an implementation class for the connection filter.

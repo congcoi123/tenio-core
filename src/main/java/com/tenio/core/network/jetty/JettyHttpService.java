@@ -26,12 +26,12 @@ package com.tenio.core.network.jetty;
 
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
-import com.tenio.core.network.jetty.servlet.RestServlet;
 import com.tenio.core.service.Service;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.servlet.http.HttpServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -45,7 +45,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
   private Server server;
   private ExecutorService executorService;
   private int port;
-  private Map<String, RestServlet> servletMap;
+  private Map<String, HttpServlet> servletMap;
   private boolean initialized;
 
   private JettyHttpService(EventManager eventManager) {
@@ -174,7 +174,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     this.port = port;
   }
 
-  public void setServletMap(Map<String, RestServlet> servletMap) {
+  public void setServletMap(Map<String, HttpServlet> servletMap) {
     this.servletMap = servletMap;
   }
 }
