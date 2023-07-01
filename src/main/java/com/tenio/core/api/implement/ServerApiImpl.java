@@ -233,6 +233,11 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
+  public int getRoomCount() {
+    return getRoomManager().getRoomCount();
+  }
+
+  @Override
   public void joinRoom(Player player, Room room, String roomPassword, int slotInRoom,
                        boolean asSpectator) {
     if (Objects.isNull(player) || Objects.isNull(room)) {

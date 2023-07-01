@@ -181,14 +181,19 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
       // reads data from socket and write them to buffer
       int byteCount = -1;
       try {
+        // this isConnected() method can only work if the server side decides to close the socket
+        // there is no way to know if the connection is closed on the client side
         if (socketChannel.isConnected()) {
           byteCount = socketChannel.read(readerBuffer);
         }
       } catch (IOException exception) {
+        // so I guess we can ignore this kind of exception or wait until we have proper solutions
+        /*
         if (isErrorEnabled()) {
           error(exception, "An exception was occurred on channel: ", socketChannel.toString());
         }
         getSocketIoHandler().sessionException(session, exception);
+        */
       }
       // no left data is available, should close the connection
       if (byteCount == -1) {

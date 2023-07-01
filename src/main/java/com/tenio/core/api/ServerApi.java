@@ -75,7 +75,6 @@ public interface ServerApi {
    */
   void login(Player player);
 
-
   /**
    * Removes a player from the management list and from the server as well. This is a silent
    * logout, so please do not perform any responding to the client since it may not work as
@@ -219,6 +218,12 @@ public interface ServerApi {
    */
   List<Room> getReadonlyRoomsList();
 
+  /**
+   * Fetches the current number of rooms on the server.
+   *
+   * @return the current number of rooms ({@code integer} value)
+   */
+  int getRoomCount();
 
   /**
    * Allows a player to join a particular room.
