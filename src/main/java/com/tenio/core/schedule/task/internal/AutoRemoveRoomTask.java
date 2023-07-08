@@ -25,7 +25,6 @@ THE SOFTWARE.
 package com.tenio.core.schedule.task.internal;
 
 import com.tenio.core.configuration.CoreConfiguration;
-import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.manager.RoomManager;
@@ -65,7 +64,8 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
             Iterator<Room> iterator = roomManager.getReadonlyRoomsList().listIterator();
             while (iterator.hasNext()) {
               Room room = iterator.next();
-              if (room.getRoomRemoveMode() == RoomRemoveMode.WHEN_EMPTY && room.isEmpty()) {
+              if (room.getRoomRemoveMode() == RoomRemoveMode.WHEN_EMPTY && room.isEmpty() &&
+                  room.getState().isIdle()) {
                 if (isDebugEnabled()) {
                   debug("AUTO REMOVE ROOM", "Room " + room.getId() + " is going to be " +
                       "forced to remove by the cleaning task");

@@ -166,6 +166,7 @@ public interface ServerApi {
    * Fetches the current number of players activating on the server.
    *
    * @return the current number of players ({@code integer} value)
+   * @since 0.5.0
    */
   int getPlayerCount();
 

@@ -141,7 +141,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     }
 
     try {
-      if (player.containsSession()) {
+      if (player.containsSession() && player.getSession().isPresent()) {
         player.getSession().get().close(ConnectionDisconnectMode.DEFAULT,
             PlayerDisconnectMode.DEFAULT);
       } else {
@@ -273,14 +273,14 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       return;
     }
 
-    var room = player.getCurrentRoom().get();
-    getEventManager().emit(ServerEvent.PLAYER_BEFORE_LEAVE_ROOM, player, room, leaveRoomMode);
+    var optionalRoom = player.getCurrentRoom();
+    getEventManager().emit(ServerEvent.PLAYER_BEFORE_LEAVE_ROOM, player, optionalRoom, leaveRoomMode);
     try {
-      room.removePlayer(player);
-      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room, leaveRoomMode,
+      optionalRoom.ifPresent(room -> room.removePlayer(player));
+      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, optionalRoom, leaveRoomMode,
           PlayerLeftRoomResult.SUCCESS);
     } catch (RemovedNonExistentPlayerFromRoomException exception) {
-      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room, leaveRoomMode,
+      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, optionalRoom, leaveRoomMode,
           PlayerLeftRoomResult.PLAYER_ALREADY_LEFT_ROOM);
     }
   }
