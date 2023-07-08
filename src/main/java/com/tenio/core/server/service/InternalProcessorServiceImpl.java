@@ -176,38 +176,68 @@ public final class InternalProcessorServiceImpl extends AbstractController
     var session = (Session) request.getSender();
     var message = request.getMessage();
 
-    Player player = null;
-
-    if (keepPlayerOnDisconnection) {
-      player =
-          (Player) eventManager.emit(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLE, session, message);
-    }
+    // When it gets disconnected from client side, the server may not recognise it. In this
+    // case, the player is remained on the server side, so we should always check this event
+    Object reconnectedObject = eventManager.emit(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLE,
+        session, message);
 
     // check reconnected case
-    if (Objects.nonNull(player)) {
-      session.setName(player.getName());
-      player.setSession(session);
-      eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player,
-          PlayerReconnectedResult.SUCCESS);
-      // check new reconnection
-    } else {
-      // check the number of current players
-      if (playerManager.getPlayerCount() >= maxNumberPlayers) {
-        eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
-            ConnectionEstablishedResult.REACHED_MAX_CONNECTION);
-        try {
-          session.close(ConnectionDisconnectMode.REACHED_MAX_CONNECTION,
-              PlayerDisconnectMode.CONNECTION_LOST);
-        } catch (IOException exception) {
-          if (isErrorEnabled()) {
-            error(exception, "Session closed with error: ", session.toString());
+    if (Objects.nonNull(reconnectedObject)) {
+      Optional<?> playerOptional = (Optional<?>) reconnectedObject;
+      if (playerOptional.isPresent()) {
+        Player player = (Player) playerOptional.get();
+        Optional<Session> optionalSession = player.getSession();
+        if (optionalSession.isPresent()) {
+          Session currentSession = optionalSession.get();
+          if (currentSession.isActivated()) {
+            try {
+              // TODO: the more complicated mechanism should be implemented to enhance this logic
+              // player should leave room (if applicable) first
+              if (player.isInRoom()) {
+                serverApi.leaveRoom(player, PlayerLeaveRoomMode.DEFAULT);
+              }
+              // Detach the current session from its player
+              currentSession.setAssociatedToPlayer(false);
+              currentSession.close(ConnectionDisconnectMode.RECONNECTION,
+                  PlayerDisconnectMode.RECONNECTION);
+            } catch (IOException exception) {
+              if (isErrorEnabled()) {
+                error(exception, "Error while closing old session: ", currentSession);
+              }
+            }
           }
         }
+
+        // connect the player to a new session
+        player.setSession(session);
+        eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player, session,
+            PlayerReconnectedResult.SUCCESS);
       } else {
-        eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
-            ConnectionEstablishedResult.SUCCESS);
+        establishNewPlayerConnection(session, message);
       }
+    } else {
+      establishNewPlayerConnection(session, message);
     }
+  }
+
+  private void establishNewPlayerConnection(Session session, DataCollection message) {
+    // check the number of current players
+    if (playerManager.getPlayerCount() >= maxNumberPlayers) {
+      eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
+          ConnectionEstablishedResult.REACHED_MAX_CONNECTION);
+      try {
+        session.close(ConnectionDisconnectMode.REACHED_MAX_CONNECTION,
+            PlayerDisconnectMode.CONNECTION_LOST);
+      } catch (IOException exception) {
+        if (isErrorEnabled()) {
+          error(exception, "Session closed with error: ", session.toString());
+        }
+      }
+    } else {
+      eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
+          ConnectionEstablishedResult.SUCCESS);
+    }
+
   }
 
   private void processSessionWillBeClosed(Session session,
@@ -223,6 +253,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
         }
         eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
         player.setSession(null);
+        // When it gets disconnected from client side, the server may not recognise it. In this
+        // case, the player is remained on the server side
         if (!keepPlayerOnDisconnection) {
           String removedPlayer = player.getName();
           playerManager.removePlayerByName(player.getName());
@@ -278,15 +310,18 @@ public final class InternalProcessorServiceImpl extends AbstractController
             message);
 
     if (optionalPlayer.isEmpty()) {
-      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, optionalPlayer,
+      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
+          optionalPlayer,
           Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
           AccessDatagramChannelResult.PLAYER_NOT_FOUND);
     } else if (!optionalPlayer.get().containsSession()) {
-      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, optionalPlayer,
+      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
+          optionalPlayer,
           Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
           AccessDatagramChannelResult.SESSION_NOT_FOUND);
     } else if (!optionalPlayer.get().getSession().get().isTcp()) {
-      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, optionalPlayer,
+      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
+          optionalPlayer,
           Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
           AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
     } else {
@@ -306,7 +341,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
           initializeKcp(sessionInstance, optionalPlayer, udpConvey);
         }
       } else {
-        eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, optionalPlayer,
+        eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
+            optionalPlayer,
             udpConvey,
             Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.SUCCESS);
       }

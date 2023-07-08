@@ -64,7 +64,13 @@ public enum ConnectionDisconnectMode {
   /**
    * Disconnected by other reasons.
    */
-  UNKNOWN;
+  UNKNOWN,
+  /**
+   * There is another session will connect to the player, so this session must be closed.
+   *
+   * @since 0.5.0
+   */
+  RECONNECTION;
 
   @Override
   public String toString() {

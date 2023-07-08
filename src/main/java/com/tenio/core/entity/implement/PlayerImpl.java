@@ -80,10 +80,6 @@ public class PlayerImpl implements Player {
     setLastWriteTime(now());
     setLastActivityTime(now());
     setNeverDeported(false);
-    if (Objects.nonNull(session)) {
-      session.setName(name);
-      session.setAssociatedToPlayer(true);
-    }
   }
 
   /**
@@ -246,6 +242,10 @@ public class PlayerImpl implements Player {
   @Override
   public void setSession(Session session) {
     this.session = session;
+    if (Objects.nonNull(this.session)) {
+      this.session.setName(name);
+      this.session.setAssociatedToPlayer(true);
+    }
   }
 
   @Override

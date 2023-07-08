@@ -105,9 +105,7 @@ public final class PlayerEventHandler {
           var session = (Session) params[0];
           var message = (DataCollection) params[1];
 
-          event.handle(session, message);
-
-          return null;
+          return event.handle(session, message);
         }));
 
     eventPlayerReconnectedResultOp.ifPresent(
