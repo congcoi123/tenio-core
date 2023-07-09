@@ -268,7 +268,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   @Override
   public void leaveRoom(Player player, PlayerLeaveRoomMode leaveRoomMode) {
     if (!player.isInRoom()) {
-      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, null, leaveRoomMode,
+      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, Optional.empty(), leaveRoomMode,
           PlayerLeftRoomResult.PLAYER_ALREADY_LEFT_ROOM);
       return;
     }
