@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.schedule.task.internal;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.schedule.task.AbstractSystemTask;
@@ -55,7 +56,8 @@ public final class DeadlockScanTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+    return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
         () -> new Thread(this::checkForDeadlockedThreads).start(),
         initialDelay, interval, TimeUnit.SECONDS);
   }

@@ -24,16 +24,21 @@ THE SOFTWARE.
 
 package com.tenio.core.schedule.task.kcp;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.schedule.task.AbstractSystemTask;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
  * This task takes responsibility to update every KCP channel frequently.
+ *
  * @since 0.3.0
  */
 public final class KcpUpdateTask extends AbstractSystemTask {
@@ -50,9 +55,13 @@ public final class KcpUpdateTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    ExecutorService workers = Executors.newFixedThreadPool(Runtime.getRuntime()
-        .availableProcessors() * 2);
-    return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+    BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(100);
+    int executorSize = Runtime.getRuntime().availableProcessors() * 2;
+    ExecutorService workers =
+        new ThreadPoolExecutor(executorSize, executorSize, 0L, TimeUnit.MILLISECONDS, queue,
+            threadFactory);
+    return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
         () -> {
           var iterator = sessionManager.getSessionIterator();
           while (iterator.hasNext()) {

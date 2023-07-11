@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.schedule.task.internal;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.manager.PlayerManager;
@@ -51,7 +52,8 @@ public final class CcuReportTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+    return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
         () -> new Thread(() -> eventManager.emit(ServerEvent.FETCHED_CCU_INFO,
             playerManager.getPlayerCount())).start(),
         initialDelay, interval, TimeUnit.SECONDS);

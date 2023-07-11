@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.schedule.task.internal;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
@@ -56,7 +57,8 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+    return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
         () -> {
           if (isDebugEnabled()) {
             debug("AUTO CLEAN ORPHAN SESSION",

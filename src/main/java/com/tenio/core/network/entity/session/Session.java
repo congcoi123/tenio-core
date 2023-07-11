@@ -402,6 +402,22 @@ public interface Session {
   void addWrittenBytes(long numberBytes);
 
   /**
+   * Retrieves the total number of messages which the session receives from client side.
+   *
+   * @return the total number of messages ({@code long} value) which the session receives from
+   * client side
+   * @since 0.5.0
+   */
+  long getReadMessages();
+
+  /**
+   * Increases the total number of read messages which the session receives from client side.
+   *
+   * @since 0.5.0
+   */
+  void increaseReadMessages();
+
+  /**
    * Retrieves the total number of dropped packets which violated the session's policies and is
    * not able to send to client side.
    *

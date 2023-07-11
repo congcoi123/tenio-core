@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.schedule.task.internal;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
@@ -54,7 +55,8 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    return Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+    return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
         () -> {
           if (isDebugEnabled()) {
             debug("AUTO REMOVE ROOM",

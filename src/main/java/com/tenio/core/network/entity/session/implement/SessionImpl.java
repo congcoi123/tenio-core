@@ -64,6 +64,7 @@ public final class SessionImpl implements Session {
 
   private final long id;
   private final AtomicLong readBytes;
+  private final AtomicLong readMessages;
   private final AtomicLong writtenBytes;
   private final AtomicLong droppedPackets;
   private volatile String name;
@@ -108,6 +109,7 @@ public final class SessionImpl implements Session {
     connectionFilter = null;
 
     readBytes = new AtomicLong(0L);
+    readMessages = new AtomicLong(0L);
     writtenBytes = new AtomicLong(0L);
     droppedPackets = new AtomicLong(0L);
 
@@ -421,6 +423,16 @@ public final class SessionImpl implements Session {
   @Override
   public void addWrittenBytes(long bytes) {
     writtenBytes.addAndGet(bytes);
+  }
+
+  @Override
+  public long getReadMessages() {
+    return readMessages.get();
+  }
+
+  @Override
+  public void increaseReadMessages() {
+    readMessages.incrementAndGet();
   }
 
   @Override

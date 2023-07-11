@@ -135,6 +135,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
       request.setSender(session);
       request.setMessage((DataCollection) params[1]);
       session.setLastReadTime(TimeUtility.currentTimeMillis());
+      session.increaseReadMessages();
       enqueueRequest(request);
 
       return null;
@@ -171,9 +172,14 @@ public final class InternalProcessorServiceImpl extends AbstractController
     }
   }
 
-  private void processSessionRequestsConnection(Request request) {
-    // check if it's a reconnection request first
+  private synchronized void processSessionRequestsConnection(Request request) {
+    // Check if it's a reconnection request first
     var session = (Session) request.getSender();
+    // We only consider the fresh session
+    if (session.isAssociatedToPlayer()) {
+      return;
+    }
+
     var message = request.getMessage();
 
     // When it gets disconnected from client side, the server may not recognise it. In this
@@ -191,10 +197,15 @@ public final class InternalProcessorServiceImpl extends AbstractController
           Session currentSession = optionalSession.get();
           if (currentSession.isActivated()) {
             try {
-              // TODO: the more complicated mechanism should be implemented to enhance this logic
-              // player should leave room (if applicable) first
-              if (player.isInRoom()) {
-                serverApi.leaveRoom(player, PlayerLeaveRoomMode.DEFAULT);
+              // In case the server does not want to hold the player when he gets disconnected, the
+              // player should be removed from his current room
+              // In case the server wants to keep this player, all the current information (room
+              // related data) has to be sent to client to get up-to-date
+              if (!keepPlayerOnDisconnection) {
+                // player should leave room (if applicable) first
+                if (player.isInRoom()) {
+                  serverApi.leaveRoom(player, PlayerLeaveRoomMode.DEFAULT);
+                }
               }
               // Detach the current session from its player
               currentSession.setAssociatedToPlayer(false);
@@ -240,7 +251,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
   }
 
-  private void processSessionWillBeClosed(Session session,
+  private synchronized void processSessionWillBeClosed(Session session,
                                           ConnectionDisconnectMode connectionDisconnectMode,
                                           PlayerDisconnectMode playerDisconnectMode) {
     if (session.isAssociatedToPlayer()) {
@@ -301,7 +312,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     }
   }
 
-  private void processDatagramChannelReadMessageForTheFirstTime(Request request) {
+  private synchronized void processDatagramChannelReadMessageForTheFirstTime(Request request) {
     var message = request.getMessage();
 
     // verify the datagram channel accessing request

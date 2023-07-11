@@ -24,16 +24,18 @@ THE SOFTWARE.
 
 package com.tenio.core.controller;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.common.utility.StringUtility;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RequestQueueFullException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entity.protocol.Request;
 import java.util.Objects;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -77,7 +79,11 @@ public abstract class AbstractController extends AbstractManager implements Cont
     var requestComparator = RequestComparator.newInstance();
     requestQueue = new PriorityBlockingQueue<>(maxQueueSize, requestComparator);
 
-    executorService = Executors.newFixedThreadPool(executorSize);
+    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+    BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(100);
+    executorService =
+        new ThreadPoolExecutor(executorSize, executorSize, 0L, TimeUnit.MILLISECONDS, queue,
+            threadFactory);
     for (int i = 0; i < executorSize; i++) {
       try {
         Thread.sleep(100L);

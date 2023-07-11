@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.implement;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.common.utility.StringUtility;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.ServiceRuntimeException;
@@ -33,8 +34,10 @@ import com.tenio.core.network.zero.engine.ZeroEngine;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
 import java.util.Objects;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -74,7 +77,11 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   }
 
   private void initializeWorkers() {
-    executorService = Executors.newFixedThreadPool(executorSize);
+    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+    BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(100);
+    executorService =
+        new ThreadPoolExecutor(executorSize, executorSize, 0L, TimeUnit.MILLISECONDS, queue,
+            threadFactory);
     for (int i = 0; i < executorSize; i++) {
       try {
         Thread.sleep(100L);
