@@ -57,7 +57,9 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+    var threadFactory =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-clean-orphan-session-task" +
+            "-%d").build();
     return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
         () -> {
           if (isDebugEnabled()) {

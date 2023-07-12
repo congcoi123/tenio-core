@@ -33,7 +33,6 @@ import com.tenio.core.server.ServerImpl;
 import java.util.Iterator;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -56,7 +55,8 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+    var threadFactory =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-disconnect-player-task-%d").build();
     return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
         () -> {
           if (isDebugEnabled()) {

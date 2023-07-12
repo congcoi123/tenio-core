@@ -54,7 +54,8 @@ public final class SystemMonitoringTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+    var threadFactory =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("system-monitoring-task-%d").build();
     return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
         () -> new Thread(
             () -> eventManager.emit(ServerEvent.SYSTEM_MONITORING, systemMonitoring.getCpuUsage(),

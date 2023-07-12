@@ -55,7 +55,8 @@ public final class KcpUpdateTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+    var threadFactory =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("kcp-update-task-%d").build();
     BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(100);
     int executorSize = Runtime.getRuntime().availableProcessors() * 2;
     ExecutorService workers =
