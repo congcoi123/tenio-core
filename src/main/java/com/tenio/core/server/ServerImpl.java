@@ -244,7 +244,10 @@ public final class ServerImpl extends SystemLogger implements Server {
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_MAX_CONNECTIONS_PER_IP));
 
     var httpConfiguration = configuration.get(CoreConfigurationType.NETWORK_HTTP);
-    networkService.setHttpConfiguration(Objects.nonNull(httpConfiguration) ?
+    networkService.setHttpConfiguration(
+        Objects.nonNull(httpConfiguration) ?
+            configuration.getInt(CoreConfigurationType.WORKER_HTTP_WORKER) : 0,
+        Objects.nonNull(httpConfiguration) ?
             ((SocketConfiguration) httpConfiguration).port() : 0,
         Objects.nonNull(httpConfiguration) ? servletMap : null);
 

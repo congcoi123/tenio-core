@@ -164,7 +164,9 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void setHttpConfiguration(int port, Map<String, HttpServlet> servletMap) {
+  public void setHttpConfiguration(int threadPoolSize, int port,
+                                   Map<String, HttpServlet> servletMap) {
+    httpService.setThreadPoolSize(threadPoolSize);
     httpService.setPort(port);
     httpService.setServletMap(servletMap);
     httpServiceInitialized = (port != 0 && Objects.nonNull(servletMap));

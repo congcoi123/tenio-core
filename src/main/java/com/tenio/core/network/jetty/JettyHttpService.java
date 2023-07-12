@@ -36,6 +36,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /**
  * This class provides methods for creating HTTP service.
@@ -44,6 +45,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
 
   private Server server;
   private ExecutorService executorService;
+  private int threadPoolSize;
   private int port;
   private Map<String, HttpServlet> servletMap;
   private boolean initialized;
@@ -66,7 +68,9 @@ public final class JettyHttpService extends AbstractManager implements Service, 
 
   private void setup() {
     // Create a Jetty server
-    server = new Server();
+    var threadPool = new QueuedThreadPool(threadPoolSize, 8);
+    threadPool.setName(getName());
+    server = new Server(threadPool);
     var connector = new ServerConnector(server);
     connector.setPort(port);
     server.addConnector(connector);
@@ -168,6 +172,10 @@ public final class JettyHttpService extends AbstractManager implements Service, 
   @Override
   public void setName(String name) {
     throw new UnsupportedOperationException();
+  }
+
+  public void setThreadPoolSize(int threadPoolSize) {
+    this.threadPoolSize = threadPoolSize;
   }
 
   public void setPort(int port) {

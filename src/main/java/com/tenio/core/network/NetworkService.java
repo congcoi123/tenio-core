@@ -51,11 +51,12 @@ public interface NetworkService extends Service {
   /**
    * Declares a collection of path configurations for the HTTP service.
    *
-   * @param port       the number ({@code integer} value) for the HTTP service
-   * @param servletMap a collection of {@link HttpServlet}
+   * @param threadPoolSize the number of workers in HTTP service
+   * @param port           the port number for the HTTP service
+   * @param servletMap     a collection of {@link HttpServlet}
    * @see Map
    */
-  void setHttpConfiguration(int port, Map<String, HttpServlet> servletMap);
+  void setHttpConfiguration(int threadPoolSize, int port, Map<String, HttpServlet> servletMap);
 
   /**
    * Sets an implementation class for the connection filter.
