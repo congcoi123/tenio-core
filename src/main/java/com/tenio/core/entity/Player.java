@@ -35,15 +35,6 @@ import java.util.function.Consumer;
  */
 public interface Player {
 
-  enum Field {
-    STATE,
-    ACTIVATION,
-    DEPORTATION,
-    ROLE_IN_ROOM,
-    SLOT_IN_ROOM,
-    PROPERTY
-  }
-
   /**
    * Retrieves the player's name which should be unique in the management list and on the server.
    *
@@ -203,6 +194,36 @@ public interface Player {
   void setNeverDeported(boolean flag);
 
   /**
+   * Retrieves the maximum time in seconds which allows the player to get in IDLE state (Do not
+   * perform any action, such as reading or writing data) in case of never deported selection.
+   *
+   * @return the maximum time in seconds ({@code integer} value) which allows the player to
+   * get in IDLE state
+   * @since 0.5.0
+   */
+  int getMaxIdleTimeNeverDeportedInSeconds();
+
+  /**
+   * Sets the maximum time in seconds which allows the player to get in IDLE state (Do not
+   * perform any action, such as reading or writing data) in case of never deported selection.
+   *
+   * @param seconds the maximum time in seconds ({@code integer} value) which allows the
+   *                player to get in IDLE state
+   * @since 0.5.0
+   */
+  void setMaxIdleTimeNeverDeportedInSeconds(int seconds);
+
+  /**
+   * Determines whether the player got in IDLE state (Do not perform any action, such as reading
+   * or writing data) in case of never deported selection.
+   *
+   * @return {@code true} if the player got in IDLE state, otherwise returns {@code false}
+   * @see AutoDisconnectPlayerTask
+   * @since 0.5.0
+   */
+  boolean isIdleNeverDeported();
+
+  /**
    * Retrieves the player's session.
    *
    * @return an instance of optional {@link Session}
@@ -322,4 +343,13 @@ public interface Player {
    * Wipes out all the player's information.
    */
   void clean();
+
+  enum Field {
+    STATE,
+    ACTIVATION,
+    DEPORTATION,
+    ROLE_IN_ROOM,
+    SLOT_IN_ROOM,
+    PROPERTY
+  }
 }

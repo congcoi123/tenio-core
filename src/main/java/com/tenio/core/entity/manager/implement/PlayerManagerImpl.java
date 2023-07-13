@@ -53,6 +53,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   private volatile Room ownerRoom;
   private volatile int playerCount;
   private int maxIdleTimeInSecond;
+  private int maxIdleTimeNeverDeportedInSecond;
 
   private PlayerManagerImpl(EventManager eventManager) {
     super(eventManager);
@@ -85,6 +86,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     player.setActivated(true);
     player.setLoggedIn(true);
     player.setMaxIdleTimeInSeconds(maxIdleTimeInSecond);
+    player.setMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeportedInSecond);
     addPlayer(player);
 
     return player;
@@ -100,6 +102,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     player.setActivated(true);
     player.setLoggedIn(true);
     player.setMaxIdleTimeInSeconds(maxIdleTimeInSecond);
+    player.setMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeportedInSecond);
     addPlayer(player);
 
     return player;
@@ -179,6 +182,16 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public void setMaxIdleTimeInSeconds(int seconds) {
     maxIdleTimeInSecond = seconds;
+  }
+
+  @Override
+  public int getMaxIdleTimeNeverDeportedInSeconds() {
+    return maxIdleTimeNeverDeportedInSecond;
+  }
+
+  @Override
+  public void setMaxIdleTimeNeverDeportedInSeconds(int seconds) {
+    maxIdleTimeNeverDeportedInSecond = seconds;
   }
 
   @Override

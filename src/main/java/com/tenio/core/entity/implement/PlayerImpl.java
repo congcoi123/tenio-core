@@ -56,6 +56,7 @@ public class PlayerImpl implements Player {
   private volatile long lastActivityTime;
 
   private int maxIdleTimeInSecond;
+  private int maxIdleTimeNeverDeportedInSecond;
   private volatile int playerSlotInCurrentRoom;
 
   private volatile boolean loggedIn;
@@ -206,7 +207,7 @@ public class PlayerImpl implements Player {
 
   @Override
   public boolean isIdle() {
-    return isConnectionIdle();
+    return isConnectionIdle(getMaxIdleTimeInSeconds());
   }
 
   @Override
@@ -222,10 +223,25 @@ public class PlayerImpl implements Player {
     }
   }
 
-  private boolean isConnectionIdle() {
-    if (getMaxIdleTimeInSeconds() > 0) {
+  @Override
+  public int getMaxIdleTimeNeverDeportedInSeconds() {
+    return maxIdleTimeNeverDeportedInSecond;
+  }
+
+  @Override
+  public void setMaxIdleTimeNeverDeportedInSeconds(int seconds) {
+    maxIdleTimeNeverDeportedInSecond = seconds;
+  }
+
+  @Override
+  public boolean isIdleNeverDeported() {
+    return isNeverDeported() && isConnectionIdle(getMaxIdleTimeNeverDeportedInSeconds());
+  }
+
+  private boolean isConnectionIdle(int maxIdleTimeInSecond) {
+    if (maxIdleTimeInSecond > 0) {
       long elapsedSinceLastActivity = now() - getLastActivityTime();
-      return elapsedSinceLastActivity / 1000L > (long) getMaxIdleTimeInSeconds();
+      return elapsedSinceLastActivity / 1000L > (long) maxIdleTimeInSecond;
     }
     return false;
   }
@@ -386,6 +402,7 @@ public class PlayerImpl implements Player {
         ", lastWriteTime=" + lastWriteTime +
         ", lastActivityTime=" + lastActivityTime +
         ", maxIdleTimeInSecond=" + maxIdleTimeInSecond +
+        ", maxIdleTimeNeverDeportedInSecond=" + maxIdleTimeNeverDeportedInSecond +
         ", playerSlotInCurrentRoom=" + playerSlotInCurrentRoom +
         ", loggedIn=" + loggedIn +
         ", activated=" + activated +

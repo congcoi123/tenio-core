@@ -224,6 +224,14 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   PROP_MAX_PLAYER_IDLE_TIME("max-player-idle-time"),
   /**
+   * Sets the maximum time in seconds a player can be in IDLE state (Without sending or receiving
+   * packets) in case of never deported selection. Excesses this time then the player will be
+   * removed from the server.
+   *
+   * @since 0.5.0
+   */
+  PROP_MAX_PLAYER_IDLE_TIME_NEVER_DEPORTED("max-player-idle-time-never-deported"),
+  /**
    * Determines whether the WebSocket connection could use SSL configuration.
    */
   NETWORK_PROP_WEBSOCKET_USING_SSL("websocket-using-ssl"),

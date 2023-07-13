@@ -60,16 +60,16 @@
 		<Schedules>
 			<!-- Get the period checking in seconds which server can keep the empty 
 				room -->
-			<Task name="removed-room-scan-interval">30</Task>	<!-- Unit: Seconds -->
+			<Task name="removed-room-scan-interval">30</Task>		<!-- Unit: Seconds -->
 			<!-- The period checking player time out in seconds -->
 			<Task name="disconnected-player-scan-interval">45</Task>		<!-- Unit: Seconds -->
 			<!-- The period checking CCU in seconds -->
-			<Task name="ccu-scan-interval">60</Task>			<!-- Unit: Seconds -->
+			<Task name="ccu-scan-interval">60</Task>				<!-- Unit: Seconds -->
 			<!-- Schedule detecting deadlocked threads -->
 			<Task name="deadlock-scan-interval">60</Task>			<!-- Unit: Seconds -->
 			<!-- The delay between two computations of performances for channels or 
 				0 if no statics are to be computed -->
-			<Task name="traffic-counter-interval">60</Task>	<!-- Unit: Seconds -->
+			<Task name="traffic-counter-interval">60</Task>			<!-- Unit: Seconds -->
 			<!-- The period monitoring system -->
 			<Task name="system-monitoring-interval">60</Task>		<!-- Unit: Seconds -->
 		</Schedules>
@@ -87,8 +87,13 @@
 			<!-- The maximum number of rooms which game can handle -->
 			<Property name="max-number-rooms">1000</Property>
 			<!-- The max IDLE time in seconds which server can wait from the last 
-				getting message from client -->
-			<Property name="max-player-idle-time">180</Property>		<!-- Unit: Seconds -->
+				 getting message from client.
+				 Set it to -1 to ignore the checking -->
+			<Property name="max-player-idle-time">180</Property>					<!-- Unit: Seconds -->
+			<!-- The max IDLE time in seconds which server can wait from the last
+				 getting message from client (in case the player enables the never deported flag).
+				 Set it to -1 to ignore the checking -->
+			<Property name="max-player-idle-time-never-deported">86400</Property>	<!-- Unit: Seconds -->
 		</Properties>
 	</Configuration>
 

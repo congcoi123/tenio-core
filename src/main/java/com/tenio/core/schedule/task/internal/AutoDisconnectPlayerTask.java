@@ -67,7 +67,7 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
             Iterator<Player> iterator = playerManager.getReadonlyPlayersList().listIterator();
             while (iterator.hasNext()) {
               Player player = iterator.next();
-              if (player.isIdle() && !player.isNeverDeported()) {
+              if (player.isIdle() || player.isIdleNeverDeported()) {
                 if (isDebugEnabled()) {
                   debug("AUTO DISCONNECT PLAYER",
                       "Player " + player.getName() + " is going to be forced to remove by the cleaning task");
