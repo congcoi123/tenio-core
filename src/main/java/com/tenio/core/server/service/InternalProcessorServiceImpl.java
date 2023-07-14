@@ -195,7 +195,9 @@ public final class InternalProcessorServiceImpl extends AbstractController
         Optional<Session> optionalSession = player.getSession();
         if (optionalSession.isPresent()) {
           Session currentSession = optionalSession.get();
-          if (currentSession.isActivated()) {
+          // This is to ensure that by any chance, the current session is not the one who is
+          // trying to reconnect
+          if (currentSession.isActivated() && !currentSession.equals(session)) {
             try {
               // In case the server does not want to hold the player when he gets disconnected, the
               // player should be removed from his current room
@@ -252,8 +254,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
   }
 
   private synchronized void processSessionWillBeClosed(Session session,
-                                          ConnectionDisconnectMode connectionDisconnectMode,
-                                          PlayerDisconnectMode playerDisconnectMode) {
+                                                       ConnectionDisconnectMode connectionDisconnectMode,
+                                                       PlayerDisconnectMode playerDisconnectMode) {
     if (session.isAssociatedToPlayer()) {
       var player = playerManager.getPlayerByName(session.getName());
       // the player maybe existed
@@ -316,46 +318,55 @@ public final class InternalProcessorServiceImpl extends AbstractController
     var message = request.getMessage();
 
     // verify the datagram channel accessing request
-    var optionalPlayer =
-        (Optional<Player>) eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION,
-            message);
+    var checkingPlayer = eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION,
+        message);
+
+    if (!(checkingPlayer instanceof Optional<?> optionalPlayer)) {
+      return;
+    }
 
     if (optionalPlayer.isEmpty()) {
       eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
           optionalPlayer,
           Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
           AccessDatagramChannelResult.PLAYER_NOT_FOUND);
-    } else if (!optionalPlayer.get().containsSession()) {
-      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-          optionalPlayer,
-          Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
-          AccessDatagramChannelResult.SESSION_NOT_FOUND);
-    } else if (!optionalPlayer.get().getSession().get().isTcp()) {
-      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-          optionalPlayer,
-          Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
-          AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
     } else {
-      var udpConvey = udpConvId.getAndIncrement();
-      var datagramChannel = (DatagramChannel) request.getSender();
-
-      var sessionInstance = optionalPlayer.get().getSession().get();
-      sessionInstance.setDatagramRemoteSocketAddress(request.getRemoteSocketAddress());
-      sessionManager.addDatagramForSession(datagramChannel, udpConvey, sessionInstance);
-
-      if (enabledKcp) {
-        if (sessionInstance.containsKcp()) {
-          // TODO: reconnect
-
-        } else {
-          // initialize a KCP connection
-          initializeKcp(sessionInstance, optionalPlayer, udpConvey);
-        }
-      } else {
+      Player player = (Player) optionalPlayer.get();
+      if (!player.containsSession() || player.getSession().isEmpty()) {
         eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
             optionalPlayer,
-            udpConvey,
-            Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.SUCCESS);
+            Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
+            AccessDatagramChannelResult.SESSION_NOT_FOUND);
+      } else {
+        Session session = player.getSession().get();
+        if (!session.isTcp()) {
+          eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
+              optionalPlayer,
+              Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
+              AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
+        } else {
+          var udpConvey = udpConvId.getAndIncrement();
+          var datagramChannel = (DatagramChannel) request.getSender();
+
+          var sessionInstance = ((Player) optionalPlayer.get()).getSession().get();
+          sessionInstance.setDatagramRemoteSocketAddress(request.getRemoteSocketAddress());
+          sessionManager.addDatagramForSession(datagramChannel, udpConvey, sessionInstance);
+
+          if (enabledKcp) {
+            if (sessionInstance.containsKcp()) {
+              // TODO: reconnect
+
+            } else {
+              // initialize a KCP connection
+              initializeKcp(sessionInstance, Optional.of(player), udpConvey);
+            }
+          } else {
+            eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
+                optionalPlayer,
+                udpConvey,
+                Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.SUCCESS);
+          }
+        }
       }
     }
   }
