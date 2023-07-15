@@ -74,7 +74,7 @@ public final class ApplicationLauncher extends SystemLogger {
     if (isInfoEnabled()) {
       var trademark =
           String.format("\n\n%s\n", Strings.join(Arrays.asList(Trademark.CONTENT), '\n'));
-      info("HAPPY CODING", trademark);
+      debug("HAPPY CODING", trademark);
     }
 
     // show system information

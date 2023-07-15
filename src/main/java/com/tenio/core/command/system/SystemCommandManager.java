@@ -59,7 +59,7 @@ public final class SystemCommandManager extends SystemLogger {
    */
   public synchronized void registerCommand(String label, AbstractSystemCommandHandler command) {
     if (isDebugEnabled()) {
-      debug("SYSTEM_COMMAND", "Registered command > " + label);
+      debug("SYSTEM_COMMAND", "Registered command > ", label);
     }
     label = label.toLowerCase();
 
@@ -81,7 +81,7 @@ public final class SystemCommandManager extends SystemLogger {
    */
   public synchronized void unregisterCommand(String label) {
     if (isDebugEnabled()) {
-      debug("SYSTEM_COMMAND", "Unregistered command > " + label);
+      debug("SYSTEM_COMMAND", "Unregistered command > ", label);
     }
 
     annotations.remove(label);

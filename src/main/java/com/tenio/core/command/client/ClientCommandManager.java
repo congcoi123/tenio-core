@@ -54,7 +54,7 @@ public final class ClientCommandManager extends SystemLogger {
    */
   public synchronized void registerCommand(Short code, AbstractClientCommandHandler command) {
     if (isDebugEnabled()) {
-      debug("CLIENT_COMMAND", "Registered command > " + code);
+      debug("CLIENT_COMMAND", "Registered command > ", code);
     }
 
     // checks availability
@@ -73,7 +73,7 @@ public final class ClientCommandManager extends SystemLogger {
    */
   public synchronized void unregisterCommand(Short code) {
     if (isDebugEnabled()) {
-      debug("CLIENT_COMMAND", "Unregistered command > " + code);
+      debug("CLIENT_COMMAND", "Unregistered command > ", code);
     }
     commands.remove(code);
   }

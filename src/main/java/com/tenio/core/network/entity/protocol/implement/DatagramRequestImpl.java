@@ -148,7 +148,7 @@ public class DatagramRequestImpl implements Request {
 
   @Override
   public String toString() {
-    return "RequestImpl{" +
+    return "DatagramRequest{" +
         "id=" + id +
         ", timestamp=" + timestamp +
         ", event=" + event +

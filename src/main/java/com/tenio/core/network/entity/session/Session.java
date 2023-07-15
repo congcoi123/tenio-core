@@ -74,18 +74,21 @@ public interface Session {
   /**
    * Determines whether the session connected to the server (It is ready to associate to a player).
    *
-   * @return {@code true} if the session connected to the server, otherwise returns {@code false}
+   * @param associatedState the {@link AssociatedState} instance
+   * @return {@code true} if the player associated state matches with the parameter, otherwise
+   * returns {@code false}
+   * @since 0.5.0
    */
-  boolean isAssociatedToPlayer();
+  boolean isAssociatedToPlayer(AssociatedState associatedState);
 
   /**
    * Sets connected state to the session on the server (whether it is ready to associate to a
    * player).
    *
-   * @param associatedToPlayer sets value to {@code true} if the session connected to the server,
-   *                           otherwise returns {@code false}
+   * @param associatedState the {@link AssociatedState} instance
+   * @since 0.5.0
    */
-  void setAssociatedToPlayer(boolean associatedToPlayer);
+  void setAssociatedToPlayer(AssociatedState associatedState);
 
   /**
    * In allowance period of time, if the session can not be associated to any player, it is
@@ -586,5 +589,20 @@ public interface Session {
    */
   default void close() throws IOException {
     close(ConnectionDisconnectMode.UNKNOWN, PlayerDisconnectMode.UNKNOWN);
+  }
+
+  enum AssociatedState {
+    /**
+     * The session is not associated with any {@link Player}.
+     */
+    NONE,
+    /**
+     * The session is trying to associate with a {@link Player}.
+     */
+    DOING,
+    /**
+     * The session is associated with a {@link Player}.
+     */
+    DONE,
   }
 }

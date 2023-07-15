@@ -64,7 +64,7 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
         () -> {
           if (isDebugEnabled()) {
             debug("AUTO CLEAN ORPHAN SESSION",
-                "Checking orphan sessions in " + sessionManager.getSessionCount() + " entities");
+                "Checking orphan sessions in ", sessionManager.getSessionCount(), " entities");
           }
           new Thread(() -> {
             Iterator<Session> iterator = sessionManager.getReadonlySessionsList().listIterator();
@@ -74,8 +74,7 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
                 try {
                   if (isDebugEnabled()) {
                     debug("AUTO CLEAN ORPHAN SESSION",
-                        "Session " + session.getId() + " is going to " +
-                            "be forced to remove by the cleaning task");
+                        "Session ", session.getId(), " is going to be forced to remove by the cleaning task");
                   }
                   session.close(ConnectionDisconnectMode.ORPHAN, PlayerDisconnectMode.DEFAULT);
                 } catch (IOException exception) {

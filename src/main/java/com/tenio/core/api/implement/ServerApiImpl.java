@@ -107,7 +107,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
         return;
       }
       if (isErrorEnabled()) {
-        error(exception, "On the player: " + playerName);
+        error(exception, "On the player: ", playerName);
       }
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT,
           getPlayerByName(playerName).orElse(null), PlayerLoggedInResult.EXCEPTION);
@@ -149,7 +149,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
         String removedPlayer = player.getName();
         getPlayerManager().removePlayerByName(player.getName());
         if (isDebugEnabled()) {
-          debug("DISCONNECTED PLAYER", "Player " + removedPlayer + " was removed.");
+          debug("DISCONNECTED PLAYER", "Player ", removedPlayer, " was removed");
         }
         player.clean();
       }
@@ -303,7 +303,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     long roomId = room.getId();
     getRoomManager().removeRoomById(roomId);
     if (isDebugEnabled()) {
-      debug("REMOVED ROOM", "Room " + roomId + " was removed.");
+      debug("REMOVED ROOM", "Room ", roomId, " was removed");
     }
   }
 

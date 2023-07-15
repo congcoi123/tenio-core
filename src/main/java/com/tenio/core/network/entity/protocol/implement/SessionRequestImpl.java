@@ -146,7 +146,7 @@ public class SessionRequestImpl implements Request {
 
   @Override
   public String toString() {
-    return "RequestImpl{" +
+    return "SessionRequest{" +
         "id=" + id +
         ", timestamp=" + timestamp +
         ", event=" + event +

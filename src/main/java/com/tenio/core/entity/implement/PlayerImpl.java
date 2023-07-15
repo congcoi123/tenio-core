@@ -257,11 +257,11 @@ public class PlayerImpl implements Player {
 
   @Override
   public void setSession(Session session) {
-    this.session = session;
-    if (Objects.nonNull(this.session)) {
-      this.session.setName(name);
-      this.session.setAssociatedToPlayer(true);
+    if (Objects.nonNull(session)) {
+      session.setName(name);
+      session.setAssociatedToPlayer(Session.AssociatedState.DONE);
     }
+    this.session = session;
   }
 
   @Override

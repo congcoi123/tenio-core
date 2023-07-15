@@ -64,14 +64,14 @@ public final class KcpIoHandlerImpl extends AbstractIoHandler implements KcpIoHa
   @Override
   public void channelActiveIn(Session session) {
     if (isDebugEnabled()) {
-      debug("KCP CHANNEL", "Activated", session.getUkcp());
+      debug("KCP CHANNEL", "Activated ", session.getUkcp());
     }
   }
 
   @Override
   public void channelInactiveIn(Session session) {
     if (isDebugEnabled()) {
-      debug("KCP CHANNEL", "Inactivated", session.getUkcp());
+      debug("KCP CHANNEL", "Inactivated ", session.getUkcp());
     }
   }
 }

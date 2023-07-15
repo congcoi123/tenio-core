@@ -61,7 +61,7 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
         () -> {
           if (isDebugEnabled()) {
             debug("AUTO REMOVE ROOM",
-                "Checking empty rooms in " + roomManager.getRoomCount() + " entities");
+                "Checking empty rooms in ", roomManager.getRoomCount(), " entities");
           }
           new Thread(() -> {
             Iterator<Room> iterator = roomManager.getReadonlyRoomsList().listIterator();
@@ -70,8 +70,8 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
               if (room.getRoomRemoveMode() == RoomRemoveMode.WHEN_EMPTY && room.isEmpty() &&
                   room.getState().isIdle()) {
                 if (isDebugEnabled()) {
-                  debug("AUTO REMOVE ROOM", "Room " + room.getId() + " is going to be " +
-                      "forced to remove by the cleaning task");
+                  debug("AUTO REMOVE ROOM", "Room ", room.getId(), " is going to be forced to remove by the cleaning " +
+                      "task");
                 }
                 ServerImpl.getInstance().getApi().removeRoom(room, RoomRemoveMode.WHEN_EMPTY);
               }

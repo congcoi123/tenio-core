@@ -32,6 +32,7 @@ import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RefusedConnectionAddressException;
+import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
@@ -127,15 +128,23 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
         return;
       }
 
+      if (session.isAssociatedToPlayer(Session.AssociatedState.DOING)) {
+        if (logger.isDebugEnabled()) {
+          logger.debug("READ WEBSOCKET CHANNEL", "Session is associating to a player, rejects " +
+                  "message: ", session.toString());
+        }
+        return;
+      }
+
       session.addReadBytes(binary.length);
       networkReaderStatistic.updateReadBytes(binary.length);
       networkReaderStatistic.updateReadPackets(1);
 
       var message = DataUtility.binaryToCollection(dataType, binary);
 
-      if (!session.isAssociatedToPlayer()) {
+      if (session.isAssociatedToPlayer(Session.AssociatedState.NONE)) {
         eventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, message);
-      } else {
+      } else if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
         eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
       }
     }

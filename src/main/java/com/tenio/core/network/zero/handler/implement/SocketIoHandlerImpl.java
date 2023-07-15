@@ -59,9 +59,17 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
   public void resultFrame(Session session, byte[] binary) {
     var message = DataUtility.binaryToCollection(dataType, binary);
 
-    if (!session.isAssociatedToPlayer()) {
+    if (session.isAssociatedToPlayer(Session.AssociatedState.DOING)) {
+      if (isDebugEnabled()) {
+        debug("READ TCP CHANNEL", "Session is associating to a player: ", session.toString(), " Rejected message: ",
+            message);
+      }
+      return;
+    }
+
+    if (session.isAssociatedToPlayer(Session.AssociatedState.NONE)) {
       eventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, message);
-    } else {
+    } else if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
     }
   }

@@ -75,7 +75,7 @@ public final class EventManager extends SystemLogger {
       }
     } else {
       if (isDebugEnabled()) {
-        debug(event.toString(), params);
+        debugEvent(event.toString(), params);
       }
     }
     return eventProducer.emit(event, params);

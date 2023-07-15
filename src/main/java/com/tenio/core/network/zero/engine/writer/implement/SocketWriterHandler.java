@@ -53,7 +53,7 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
     // exception here
     if (Objects.isNull(channel)) {
       if (isDebugEnabled()) {
-        debug("SOCKET CHANNEL SEND", "Skipping this packet, found null socket for session: ",
+        debug("SOCKET CHANNEL SEND", "Skipping this packet, found null socket for session ",
             session);
       }
       return;

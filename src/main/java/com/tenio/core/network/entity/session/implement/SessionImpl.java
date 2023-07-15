@@ -96,7 +96,7 @@ public final class SessionImpl implements Session {
   private int maxIdleTimeInSecond;
 
   private volatile boolean activated;
-  private volatile boolean associatedToPlayer;
+  private volatile AssociatedState associatedState;
   private volatile boolean hasUdp;
   private volatile boolean enabledKcp;
   private volatile boolean hasKcp;
@@ -116,7 +116,7 @@ public final class SessionImpl implements Session {
     inactivatedTime = 0L;
     udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
     activated = false;
-    associatedToPlayer = false;
+    associatedState = AssociatedState.NONE;
     hasUdp = false;
     enabledKcp = false;
     hasKcp = false;
@@ -147,18 +147,18 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public boolean isAssociatedToPlayer() {
-    return associatedToPlayer;
+  public boolean isAssociatedToPlayer(AssociatedState associatedState) {
+    return this.associatedState == associatedState;
   }
 
   @Override
-  public void setAssociatedToPlayer(boolean associatedToPlayer) {
-    this.associatedToPlayer = associatedToPlayer;
+  public void setAssociatedToPlayer(AssociatedState associatedState) {
+    this.associatedState = associatedState;
   }
 
   @Override
   public boolean isOrphan() {
-    return (!isAssociatedToPlayer() &&
+    return (!isAssociatedToPlayer(AssociatedState.DONE) &&
         (now() - createdTime) >= ORPHAN_ALLOWANCE_TIME_IN_MILLISECONDS);
   }
 
@@ -631,7 +631,7 @@ public final class SessionImpl implements Session {
         ", serverAddress='" + serverAddress + '\'' +
         ", maxIdleTimeInSecond=" + maxIdleTimeInSecond +
         ", activated=" + activated +
-        ", associatedToPlayer=" + associatedToPlayer +
+        ", associatedState=" + associatedState +
         ", hasUdp=" + hasUdp +
         ", udpConvey=" + udpConvey +
         ", enabledKcp=" + enabledKcp +

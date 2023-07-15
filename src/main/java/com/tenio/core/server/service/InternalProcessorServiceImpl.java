@@ -176,16 +176,26 @@ public final class InternalProcessorServiceImpl extends AbstractController
     // Check if it's a reconnection request first
     var session = (Session) request.getSender();
     // We only consider the fresh session
-    if (session.isAssociatedToPlayer()) {
+    if (!session.isAssociatedToPlayer(Session.AssociatedState.NONE)) {
       return;
     }
+
+    // Processing
+    session.setAssociatedToPlayer(Session.AssociatedState.DOING);
 
     var message = request.getMessage();
 
     // When it gets disconnected from client side, the server may not recognise it. In this
     // case, the player is remained on the server side, so we should always check this event
-    Object reconnectedObject = eventManager.emit(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLE,
-        session, message);
+    Object reconnectedObject = null;
+    try {
+      reconnectedObject = eventManager.emit(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLE,
+          session, message);
+    } catch (Exception exception) {
+      if (isErrorEnabled()) {
+        error(exception, request);
+      }
+    }
 
     // check reconnected case
     if (Objects.nonNull(reconnectedObject)) {
@@ -199,18 +209,9 @@ public final class InternalProcessorServiceImpl extends AbstractController
           // trying to reconnect
           if (currentSession.isActivated() && !currentSession.equals(session)) {
             try {
-              // In case the server does not want to hold the player when he gets disconnected, the
-              // player should be removed from his current room
-              // In case the server wants to keep this player, all the current information (room
-              // related data) has to be sent to client to get up-to-date
-              if (!keepPlayerOnDisconnection) {
-                // player should leave room (if applicable) first
-                if (player.isInRoom()) {
-                  serverApi.leaveRoom(player, PlayerLeaveRoomMode.DEFAULT);
-                }
-              }
               // Detach the current session from its player
-              currentSession.setAssociatedToPlayer(false);
+              currentSession.setName("STALE-" + currentSession.getName());
+              currentSession.setAssociatedToPlayer(Session.AssociatedState.NONE);
               currentSession.close(ConnectionDisconnectMode.RECONNECTION,
                   PlayerDisconnectMode.RECONNECTION);
             } catch (IOException exception) {
@@ -221,8 +222,22 @@ public final class InternalProcessorServiceImpl extends AbstractController
           }
         }
 
+        // In case the server does not want to hold the player when he gets disconnected, the
+        // player should be removed from his current room
+        // In case the server wants to keep this player, all the current information (room
+        // related data) has to be sent to client to get up-to-date
+        if (!keepPlayerOnDisconnection) {
+          // player should leave room (if applicable) first
+          if (player.isInRoom()) {
+            serverApi.leaveRoom(player, PlayerLeaveRoomMode.DEFAULT);
+          }
+        }
+
         // connect the player to a new session
         player.setSession(session);
+        player.setLastReadTime(now());
+        player.setLastWriteTime(now());
+        player.setLastActivityTime(now());
         eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player, session,
             PlayerReconnectedResult.SUCCESS);
       } else {
@@ -256,7 +271,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
   private synchronized void processSessionWillBeClosed(Session session,
                                                        ConnectionDisconnectMode connectionDisconnectMode,
                                                        PlayerDisconnectMode playerDisconnectMode) {
-    if (session.isAssociatedToPlayer()) {
+    if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByName(session.getName());
       // the player maybe existed
       if (Objects.nonNull(player)) {
@@ -272,24 +287,26 @@ public final class InternalProcessorServiceImpl extends AbstractController
           String removedPlayer = player.getName();
           playerManager.removePlayerByName(player.getName());
           if (isDebugEnabled()) {
-            debug("DISCONNECTED PLAYER", "Player " + removedPlayer + " was removed.");
+            debug("DISCONNECTED PLAYER", "Player ", removedPlayer, " was removed");
           }
           player.clean();
         }
       } else {
         if (isDebugEnabled()) {
-          debug("SESSION WILL BE REMOVED", "The player " + session.getName() + " should be " +
-              "presented, but it was not.");
+          debug("SESSION WILL BE REMOVED", "The player ", session.getName(), " should be " +
+              "presented, but it was not");
         }
       }
     }
-    long removedSession = session.getId();
+    long removedSessionId = session.getId();
+    String removedSessionName = session.getName();
     session.setName(null);
-    session.setAssociatedToPlayer(false);
+    session.setAssociatedToPlayer(Session.AssociatedState.NONE);
     session.remove();
     if (isDebugEnabled()) {
       debug("DISCONNECTED SESSION",
-          "Session " + removedSession + " was removed in mode " + connectionDisconnectMode);
+          "Session ", removedSessionId, " (", removedSessionName, ") was removed in mode ",
+          connectionDisconnectMode);
     }
   }
 
@@ -298,7 +315,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
   private void processSessionReadMessage(Request request) {
     var session = (Session) request.getSender();
 
-    if (session.isAssociatedToPlayer()) {
+    if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByName(session.getName());
       if (Objects.isNull(player)) {
         var illegalValueException = new IllegalArgumentException(
@@ -318,8 +335,15 @@ public final class InternalProcessorServiceImpl extends AbstractController
     var message = request.getMessage();
 
     // verify the datagram channel accessing request
-    var checkingPlayer = eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION,
-        message);
+    Object checkingPlayer = null;
+    try {
+      checkingPlayer = eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION,
+          message);
+    } catch (Exception exception) {
+      if (isErrorEnabled()) {
+        error(exception, request);
+      }
+    }
 
     if (!(checkingPlayer instanceof Optional<?> optionalPlayer)) {
       return;
@@ -381,6 +405,10 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
     eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, optionalPlayer,
         udpConvey, kcpConv, AccessDatagramChannelResult.SUCCESS);
+  }
+
+  private long now() {
+    return TimeUtility.currentTimeMillis();
   }
 
   @Override

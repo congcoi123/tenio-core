@@ -339,7 +339,7 @@ public final class Injector extends SystemLogger {
           }
         } catch (Exception exception) {
           if (isErrorEnabled()) {
-            error(exception, "Failed to register command handler for " + clazz.getSimpleName());
+            error(exception, "Failed to register command handler for ", clazz.getSimpleName());
           }
         }
       } else if (clazz.isAnnotationPresent(ClientCommand.class)) {
@@ -365,7 +365,7 @@ public final class Injector extends SystemLogger {
           }
         } catch (Exception exception) {
           if (isErrorEnabled()) {
-            error(exception, "Failed to register command handler for " + clazz.getSimpleName());
+            error(exception, "Failed to register command handler for ", clazz.getSimpleName());
           }
         }
       }
