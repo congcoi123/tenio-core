@@ -55,13 +55,18 @@ public final class TrafficCounterTask extends AbstractSystemTask {
     var threadFactory =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("traffic-counter-task-%d").build();
     return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
-        () -> new Thread(() -> eventManager.emit(ServerEvent.FETCHED_BANDWIDTH_INFO,
-            networkReaderStatistic.getReadBytes(),
-            networkReaderStatistic.getReadPackets(),
-            networkReaderStatistic.getReadDroppedPackets(),
-            networkWriterStatistic.getWrittenBytes(), networkWriterStatistic.getWrittenPackets(),
-            networkWriterStatistic.getWrittenDroppedPacketsByPolicy(),
-            networkWriterStatistic.getWrittenDroppedPacketsByFull())).start(),
+        () -> {
+          var worker = new Thread(() -> eventManager.emit(ServerEvent.FETCHED_BANDWIDTH_INFO,
+              networkReaderStatistic.getReadBytes(),
+              networkReaderStatistic.getReadPackets(),
+              networkReaderStatistic.getReadDroppedPackets(),
+              networkWriterStatistic.getWrittenBytes(), networkWriterStatistic.getWrittenPackets(),
+              networkWriterStatistic.getWrittenDroppedPacketsByPolicy(),
+              networkWriterStatistic.getWrittenDroppedPacketsByFull()));
+          worker.setDaemon(true);
+          worker.setName("traffic-counter-worker");
+          worker.start();
+        },
         initialDelay, interval, TimeUnit.SECONDS);
   }
 

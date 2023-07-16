@@ -169,7 +169,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     // when a socket channel is writable, should make it the highest priority
     // manipulation
     if (selectionKey.isValid() && selectionKey.isWritable()) {
-      // should continue put this session for sending all left packets first
+      // should continually put this session for sending all left packets first
       zeroWriterListener.continueWriteInterestOp(session);
       // now we should set it back to interest in OP_READ
       selectionKey.interestOps(SelectionKey.OP_READ);
@@ -188,12 +188,13 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         }
       } catch (IOException exception) {
         // so I guess we can ignore this kind of exception or wait until we have proper solutions
-        /*
-        if (isErrorEnabled()) {
-          error(exception, "An exception was occurred on channel: ", socketChannel.toString());
+        // this checking may not work with other languages (e.g: japanese)
+        if (!exception.getMessage().contains("Connection reset")) {
+          if (isErrorEnabled()) {
+            error(exception, "An exception was occurred on channel: ", socketChannel.toString());
+          }
+          getSocketIoHandler().sessionException(session, exception);
         }
-        getSocketIoHandler().sessionException(session, exception);
-        */
       }
       // no left data is available, should close the connection
       if (byteCount == -1) {

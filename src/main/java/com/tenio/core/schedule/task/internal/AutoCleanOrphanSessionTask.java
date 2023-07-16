@@ -66,7 +66,7 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
             debug("AUTO CLEAN ORPHAN SESSION",
                 "Checking orphan sessions in ", sessionManager.getSessionCount(), " entities");
           }
-          new Thread(() -> {
+          var worker = new Thread(() -> {
             Iterator<Session> iterator = sessionManager.getReadonlySessionsList().listIterator();
             while (iterator.hasNext()) {
               Session session = iterator.next();
@@ -84,7 +84,10 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
                 }
               }
             }
-          }).start();
+          });
+          worker.setDaemon(true);
+          worker.setName("auto-clean-orphan-session-worker");
+          worker.start();
         }, initialDelay, interval, TimeUnit.SECONDS);
   }
 

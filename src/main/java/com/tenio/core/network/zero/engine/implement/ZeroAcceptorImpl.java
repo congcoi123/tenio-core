@@ -79,7 +79,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     return new ZeroAcceptorImpl(eventManager);
   }
 
-  private void initializeSockets() throws ServiceRuntimeException {
+  private void initializeSocketChannel() throws ServiceRuntimeException {
     // opens a selector to handle server socket, udp datagram and accept all incoming client socket
     try {
       acceptableSelector = Selector.open();
@@ -88,15 +88,15 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     }
 
     // each socket configuration constructs a server socket or an udp datagram
-    bindSocket(socketConfiguration);
+    bindSocketChannel(socketConfiguration);
   }
 
-  private void bindSocket(SocketConfiguration socketConfiguration) throws ServiceRuntimeException {
+  private void bindSocketChannel(SocketConfiguration socketConfiguration) throws ServiceRuntimeException {
     if (socketConfiguration.type() == TransportType.TCP) {
       bindTcpSocket(socketConfiguration.port());
     }
     if (amountUdpWorkers > 0) {
-      bindUdpSocket();
+      bindUdpChannel();
     }
   }
 
@@ -124,7 +124,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     }
   }
 
-  private void bindUdpSocket() throws ServiceRuntimeException {
+  private void bindUdpChannel() throws ServiceRuntimeException {
     try {
       synchronized (boundSockets) {
         for (int i = 0; i < amountUdpWorkers; i++) {
@@ -371,7 +371,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
 
   @Override
   public void onInitialized() {
-    initializeSockets();
+    initializeSocketChannel();
   }
 
   @Override

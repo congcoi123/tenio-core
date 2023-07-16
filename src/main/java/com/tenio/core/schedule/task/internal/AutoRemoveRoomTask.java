@@ -63,7 +63,7 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
             debug("AUTO REMOVE ROOM",
                 "Checking empty rooms in ", roomManager.getRoomCount(), " entities");
           }
-          new Thread(() -> {
+          var worker = new Thread(() -> {
             Iterator<Room> iterator = roomManager.getReadonlyRoomsList().listIterator();
             while (iterator.hasNext()) {
               Room room = iterator.next();
@@ -76,7 +76,10 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
                 ServerImpl.getInstance().getApi().removeRoom(room, RoomRemoveMode.WHEN_EMPTY);
               }
             }
-          }).start();
+          });
+          worker.setDaemon(true);
+          worker.setName("auto-remove-room-worker");
+          worker.start();
         }, initialDelay, interval, TimeUnit.SECONDS);
   }
 

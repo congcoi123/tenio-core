@@ -63,7 +63,7 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
             debug("AUTO DISCONNECT PLAYER",
                 "Checking IDLE players in ", playerManager.getPlayerCount(), " entities");
           }
-          new Thread(() -> {
+          var worker = new Thread(() -> {
             Iterator<Player> iterator = playerManager.getReadonlyPlayersList().listIterator();
             while (iterator.hasNext()) {
               Player player = iterator.next();
@@ -75,7 +75,10 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
                 ServerImpl.getInstance().getApi().logout(player);
               }
             }
-          }).start();
+          });
+          worker.setDaemon(true);
+          worker.setName("auto-disconnect-player-worker");
+          worker.start();
         }, initialDelay, interval, TimeUnit.SECONDS);
   }
 

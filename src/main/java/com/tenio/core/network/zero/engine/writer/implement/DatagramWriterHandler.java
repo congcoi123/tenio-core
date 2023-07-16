@@ -60,14 +60,14 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
       // the datagram need to be declared first, something went wrong here, need to
       // log the exception content
       if (Objects.isNull(datagramChannel)) {
-        if (isDebugEnabled()) {
-          debug("DATAGRAM CHANNEL SEND", "UDP Packet cannot be sent to ", session.toString(),
+        if (isErrorEnabled()) {
+          error("{DATAGRAM CHANNEL SEND} ", "UDP Packet cannot be sent to ", session.toString(),
               ", no DatagramChannel was set");
         }
         return;
       } else if (Objects.isNull(remoteSocketAddress)) {
-        if (isDebugEnabled()) {
-          debug("DATAGRAM CHANNEL SEND", "UDP Packet cannot be sent to ", session.toString(),
+        if (isErrorEnabled()) {
+          error("{DATAGRAM CHANNEL SEND} ", "UDP Packet cannot be sent to ", session.toString(),
               ", no InetSocketAddress was set");
         }
         return;
@@ -94,6 +94,12 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
         getBuffer().flip();
 
         int writtenBytes = datagramChannel.send(getBuffer(), remoteSocketAddress);
+        if (writtenBytes == 0) {
+          if (isErrorEnabled()) {
+            error("{DATAGRAM CHANNEL SEND} ", "Channel writes 0 byte in session: ", session);
+          }
+        }
+
         // update statistic data
         getNetworkWriterStatistic().updateWrittenBytes(writtenBytes);
         getNetworkWriterStatistic().updateWrittenPackets(1);

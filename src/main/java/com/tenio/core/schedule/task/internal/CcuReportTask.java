@@ -55,8 +55,13 @@ public final class CcuReportTask extends AbstractSystemTask {
     var threadFactory =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("ccu-report-task-%d").build();
     return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
-        () -> new Thread(() -> eventManager.emit(ServerEvent.FETCHED_CCU_INFO,
-            playerManager.getPlayerCount())).start(),
+        () -> {
+          var worker = new Thread(() -> eventManager.emit(ServerEvent.FETCHED_CCU_INFO,
+              playerManager.getPlayerCount()));
+          worker.setDaemon(true);
+          worker.setName("ccu-report-worker");
+          worker.start();
+        },
         initialDelay, interval, TimeUnit.SECONDS);
   }
 

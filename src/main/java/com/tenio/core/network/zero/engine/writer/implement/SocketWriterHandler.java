@@ -87,6 +87,12 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
     try {
       int realWrittenBytes = channel.write(getBuffer());
 
+      if (realWrittenBytes == 0) {
+        if (isErrorEnabled()) {
+          error("{SOCKET CHANNEL SEND} ", "Socket writes 0 byte in session: ", session);
+        }
+      }
+
       // update statistic data
       getNetworkWriterStatistic().updateWrittenBytes(realWrittenBytes);
 
@@ -103,17 +109,6 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
 
         // save those bytes to the packet for next manipulation
         packet.setFragmentBuffer(leftUnwrittenBytes);
-
-        // want to know when the socket can write, which should be noticed on isWritable() method
-        // when that event occurred, re-add the session to the tickets queue
-        var selectionKey = session.getSelectionKey();
-        if (Objects.nonNull(selectionKey) && selectionKey.isValid()) {
-          selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-        } else {
-          if (isDebugEnabled()) {
-            debug("SOCKET CHANNEL SEND", "Something went wrong with OP_WRITE key for session: ", session);
-          }
-        }
       } else {
         // update the statistic data
         getNetworkWriterStatistic().updateWrittenPackets(1);
@@ -123,6 +118,7 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
 
         // in case this packet is the last one, it closes the session
         if (packet.isMarkedAsLast()) {
+          packetQueue.clear();
           session.close(ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
           return;
         }
@@ -131,6 +127,18 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
         // the tickets queue
         if (!packetQueue.isEmpty()) {
           getSessionTicketsQueue().add(session);
+        }
+      }
+
+      // want to know when the socket can write, which should be noticed on isWritable() method
+      // when that event occurs, try to re-add the session to the tickets queue
+      var selectionKey = session.getSelectionKey();
+      if (Objects.nonNull(selectionKey) && selectionKey.isValid()) {
+        selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+      } else {
+        if (isErrorEnabled()) {
+          error("{SOCKET CHANNEL SEND} ", "Something went wrong with OP_WRITE key for session: ",
+              session);
         }
       }
     } catch (IOException exception) {
