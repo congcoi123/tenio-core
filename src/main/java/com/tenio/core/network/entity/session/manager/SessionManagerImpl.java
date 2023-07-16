@@ -214,6 +214,9 @@ public final class SessionManagerImpl extends AbstractManager implements Session
           if (session.containsUdp()) {
             sessionByDatagrams.remove(session.getUdpConveyId());
             session.setDatagramChannel(null, Session.EMPTY_DATAGRAM_CONVEY_ID);
+            if (isDebugEnabled()) {
+              debug("SESSION MANAGER", "Datagram channel was removed in session: ", session);
+            }
           }
           sessionBySockets.remove(session.getSocketChannel());
         }
