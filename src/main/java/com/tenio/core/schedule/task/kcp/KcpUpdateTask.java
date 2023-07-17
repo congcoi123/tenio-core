@@ -52,11 +52,13 @@ public final class KcpUpdateTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    var threadFactory =
+    var threadFactoryTask =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("kcp-update-task-%d").build();
     int executorSize = Runtime.getRuntime().availableProcessors() * 2;
-    ExecutorService workers = Executors.newFixedThreadPool(executorSize, threadFactory);
-    return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
+    ExecutorService workers = Executors.newFixedThreadPool(executorSize, threadFactoryTask);
+    var threadFactoryWorker =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("kcp-update-worker-%d").build();
+    return Executors.newSingleThreadScheduledExecutor(threadFactoryWorker).scheduleAtFixedRate(
         () -> {
           var iterator = sessionManager.getSessionIterator();
           while (iterator.hasNext()) {
