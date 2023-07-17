@@ -28,12 +28,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.schedule.task.AbstractSystemTask;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -57,11 +54,8 @@ public final class KcpUpdateTask extends AbstractSystemTask {
   public ScheduledFuture<?> run() {
     var threadFactory =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("kcp-update-task-%d").build();
-    BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(100);
     int executorSize = Runtime.getRuntime().availableProcessors() * 2;
-    ExecutorService workers =
-        new ThreadPoolExecutor(executorSize, executorSize, 0L, TimeUnit.MILLISECONDS, queue,
-            threadFactory);
+    ExecutorService workers = Executors.newFixedThreadPool(executorSize, threadFactory);
     return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
         () -> {
           var iterator = sessionManager.getSessionIterator();
