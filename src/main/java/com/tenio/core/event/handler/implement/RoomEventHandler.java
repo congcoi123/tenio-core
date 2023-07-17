@@ -133,7 +133,7 @@ public final class RoomEventHandler {
 
     eventRoomCreatedResultOp.ifPresent(event -> eventManager.on(ServerEvent.ROOM_CREATED_RESULT,
         params -> {
-          var room = (Room) params[0];
+          var room = (Optional<Room>) params[0];
           var setting = (InitialRoomSetting) params[1];
           var result = (RoomCreatedResult) params[2];
 

@@ -27,7 +27,9 @@ package com.tenio.core.api;
 import com.tenio.common.data.DataCollection;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerBanMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.manager.PlayerManager;
@@ -82,10 +84,14 @@ public interface ServerApi {
    * you want to send a message to the client before closing connect or logout the player, please
    * use this method {@link Response#writeThenClose()}
    *
-   * @param player the current {@link Player} in the management list, on the server
+   * @param player                   the current {@link Player} in the management list, on the server
+   * @param connectionDisconnectMode {@link ConnectionDisconnectMode} session disconnected reason
+   * @param playerDisconnectMode     {@link PlayerDisconnectMode} player disconnected   reason
    * @see Response
+   * @since 0.5.0
    */
-  void logout(Player player);
+  void logout(Player player, ConnectionDisconnectMode connectionDisconnectMode,
+              PlayerDisconnectMode playerDisconnectMode);
 
   /**
    * Removes a player manually from the server.

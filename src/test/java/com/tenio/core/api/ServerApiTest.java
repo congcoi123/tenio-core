@@ -188,7 +188,7 @@ class ServerApiTest {
   @Test
   @DisplayName("When it tries to logout a null player, it should not do any further action")
   void itLogoutNullPlayerShouldDoNothingFurther() {
-    serverApi.logout(null);
+    serverApi.logout(null, ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
     Mockito.verifyNoMoreInteractions(eventManager, playerManager);
   }
 
@@ -204,7 +204,7 @@ class ServerApiTest {
     optionalRoom.get().addPlayer(player);
     Mockito.when(player.isInRoom()).thenReturn(true);
     Mockito.when(player.getCurrentRoom()).thenReturn(optionalRoom);
-    serverApi.logout(player);
+    serverApi.logout(player, ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
     Mockito.verify(eventManager, Mockito.times(1))
         .emit(ServerEvent.PLAYER_BEFORE_LEAVE_ROOM, player, optionalRoom,
             PlayerLeaveRoomMode.LOG_OUT);
@@ -228,7 +228,7 @@ class ServerApiTest {
     Mockito.when(player.getCurrentRoom()).thenReturn(optionalRoom);
     Mockito.doThrow(RemovedNonExistentPlayerFromRoomException.class)
         .when(room).removePlayer(player);
-    serverApi.logout(player);
+    serverApi.logout(player, ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
     Mockito.verify(eventManager, Mockito.times(1))
         .emit(ServerEvent.PLAYER_BEFORE_LEAVE_ROOM, player, optionalRoom,
             PlayerLeaveRoomMode.LOG_OUT);
@@ -248,7 +248,7 @@ class ServerApiTest {
     Mockito.when(optionalSession.get()).thenReturn(session);
     Mockito.when(player.getSession()).thenReturn(optionalSession);
     Mockito.when(player.containsSession()).thenReturn(true);
-    serverApi.logout(player);
+    serverApi.logout(player, ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
     Mockito.verify(session, Mockito.times(1))
         .close(ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
     Mockito.verify(eventManager, Mockito.times(1))
@@ -266,7 +266,7 @@ class ServerApiTest {
     Mockito.when(player.containsSession()).thenReturn(true);
     Mockito.doThrow(IOException.class)
         .when(session).close(ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
-    serverApi.logout(player);
+    serverApi.logout(player, ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
     Mockito.verifyNoMoreInteractions(eventManager, playerManager);
   }
 

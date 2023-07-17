@@ -35,7 +35,6 @@ import com.tenio.core.network.entity.session.implement.SessionImpl;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import io.netty.channel.Channel;
 import java.lang.reflect.InvocationTargetException;
-import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -214,9 +213,6 @@ public final class SessionManagerImpl extends AbstractManager implements Session
           if (session.containsUdp()) {
             sessionByDatagrams.remove(session.getUdpConveyId());
             session.setDatagramChannel(null, Session.EMPTY_DATAGRAM_CONVEY_ID);
-            if (isDebugEnabled()) {
-              debug("SESSION MANAGER", "Datagram channel was removed in session: ", session);
-            }
           }
           sessionBySockets.remove(session.getSocketChannel());
         }

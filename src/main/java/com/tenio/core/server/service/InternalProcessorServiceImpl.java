@@ -284,11 +284,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
         // When it gets disconnected from client side, the server may not recognise it. In this
         // case, the player is remained on the server side
         if (!keepPlayerOnDisconnection) {
-          String removedPlayer = player.getName();
           playerManager.removePlayerByName(player.getName());
-          if (isDebugEnabled()) {
-            debug("DISCONNECTED PLAYER", "Player ", removedPlayer, " was removed");
-          }
           player.clean();
         }
       } else {
@@ -298,16 +294,9 @@ public final class InternalProcessorServiceImpl extends AbstractController
         }
       }
     }
-    long removedSessionId = session.getId();
-    String removedSessionName = session.getName();
     session.setName(null);
     session.setAssociatedToPlayer(Session.AssociatedState.NONE);
     session.remove();
-    if (isDebugEnabled()) {
-      debug("DISCONNECTED SESSION",
-          "Session ", removedSessionId, " (", removedSessionName, ") was removed in mode ",
-          connectionDisconnectMode);
-    }
   }
 
   // In this phase, the session must be bound with a player, a free session can only be accepted
