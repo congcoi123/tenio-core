@@ -383,7 +383,13 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
     while (true) {
       if (isActivated()) {
-        readableLoop(readerBuffer);
+        try {
+          readableLoop(readerBuffer);
+        } catch (Throwable cause) {
+          if (isErrorEnabled()) {
+            error(cause);
+          }
+        }
       }
     }
   }

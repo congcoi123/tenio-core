@@ -48,12 +48,13 @@ public final class JettyHttpService extends AbstractManager implements Service, 
   private int threadPoolSize;
   private int port;
   private Map<String, HttpServlet> servletMap;
-  private boolean initialized;
+  private volatile boolean initialized;
+  private boolean stopping;
 
   private JettyHttpService(EventManager eventManager) {
     super(eventManager);
-
     initialized = false;
+    stopping = false;
   }
 
   /**
@@ -96,9 +97,9 @@ public final class JettyHttpService extends AbstractManager implements Service, 
 
       server.start();
       server.join();
-    } catch (Exception exception) {
+    } catch (Throwable cause) {
       if (isErrorEnabled()) {
-        error(exception);
+        error(cause);
       }
     }
   }
@@ -138,6 +139,12 @@ public final class JettyHttpService extends AbstractManager implements Service, 
       return;
     }
 
+    if (stopping) {
+      return;
+    }
+
+    stopping = true;
+
     try {
       server.stop();
       executorService.shutdownNow();
@@ -145,18 +152,11 @@ public final class JettyHttpService extends AbstractManager implements Service, 
       if (isInfoEnabled()) {
         info("STOPPED SERVICE", buildgen(getName(), " (", 1, ")"));
       }
-      destroy();
-      if (isInfoEnabled()) {
-        info("DESTROYED SERVICE", buildgen(getName(), " (", 1, ")"));
-      }
     } catch (Exception exception) {
       if (isErrorEnabled()) {
         error(exception);
       }
     }
-  }
-
-  private void destroy() {
   }
 
   @Override

@@ -59,6 +59,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   private SessionManager sessionManager;
 
   private volatile boolean activated;
+  private boolean stopping;
 
   /**
    * Initialization.
@@ -71,6 +72,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
     executorSize = DEFAULT_NUMBER_WORKERS;
     bufferSize = DEFAULT_BUFFER_SIZE;
     activated = false;
+    stopping = false;
     id = new AtomicInteger();
   }
 
@@ -102,6 +104,11 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   }
 
   private void halting() throws ServiceRuntimeException {
+    if (stopping) {
+      return;
+    }
+
+    stopping = true;
     activated = false;
 
     onShutdown();
@@ -136,8 +143,13 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   }
 
   private void setThreadName() {
-    Thread.currentThread()
-        .setName(StringUtility.strgen("zero-", getName(), "-", id.incrementAndGet()));
+    Thread currentThread = Thread.currentThread();
+    currentThread.setName(StringUtility.strgen("zero-", getName(), "-", id.incrementAndGet()));
+    currentThread.setUncaughtExceptionHandler((thread, cause) -> {
+      if (isErrorEnabled()) {
+        error(cause, thread.getName());
+      }
+    });
   }
 
   @Override

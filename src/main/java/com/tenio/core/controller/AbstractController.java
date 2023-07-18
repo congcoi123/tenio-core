@@ -57,6 +57,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
   private int maxQueueSize;
 
   private boolean initialized;
+  private boolean stopping;
   private volatile boolean activated;
 
   /**
@@ -70,6 +71,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
     maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
     executorSize = DEFAULT_NUMBER_WORKERS;
     activated = false;
+    stopping = false;
     initialized = false;
     id = new AtomicInteger();
   }
@@ -105,7 +107,13 @@ public abstract class AbstractController extends AbstractManager implements Cont
   }
 
   private void attemptToShutdown() {
+    if (stopping) {
+      return;
+    }
+
+    stopping = true;
     activated = false;
+
     if (isInfoEnabled()) {
       info("STOPPING SERVICE", buildgen("controller-", getName(), " (", executorSize, ")"));
     }
@@ -134,9 +142,9 @@ public abstract class AbstractController extends AbstractManager implements Cont
         try {
           var request = requestQueue.take();
           processRequest(request);
-        } catch (Throwable throwable) {
+        } catch (Throwable cause) {
           if (isErrorEnabled()) {
-            error(throwable);
+            error(cause);
           }
         }
       }
@@ -149,8 +157,13 @@ public abstract class AbstractController extends AbstractManager implements Cont
   }
 
   private void setThreadName() {
-    Thread.currentThread()
-        .setName(StringUtility.strgen("controller-", getName(), "-", id.incrementAndGet()));
+    Thread currentThread = Thread.currentThread();
+    currentThread.setName(StringUtility.strgen("controller-", getName(), "-", id.incrementAndGet()));
+    currentThread.setUncaughtExceptionHandler((thread, cause) -> {
+      if (isErrorEnabled()) {
+        error(cause, thread.getName());
+      }
+    });
   }
 
   private void destroyController() {

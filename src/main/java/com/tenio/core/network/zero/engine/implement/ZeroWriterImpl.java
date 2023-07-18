@@ -33,9 +33,9 @@ import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.engine.ZeroWriter;
 import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
+import com.tenio.core.network.zero.engine.writer.WriterHandler;
 import com.tenio.core.network.zero.engine.writer.implement.DatagramWriterHandler;
 import com.tenio.core.network.zero.engine.writer.implement.SocketWriterHandler;
-import com.tenio.core.network.zero.engine.writer.WriterHandler;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -85,9 +85,9 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
     try {
       var session = sessionTicketsQueue.take();
       processSessionQueue(session, socketWriterHandler, datagramWriterHandler);
-    } catch (InterruptedException exception) {
+    } catch (Throwable cause) {
       if (isErrorEnabled()) {
-        error(exception, "Interruption occurred when process a session and its packet");
+        error(cause, "Interruption occurred when process a session and its packet");
       }
     }
   }
@@ -101,33 +101,31 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
 
     // now we can iterate packets from queue to proceed
     var packetQueue = session.getPacketQueue();
-    synchronized (packetQueue) {
-      // ignore the empty queue
-      if (packetQueue.isEmpty()) {
-        return;
-      }
+    // ignore the empty queue
+    if (packetQueue.isEmpty()) {
+      return;
+    }
 
-      // when the session is in-activated, just ignore its packets
-      if (!session.isActivated()) {
+    // when the session is in-activated, just ignore its packets
+    if (!session.isActivated()) {
+      packetQueue.take();
+      return;
+    }
+
+    var packet = packetQueue.peek();
+    // ignore the null packet and remove it from queue
+    if (Objects.isNull(packet)) {
+      if (!packetQueue.isEmpty()) {
         packetQueue.take();
-        return;
       }
 
-      var packet = packetQueue.peek();
-      // ignore the null packet and remove it from queue
-      if (Objects.isNull(packet)) {
-        if (!packetQueue.isEmpty()) {
-          packetQueue.take();
-        }
+      return;
+    }
 
-        return;
-      }
-
-      if (packet.isTcp()) {
-        socketWriterHandler.send(packetQueue, session, packet);
-      } else if (packet.isUdp()) {
-        datagramWriterHandler.send(packetQueue, session, packet);
-      }
+    if (packet.isTcp()) {
+      socketWriterHandler.send(packetQueue, session, packet);
+    } else if (packet.isUdp()) {
+      datagramWriterHandler.send(packetQueue, session, packet);
     }
   }
 

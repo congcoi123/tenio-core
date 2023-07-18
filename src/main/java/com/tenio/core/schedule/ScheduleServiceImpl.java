@@ -63,6 +63,7 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
 
   private boolean enabledKcp;
   private boolean initialized;
+  private boolean stopping;
 
   private ScheduleServiceImpl(EventManager eventManager) {
     super(eventManager);
@@ -78,6 +79,7 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
     kcpUpdateTask = KcpUpdateTask.newInstance(this.eventManager);
 
     initialized = false;
+    stopping = false;
   }
 
   public static ScheduleService newInstance(EventManager eventManager) {
@@ -118,6 +120,10 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
     if (!initialized) {
       return;
     }
+    if (stopping) {
+      return;
+    }
+    stopping = true;
     attemptToShutdown();
   }
 
@@ -127,13 +133,6 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
     if (isInfoEnabled()) {
       info("STOPPED SERVICE", buildgen(getName(), " (", 1, ")"));
     }
-    cleanup();
-    if (isInfoEnabled()) {
-      info("DESTROYED SERVICE", buildgen(getName(), " (", 1, ")"));
-    }
-  }
-
-  private void cleanup() {
   }
 
   @Override

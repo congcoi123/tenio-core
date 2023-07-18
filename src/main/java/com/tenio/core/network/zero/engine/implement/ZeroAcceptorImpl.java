@@ -385,9 +385,9 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
       if (isActivated()) {
         try {
           acceptableLoop();
-        } catch (IOException exception) {
+        } catch (Throwable cause) {
           if (isErrorEnabled()) {
-            error(exception, exception.getMessage());
+            error(cause);
           }
         }
       }

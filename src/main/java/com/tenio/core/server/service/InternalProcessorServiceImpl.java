@@ -122,7 +122,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     });
 
     eventManager.on(ServerEvent.SESSION_WILL_BE_CLOSED, params -> {
-      processSessionWillBeClosed((Session) params[0], (ConnectionDisconnectMode) params[1],
+      processSessionWillBeClosed((Session) params[0],
           (PlayerDisconnectMode) params[2]);
 
       return null;
@@ -269,7 +269,6 @@ public final class InternalProcessorServiceImpl extends AbstractController
   }
 
   private synchronized void processSessionWillBeClosed(Session session,
-                                                       ConnectionDisconnectMode connectionDisconnectMode,
                                                        PlayerDisconnectMode playerDisconnectMode) {
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByName(session.getName());
