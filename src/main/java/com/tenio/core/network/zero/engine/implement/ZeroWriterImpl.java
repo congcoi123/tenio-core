@@ -102,7 +102,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
     // now we can iterate packets from queue to proceed
     var packetQueue = session.getPacketQueue();
     // ignore the empty queue
-    if (packetQueue.isEmpty()) {
+    if (Objects.isNull(packetQueue) || packetQueue.isEmpty()) {
       return;
     }
 
