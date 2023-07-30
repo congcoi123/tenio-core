@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.jetty;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.service.Service;
@@ -71,6 +72,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     // Create a Jetty server
     var threadPool = new QueuedThreadPool(threadPoolSize, 8);
     threadPool.setName(getName());
+    threadPool.setDaemon(true);
     server = new Server(threadPool);
     var connector = new ServerConnector(server);
     connector.setPort(port);
@@ -117,7 +119,9 @@ public final class JettyHttpService extends AbstractManager implements Service, 
       return;
     }
 
-    executorService = Executors.newSingleThreadExecutor();
+    var threadFactory =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("jetty-http-management-%d").build();
+    executorService = Executors.newSingleThreadExecutor(threadFactory);
     executorService.execute(this);
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -166,7 +170,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
 
   @Override
   public String getName() {
-    return "jetty-http";
+    return "jetty-http-worker";
   }
 
   @Override
