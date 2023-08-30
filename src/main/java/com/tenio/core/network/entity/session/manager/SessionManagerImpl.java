@@ -85,6 +85,12 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     connectionFilter = null;
   }
 
+  /**
+   * Creates a new instance of the session manager.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link SessionManager}
+   */
   public static SessionManager newInstance(EventManager eventManager) {
     return new SessionManagerImpl(eventManager);
   }

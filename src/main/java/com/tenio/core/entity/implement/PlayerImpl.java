@@ -26,9 +26,9 @@ package com.tenio.core.entity.implement;
 
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.define.room.PlayerRoleInRoom;
 import com.tenio.core.entity.PlayerState;
 import com.tenio.core.entity.Room;
+import com.tenio.core.entity.define.room.PlayerRoleInRoom;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Map;
 import java.util.Objects;
@@ -63,10 +63,21 @@ public class PlayerImpl implements Player {
   private volatile boolean activated;
   private volatile boolean deportedFlag;
 
+  /**
+   * Constructor.
+   *
+   * @param name the player unique name
+   */
   public PlayerImpl(String name) {
     this(name, null);
   }
 
+  /**
+   * Constructor.
+   *
+   * @param name    the player unique name
+   * @param session a session which associates to the player
+   */
   public PlayerImpl(String name, Session session) {
     this.name = name;
     properties = new ConcurrentHashMap<>();

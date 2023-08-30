@@ -62,6 +62,11 @@ public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
     last = false;
   }
 
+  /**
+   * Creates a new instance of packet.
+   *
+   * @return a new instance of {@link Packet}
+   */
   public static Packet newInstance() {
     return new PacketImpl();
   }

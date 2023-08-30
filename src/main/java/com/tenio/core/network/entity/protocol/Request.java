@@ -28,10 +28,7 @@ import com.tenio.common.data.DataCollection;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.controller.RequestComparator;
 import com.tenio.core.network.define.RequestPriority;
-import com.tenio.core.network.entity.session.Session;
 import java.net.SocketAddress;
-import java.nio.channels.DatagramChannel;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -39,6 +36,9 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public interface Request {
 
+  /**
+   * The request counter to provide unique id for every single request.
+   */
   AtomicLong ID_COUNTER = new AtomicLong(1L);
 
   /**
@@ -90,12 +90,24 @@ public interface Request {
    * Sets the remote address associating to the client side whenever the server receives
    * message from him.
    *
-   * @param datagramRemoteSocketAddress remote address associating to the client side
+   * @param remoteSocketAddress remote address associating to the client side
+   * @return the request instance
    */
   Request setRemoteSocketAddress(SocketAddress remoteSocketAddress);
 
+  /**
+   * Retrieves the request message.
+   *
+   * @return an instance of {@link DataCollection}
+   */
   DataCollection getMessage();
 
+  /**
+   * Sets the request message.
+   *
+   * @param message an instance of {@link DataCollection}
+   * @return the {@link Request} itself
+   */
   Request setMessage(DataCollection message);
 
   /**

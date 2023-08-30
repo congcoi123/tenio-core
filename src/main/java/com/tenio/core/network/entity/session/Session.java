@@ -48,6 +48,9 @@ import java.nio.channels.SocketChannel;
  */
 public interface Session {
 
+  /**
+   * The default UDP convey ID.
+   */
   int EMPTY_DATAGRAM_CONVEY_ID = -1;
 
   /**
@@ -591,6 +594,9 @@ public interface Session {
     close(ConnectionDisconnectMode.UNKNOWN, PlayerDisconnectMode.UNKNOWN);
   }
 
+  /**
+   * The state values present the phase of associating between a session and a player.
+   */
   enum AssociatedState {
     /**
      * The session is not associated with any {@link Player}.

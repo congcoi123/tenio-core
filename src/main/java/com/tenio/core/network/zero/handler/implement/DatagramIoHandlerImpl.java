@@ -41,6 +41,12 @@ public final class DatagramIoHandlerImpl extends AbstractIoHandler implements Da
     super(eventManager);
   }
 
+  /**
+   * Retrieves a new instance of datagram handler.
+   *
+   * @param eventManager an instance of {@link EventManager}
+   * @return a new instance of {@link DatagramIoHandler}
+   */
   public static DatagramIoHandler newInstance(EventManager eventManager) {
     return new DatagramIoHandlerImpl(eventManager);
   }

@@ -27,11 +27,16 @@ package com.tenio.core.bootstrap.annotation;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.tenio.core.network.jetty.controller.PingController;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
+ * Declares a component as a Restful Controller. This can contain multiple Rest Mapping instances.
+ *
+ * @see RestMapping
+ * @see PingController
  * @since 0.5.0
  */
 @Retention(RUNTIME)
@@ -40,6 +45,9 @@ import java.lang.annotation.Target;
 public @interface RestController {
 
   /**
+   * Retrieves a Restful Controller path.
+   *
+   * @return the Restful Controller path
    * @since 0.5.0
    */
   String value() default "";

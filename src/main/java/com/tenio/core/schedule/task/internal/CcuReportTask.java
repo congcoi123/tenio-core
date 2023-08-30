@@ -46,6 +46,12 @@ public final class CcuReportTask extends AbstractSystemTask {
     super(eventManager);
   }
 
+  /**
+   * Creates a new task instance.
+   *
+   * @param eventManager an instance of {@link EventManager}
+   * @return a new instance of {@link CcuReportTask}
+   */
   public static CcuReportTask newInstance(EventManager eventManager) {
     return new CcuReportTask(eventManager);
   }
@@ -65,6 +71,11 @@ public final class CcuReportTask extends AbstractSystemTask {
         initialDelay, interval, TimeUnit.SECONDS);
   }
 
+  /**
+   * Sets the player manager instance.
+   *
+   * @param playerManager an instance of {@link PlayerManager}
+   */
   public void setPlayerManager(PlayerManager playerManager) {
     this.playerManager = playerManager;
   }

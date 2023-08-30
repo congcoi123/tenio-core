@@ -51,6 +51,12 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
     super(eventManager);
   }
 
+  /**
+   * Creates a new task instance.
+   *
+   * @param eventManager an instance of {@link EventManager}
+   * @return a new instance of {@link AutoDisconnectPlayerTask}
+   */
   public static AutoDisconnectPlayerTask newInstance(EventManager eventManager) {
     return new AutoDisconnectPlayerTask(eventManager);
   }
@@ -74,7 +80,8 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
                 if (player.isIdleNeverDeported()) {
                   if (isDebugEnabled()) {
                     debug("AUTO DISCONNECT PLAYER",
-                        player.getName(), " (never deported) is going to be forced to remove by the " +
+                        player.getName(),
+                        " (never deported) is going to be forced to remove by the " +
                             "cleaning task");
                   }
                   ServerImpl.getInstance().getApi().logout(player, ConnectionDisconnectMode.IDLE,

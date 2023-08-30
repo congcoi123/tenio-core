@@ -87,6 +87,11 @@ public final class ClientCommandManager extends SystemLogger {
     return new LinkedList<>(commands.values());
   }
 
+  /**
+   * Retrieves a map of all registered commands.
+   *
+   * @return a {@link Map} of all registered commands
+   */
   public synchronized Map<Short, AbstractClientCommandHandler> getHandlers() {
     return commands;
   }
@@ -122,6 +127,9 @@ public final class ClientCommandManager extends SystemLogger {
     runnable.run();
   }
 
+  /**
+   * Clears all the list of commands.
+   */
   public synchronized void clear() {
     commands.clear();
   }

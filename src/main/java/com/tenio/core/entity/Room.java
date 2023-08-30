@@ -44,7 +44,13 @@ import java.util.Optional;
  */
 public interface Room {
 
+  /**
+   * The value indicates that a player has no slot position value in the room.
+   */
   int NIL_SLOT = -1;
+  /**
+   * The value indicates that a player owns a default slot position value in the room.
+   */
   int DEFAULT_SLOT = 0;
 
   /**
@@ -351,7 +357,6 @@ public interface Room {
   default void addPlayer(Player player, boolean asSpectator, int targetSlot)
       throws PlayerJoinedRoomException, AddedDuplicatedPlayerException {
     addPlayer(player, null, asSpectator, targetSlot);
-
   }
 
   /**

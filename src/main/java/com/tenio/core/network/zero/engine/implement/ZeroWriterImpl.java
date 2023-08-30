@@ -58,6 +58,12 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
     setName("writer");
   }
 
+  /**
+   * Creates a new instance of the socket writer.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link ZeroWriter}
+   */
   public static ZeroWriter newInstance(EventManager eventManager) {
     return new ZeroWriterImpl(eventManager);
   }

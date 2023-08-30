@@ -92,6 +92,12 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
     socketService = ZeroSocketServiceImpl.newInstance(eventManager);
   }
 
+  /**
+   * Creates a new instance of the network service.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link NetworkService}
+   */
   public static NetworkService newInstance(EventManager eventManager) {
     return new NetworkServiceImpl(eventManager);
   }

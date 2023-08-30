@@ -43,8 +43,6 @@ public abstract class AbstractTask extends AbstractLogger implements Task {
 
   /**
    * Initialization.
-   *
-   * @param eventManager the event manager
    */
   protected AbstractTask() {
     interval = DEFAULT_INTERVAL_IN_SECONDS;

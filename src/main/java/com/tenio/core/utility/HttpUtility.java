@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 
 /**
@@ -40,6 +41,9 @@ import org.json.JSONObject;
  * @since 0.5.0
  */
 public enum HttpUtility {
+  /**
+   * Singleton instance.
+   */
   INSTANCE;
 
   /**
@@ -110,6 +114,12 @@ public enum HttpUtility {
     return new JSONObject(body);
   }
 
+  /**
+   * Retrieves a JSON body content of a request.
+   *
+   * @param request an instance of {@link HttpServletRequest}
+   * @return a JSON {@link String} contains the body content
+   */
   public String getBodyText(HttpServletRequest request) {
     var body = "";
     if (request.getMethod().equals("POST") || request.getMethod().equals("PUT")
@@ -146,6 +156,13 @@ public enum HttpUtility {
     return body;
   }
 
+  /**
+   * Sends the request and gets the response.
+   *
+   * @param response   an instance of {@link HttpServletResponse}
+   * @param statusCode the status code {@link HttpStatus}
+   * @param payload    the sending payload data in {@link String}
+   */
   public void sendResponseJson(HttpServletResponse response, int statusCode, String payload) {
     response.setContentType(CoreConstant.CONTENT_TYPE_JSON);
     response.setStatus(statusCode);

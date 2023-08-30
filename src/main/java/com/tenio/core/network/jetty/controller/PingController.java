@@ -42,6 +42,11 @@ import javax.servlet.http.HttpServletResponse;
 @RestController("ping")
 public class PingController extends SystemLogger {
 
+  /**
+   * A ping method.
+   *
+   * @return an instance of {@link HttpServlet}
+   */
   @RestMapping
   public HttpServlet doPing() {
     return new HttpServlet() {
@@ -65,6 +70,11 @@ public class PingController extends SystemLogger {
     };
   }
 
+  /**
+   * It is just another ping method.
+   *
+   * @return an instance of {@link HttpServlet}
+   */
   @RestMapping("another")
   public HttpServlet doAnotherPing() {
     return new HttpServlet() {

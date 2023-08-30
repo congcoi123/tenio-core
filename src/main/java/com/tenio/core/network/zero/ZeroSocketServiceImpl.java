@@ -78,6 +78,12 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
     initialized = false;
   }
 
+  /**
+   * Creates a new instance of the socket service.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link ZeroSocketService}
+   */
   public static ZeroSocketService newInstance(EventManager eventManager) {
     return new ZeroSocketServiceImpl(eventManager);
   }

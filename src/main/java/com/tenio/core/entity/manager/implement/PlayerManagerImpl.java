@@ -63,6 +63,12 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     playerCount = 0;
   }
 
+  /**
+   * Creates a new instance of the player manager.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link PlayerManager}
+   */
   public static PlayerManager newInstance(EventManager eventManager) {
     return new PlayerManagerImpl(eventManager);
   }

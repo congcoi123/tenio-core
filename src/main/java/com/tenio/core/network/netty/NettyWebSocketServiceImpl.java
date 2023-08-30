@@ -102,6 +102,12 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
     initialized = false;
   }
 
+  /**
+   * Creates a new instance of web socket service.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link NettyWebSocketService}
+   */
   public static NettyWebSocketService newInstance(EventManager eventManager) {
     return new NettyWebSocketServiceImpl(eventManager);
   }

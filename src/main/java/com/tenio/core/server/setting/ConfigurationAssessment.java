@@ -51,6 +51,13 @@ public final class ConfigurationAssessment {
     this.configuration = configuration;
   }
 
+  /**
+   * Retrieves a new instance of configuration assessment.
+   *
+   * @param eventManager an instance of {@link EventManager}
+   * @param configuration and instance of {@link Configuration}
+   * @return a new instance of {@link ConfigurationAssessment}
+   */
   public static ConfigurationAssessment newInstance(EventManager eventManager,
                                                     Configuration configuration) {
     return new ConfigurationAssessment(eventManager, configuration);

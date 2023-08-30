@@ -51,6 +51,12 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
     super(eventManager);
   }
 
+  /**
+   * Creates a new task instance.
+   *
+   * @param eventManager an instance of {@link EventManager}
+   * @return a new instance of {@link AutoCleanOrphanSessionTask}
+   */
   public static AutoCleanOrphanSessionTask newInstance(EventManager eventManager) {
     return new AutoCleanOrphanSessionTask(eventManager);
   }

@@ -46,6 +46,12 @@ public final class TrafficCounterTask extends AbstractSystemTask {
     super(eventManager);
   }
 
+  /**
+   * Creates a new task instance.
+   *
+   * @param eventManager an instance of {@link EventManager}
+   * @return a new instance of {@link TrafficCounterTask}
+   */
   public static TrafficCounterTask newInstance(EventManager eventManager) {
     return new TrafficCounterTask(eventManager);
   }
@@ -70,10 +76,20 @@ public final class TrafficCounterTask extends AbstractSystemTask {
         initialDelay, interval, TimeUnit.SECONDS);
   }
 
+  /**
+   * Sets the network reader statistic.
+   *
+   * @param networkReaderStatistic the {@link NetworkReaderStatistic} instance
+   */
   public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
     this.networkReaderStatistic = networkReaderStatistic;
   }
 
+  /**
+   * Sets the network writer statistic.
+   *
+   * @param networkWriterStatistic the {@link NetworkWriterStatistic} instance
+   */
   public void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic) {
     this.networkWriterStatistic = networkWriterStatistic;
   }

@@ -37,10 +37,20 @@ public abstract class AbstractClientCommandHandler<P extends Player> extends Abs
 
   private ClientCommandManager clientCommandManager;
 
+  /**
+   * Retrieves the client command manager.
+   *
+   * @return an instance of {@link ClientCommandManager}
+   */
   public ClientCommandManager getCommandManager() {
     return clientCommandManager;
   }
 
+  /**
+   * Sets value for the client command manager.
+   * *
+   * @param clientCommandManager an instance of {@link ClientCommandManager}
+   */
   public void setCommandManager(ClientCommandManager clientCommandManager) {
     this.clientCommandManager = clientCommandManager;
   }

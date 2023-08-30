@@ -68,6 +68,16 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
     logger = new PrivateLogger();
   }
 
+  /**
+   * Creates a new instance of the websocket handler.
+   *
+   * @param eventManager           the instance of {@link EventManager}
+   * @param sessionManager         the instance of {@link SessionManager}
+   * @param connectionFilter       the instance of {@link ConnectionFilter}
+   * @param dataType               the {@link DataType}
+   * @param networkReaderStatistic the instance of {@link NetworkReaderStatistic}
+   * @return a new instance of {@link NettyWsHandler}
+   */
   public static NettyWsHandler newInstance(EventManager eventManager, SessionManager sessionManager,
                                            ConnectionFilter connectionFilter, DataType dataType,
                                            NetworkReaderStatistic networkReaderStatistic) {
@@ -131,7 +141,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       if (session.isAssociatedToPlayer(Session.AssociatedState.DOING)) {
         if (logger.isDebugEnabled()) {
           logger.debug("READ WEBSOCKET CHANNEL", "Session is associating to a player, rejects " +
-                  "message: ", session.toString());
+              "message: ", session.toString());
         }
         return;
       }

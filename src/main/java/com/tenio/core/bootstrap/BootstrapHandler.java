@@ -91,18 +91,38 @@ public final class BootstrapHandler {
     return configurationHandler;
   }
 
+  /**
+   * Retrieves servlet configuration.
+   *
+   * @return a {@link Map} of servlet configuration
+   */
   public Map<String, HttpServlet> getServletMap() {
     return servletMap;
   }
 
+  /**
+   * Sets servlet configuration.
+   *
+   * @param servletMap a {@link Map} of servlet configurations
+   */
   public void setServletMap(Map<String, HttpServlet> servletMap) {
     this.servletMap = servletMap;
   }
 
+  /**
+   * Sets the system command manager.
+   *
+   * @param systemCommandManager an instance of {@link SystemCommandManager}
+   */
   public void setSystemCommandManager(SystemCommandManager systemCommandManager) {
     this.systemCommandManager = systemCommandManager;
   }
 
+  /**
+   * Sets the client command manager.
+   *
+   * @param clientCommandManager an instance of {@link ClientCommandManager}
+   */
   public void setClientCommandManager(ClientCommandManager clientCommandManager) {
     this.clientCommandManager = clientCommandManager;
   }

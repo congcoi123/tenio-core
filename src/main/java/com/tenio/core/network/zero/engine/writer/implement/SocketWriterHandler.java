@@ -41,6 +41,11 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
   private SocketWriterHandler() {
   }
 
+  /**
+   * Creates a new instance of the socket writer handler.
+   *
+   * @return a new instance of {@link SocketWriterHandler}
+   */
   public static SocketWriterHandler newInstance() {
     return new SocketWriterHandler();
   }

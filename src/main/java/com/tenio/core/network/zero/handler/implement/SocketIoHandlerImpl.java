@@ -51,6 +51,12 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
     super(eventManager);
   }
 
+  /**
+   * Creates a new instance of the socket handler.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link SocketIoHandler}
+   */
   public static SocketIoHandler newInstance(EventManager eventManager) {
     return new SocketIoHandlerImpl(eventManager);
   }
@@ -61,7 +67,8 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
 
     if (session.isAssociatedToPlayer(Session.AssociatedState.DOING)) {
       if (isDebugEnabled()) {
-        debug("READ TCP CHANNEL", "Session is associating to a player: ", session.toString(), " Rejected message: ",
+        debug("READ TCP CHANNEL", "Session is associating to a player: ", session.toString(),
+            " Rejected message: ",
             message);
       }
       return;

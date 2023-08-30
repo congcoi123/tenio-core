@@ -37,7 +37,13 @@ public final class AddedDuplicatedPlayerException extends RuntimeException {
   @Serial
   private static final long serialVersionUID = 1303721781114060707L;
 
+  /**
+   * The player instance.
+   */
   private final Player player;
+  /**
+   * The room instance.
+   */
   private final Room room;
 
   /**
@@ -55,10 +61,20 @@ public final class AddedDuplicatedPlayerException extends RuntimeException {
     this.room = room;
   }
 
+  /**
+   * Retrieves the player.
+   *
+   * @return an instance of {@link Player}
+   */
   public Player getPlayer() {
     return player;
   }
 
+  /**
+   * Retrieves the room.
+   *
+   * @return an instance of {@link Room}
+   */
   public Room getRoom() {
     return room;
   }

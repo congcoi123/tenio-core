@@ -50,6 +50,12 @@ public final class ApiResponse {
     timestamp = ZonedDateTime.now().format(DateTimeFormatter.ISO_INSTANT);
   }
 
+  /**
+   * Forms a response in case of success.
+   *
+   * @param data a {@link Map} of key-value data
+   * @return a response in {@link String}
+   */
   public static String ok(Map<String, Object> data) {
     var apiResponse = new ApiResponse();
     apiResponse.status = "success";
@@ -62,6 +68,12 @@ public final class ApiResponse {
     return null;
   }
 
+  /**
+   * Forms a response in case of error.
+   *
+   * @param error a {@link Map} of key-value data
+   * @return a response in {@link String}
+   */
   public static String error(Map<String, Object> error) {
     var apiResponse = new ApiResponse();
     apiResponse.status = "error";
@@ -74,6 +86,12 @@ public final class ApiResponse {
     return null;
   }
 
+  /**
+   * Forms a response in case of non result.
+   *
+   * @param data a {@link Map} of key-value data
+   * @return a response in {@link String}
+   */
   public static String noContent(Map<String, Object> data) {
     var apiResponse = new ApiResponse();
     apiResponse.status = "no-content";
@@ -86,30 +104,65 @@ public final class ApiResponse {
     return null;
   }
 
+  /**
+   * Retrieves the creation timestamp.
+   *
+   * @return creation timestamp value in {@link String}
+   */
   public String getTimestamp() {
     return timestamp;
   }
 
+  /**
+   * Retrieves the status.
+   *
+   * @return status value in {@link String}
+   */
   public String getStatus() {
     return status;
   }
 
+  /**
+   * Sets the response status.
+   *
+   * @param status the status value in {@link String}
+   */
   public void setStatus(String status) {
     this.status = status;
   }
 
+  /**
+   * Retrieves the response content in case of success.
+   *
+   * @return a {@link Map} of key-value data
+   */
   public Map<String, Object> getData() {
     return data;
   }
 
+  /**
+   * Sets the response content in case of success.
+   *
+   * @param data a {@link Map} of content data
+   */
   public void setData(Map<String, Object> data) {
     this.data = data;
   }
 
+  /**
+   * Retrieves the response content in case of error.
+   *
+   * @return a {@link Map} of key-value data
+   */
   public Map<String, Object> getError() {
     return error;
   }
 
+  /**
+   * Sets the response content in case of error.
+   *
+   * @param error a {@link Map} of content data
+   */
   public void setError(Map<String, Object> error) {
     this.error = error;
   }

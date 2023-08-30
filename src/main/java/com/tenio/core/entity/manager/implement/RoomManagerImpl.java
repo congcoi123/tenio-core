@@ -64,6 +64,12 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     maxRooms = DEFAULT_MAX_ROOMS;
   }
 
+  /**
+   * Retrieves a new room manager instance.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link RoomManager}
+   */
   public static RoomManager newInstance(EventManager eventManager) {
     return new RoomManagerImpl(eventManager);
   }

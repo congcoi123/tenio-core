@@ -75,6 +75,9 @@ public class RoomImpl implements Room {
 
   private volatile boolean activated;
 
+  /**
+   * Constructor.
+   */
   public RoomImpl() {
     id = ID_COUNTER.getAndIncrement();
     maxParticipants = 0;

@@ -35,6 +35,9 @@ public final class CreatedRoomException extends RuntimeException {
   @Serial
   private static final long serialVersionUID = 1641350947646134751L;
 
+  /**
+   * The room creation result.
+   */
   private final RoomCreatedResult result;
 
   /**

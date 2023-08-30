@@ -50,6 +50,12 @@ public final class DeadlockScanTask extends AbstractSystemTask {
     threadMxBean = ManagementFactory.getThreadMXBean();
   }
 
+  /**
+   * Creates a new task instance.
+   *
+   * @param eventManager an instance of {@link EventManager}
+   * @return a new instance of {@link DeadlockScanTask}
+   */
   public static DeadlockScanTask newInstance(EventManager eventManager) {
     return new DeadlockScanTask(eventManager);
   }

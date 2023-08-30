@@ -153,6 +153,7 @@ public interface ServerApi {
    * @param room        an instance of {@link Room}
    * @param roomSetting all settings created by a {@link InitialRoomSetting} builder
    * @param roomOwner   a {@link Player} as the room's owner
+   * @return the room instance
    * @throws AddedDuplicatedRoomException when a room is already available on the server, but it
    *                                      is mentioned again
    * @since 0.5.0

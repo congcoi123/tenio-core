@@ -46,6 +46,11 @@ public final class PacketQueueImpl implements PacketQueue {
     queue = new TreeSet<>();
   }
 
+  /**
+   * Creates a new instance of a packet queue.
+   *
+   * @return a new instance of {@link PacketQueue}
+   */
   public static PacketQueueImpl newInstance() {
     return new PacketQueueImpl();
   }

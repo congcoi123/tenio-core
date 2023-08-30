@@ -38,26 +38,57 @@ public abstract class AbstractSystemCommandHandler extends AbstractHandler {
 
   private SystemCommandManager systemCommandManager;
 
+  /**
+   * Retrieves the command label.
+   *
+   * @return a {@link String} value of the command label
+   */
   public String getLabel() {
     return getClass().getAnnotation(SystemCommand.class).label();
   }
 
+  /**
+   * Retrieves the command usage (manual).
+   *
+   * @return an array of instructions in {@link String} values
+   */
   public String[] getUsage() {
     return getClass().getAnnotation(SystemCommand.class).usage();
   }
 
+  /**
+   * Retrieves the command description.
+   *
+   * @return a {@link String} value of the command description
+   */
   public String getDescription() {
     return getClass().getAnnotation(SystemCommand.class).description();
   }
 
+  /**
+   * Checks whether the command should be running in background.
+   *
+   * @return {@code true} if the command should be running in the background, otherwise, returns
+   * {@code false}
+   */
   public boolean isRunningBackground() {
     return getClass().getAnnotation(SystemCommand.class).isBackgroundRunning();
   }
 
+  /**
+   * Retrieves the system command manager.
+   *
+   * @return an instance of {@link SystemCommandManager}
+   */
   public SystemCommandManager getCommandManager() {
     return systemCommandManager;
   }
 
+  /**
+   * Sets a value for system command manager.
+   *
+   * @param systemCommandManager an instance of {@link SystemCommandManager}
+   */
   public void setCommandManager(SystemCommandManager systemCommandManager) {
     this.systemCommandManager = systemCommandManager;
   }

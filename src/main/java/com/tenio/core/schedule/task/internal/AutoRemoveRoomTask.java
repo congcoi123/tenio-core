@@ -49,6 +49,12 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
     super(eventManager);
   }
 
+  /**
+   * Creates a new task instance.
+   *
+   * @param eventManager an instance of {@link EventManager}
+   * @return a new instance of {@link AutoRemoveRoomTask}
+   */
   public static AutoRemoveRoomTask newInstance(EventManager eventManager) {
     return new AutoRemoveRoomTask(eventManager);
   }
@@ -56,7 +62,8 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
   @Override
   public ScheduledFuture<?> run() {
     var threadFactory =
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-remove-room-task-%d").build();
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-remove-room-task-%d")
+            .build();
     return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
         () -> {
           if (isDebugEnabled()) {
@@ -70,8 +77,9 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
               if (room.getRoomRemoveMode() == RoomRemoveMode.WHEN_EMPTY && room.isEmpty() &&
                   room.getState().isIdle()) {
                 if (isDebugEnabled()) {
-                  debug("AUTO REMOVE ROOM", "Room ", room.getId(), " is going to be forced to remove by the cleaning " +
-                      "task");
+                  debug("AUTO REMOVE ROOM", "Room ", room.getId(),
+                      " is going to be forced to remove by the cleaning " +
+                          "task");
                 }
                 ServerImpl.getInstance().getApi().removeRoom(room, RoomRemoveMode.WHEN_EMPTY);
               }

@@ -71,6 +71,12 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     setName("reader");
   }
 
+  /**
+   * Creates a new instance of reader engine.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link ZeroReader}
+   */
   public static ZeroReader newInstance(EventManager eventManager) {
     return new ZeroReaderImpl(eventManager);
   }

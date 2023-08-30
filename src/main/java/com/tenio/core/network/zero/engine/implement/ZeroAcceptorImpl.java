@@ -28,8 +28,8 @@ import com.tenio.common.utility.OsUtility;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RefusedConnectionAddressException;
 import com.tenio.core.exception.ServiceRuntimeException;
-import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.configuration.SocketConfiguration;
+import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.engine.ZeroAcceptor;
 import com.tenio.core.network.zero.engine.listener.ZeroAcceptorListener;
@@ -75,6 +75,12 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     setName("acceptor");
   }
 
+  /**
+   * Creates a new instance of acceptor engine.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link ZeroAcceptor}
+   */
   public static ZeroAcceptor newInstance(EventManager eventManager) {
     return new ZeroAcceptorImpl(eventManager);
   }
@@ -91,7 +97,8 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     bindSocketChannel(socketConfiguration);
   }
 
-  private void bindSocketChannel(SocketConfiguration socketConfiguration) throws ServiceRuntimeException {
+  private void bindSocketChannel(SocketConfiguration socketConfiguration)
+      throws ServiceRuntimeException {
     if (socketConfiguration.type() == TransportType.TCP) {
       bindTcpSocket(socketConfiguration.port());
     }

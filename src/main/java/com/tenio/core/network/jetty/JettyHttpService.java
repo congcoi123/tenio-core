@@ -178,14 +178,29 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Sets the thread pool size.
+   *
+   * @param threadPoolSize thread pool size value
+   */
   public void setThreadPoolSize(int threadPoolSize) {
     this.threadPoolSize = threadPoolSize;
   }
 
+  /**
+   * Sets the port number.
+   *
+   * @param port the port number
+   */
   public void setPort(int port) {
     this.port = port;
   }
 
+  /**
+   * Sets the servlet configuration.
+   *
+   * @param servletMap a {@link Map} of the servlet configuration map
+   */
   public void setServletMap(Map<String, HttpServlet> servletMap) {
     this.servletMap = servletMap;
   }

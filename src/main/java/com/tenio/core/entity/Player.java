@@ -344,12 +344,37 @@ public interface Player {
    */
   void clean();
 
+  /**
+   * All the support fields that can be triggered as events.
+   *
+   * @see Player#onUpdateListener(Consumer)
+   */
   enum Field {
+    /**
+     * The player state.
+     */
     STATE,
+    /**
+     * The player activation status.
+     */
     ACTIVATION,
+    /**
+     * The player deportation status.
+     */
     DEPORTATION,
+    /**
+     * The player role in his room.
+     *
+     * @see PlayerRoleInRoom
+     */
     ROLE_IN_ROOM,
+    /**
+     * The player slot position in his room.
+     */
     SLOT_IN_ROOM,
+    /**
+     * The player map of properties.
+     */
     PROPERTY
   }
 }

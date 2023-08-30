@@ -46,6 +46,12 @@ public final class KcpUpdateTask extends AbstractSystemTask {
     super(eventManager);
   }
 
+  /**
+   * Creates a new instance of KCP updater.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link KcpUpdateTask}
+   */
   public static KcpUpdateTask newInstance(EventManager eventManager) {
     return new KcpUpdateTask(eventManager);
   }

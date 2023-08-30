@@ -127,6 +127,11 @@ public final class SessionImpl implements Session {
     setLastActivityTime(now());
   }
 
+  /**
+   * Creates a new session instance.
+   *
+   * @return a new instance of {@link Session}
+   */
   public static Session newInstance() {
     return new SessionImpl();
   }

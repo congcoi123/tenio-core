@@ -49,8 +49,6 @@ import com.tenio.core.schedule.task.kcp.KcpUpdateTask;
  */
 public final class ScheduleServiceImpl extends AbstractManager implements ScheduleService {
 
-  private TaskManager taskManager;
-
   private final AutoDisconnectPlayerTask autoDisconnectPlayerTask;
   private final AutoCleanOrphanSessionTask autoCleanOrphanSessionTask;
   private final AutoRemoveRoomTask autoRemoveRoomTask;
@@ -58,9 +56,8 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
   private final DeadlockScanTask deadlockScanTask;
   private final SystemMonitoringTask systemMonitoringTask;
   private final TrafficCounterTask trafficCounterTask;
-
   private final KcpUpdateTask kcpUpdateTask;
-
+  private TaskManager taskManager;
   private boolean enabledKcp;
   private boolean initialized;
   private boolean stopping;
@@ -82,6 +79,12 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
     stopping = false;
   }
 
+  /**
+   * Retrieves a new instance of schedule service.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link ScheduleService}
+   */
   public static ScheduleService newInstance(EventManager eventManager) {
     return new ScheduleServiceImpl(eventManager);
   }

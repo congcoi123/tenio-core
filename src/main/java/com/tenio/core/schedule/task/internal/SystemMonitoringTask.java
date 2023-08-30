@@ -48,6 +48,12 @@ public final class SystemMonitoringTask extends AbstractSystemTask {
     systemMonitoring = SystemMonitoring.newInstance();
   }
 
+  /**
+   * Creates a new task instance.
+   *
+   * @param eventManager an instance of {@link EventManager}
+   * @return a new instance of {@link SystemMonitoringTask}
+   */
   public static SystemMonitoringTask newInstance(EventManager eventManager) {
     return new SystemMonitoringTask(eventManager);
   }

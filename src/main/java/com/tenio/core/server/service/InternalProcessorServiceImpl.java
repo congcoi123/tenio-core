@@ -84,6 +84,13 @@ public final class InternalProcessorServiceImpl extends AbstractController
     this.serverApi = serverApi;
   }
 
+  /**
+   * Retrieves a new instance of internal processor.
+   *
+   * @param eventManager an instance of {@link EventManager}
+   * @param serverApi    an instance of {@link ServerApi}
+   * @return a new instance of {@link InternalProcessorService}
+   */
   public static InternalProcessorServiceImpl newInstance(EventManager eventManager,
                                                          ServerApi serverApi) {
     return new InternalProcessorServiceImpl(eventManager, serverApi);

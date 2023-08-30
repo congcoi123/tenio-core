@@ -62,6 +62,11 @@ public final class ResponseImpl implements Response {
     isEncrypted = false;
   }
 
+  /**
+   * Creates a new response instance.
+   *
+   * @return a new instance of {@link Response}
+   */
   public static Response newInstance() {
     return new ResponseImpl();
   }

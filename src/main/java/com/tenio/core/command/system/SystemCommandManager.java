@@ -25,8 +25,8 @@ THE SOFTWARE.
 package com.tenio.core.command.system;
 
 import com.tenio.common.logger.SystemLogger;
-import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.bootstrap.annotation.Component;
+import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.exception.AddedDuplicatedCommandException;
 import com.tenio.core.utility.CommandUtility;
 import java.util.Arrays;
@@ -88,10 +88,22 @@ public final class SystemCommandManager extends SystemLogger {
     commands.remove(label);
   }
 
+  /**
+   * Retrieves the annotations list.
+   *
+   * @return a {@link List} of annotations
+   * @see SystemCommand
+   */
   public synchronized List<SystemCommand> getAnnotationsAsList() {
     return new LinkedList<>(annotations.values());
   }
 
+  /**
+   * Retrieves the annotations map.
+   *
+   * @return a {@link Map} of annotations
+   * @see SystemCommand
+   */
   public synchronized Map<String, SystemCommand> getAnnotations() {
     return new LinkedHashMap<>(annotations);
   }
@@ -105,6 +117,11 @@ public final class SystemCommandManager extends SystemLogger {
     return new LinkedList<>(commands.values());
   }
 
+  /**
+   * Retrieves all handlers.
+   *
+   * @return a {@link Map} of all handlers which are managed
+   */
   public synchronized Map<String, AbstractSystemCommandHandler> getHandlers() {
     return commands;
   }
@@ -156,6 +173,9 @@ public final class SystemCommandManager extends SystemLogger {
     }
   }
 
+  /**
+   * Clear all settings.
+   */
   public synchronized void clear() {
     commands.clear();
     annotations.clear();

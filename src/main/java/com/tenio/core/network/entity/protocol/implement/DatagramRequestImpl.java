@@ -53,6 +53,11 @@ public class DatagramRequestImpl implements Request {
     timestamp = TimeUtility.currentTimeMillis();
   }
 
+  /**
+   * Creates a new request instance.
+   *
+   * @return a new instance of {@link Request}
+   */
   public static Request newInstance() {
     return new DatagramRequestImpl();
   }

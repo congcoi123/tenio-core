@@ -33,12 +33,12 @@ import com.tenio.core.bootstrap.annotation.AutowiredQualifier;
 import com.tenio.core.bootstrap.annotation.Bean;
 import com.tenio.core.bootstrap.annotation.BeanFactory;
 import com.tenio.core.bootstrap.annotation.ClientCommand;
-import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.annotation.EventHandler;
 import com.tenio.core.bootstrap.annotation.RestController;
 import com.tenio.core.bootstrap.annotation.RestMapping;
 import com.tenio.core.bootstrap.annotation.Setting;
+import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.command.client.AbstractClientCommandHandler;
 import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.system.AbstractSystemCommandHandler;
@@ -389,7 +389,8 @@ public final class Injector extends SystemLogger {
   private String getStackTrace(Exception exception) {
     StringBuilder stringBuilder = new StringBuilder();
     StackTraceElement[] stackTraceElements = exception.getStackTrace();
-    stringBuilder.append(exception.getClass().getName()).append(": ").append(exception.getMessage()).append("\n");
+    stringBuilder.append(exception.getClass().getName()).append(": ").append(exception.getMessage())
+        .append("\n");
     for (StackTraceElement stackTraceElement : stackTraceElements) {
       stringBuilder.append("\t at ").append(stackTraceElement.toString()).append("\n");
     }
@@ -413,14 +414,29 @@ public final class Injector extends SystemLogger {
         .orElse(null);
   }
 
+  /**
+   * Retrieves servlet beans.
+   *
+   * @return a {@link Map} of servlet beans
+   */
   public Map<String, HttpServlet> getServletBeansMap() {
     return servletBeansMap;
   }
 
+  /**
+   * Retrieves the system command manager.
+   *
+   * @return an instance of {@link SystemCommandManager}
+   */
   public SystemCommandManager getSystemCommandManager() {
     return systemCommandManager;
   }
 
+  /**
+   * Retrieves the client command manager.
+   *
+   * @return an instance of {@link ClientCommandManager}
+   */
   public ClientCommandManager getClientCommandManager() {
     return clientCommandManager;
   }

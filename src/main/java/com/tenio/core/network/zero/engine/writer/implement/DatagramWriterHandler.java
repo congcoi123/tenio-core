@@ -38,6 +38,11 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
   private DatagramWriterHandler() {
   }
 
+  /**
+   * Retrieves a new instance of datagram writer handler.
+   *
+   * @return a new instance of {@link DatagramWriterHandler}
+   */
   public static DatagramWriterHandler newInstance() {
     return new DatagramWriterHandler();
   }

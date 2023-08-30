@@ -42,6 +42,12 @@ public final class KcpIoHandlerImpl extends AbstractIoHandler implements KcpIoHa
     super(eventManager);
   }
 
+  /**
+   * Creates a new instance of KCP handler.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @return a new instance of {@link KcpIoHandler}
+   */
   public static KcpIoHandlerImpl newInstance(EventManager eventManager) {
     return new KcpIoHandlerImpl(eventManager);
   }

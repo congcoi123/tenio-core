@@ -35,6 +35,9 @@ public final class PlayerJoinedRoomException extends RuntimeException {
   @Serial
   private static final long serialVersionUID = 3173662815856707842L;
 
+  /**
+   * The player-join-room result.
+   */
   private final PlayerJoinedRoomResult result;
 
   /**
