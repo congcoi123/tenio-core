@@ -48,8 +48,6 @@ EventDisconnectConnection
 EventDisconnectPlayer
 EventFetchedBandwidthInfo
 EventFetchedCcuInfo
-EventHttpRequestHandle
-EventHttpRequestValidation
 EventPlayerAfterLeftRoom
 EventPlayerBeforeLeaveRoom
 EventPlayerJoinedRoomResult

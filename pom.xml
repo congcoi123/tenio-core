@@ -5,7 +5,7 @@
 
     <groupId>io.github.congcoi123</groupId>
     <artifactId>tenio-core</artifactId>
-    <version>0.4.0</version>
+    <version>0.5.0</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -39,7 +39,7 @@
     </scm>
 
     <properties>
-        <io.github.congcoi123.tenio.common>0.4.0</io.github.congcoi123.tenio.common>
+        <io.github.congcoi123.tenio.common>0.5.0</io.github.congcoi123.tenio.common>
 
         <io.netty.version>4.1.90.Final</io.netty.version>
         <org.eclipse.jetty.version>9.4.38.v20210224</org.eclipse.jetty.version>
@@ -57,7 +57,7 @@
         <org.mockito.core.version>5.2.0</org.mockito.core.version>
 
         <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
-        <jdk.release>11</jdk.release>
+        <jdk.release>17</jdk.release>
         <jdk.vendor>oracle</jdk.vendor>
 
         <maven.checkstyle.version>3.1.2</maven.checkstyle.version>
