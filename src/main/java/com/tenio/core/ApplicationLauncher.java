@@ -112,6 +112,15 @@ public final class ApplicationLauncher extends SystemLogger {
       System.exit(1);
     }
 
+    // Keep the main thread running
+    try {
+      Thread.currentThread().join();
+    } catch (InterruptedException exception) {
+      if (isErrorEnabled()) {
+        error(exception);
+      }
+    }
+
     // Suddenly shutdown
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       server.shutdown();
