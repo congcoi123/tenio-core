@@ -114,7 +114,14 @@ public final class ApplicationLauncher extends SystemLogger {
 
     // Keep the main thread running
     try {
-      Thread.currentThread().join();
+      var currentThread = Thread.currentThread();
+      currentThread.setName("tenio-main-thread");
+      currentThread.setUncaughtExceptionHandler((thread, cause) -> {
+        if (isErrorEnabled()) {
+          error(cause, thread.getName());
+        }
+      });
+      currentThread.join();
     } catch (InterruptedException exception) {
       if (isErrorEnabled()) {
         error(exception);
