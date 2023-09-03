@@ -58,20 +58,20 @@ public final class TrafficCounterTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    var threadFactory =
+    var threadFactoryTask =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("traffic-counter-task-%d").build();
-    return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
+    var threadFactoryWorker =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("traffic-counter-worker-%d").build();
+    var executors = Executors.newCachedThreadPool(threadFactoryWorker);
+    return Executors.newSingleThreadScheduledExecutor(threadFactoryTask).scheduleAtFixedRate(
         () -> {
-          var worker = new Thread(() -> eventManager.emit(ServerEvent.FETCHED_BANDWIDTH_INFO,
+          executors.execute(() -> eventManager.emit(ServerEvent.FETCHED_BANDWIDTH_INFO,
               networkReaderStatistic.getReadBytes(),
               networkReaderStatistic.getReadPackets(),
               networkReaderStatistic.getReadDroppedPackets(),
               networkWriterStatistic.getWrittenBytes(), networkWriterStatistic.getWrittenPackets(),
               networkWriterStatistic.getWrittenDroppedPacketsByPolicy(),
               networkWriterStatistic.getWrittenDroppedPacketsByFull()));
-          worker.setDaemon(true);
-          worker.setName("traffic-counter-worker");
-          worker.start();
         },
         initialDelay, interval, TimeUnit.SECONDS);
   }

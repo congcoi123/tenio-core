@@ -63,16 +63,19 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    var threadFactory =
+    var threadFactoryTask =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-clean-orphan-session-task" +
             "-%d").build();
-    return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
+    var threadFactoryWorker =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-clean-orphan-worker-%d").build();
+    var executors = Executors.newCachedThreadPool(threadFactoryWorker);
+    return Executors.newSingleThreadScheduledExecutor(threadFactoryTask).scheduleAtFixedRate(
         () -> {
           if (isDebugEnabled()) {
             debug("AUTO CLEAN ORPHAN SESSION",
                 "Checking orphan sessions in ", sessionManager.getSessionCount(), " entities");
           }
-          var worker = new Thread(() -> {
+          executors.execute(() -> {
             Iterator<Session> iterator = sessionManager.getReadonlySessionsList().listIterator();
             while (iterator.hasNext()) {
               Session session = iterator.next();
@@ -91,9 +94,6 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
               }
             }
           });
-          worker.setDaemon(true);
-          worker.setName("auto-clean-orphan-session-worker");
-          worker.start();
         }, initialDelay, interval, TimeUnit.SECONDS);
   }
 

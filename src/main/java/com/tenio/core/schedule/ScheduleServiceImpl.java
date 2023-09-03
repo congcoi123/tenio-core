@@ -178,25 +178,25 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
   @Override
   public void setCcuReportInterval(int interval) {
     ccuReportTask.setInterval(interval);
-    enableCcuReportTask = (interval <= 0);
+    enableCcuReportTask = (interval > 0);
   }
 
   @Override
   public void setDeadlockScanInterval(int interval) {
     deadlockScanTask.setInterval(interval);
-    enableDeadLockScanTask = (interval <= 0);
+    enableDeadLockScanTask = (interval > 0);
   }
 
   @Override
   public void setTrafficCounterInterval(int interval) {
     trafficCounterTask.setInterval(interval);
-    enableTrafficCounterTask = (interval <= 0);
+    enableTrafficCounterTask = (interval > 0);
   }
 
   @Override
   public void setSystemMonitoringInterval(int interval) {
     systemMonitoringTask.setInterval(interval);
-    enableSystemMonitoringTask = (interval <= 0);
+    enableSystemMonitoringTask = (interval > 0);
   }
 
   @Override

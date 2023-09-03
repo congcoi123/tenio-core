@@ -60,19 +60,19 @@ public final class SystemMonitoringTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    var threadFactory =
+    var threadFactoryTask =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("system-monitoring-task-%d")
             .build();
-    return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
+    var threadFactoryWorker =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("system-monitoring-worker-%d").build();
+    var executors = Executors.newCachedThreadPool(threadFactoryWorker);
+    return Executors.newSingleThreadScheduledExecutor(threadFactoryTask).scheduleAtFixedRate(
         () -> {
-          var worker = new Thread(
+          executors.execute(
               () -> eventManager.emit(ServerEvent.SYSTEM_MONITORING, systemMonitoring.getCpuUsage(),
                   systemMonitoring.getTotalMemory(), systemMonitoring.getUsedMemory(),
                   systemMonitoring.getFreeMemory(),
                   systemMonitoring.countRunningThreads()));
-          worker.setDaemon(true);
-          worker.setName("system-monitoring-worker");
-          worker.start();
         },
         initialDelay, interval, TimeUnit.SECONDS);
   }

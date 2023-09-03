@@ -58,15 +58,15 @@ public final class CcuReportTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    var threadFactory =
+    var threadFactoryTask =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("ccu-report-task-%d").build();
-    return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
+    var threadFactoryWorker =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("ccu-report-worker-%d").build();
+    var executors = Executors.newCachedThreadPool(threadFactoryWorker);
+    return Executors.newSingleThreadScheduledExecutor(threadFactoryTask).scheduleAtFixedRate(
         () -> {
-          var worker = new Thread(() -> eventManager.emit(ServerEvent.FETCHED_CCU_INFO,
+          executors.execute(() -> eventManager.emit(ServerEvent.FETCHED_CCU_INFO,
               playerManager.getPlayerCount()));
-          worker.setDaemon(true);
-          worker.setName("ccu-report-worker");
-          worker.start();
         },
         initialDelay, interval, TimeUnit.SECONDS);
   }

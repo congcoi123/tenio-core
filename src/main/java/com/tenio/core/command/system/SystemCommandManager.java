@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.command.system;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.annotation.SystemCommand;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.concurrent.Executors;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -165,8 +167,11 @@ public final class SystemCommandManager extends SystemLogger {
 
     // invokes execute method for handler
     Runnable runnable = () -> handler.execute(args);
+    var threadFactoryWorker =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("system-command-worker-%d").build();
+    var executors = Executors.newCachedThreadPool(threadFactoryWorker);
     if (annotation.isBackgroundRunning()) {
-      new Thread(runnable).start();
+      executors.execute(runnable);
       CommandUtility.INSTANCE.showConsoleMessage("The process is running in background.");
     } else {
       runnable.run();

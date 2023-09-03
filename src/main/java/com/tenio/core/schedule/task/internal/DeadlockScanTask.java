@@ -62,14 +62,14 @@ public final class DeadlockScanTask extends AbstractSystemTask {
 
   @Override
   public ScheduledFuture<?> run() {
-    var threadFactory =
+    var threadFactoryTask =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("deadlock-scan-task-%d").build();
-    return Executors.newSingleThreadScheduledExecutor(threadFactory).scheduleAtFixedRate(
+    var threadFactoryWorker =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("deadlock-scan-worker-%d").build();
+    var executors = Executors.newCachedThreadPool(threadFactoryWorker);
+    return Executors.newSingleThreadScheduledExecutor(threadFactoryTask).scheduleAtFixedRate(
         () -> {
-          var worker = new Thread(this::checkForDeadlockedThreads);
-          worker.setDaemon(true);
-          worker.setName("deadlock-scan-worker");
-          worker.start();
+          executors.execute(this::checkForDeadlockedThreads);
         },
         initialDelay, interval, TimeUnit.SECONDS);
   }
