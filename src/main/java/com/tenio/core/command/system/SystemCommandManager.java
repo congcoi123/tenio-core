@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -52,6 +53,13 @@ public final class SystemCommandManager extends SystemLogger {
   private final Map<String, AbstractSystemCommandHandler> commands = new TreeMap<>();
   @GuardedBy("this")
   private final Map<String, SystemCommand> annotations = new TreeMap<>();
+  private final ExecutorService executors;
+
+  public SystemCommandManager() {
+    var threadFactoryWorker =
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("system-command-worker-%d").build();
+    executors = Executors.newCachedThreadPool(threadFactoryWorker);
+  }
 
   /**
    * Registers a command handler.
@@ -167,9 +175,6 @@ public final class SystemCommandManager extends SystemLogger {
 
     // invokes execute method for handler
     Runnable runnable = () -> handler.execute(args);
-    var threadFactoryWorker =
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("system-command-worker-%d").build();
-    var executors = Executors.newCachedThreadPool(threadFactoryWorker);
     if (annotation.isBackgroundRunning()) {
       executors.execute(runnable);
       CommandUtility.INSTANCE.showConsoleMessage("The process is running in background.");
