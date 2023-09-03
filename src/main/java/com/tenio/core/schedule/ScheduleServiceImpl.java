@@ -58,6 +58,10 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
   private final TrafficCounterTask trafficCounterTask;
   private final KcpUpdateTask kcpUpdateTask;
   private TaskManager taskManager;
+  private boolean enableCcuReportTask;
+  private boolean enableDeadLockScanTask;
+  private boolean enableSystemMonitoringTask;
+  private boolean enableTrafficCounterTask;
   private boolean enabledKcp;
   private boolean initialized;
   private boolean stopping;
@@ -108,11 +112,18 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
     taskManager.create("auto-disconnect-player", autoDisconnectPlayerTask.run());
     taskManager.create("auto-clean-orphan-session", autoCleanOrphanSessionTask.run());
     taskManager.create("auto-remove-room", autoRemoveRoomTask.run());
-    taskManager.create("ccu-report", ccuReportTask.run());
-    taskManager.create("dead-lock", deadlockScanTask.run());
-    taskManager.create("system-monitoring", systemMonitoringTask.run());
-    taskManager.create("traffic-counter", trafficCounterTask.run());
-
+    if (enableCcuReportTask) {
+      taskManager.create("ccu-report", ccuReportTask.run());
+    }
+    if (enableDeadLockScanTask) {
+      taskManager.create("dead-lock", deadlockScanTask.run());
+    }
+    if (enableSystemMonitoringTask) {
+      taskManager.create("system-monitoring", systemMonitoringTask.run());
+    }
+    if (enableTrafficCounterTask) {
+      taskManager.create("traffic-counter", trafficCounterTask.run());
+    }
     if (enabledKcp) {
       taskManager.create("kcp-update", kcpUpdateTask.run());
     }
@@ -167,21 +178,25 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
   @Override
   public void setCcuReportInterval(int interval) {
     ccuReportTask.setInterval(interval);
+    enableCcuReportTask = (interval <= 0);
   }
 
   @Override
   public void setDeadlockScanInterval(int interval) {
     deadlockScanTask.setInterval(interval);
+    enableDeadLockScanTask = (interval <= 0);
   }
 
   @Override
   public void setTrafficCounterInterval(int interval) {
     trafficCounterTask.setInterval(interval);
+    enableTrafficCounterTask = (interval <= 0);
   }
 
   @Override
   public void setSystemMonitoringInterval(int interval) {
     systemMonitoringTask.setInterval(interval);
+    enableSystemMonitoringTask = (interval <= 0);
   }
 
   @Override

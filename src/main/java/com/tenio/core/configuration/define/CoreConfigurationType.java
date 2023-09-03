@@ -169,20 +169,31 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   INTERVAL_DISCONNECTED_PLAYER_SCAN("disconnected-player-scan-interval"),
   /**
-   * Sets an interval to frequently check the concurrent users activating on the server.
+   * Sets an interval to frequently check the concurrent users activating on the server. Disable
+   * this feature by setting the value to {@code 0}.
+   *
+   * @since 0.5.1
    */
   INTERVAL_CCU_SCAN("ccu-scan-interval"),
   /**
-   * Sets an interval to frequently check whether a deadlock occurred.
+   * Sets an interval to frequently check whether a deadlock occurred.Disable
+   * this feature by setting the value to {@code 0}.
+   *
+   * @since 0.5.1
    */
   INTERVAL_DEADLOCK_SCAN("deadlock-scan-interval"),
   /**
    * Sets an interval to frequently report the current read and written number of packets on the
-   * server.
+   * server. Disable this feature by setting the value to {@code 0}.
+   *
+   * @since 0.5.1
    */
   INTERVAL_TRAFFIC_COUNTER("traffic-counter-interval"),
   /**
-   * Sets an interval to frequently monitoring the server information.
+   * Sets an interval to frequently monitoring the server information. Disable
+   * this feature by setting the value to {@code 0}.
+   *
+   * @since 0.5.1
    */
   INTERVAL_SYSTEM_MONITORING("system-monitoring-interval"),
   /**
