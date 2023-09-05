@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2022 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -64,14 +64,8 @@ public final class DeadlockScanTask extends AbstractSystemTask {
   public ScheduledFuture<?> run() {
     var threadFactoryTask =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("deadlock-scan-task-%d").build();
-    var threadFactoryWorker =
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("deadlock-scan-worker-%d").build();
-    var executors = Executors.newCachedThreadPool(threadFactoryWorker);
     return Executors.newSingleThreadScheduledExecutor(threadFactoryTask).scheduleAtFixedRate(
-        () -> {
-          executors.execute(this::checkForDeadlockedThreads);
-        },
-        initialDelay, interval, TimeUnit.SECONDS);
+        this::checkForDeadlockedThreads, initialDelay, interval, TimeUnit.SECONDS);
   }
 
   private void checkForDeadlockedThreads() {
