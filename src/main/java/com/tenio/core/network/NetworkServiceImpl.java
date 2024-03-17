@@ -233,11 +233,6 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void setSocketAcceptorEnabledKcp(boolean enabledKcp) {
-    socketService.setAcceptorEnabledKcp(enabledKcp);
-  }
-
-  @Override
   public void setSocketReaderWorkers(int workerSize) {
     socketService.setReaderWorkerSize(workerSize);
   }
@@ -267,18 +262,13 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
                                      SocketConfiguration webSocketConfiguration) {
     if (Objects.nonNull(socketConfiguration)) {
       socketServiceInitialized = true;
-      socketService.setSocketConfig(socketConfiguration);
+      socketService.setSocketConfiguration(socketConfiguration);
     }
 
     if (Objects.nonNull(webSocketConfiguration)) {
       webSocketServiceInitialized = true;
-      webSocketService.setWebSocketConfig(webSocketConfiguration);
+      webSocketService.setWebSocketConfiguration(webSocketConfiguration);
     }
-  }
-
-  @Override
-  public void setSessionEnabledKcp(boolean enabledKcp) {
-    sessionManager.setEnabledKcp(enabledKcp);
   }
 
   @Override

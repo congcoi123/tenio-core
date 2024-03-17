@@ -308,12 +308,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         if (session.isActivated()) {
           session.setDatagramRemoteSocketAddress(remoteAddress);
           session.addReadBytes(byteCount);
-          if (session.containsKcp()) {
-            // At this time, UKCP knows who is its session
-            session.getUkcp().input(binary);
-          } else {
-            getDatagramIoHandler().sessionRead(session, message);
-          }
+          getDatagramIoHandler().sessionRead(session, message);
         } else {
           if (isDebugEnabled()) {
             debug("READ UDP CHANNEL", "Session is inactivated: ", session.toString());

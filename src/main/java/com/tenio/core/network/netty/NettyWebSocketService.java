@@ -111,7 +111,7 @@ public interface NettyWebSocketService extends Service {
    *
    * @param socketConfiguration a instance of {@link SocketConfiguration}
    */
-  void setWebSocketConfig(SocketConfiguration socketConfiguration);
+  void setWebSocketConfiguration(SocketConfiguration socketConfiguration);
 
   /**
    * Determines whether the WebSocket is able to use the SSL.

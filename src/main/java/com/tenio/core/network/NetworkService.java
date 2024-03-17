@@ -141,13 +141,6 @@ public interface NetworkService extends Service {
   void setSocketAcceptorWorkers(int workerSize);
 
   /**
-   * Determines if UDP channels can use KCP transportation for communication.
-   *
-   * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}
-   */
-  void setSocketAcceptorEnabledKcp(boolean enabledKcp);
-
-  /**
    * Sets the number of reader workers for the socket (TCP) which are using to read coming packets
    * from clients side.
    *
@@ -198,13 +191,6 @@ public interface NetworkService extends Service {
    */
   void setSocketConfiguration(SocketConfiguration socketConfiguration,
                               SocketConfiguration webSocketConfiguration);
-
-  /**
-   * Determines if UDP channels can use KCP transportation for communication.
-   *
-   * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}
-   */
-  void setSessionEnabledKcp(boolean enabledKcp);
 
   /**
    * Sets the maximum time in seconds which allows the session to get in IDLE state (Do not

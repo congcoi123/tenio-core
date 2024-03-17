@@ -74,13 +74,6 @@ public interface InternalProcessorService extends Controller {
   void setEnabledUdp(boolean enabledUdp);
 
   /**
-   * Determines if UDP channels can use KCP transportation for communication.
-   *
-   * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}
-   */
-  void setEnabledKcp(boolean enabledKcp);
-
-  /**
    * Sets a session manager instance.
    *
    * @param sessionManager a {@link SessionManager} instance

@@ -66,7 +66,6 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private PacketQueuePolicy packetQueuePolicy;
   private ConnectionFilter connectionFilter;
   private int packetQueueSize;
-  private boolean enabledKcp;
   private volatile int sessionCount;
   private int maxIdleTimeInSeconds;
 
@@ -110,7 +109,6 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     session.setSessionManager(this);
     session.setPacketQueue(createNewPacketQueue());
     session.setConnectionFilter(connectionFilter);
-    session.setEnabledKcp(enabledKcp);
     session.setMaxIdleTimeInSeconds(maxIdleTimeInSeconds);
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
@@ -245,11 +243,6 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   @Override
   public int getSessionCount() {
     return sessionCount;
-  }
-
-  @Override
-  public void setEnabledKcp(boolean enabledKcp) {
-    this.enabledKcp = enabledKcp;
   }
 
   @Override

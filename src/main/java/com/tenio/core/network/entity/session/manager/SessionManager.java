@@ -200,13 +200,6 @@ public interface SessionManager extends Manager {
   int getSessionCount();
 
   /**
-   * Determines if UDP channels can use KCP transportation for communication.
-   *
-   * @param enabledKcp sets it {@code true} if enabled, otherwise sets it {code false}
-   */
-  void setEnabledKcp(boolean enabledKcp);
-
-  /**
    * Sets the maximum time in seconds which allows the session to get in IDLE state (Do not
    * perform any action, such as reading or writing data).
    *
