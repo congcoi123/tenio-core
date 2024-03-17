@@ -44,6 +44,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.concurrent.GuardedBy;
+import kcp.Ukcp;
 
 /**
  * The implementation for session manager.
@@ -62,6 +63,8 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private final Map<Channel, Session> sessionByWebSockets;
   @GuardedBy("this")
   private final Map<Integer, Session> sessionByDatagrams;
+  @GuardedBy("this")
+  private final Map<Integer, Session> sessionByKcps;
   private List<Session> readonlySessionsList;
   private PacketQueuePolicy packetQueuePolicy;
   private ConnectionFilter connectionFilter;
@@ -76,6 +79,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     sessionBySockets = new HashMap<>();
     sessionByWebSockets = new HashMap<>();
     sessionByDatagrams = new HashMap<>();
+    sessionByKcps = new HashMap<>();
     readonlySessionsList = new ArrayList<>();
 
     sessionCount = 0;
@@ -154,6 +158,26 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   }
 
   @Override
+  public void addKcpForSession(Ukcp kcpChannel, Session session) throws IllegalArgumentException {
+    if (!session.isTcp()) {
+      throw new IllegalArgumentException(
+          String.format("Unable to add datagram channel for the non-TCP session: %s",
+              session));
+    }
+    synchronized (sessionByKcps) {
+      session.setKcpChannel(kcpChannel);
+      sessionByKcps.put(kcpChannel.getConv(), session);
+    }
+  }
+
+  @Override
+  public Session getSessionByKcp(Ukcp kcpChannel) {
+    synchronized (sessionByKcps) {
+      return sessionByKcps.get(kcpChannel.getConv());
+    }
+  }
+
+  @Override
   public void setConnectionFilter(ConnectionFilter connectionFilter) {
     this.connectionFilter = connectionFilter;
   }
@@ -217,6 +241,10 @@ public final class SessionManagerImpl extends AbstractManager implements Session
           if (session.containsUdp()) {
             sessionByDatagrams.remove(session.getUdpConveyId());
             session.setDatagramChannel(null, Session.EMPTY_DATAGRAM_CONVEY_ID);
+          }
+          if (session.containsKcp()) {
+            sessionByKcps.remove(session.getKcpChannel().getConv());
+            session.setKcpChannel(null);
           }
           sessionBySockets.remove(session.getSocketChannel());
         }

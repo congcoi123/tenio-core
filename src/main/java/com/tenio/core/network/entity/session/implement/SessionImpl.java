@@ -46,6 +46,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
+import kcp.Ukcp;
 
 /**
  * The implementation for session.
@@ -70,6 +71,7 @@ public final class SessionImpl implements Session {
   private SocketChannel socketChannel;
   private SelectionKey selectionKey;
   private DatagramChannel datagramChannel;
+  private Ukcp kcpChannel;
   private Channel webSocketChannel;
   private ConnectionFilter connectionFilter;
   private TransportType transportType;
@@ -95,6 +97,7 @@ public final class SessionImpl implements Session {
   private volatile boolean activated;
   private volatile AssociatedState associatedState;
   private volatile boolean hasUdp;
+  private volatile boolean hasKcp;
 
   private SessionImpl() {
     id = ID_COUNTER.getAndIncrement();
@@ -113,6 +116,7 @@ public final class SessionImpl implements Session {
     activated = false;
     associatedState = AssociatedState.NONE;
     hasUdp = false;
+    hasKcp = false;
 
     setCreatedTime(now());
     setLastReadTime(now());
@@ -183,6 +187,11 @@ public final class SessionImpl implements Session {
   @Override
   public boolean containsUdp() {
     return hasUdp;
+  }
+
+  @Override
+  public boolean containsKcp() {
+    return hasKcp;
   }
 
   @Override
@@ -282,6 +291,17 @@ public final class SessionImpl implements Session {
   @Override
   public int getUdpConveyId() {
     return udpConvey;
+  }
+
+  @Override
+  public Ukcp getKcpChannel() {
+    return kcpChannel;
+  }
+
+  @Override
+  public void setKcpChannel(Ukcp kcpChannel) {
+    this.kcpChannel = kcpChannel;
+    this.hasKcp = !Objects.isNull(kcpChannel);
   }
 
   @Override
@@ -561,7 +581,7 @@ public final class SessionImpl implements Session {
 
   /**
    * It is generally necessary to override the <b>hashCode</b> method whenever
-   * equals method is overridden, so as to maintain the general contract for the
+   * equals method is overridden, to maintain the general contract for the
    * hashCode method, which states that equal objects must have equal hash codes.
    *
    * @see <a href="https://imgur.com/x6rEAZE">Formula</a>

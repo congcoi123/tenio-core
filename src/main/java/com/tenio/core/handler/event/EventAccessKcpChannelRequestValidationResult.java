@@ -27,27 +27,24 @@ package com.tenio.core.handler.event;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.result.AccessDatagramChannelResult;
-import com.tenio.core.network.entity.session.Session;
 import java.util.Optional;
 
 /**
- * When the server responds to the request from client side which requires using the UDP channel.
+ * When the server responds to the request from client side which requires using the KCP channel.
  */
 @FunctionalInterface
-public interface EventAccessDatagramChannelRequestValidationResult<P extends Player> {
+public interface EventAccessKcpChannelRequestValidationResult<P extends Player> {
 
   /**
-   * When the server responds to the request from client side which requires using the UDP channel.
+   * When the server responds to the request from client side which requires using the KCP channel.
    *
-   * @param player  the optional of {@link Player} which requires using UDP channel
-   * @param udpConv the UDP convey ID created when it is successfully accessed to the UDP channel
-   *                , otherwise it can be left as {@link Session#EMPTY_DATAGRAM_CONVEY_ID}
-   * @param result  the responded {@link AccessDatagramChannelResult} from the server, if the result
-   *                equals to {@link AccessDatagramChannelResult#PLAYER_NOT_FOUND} then the returned
-   *                player is empty, otherwise it is present
-   * @see ServerEvent#ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT
-   * @see EventAccessDatagramChannelRequestValidation
+   * @param player the optional of {@link Player} which requires using UDP channel
+   * @param result the responded {@link AccessDatagramChannelResult} from the server, if the result
+   *               equals to {@link AccessDatagramChannelResult#PLAYER_NOT_FOUND} then the returned
+   *               player is empty, otherwise it is present
+   * @see ServerEvent#ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT
+   * @see EventAccessKcpChannelRequestValidation
    * @see Optional
    */
-  void handle(Optional<P> player, int udpConv, AccessDatagramChannelResult result);
+  void handle(Optional<P> player, AccessDatagramChannelResult result);
 }

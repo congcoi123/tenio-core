@@ -188,9 +188,11 @@ public interface NetworkService extends Service {
    *
    * @param socketConfiguration    a {@link SocketConfiguration} instance for TCP
    * @param webSocketConfiguration a {@link SocketConfiguration} instance for WebSocket
+   * @param kcpSocketConfiguration a {@link SocketConfiguration} instance for KCP
    */
   void setSocketConfiguration(SocketConfiguration socketConfiguration,
-                              SocketConfiguration webSocketConfiguration);
+                              SocketConfiguration webSocketConfiguration,
+                              SocketConfiguration kcpSocketConfiguration);
 
   /**
    * Sets the maximum time in seconds which allows the session to get in IDLE state (Do not

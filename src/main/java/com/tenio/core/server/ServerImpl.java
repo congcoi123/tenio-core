@@ -267,6 +267,9 @@ public final class ServerImpl extends SystemLogger implements Server {
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_SOCKET) : null),
         (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET)) ?
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) :
+            null),
+        (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_KCP)) ?
+            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_KCP) :
             null));
 
     networkService.setSocketReaderBufferSize(

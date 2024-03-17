@@ -156,8 +156,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
       case SESSION_REQUEST_CONNECTION -> processSessionRequestsConnection(request);
       case SESSION_READ_MESSAGE -> processSessionReadMessage(request);
       case DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME ->
-          processDatagramChannelReadMessageForTheFirstTime(
-              request);
+          processDatagramChannelReadMessageForTheFirstTime(request);
       default -> {
         // do nothing
       }
@@ -332,21 +331,21 @@ public final class InternalProcessorServiceImpl extends AbstractController
     if (optionalPlayer.isEmpty()) {
       eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
           optionalPlayer,
-          Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
+          Session.EMPTY_DATAGRAM_CONVEY_ID,
           AccessDatagramChannelResult.PLAYER_NOT_FOUND);
     } else {
       Player player = (Player) optionalPlayer.get();
       if (!player.containsSession() || player.getSession().isEmpty()) {
         eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
             optionalPlayer,
-            Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
+            Session.EMPTY_DATAGRAM_CONVEY_ID,
             AccessDatagramChannelResult.SESSION_NOT_FOUND);
       } else {
         Session session = player.getSession().get();
         if (!session.isTcp()) {
           eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
               optionalPlayer,
-              Session.EMPTY_DATAGRAM_CONVEY_ID, Session.EMPTY_DATAGRAM_CONVEY_ID,
+              Session.EMPTY_DATAGRAM_CONVEY_ID,
               AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
         } else {
           var udpConvey = udpConvId.getAndIncrement();
@@ -359,7 +358,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
           eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
               optionalPlayer,
               udpConvey,
-              Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.SUCCESS);
+              AccessDatagramChannelResult.SUCCESS);
         }
       }
     }
