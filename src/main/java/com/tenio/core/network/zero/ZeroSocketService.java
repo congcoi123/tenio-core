@@ -148,7 +148,7 @@ public interface ZeroSocketService extends Service {
    *
    * @param socketConfiguration an instance of {@link SocketConfiguration}
    */
-  void setSocketConfig(SocketConfiguration socketConfiguration);
+  void setSocketConfiguration(SocketConfiguration socketConfiguration);
 
   /**
    * Sets an instance of packet encoder to encode packets for sending to clients side via the

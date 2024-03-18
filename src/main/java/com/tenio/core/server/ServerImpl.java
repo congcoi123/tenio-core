@@ -52,7 +52,7 @@ import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
-import com.tenio.core.network.zero.engine.manager.UdpChannelManager;
+import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import com.tenio.core.schedule.ScheduleService;
 import com.tenio.core.schedule.ScheduleServiceImpl;
 import com.tenio.core.server.service.InternalProcessorService;
@@ -83,7 +83,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final EventManager eventManager;
   private final RoomManager roomManager;
   private final PlayerManager playerManager;
-  private final UdpChannelManager udpChannelManager;
+  private final DatagramChannelManager datagramChannelManager;
   private final InternalProcessorService internalProcessorService;
   private final ScheduleService scheduleService;
   private final NetworkService networkService;
@@ -98,7 +98,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     eventManager = EventManager.newInstance();
     roomManager = RoomManagerImpl.newInstance(eventManager);
     playerManager = PlayerManagerImpl.newInstance(eventManager);
-    udpChannelManager = UdpChannelManager.newInstance();
+    datagramChannelManager = DatagramChannelManager.newInstance();
     networkService = NetworkServiceImpl.newInstance(eventManager);
     serverApi = ServerApiImpl.newInstance(this);
     internalProcessorService = InternalProcessorServiceImpl.newInstance(eventManager, serverApi);
@@ -228,8 +228,6 @@ public final class ServerImpl extends SystemLogger implements Server {
     scheduleService.setRoomManager(roomManager);
     scheduleService.setNetworkReaderStatistic(networkService.getNetworkReaderStatistic());
     scheduleService.setNetworkWriterStatistic(networkService.getNetworkWriterStatistic());
-    scheduleService.setEnabledKcp(
-        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP));
   }
 
   @SuppressWarnings("unchecked")
@@ -257,8 +255,6 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     networkService.setSocketAcceptorAmountUdpWorkers(
         configuration.getInt(CoreConfigurationType.WORKER_UDP_WORKER));
-    networkService.setSocketAcceptorEnabledKcp(
-        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP));
 
     networkService.setSocketAcceptorBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE));
@@ -271,6 +267,9 @@ public final class ServerImpl extends SystemLogger implements Server {
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_SOCKET) : null),
         (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET)) ?
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) :
+            null),
+        (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_KCP)) ?
+            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_KCP) :
             null));
 
     networkService.setSocketReaderBufferSize(
@@ -308,8 +307,6 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.setPacketQueueSize(
         configuration.getInt(CoreConfigurationType.PROP_MAX_PACKET_QUEUE_SIZE));
 
-    networkService.setSessionEnabledKcp(
-        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP));
     networkService.setSessionMaxIdleTimeInSeconds(
         configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
 
@@ -358,8 +355,6 @@ public final class ServerImpl extends SystemLogger implements Server {
     internalProcessorService
         .setThreadPoolSize(configuration.getInt(CoreConfigurationType.WORKER_INTERNAL_PROCESSOR));
     internalProcessorService.setEnabledUdp(configuration.getInt(CoreConfigurationType.WORKER_UDP_WORKER) > 0);
-    internalProcessorService.setEnabledKcp(
-        configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_ENABLED_KCP));
     internalProcessorService.setKeepPlayerOnDisconnection(
         configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION));
 
@@ -458,8 +453,8 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   @Override
-  public UdpChannelManager getUdpChannelManager() {
-    return udpChannelManager;
+  public DatagramChannelManager getUdpChannelManager() {
+    return datagramChannelManager;
   }
 
   @Override

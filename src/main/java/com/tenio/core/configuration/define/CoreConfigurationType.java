@@ -276,12 +276,6 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   NETWORK_PROP_MAX_CONNECTIONS_PER_IP("max-connections-per-ip"),
   /**
-   * Allows using KCP transportation in UDP channels.
-   *
-   * @since 0.3.0
-   */
-  NETWORK_PROP_ENABLED_KCP("enabled-kcp"),
-  /**
    * Socket in the server configuration.
    *
    * @since 0.5.0
@@ -293,6 +287,12 @@ public enum CoreConfigurationType implements ConfigurationType {
    * @since 0.5.0
    */
   NETWORK_WEBSOCKET("websocket-configuration"),
+  /**
+   * KCP in the server configuration.
+   *
+   * @since 0.6.0
+   */
+  NETWORK_KCP("kcp-configuration"),
   /**
    * HTTP in the server configuration.
    *

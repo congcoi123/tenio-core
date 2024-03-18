@@ -299,7 +299,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
   }
 
   @Override
-  public void setWebSocketConfig(SocketConfiguration socketConfiguration) {
+  public void setWebSocketConfiguration(SocketConfiguration socketConfiguration) {
     this.socketConfiguration = socketConfiguration;
   }
 

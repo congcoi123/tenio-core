@@ -235,7 +235,7 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   }
 
   @Override
-  public void setSocketConfig(SocketConfiguration socketConfiguration) {
+  public void setSocketConfiguration(SocketConfiguration socketConfiguration) {
     acceptorEngine.setSocketConfig(socketConfiguration);
   }
 

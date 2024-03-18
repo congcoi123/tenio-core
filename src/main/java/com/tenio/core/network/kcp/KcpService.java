@@ -22,24 +22,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.server.service;
+package com.tenio.core.network.kcp;
 
 import com.tenio.common.data.DataType;
-import com.tenio.core.controller.Controller;
-import com.tenio.core.entity.manager.PlayerManager;
+import com.tenio.core.network.configuration.SocketConfiguration;
+import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.service.Service;
 
 /**
- * The internal processor service, the heart of the server.
+ * The websockets handler is provided by the <a href="https://github.com/l42111996/java-Kcp">KCP</a> library.
  */
-public interface InternalProcessorService extends Controller {
-
-  /**
-   * Subscribes all events on the server.
-   */
-  void subscribe();
+public interface KcpService extends Service {
 
   /**
    * Set the data serialization type.
@@ -49,43 +45,11 @@ public interface InternalProcessorService extends Controller {
   void setDataType(DataType dataType);
 
   /**
-   * Sets the maximum number of players allowed participating on the server.
-   *
-   * @param maxPlayers {@code integer} value, the maximum number of players allowed
-   *                   participating on the server
-   */
-  void setMaxNumberPlayers(int maxPlayers);
-
-  /**
-   * Determines if a player could be kept its connection when it is disconnected from the server
-   * for a while.
-   *
-   * @param keepPlayerOnDisconnection sets to {@code true} if a player could be kept its
-   *                                  connection when it is disconnected from the server for a
-   *                                  while, otherwise returns {@code false}
-   */
-  void setKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection);
-
-  /**
-   * Determines if UDP channels can be in use for communication.
-   *
-   * @param enabledUdp sets it {@code true} if enabled, otherwise sets it {code false}
-   */
-  void setEnabledUdp(boolean enabledUdp);
-
-  /**
    * Sets a session manager instance.
    *
    * @param sessionManager a {@link SessionManager} instance
    */
   void setSessionManager(SessionManager sessionManager);
-
-  /**
-   * Sets a player manager for the server which is used to manage all players.
-   *
-   * @param playerManager an instance of {@link PlayerManager}
-   */
-  void setPlayerManager(PlayerManager playerManager);
 
   /**
    * Sets a network reader statistic instance which takes responsibility recording the
@@ -102,4 +66,18 @@ public interface InternalProcessorService extends Controller {
    * @param networkWriterStatistic a {@link NetworkWriterStatistic} instance
    */
   void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic);
+
+  /**
+   * Declares a socket configurations for the WebSocket.
+   *
+   * @param socketConfiguration a instance of {@link SocketConfiguration}
+   */
+  void setKcpSocketConfiguration(SocketConfiguration socketConfiguration);
+
+  /**
+   * Writes down (binaries) data to socket/channel in order to send them to client side.
+   *
+   * @param packet an instance of {@link Packet} using to carry conveying information
+   */
+  void write(Packet packet);
 }

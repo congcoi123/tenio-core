@@ -33,6 +33,8 @@ import com.tenio.core.exception.ConfigurationException;
 import com.tenio.core.exception.NotDefinedSubscribersException;
 import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidation;
 import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidationResult;
+import com.tenio.core.handler.event.EventAccessKcpChannelRequestValidation;
+import com.tenio.core.handler.event.EventAccessKcpChannelRequestValidationResult;
 import com.tenio.core.handler.event.EventPlayerReconnectRequestHandle;
 import com.tenio.core.handler.event.EventPlayerReconnectedResult;
 import java.util.Arrays;
@@ -73,6 +75,7 @@ public final class ConfigurationAssessment {
     checkDataSerialization();
     checkSubscriberReconnection();
     checkSubscriberRequestAccessingDatagramChannelHandler();
+    checkSubscriberRequestAccessingKcpChannelHandler();
     checkDefinedMainSocketConnection();
   }
 
@@ -107,6 +110,18 @@ public final class ConfigurationAssessment {
     }
   }
 
+  private void checkSubscriberRequestAccessingKcpChannelHandler()
+      throws NotDefinedSubscribersException {
+    if (containsTcpSocketConfig() && containsKcpSocketConfig()) {
+      if (!eventManager.hasSubscriber(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION)
+          || !eventManager.hasSubscriber(
+          ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT)) {
+        throw new NotDefinedSubscribersException(EventAccessKcpChannelRequestValidation.class,
+            EventAccessKcpChannelRequestValidationResult.class);
+      }
+    }
+  }
+
   private void checkDefinedMainSocketConnection() throws ConfigurationException {
     if (!containsTcpSocketConfig() && containsUdpSocketConfig()) {
       throw new ConfigurationException("TCP connection was not defined");
@@ -121,5 +136,9 @@ public final class ConfigurationAssessment {
   @SuppressWarnings("unchecked")
   private boolean containsUdpSocketConfig() {
     return configuration.getInt(CoreConfigurationType.WORKER_UDP_WORKER) > 0;
+  }
+
+  private boolean containsKcpSocketConfig() {
+    return Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_KCP));
   }
 }
