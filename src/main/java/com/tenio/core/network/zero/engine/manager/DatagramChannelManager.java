@@ -32,17 +32,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
- * This class takes responsibility to provide an available UDP channel port when required.
+ * This class takes responsibility to provide an available UDP channel port, KCP convey id, ... when required.
  */
-public class UdpChannelManager implements Manager {
+public class DatagramChannelManager implements Manager {
 
-  private AtomicInteger kcpConveyIdGenerator;
+  private final AtomicInteger kcpConveyIdGenerator;
   @GuardedBy("this")
   private final List<Integer> udpPorts;
   @GuardedBy("this")
   private int currentIndex;
 
-  private UdpChannelManager() {
+  private DatagramChannelManager() {
     kcpConveyIdGenerator = new AtomicInteger(0);
     udpPorts = new ArrayList<>();
     currentIndex = -1;
@@ -51,10 +51,10 @@ public class UdpChannelManager implements Manager {
   /**
    * Creates a new UDP channel manager instance.
    *
-   * @return a new instance of {@link UdpChannelManager}
+   * @return a new instance of {@link DatagramChannelManager}
    */
-  public static UdpChannelManager newInstance() {
-    return new UdpChannelManager();
+  public static DatagramChannelManager newInstance() {
+    return new DatagramChannelManager();
   }
 
   /**

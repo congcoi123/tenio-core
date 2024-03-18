@@ -52,7 +52,7 @@ import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
-import com.tenio.core.network.zero.engine.manager.UdpChannelManager;
+import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import com.tenio.core.schedule.ScheduleService;
 import com.tenio.core.schedule.ScheduleServiceImpl;
 import com.tenio.core.server.service.InternalProcessorService;
@@ -83,7 +83,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final EventManager eventManager;
   private final RoomManager roomManager;
   private final PlayerManager playerManager;
-  private final UdpChannelManager udpChannelManager;
+  private final DatagramChannelManager datagramChannelManager;
   private final InternalProcessorService internalProcessorService;
   private final ScheduleService scheduleService;
   private final NetworkService networkService;
@@ -98,7 +98,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     eventManager = EventManager.newInstance();
     roomManager = RoomManagerImpl.newInstance(eventManager);
     playerManager = PlayerManagerImpl.newInstance(eventManager);
-    udpChannelManager = UdpChannelManager.newInstance();
+    datagramChannelManager = DatagramChannelManager.newInstance();
     networkService = NetworkServiceImpl.newInstance(eventManager);
     serverApi = ServerApiImpl.newInstance(this);
     internalProcessorService = InternalProcessorServiceImpl.newInstance(eventManager, serverApi);
@@ -453,8 +453,8 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   @Override
-  public UdpChannelManager getUdpChannelManager() {
-    return udpChannelManager;
+  public DatagramChannelManager getUdpChannelManager() {
+    return datagramChannelManager;
   }
 
   @Override
