@@ -35,7 +35,7 @@ import com.tenio.core.service.Service;
 import java.nio.ByteBuffer;
 
 /**
- * The websockets handler is provided by the <a href="https://netty.io/">Netty</a> library.
+ * The websockets handler is provided by the <a href="https://netty.io">Netty</a> library.
  */
 public interface NettyWebSocketService extends Service {
 

@@ -1,3 +1,27 @@
+/*
+The MIT License
+
+Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 package com.tenio.core.network.kcp.handler;
 
 import com.tenio.common.data.DataCollection;
@@ -17,6 +41,11 @@ import java.util.Optional;
 import kcp.KcpListener;
 import kcp.Ukcp;
 
+/**
+ * Receive all messages sent from clients side. It converts serialize data to a system's object
+ * for convenience and easy to use. It also handles the logic for the processing of players and
+ * connections.
+ */
 public class KcpHandler implements KcpListener {
 
   private final EventManager eventManager;
@@ -36,7 +65,9 @@ public class KcpHandler implements KcpListener {
 
   @Override
   public void onConnected(Ukcp ukcp) {
-    // Do nothing
+    if (logger.isDebugEnabled()) {
+      logger.debug("KCP CHANNEL CONNECTED", ukcp);
+    }
   }
 
   @Override
@@ -70,6 +101,8 @@ public class KcpHandler implements KcpListener {
       if (logger.isErrorEnabled()) {
         logger.error(cause, "Session: ", session.toString());
       }
+      // remove the kcp channel, the system then automatically switches to the tcp for communication
+      session.setKcpChannel(null);
       eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, cause);
     } else {
       if (logger.isErrorEnabled()) {
@@ -80,7 +113,9 @@ public class KcpHandler implements KcpListener {
 
   @Override
   public void handleClose(Ukcp ukcp) {
-    // Do nothing at the moment
+    if (logger.isDebugEnabled()) {
+      logger.debug("KCP CHANNEL CLOSED", ukcp);
+    }
   }
 
   private void processDatagramChannelReadMessageForTheFirstTime(Ukcp ukcp, DataCollection message) {
@@ -116,7 +151,6 @@ public class KcpHandler implements KcpListener {
               AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
         } else {
           var sessionInstance = ((Player) optionalPlayer.get()).getSession().get();
-          sessionInstance.setKcpChannel(ukcp);
           sessionManager.addKcpForSession(ukcp, sessionInstance);
 
           eventManager.emit(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT,

@@ -1,3 +1,27 @@
+/*
+The MIT License
+
+Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 package com.tenio.core.network.kcp;
 
 import com.backblaze.erasure.FecAdapt;
@@ -19,6 +43,9 @@ import java.io.IOException;
 import kcp.ChannelConfig;
 import kcp.KcpServer;
 
+/**
+ * The implementation for the KCP service.
+ */
 public class KcpServiceImpl extends AbstractManager implements KcpService {
 
   private DataType dataType;
@@ -52,12 +79,11 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
 
     ChannelConfig channelConfig = new ChannelConfig();
     channelConfig.nodelay(true, 40, 2, true);
-    channelConfig.setSndwnd(512);
-    channelConfig.setRcvwnd(512);
-    channelConfig.setMtu(512);
-    channelConfig.setFecAdapt(new FecAdapt(3, 1));
+    channelConfig.setSndwnd(1024);
+    channelConfig.setRcvwnd(1024);
+    channelConfig.setMtu(1400);
+    channelConfig.setFecAdapt(new FecAdapt(5, 1));
     channelConfig.setAckNoDelay(true);
-    channelConfig.setTimeoutMillis(10000);
     channelConfig.setUseConvChannel(true);
     channelConfig.setCrc32Check(true);
 

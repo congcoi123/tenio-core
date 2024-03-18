@@ -300,8 +300,12 @@ public final class SessionImpl implements Session {
 
   @Override
   public void setKcpChannel(Ukcp kcpChannel) {
+    if (Objects.nonNull(this.kcpChannel) && this.kcpChannel.isActive()) {
+      this.kcpChannel.close();
+    }
+
     this.kcpChannel = kcpChannel;
-    this.hasKcp = !Objects.isNull(kcpChannel);
+    this.hasKcp = Objects.nonNull(kcpChannel);
   }
 
   @Override
@@ -618,6 +622,8 @@ public final class SessionImpl implements Session {
         ", associatedState=" + associatedState +
         ", hasUdp=" + hasUdp +
         ", udpConvey=" + udpConvey +
+        ", hasKcp=" + hasKcp +
+        ", kcpChannel=" + kcpChannel +
         '}';
   }
 }

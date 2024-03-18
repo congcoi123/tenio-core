@@ -380,7 +380,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
   @Override
   public void onRunning() {
-    ByteBuffer readerBuffer = ByteBuffer.allocate(getMaxBufferSize());
+    ByteBuffer readerBuffer = ByteBuffer.allocateDirect(getMaxBufferSize());
 
     while (true) {
       if (isActivated()) {

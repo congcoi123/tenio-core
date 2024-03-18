@@ -28,6 +28,7 @@ import com.tenio.core.exception.EmptyUdpChannelsException;
 import com.tenio.core.manager.Manager;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -35,12 +36,14 @@ import javax.annotation.concurrent.GuardedBy;
  */
 public class UdpChannelManager implements Manager {
 
+  private AtomicInteger kcpConveyIdGenerator;
   @GuardedBy("this")
   private final List<Integer> udpPorts;
   @GuardedBy("this")
   private int currentIndex;
 
   private UdpChannelManager() {
+    kcpConveyIdGenerator = new AtomicInteger(0);
     udpPorts = new ArrayList<>();
     currentIndex = -1;
   }
@@ -78,5 +81,15 @@ public class UdpChannelManager implements Manager {
       currentIndex = 0;
     }
     return udpPorts.get(currentIndex);
+  }
+
+  /**
+   * Retrieves the current available KCP Convey Id.
+   *
+   * @return an {@code integer} value of a KCP Convey Id
+   * @since 0.6.0
+   */
+  public int getCurrentKcpConveyId() {
+    return kcpConveyIdGenerator.getAndIncrement();
   }
 }
