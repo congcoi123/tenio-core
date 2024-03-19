@@ -43,6 +43,8 @@ This module provides all the main features for the framework to operate. It cont
 ```txt
 EventAccessDatagramChannelRequestValidation
 EventAccessDatagramChannelRequestValidationResult
+EventAccessKcpChannelRequestValidation
+EventAccessKcpChannelRequestValidationResult
 EventConnectionEstablishedResult
 EventDisconnectConnection
 EventDisconnectPlayer
