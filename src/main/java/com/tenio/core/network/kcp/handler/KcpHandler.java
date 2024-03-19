@@ -101,8 +101,6 @@ public class KcpHandler implements KcpListener {
       if (logger.isErrorEnabled()) {
         logger.error(cause, "Session: ", session.toString());
       }
-      // remove the kcp channel, the system then automatically switches to the tcp for communication
-      session.setKcpChannel(null);
       eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, cause);
     } else {
       if (logger.isErrorEnabled()) {
@@ -116,6 +114,10 @@ public class KcpHandler implements KcpListener {
     if (logger.isDebugEnabled()) {
       logger.debug("KCP CHANNEL CLOSED", ukcp);
     }
+    var session = sessionManager.getSessionByKcp(ukcp);
+    if (Objects.nonNull(session) && session.containsKcp()) {
+      session.setKcpChannel(null);
+    }
   }
 
   private void processDatagramChannelReadMessageForTheFirstTime(Ukcp ukcp, DataCollection message) {
@@ -124,28 +126,33 @@ public class KcpHandler implements KcpListener {
     try {
       checkingPlayer = eventManager.emit(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION, message);
     } catch (Exception exception) {
+      ukcp.close();
       if (logger.isErrorEnabled()) {
         logger.error(exception, message);
       }
     }
 
     if (!(checkingPlayer instanceof Optional<?> optionalPlayer)) {
+      ukcp.close();
       return;
     }
 
     if (optionalPlayer.isEmpty()) {
+      ukcp.close();
       eventManager.emit(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT,
           optionalPlayer,
           AccessDatagramChannelResult.PLAYER_NOT_FOUND);
     } else {
       Player player = (Player) optionalPlayer.get();
       if (!player.containsSession() || player.getSession().isEmpty()) {
+        ukcp.close();
         eventManager.emit(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT,
             optionalPlayer,
             AccessDatagramChannelResult.SESSION_NOT_FOUND);
       } else {
         Session session = player.getSession().get();
         if (!session.isTcp()) {
+          ukcp.close();
           eventManager.emit(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT,
               optionalPlayer,
               AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);

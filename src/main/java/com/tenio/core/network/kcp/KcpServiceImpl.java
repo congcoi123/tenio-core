@@ -31,6 +31,7 @@ import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.manager.AbstractManager;
+import com.tenio.core.network.configuration.KcpConfiguration;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.manager.SessionManager;
@@ -78,6 +79,7 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
     }
 
     ChannelConfig channelConfig = new ChannelConfig();
+    channelConfig.setTimeoutMillis(KcpConfiguration.TIME_OUT_IN_MILLISECONDS);
     channelConfig.nodelay(true, 40, 2, true);
     channelConfig.setSndwnd(1024);
     channelConfig.setRcvwnd(1024);
