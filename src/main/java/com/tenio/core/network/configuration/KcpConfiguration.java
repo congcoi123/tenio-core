@@ -24,12 +24,42 @@ THE SOFTWARE.
 
 package com.tenio.core.network.configuration;
 
+import kcp.ChannelConfig;
+
 /**
- * KCP Configuration.
+ * KCP Configuration <a href="https://github.com/skywind3000/kcp/blob/master/README.en.md">Manual</a>.
  */
 public final class KcpConfiguration {
 
-  public static final int TIME_OUT_IN_MILLISECONDS = 3_600_000; // 1 hour
+  public static final int DEFAULT_TIME_OUT_IN_MILLISECONDS = 3_600_000; // 1 hour
+
+  public static ChannelConfig inTurboMode() {
+    ChannelConfig channelConfig = new ChannelConfig();
+    channelConfig.setTimeoutMillis(KcpConfiguration.DEFAULT_TIME_OUT_IN_MILLISECONDS);
+    // Turbo Mode
+    channelConfig.nodelay(true, 10, 2, true);
+    channelConfig.setSndwnd(1024);
+    channelConfig.setRcvwnd(1024);
+    channelConfig.setMtu(1400);
+    channelConfig.setAckNoDelay(true);
+    channelConfig.setUseConvChannel(true);
+    channelConfig.setCrc32Check(true);
+    return channelConfig;
+  }
+
+  public static ChannelConfig inNormalMode() {
+    ChannelConfig channelConfig = new ChannelConfig();
+    channelConfig.setTimeoutMillis(KcpConfiguration.DEFAULT_TIME_OUT_IN_MILLISECONDS);
+    // Normal Mode
+    channelConfig.nodelay(false, 40, 0, false);
+    channelConfig.setSndwnd(1024);
+    channelConfig.setRcvwnd(1024);
+    channelConfig.setMtu(1400);
+    channelConfig.setAckNoDelay(true);
+    channelConfig.setUseConvChannel(true);
+    channelConfig.setCrc32Check(true);
+    return channelConfig;
+  }
 
   private KcpConfiguration() {
     throw new UnsupportedOperationException();

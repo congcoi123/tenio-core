@@ -44,7 +44,6 @@
         <io.netty.version>4.1.104.Final</io.netty.version>
         <org.eclipse.jetty.version>9.4.38.v20210224</org.eclipse.jetty.version>
         <kcp-base.version>1.6.1</kcp-base.version>
-        <kcp-fec.version>1.6.1</kcp-fec.version>
         <javax.servlet.version>2.5</javax.servlet.version>
         <org.json.version>20240303</org.json.version>
         <com.fasterxml.jackson.core.version>2.15.1</com.fasterxml.jackson.core.version>
@@ -108,11 +107,6 @@
             <groupId>com.github.l42111996</groupId>
             <artifactId>kcp-base</artifactId>
             <version>${kcp-base.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.l42111996</groupId>
-            <artifactId>kcp-fec</artifactId>
-            <version>${kcp-fec.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
