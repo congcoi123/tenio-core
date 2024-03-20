@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.kcp;
 
-import com.backblaze.erasure.FecAdapt;
 import com.tenio.common.data.DataType;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
@@ -41,7 +40,6 @@ import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.io.IOException;
-import kcp.ChannelConfig;
 import kcp.KcpServer;
 
 /**
@@ -78,24 +76,13 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
       return;
     }
 
-    ChannelConfig channelConfig = new ChannelConfig();
-    channelConfig.setTimeoutMillis(KcpConfiguration.TIME_OUT_IN_MILLISECONDS);
-    channelConfig.nodelay(true, 40, 2, true);
-    channelConfig.setSndwnd(1024);
-    channelConfig.setRcvwnd(1024);
-    channelConfig.setMtu(1400);
-    channelConfig.setFecAdapt(new FecAdapt(5, 1));
-    channelConfig.setAckNoDelay(true);
-    channelConfig.setUseConvChannel(true);
-    channelConfig.setCrc32Check(true);
-
     kcpServer = new KcpServer();
     kcpServer.init(new KcpHandler(
         eventManager,
         sessionManager,
         dataType,
         networkReaderStatistic
-    ), channelConfig, socketConfiguration.port());
+    ), KcpConfiguration.inTurboMode(), socketConfiguration.port());
 
     if (isInfoEnabled()) {
       info("KCP CHANNEL", buildgen("Started at port: ", socketConfiguration.port()));
