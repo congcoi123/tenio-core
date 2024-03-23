@@ -141,7 +141,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
                                     Session session) {
     if (!session.isTcp()) {
       throw new IllegalArgumentException(
-          String.format("Unable to add datagram channel for the non-TCP session: %s",
+          String.format("Unable to add kcp channel for the non-TCP session: %s",
               session));
     }
     synchronized (sessionByDatagrams) {

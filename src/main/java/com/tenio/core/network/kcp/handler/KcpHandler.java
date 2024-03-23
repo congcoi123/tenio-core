@@ -112,7 +112,7 @@ public class KcpHandler implements KcpListener {
   @Override
   public void handleClose(Ukcp ukcp, String reason) {
     if (logger.isDebugEnabled()) {
-      logger.debug("KCP CHANNEL CLOSED", ukcp, " > Reason: \n" + reason);
+      logger.debug("KCP CHANNEL CLOSED", ukcp, " > Reason: \n", reason);
     }
     var session = sessionManager.getSessionByKcp(ukcp);
     if (Objects.nonNull(session) && session.containsKcp()) {
