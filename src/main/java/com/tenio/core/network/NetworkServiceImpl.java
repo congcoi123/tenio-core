@@ -238,11 +238,6 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void setSocketAcceptorAmountUdpWorkers(int amountUdpWorkers) {
-    socketService.setAcceptorAmountUdpWorkers(amountUdpWorkers);
-  }
-
-  @Override
   public void setSocketAcceptorWorkers(int workerSize) {
     socketService.setAcceptorWorkerSize(workerSize);
   }
@@ -273,12 +268,13 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void setSocketConfiguration(SocketConfiguration socketConfiguration,
+  public void setSocketConfiguration(SocketConfiguration tcpSocketConfiguration,
+                                     SocketConfiguration udpSocketConfiguration,
                                      SocketConfiguration webSocketConfiguration,
                                      SocketConfiguration kcpSocketConfiguration) {
-    if (Objects.nonNull(socketConfiguration)) {
+    if (Objects.nonNull(tcpSocketConfiguration)) {
       socketServiceInitialized = true;
-      socketService.setSocketConfiguration(socketConfiguration);
+      socketService.setSocketConfiguration(tcpSocketConfiguration, udpSocketConfiguration);
     }
 
     if (Objects.nonNull(webSocketConfiguration)) {
