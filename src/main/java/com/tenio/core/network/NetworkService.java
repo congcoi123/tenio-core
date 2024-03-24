@@ -126,13 +126,6 @@ public interface NetworkService extends Service {
   void setSocketAcceptorServerAddress(String serverAddress);
 
   /**
-   * Declares the number of Udp channel will be opened on the server.
-   *
-   * @param amountUdpWorkers the number of opening Udp channels
-   */
-  void setSocketAcceptorAmountUdpWorkers(int amountUdpWorkers);
-
-  /**
    * Sets the number of acceptor workers for the socket (TCP) which are using to accept new coming
    * clients.
    *
@@ -186,11 +179,13 @@ public interface NetworkService extends Service {
   /**
    * Declares socket configurations for the network.
    *
-   * @param socketConfiguration    a {@link SocketConfiguration} instance for TCP
+   * @param tcpSocketConfiguration a {@link SocketConfiguration} instance for TCP
+   * @param udpSocketConfiguration a {@link SocketConfiguration} instance for UDP
    * @param webSocketConfiguration a {@link SocketConfiguration} instance for WebSocket
    * @param kcpSocketConfiguration a {@link SocketConfiguration} instance for KCP
    */
-  void setSocketConfiguration(SocketConfiguration socketConfiguration,
+  void setSocketConfiguration(SocketConfiguration tcpSocketConfiguration,
+                              SocketConfiguration udpSocketConfiguration,
                               SocketConfiguration webSocketConfiguration,
                               SocketConfiguration kcpSocketConfiguration);
 

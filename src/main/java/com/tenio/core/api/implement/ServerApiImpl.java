@@ -326,7 +326,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     if (Objects.isNull(configuration.get(CoreConfigurationType.NETWORK_KCP))) {
       return CoreConstant.NULL_PORT_VALUE;
     }
-    return ((SocketConfiguration) (configuration.get(CoreConfigurationType.NETWORK_KCP))).port();
+    return Integer.parseInt(((SocketConfiguration) (configuration.get(CoreConfigurationType.NETWORK_KCP))).port());
   }
 
   @Override

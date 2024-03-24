@@ -150,12 +150,6 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   WORKER_INTERNAL_PROCESSOR("internal-processor"),
   /**
-   * The number of UDP channel will be opened on the server.
-   *
-   * @since 0.3.0
-   */
-  WORKER_UDP_WORKER("udp-worker"),
-  /**
    * Sets an interval to frequently check removable rooms for removing them.
    *
    * @see RoomRemoveMode
@@ -280,7 +274,7 @@ public enum CoreConfigurationType implements ConfigurationType {
    *
    * @since 0.5.0
    */
-  NETWORK_SOCKET("socket-configuration"),
+  NETWORK_TCP("tcp-configuration"),
   /**
    * WebSocket in the server configuration.
    *
@@ -293,6 +287,12 @@ public enum CoreConfigurationType implements ConfigurationType {
    * @since 0.6.0
    */
   NETWORK_KCP("kcp-configuration"),
+  /**
+   * UDP in the server configuration.
+   *
+   * @since 0.6.0
+   */
+  NETWORK_UDP("udp-configuration"),
   /**
    * HTTP in the server configuration.
    *

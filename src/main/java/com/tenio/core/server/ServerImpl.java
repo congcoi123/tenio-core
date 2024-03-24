@@ -247,14 +247,11 @@ public final class ServerImpl extends SystemLogger implements Server {
         Objects.nonNull(httpConfiguration) ?
             configuration.getInt(CoreConfigurationType.WORKER_HTTP_WORKER) : 0,
         Objects.nonNull(httpConfiguration) ?
-            ((SocketConfiguration) httpConfiguration).port() : 0,
+            Integer.parseInt(((SocketConfiguration) httpConfiguration).port()) : 0,
         Objects.nonNull(httpConfiguration) ? servletMap : null);
 
     networkService.setSocketAcceptorServerAddress(
         configuration.getString(CoreConfigurationType.SERVER_ADDRESS));
-
-    networkService.setSocketAcceptorAmountUdpWorkers(
-        configuration.getInt(CoreConfigurationType.WORKER_UDP_WORKER));
 
     networkService.setSocketAcceptorBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE));
@@ -263,8 +260,10 @@ public final class ServerImpl extends SystemLogger implements Server {
 
 
     networkService.setSocketConfiguration(
-        (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_SOCKET)) ?
-            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_SOCKET) : null),
+        (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_TCP)) ?
+            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_TCP) : null),
+        (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_UDP)) ?
+            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_UDP) : null),
         (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET)) ?
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) :
             null),
@@ -354,7 +353,7 @@ public final class ServerImpl extends SystemLogger implements Server {
             configuration.getInt(CoreConfigurationType.PROP_MAX_REQUEST_QUEUE_SIZE));
     internalProcessorService
         .setThreadPoolSize(configuration.getInt(CoreConfigurationType.WORKER_INTERNAL_PROCESSOR));
-    internalProcessorService.setEnabledUdp(configuration.getInt(CoreConfigurationType.WORKER_UDP_WORKER) > 0);
+    internalProcessorService.setEnabledUdp(Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_UDP)));
     internalProcessorService.setKeepPlayerOnDisconnection(
         configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION));
 

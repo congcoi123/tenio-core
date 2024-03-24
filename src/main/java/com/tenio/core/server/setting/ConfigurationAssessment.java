@@ -100,7 +100,7 @@ public final class ConfigurationAssessment {
 
   private void checkSubscriberRequestAccessingDatagramChannelHandler()
       throws NotDefinedSubscribersException {
-    if (containsTcpSocketConfig() && containsUdpSocketConfig()) {
+    if (containsTcpSocketConfiguration() && containsUdpSocketConfiguration()) {
       if (!eventManager.hasSubscriber(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION)
           || !eventManager.hasSubscriber(
           ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT)) {
@@ -112,7 +112,7 @@ public final class ConfigurationAssessment {
 
   private void checkSubscriberRequestAccessingKcpChannelHandler()
       throws NotDefinedSubscribersException {
-    if (containsTcpSocketConfig() && containsKcpSocketConfig()) {
+    if (containsTcpSocketConfiguration() && containsKcpSocketConfiguration()) {
       if (!eventManager.hasSubscriber(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION)
           || !eventManager.hasSubscriber(
           ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT)) {
@@ -123,22 +123,20 @@ public final class ConfigurationAssessment {
   }
 
   private void checkDefinedMainSocketConnection() throws ConfigurationException {
-    if (!containsTcpSocketConfig() && containsUdpSocketConfig()) {
+    if (!containsTcpSocketConfiguration() && containsUdpSocketConfiguration()) {
       throw new ConfigurationException("TCP connection was not defined");
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private boolean containsTcpSocketConfig() {
-    return Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_SOCKET));
+  private boolean containsTcpSocketConfiguration() {
+    return Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_TCP));
   }
 
-  @SuppressWarnings("unchecked")
-  private boolean containsUdpSocketConfig() {
-    return configuration.getInt(CoreConfigurationType.WORKER_UDP_WORKER) > 0;
+  private boolean containsUdpSocketConfiguration() {
+    return Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_UDP));
   }
 
-  private boolean containsKcpSocketConfig() {
+  private boolean containsKcpSocketConfiguration() {
     return Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_KCP));
   }
 }
