@@ -36,16 +36,18 @@ import javax.annotation.concurrent.GuardedBy;
  */
 public class DatagramChannelManager implements Manager {
 
+  private final AtomicInteger udpConveyIdGenerator;
   private final AtomicInteger kcpConveyIdGenerator;
   @GuardedBy("this")
   private final List<Integer> udpPorts;
   @GuardedBy("this")
-  private int currentIndex;
+  private int currentUdpPortIndex;
 
   private DatagramChannelManager() {
+    udpConveyIdGenerator = new AtomicInteger(0);
     kcpConveyIdGenerator = new AtomicInteger(0);
     udpPorts = new ArrayList<>();
-    currentIndex = -1;
+    currentUdpPortIndex = -1;
   }
 
   /**
@@ -76,11 +78,21 @@ public class DatagramChannelManager implements Manager {
     if (size == 0) {
       throw new EmptyUdpChannelsException();
     }
-    currentIndex++;
-    if (currentIndex >= size) {
-      currentIndex = 0;
+    currentUdpPortIndex++;
+    if (currentUdpPortIndex >= size) {
+      currentUdpPortIndex = 0;
     }
-    return udpPorts.get(currentIndex);
+    return udpPorts.get(currentUdpPortIndex);
+  }
+
+  /**
+   * Retrieves the current available UDP Convey Id.
+   *
+   * @return an {@code integer} value of a UDP Convey Id
+   * @since 0.6.0
+   */
+  public int getCurrentUdpConveyId() {
+    return udpConveyIdGenerator.getAndIncrement();
   }
 
   /**
