@@ -101,7 +101,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     datagramChannelManager = DatagramChannelManager.newInstance();
     networkService = NetworkServiceImpl.newInstance(eventManager);
     serverApi = ServerApiImpl.newInstance(this);
-    internalProcessorService = InternalProcessorServiceImpl.newInstance(eventManager, serverApi);
+    internalProcessorService = InternalProcessorServiceImpl.newInstance(eventManager, serverApi, datagramChannelManager);
     scheduleService = ScheduleServiceImpl.newInstance(eventManager);
   } // prevent creation manually
 
@@ -353,7 +353,6 @@ public final class ServerImpl extends SystemLogger implements Server {
             configuration.getInt(CoreConfigurationType.PROP_MAX_REQUEST_QUEUE_SIZE));
     internalProcessorService
         .setThreadPoolSize(configuration.getInt(CoreConfigurationType.WORKER_INTERNAL_PROCESSOR));
-    internalProcessorService.setEnabledUdp(Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_UDP)));
     internalProcessorService.setKeepPlayerOnDisconnection(
         configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION));
 

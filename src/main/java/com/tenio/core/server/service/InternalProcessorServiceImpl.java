@@ -46,12 +46,12 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The implementation for the processor service.
@@ -62,36 +62,36 @@ public final class InternalProcessorServiceImpl extends AbstractController
     implements InternalProcessorService {
 
   private final ServerApi serverApi;
+  private final DatagramChannelManager datagramChannelManager;
   private SessionManager sessionManager;
   private PlayerManager playerManager;
-  private AtomicInteger udpConvId;
-  private boolean enabledUdp;
   private int maxNumberPlayers;
   private boolean keepPlayerOnDisconnection;
 
-  private InternalProcessorServiceImpl(EventManager eventManager, ServerApi serverApi) {
+  private InternalProcessorServiceImpl(EventManager eventManager, ServerApi serverApi,
+                                       DatagramChannelManager datagramChannelManager) {
     super(eventManager);
     this.serverApi = serverApi;
+    this.datagramChannelManager = datagramChannelManager;
   }
 
   /**
    * Retrieves a new instance of internal processor.
    *
-   * @param eventManager an instance of {@link EventManager}
-   * @param serverApi    an instance of {@link ServerApi}
+   * @param eventManager           an instance of {@link EventManager}
+   * @param serverApi              an instance of {@link ServerApi}
+   * @param datagramChannelManager an instance of {@link DatagramChannelManager}
    * @return a new instance of {@link InternalProcessorService}
    */
   public static InternalProcessorServiceImpl newInstance(EventManager eventManager,
-                                                         ServerApi serverApi) {
-    return new InternalProcessorServiceImpl(eventManager, serverApi);
+                                                         ServerApi serverApi,
+                                                         DatagramChannelManager datagramChannelManager) {
+    return new InternalProcessorServiceImpl(eventManager, serverApi, datagramChannelManager);
   }
 
   @Override
   public void initialize() {
     super.initialize();
-    if (enabledUdp) {
-      udpConvId = new AtomicInteger(0);
-    }
   }
 
   @Override
@@ -348,7 +348,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
               Session.EMPTY_DATAGRAM_CONVEY_ID,
               AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
         } else {
-          var udpConvey = udpConvId.getAndIncrement();
+          var udpConvey = datagramChannelManager.getCurrentUdpConveyId();
           var datagramChannel = (DatagramChannel) request.getSender();
 
           var sessionInstance = ((Player) optionalPlayer.get()).getSession().get();
@@ -381,11 +381,6 @@ public final class InternalProcessorServiceImpl extends AbstractController
   @Override
   public void setKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection) {
     this.keepPlayerOnDisconnection = keepPlayerOnDisconnection;
-  }
-
-  @Override
-  public void setEnabledUdp(boolean enabledUdp) {
-    this.enabledUdp = enabledUdp;
   }
 
   @Override
