@@ -110,9 +110,9 @@ public class KcpHandler implements KcpListener {
   }
 
   @Override
-  public void handleClose(Ukcp ukcp, String reason) {
+  public void handleClose(Ukcp ukcp) {
     if (logger.isDebugEnabled()) {
-      logger.debug("KCP CHANNEL CLOSED", ukcp, " > Reason: \n", reason);
+      logger.debug("KCP CHANNEL CLOSED", ukcp);
     }
     var session = sessionManager.getSessionByKcp(ukcp);
     if (Objects.nonNull(session) && session.containsKcp()) {
@@ -126,33 +126,33 @@ public class KcpHandler implements KcpListener {
     try {
       checkingPlayer = eventManager.emit(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION, message);
     } catch (Exception exception) {
-      ukcp.close(exception.getMessage() + "\n" + stackTraceToString(exception));
+      ukcp.close();
       if (logger.isErrorEnabled()) {
         logger.error(exception, message);
       }
     }
 
     if (!(checkingPlayer instanceof Optional<?> optionalPlayer)) {
-      ukcp.close("Invalid player type");
+      ukcp.close();
       return;
     }
 
     if (optionalPlayer.isEmpty()) {
-      ukcp.close("Player not found");
+      ukcp.close();
       eventManager.emit(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT,
           optionalPlayer,
           AccessDatagramChannelResult.PLAYER_NOT_FOUND);
     } else {
       Player player = (Player) optionalPlayer.get();
       if (!player.containsSession() || player.getSession().isEmpty()) {
-        ukcp.close("Player does not contain a session");
+        ukcp.close();
         eventManager.emit(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT,
             optionalPlayer,
             AccessDatagramChannelResult.SESSION_NOT_FOUND);
       } else {
         Session session = player.getSession().get();
         if (!session.isTcp()) {
-          ukcp.close("Session is not TCP");
+          ukcp.close();
           eventManager.emit(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT,
               optionalPlayer,
               AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
@@ -166,15 +166,6 @@ public class KcpHandler implements KcpListener {
         }
       }
     }
-  }
-
-  private String stackTraceToString(Throwable throwable) {
-    StringBuilder sb = new StringBuilder();
-    for (StackTraceElement element : throwable.getStackTrace()) {
-      sb.append(element.toString());
-      sb.append("\n");
-    }
-    return sb.toString();
   }
 }
 
