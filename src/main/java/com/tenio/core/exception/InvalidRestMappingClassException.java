@@ -22,33 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.bootstrap.annotation;
+package com.tenio.core.exception;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import com.tenio.core.network.jetty.controller.PingController;
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+import com.tenio.core.bootstrap.annotation.RestMapping;
+import jakarta.servlet.http.HttpServlet;
+import java.io.Serial;
 
 /**
- * Declares a component as a Restful Mapping. This must be defined inside a Rest Controller.
+ * When the mapping class does not return an instance of HttpServlet.
  *
- * @see RestController
- * @see PingController
- * @since 0.5.0
+ * @see RestMapping
+ * @see HttpServlet
  */
-@Retention(RUNTIME)
-@Target(METHOD)
-@Documented
-public @interface RestMapping {
+public final class InvalidRestMappingClassException extends RuntimeException {
 
-  /**
-   * Retrieves a Restful Mapping path.
-   *
-   * @return the Restful Mapping path
-   * @since 0.5.0
-   */
-  String value() default "";
+  @Serial
+  private static final long serialVersionUID = -7249766208940595231L;
+
+  public InvalidRestMappingClassException() {
+    super("Invalid RestMapping class, it should return an instance of jakarta.servlet.http.HttpServlet.");
+  }
 }
