@@ -47,7 +47,7 @@ public class PingController extends SystemLogger {
    *
    * @return an instance of {@link HttpServlet}
    */
-  @RestMapping()
+  @RestMapping
   public HttpServlet doPing() {
     return new HttpServlet() {
 
