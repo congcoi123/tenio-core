@@ -41,7 +41,7 @@ import java.util.function.Consumer;
  */
 public class PlayerImpl implements Player {
 
-  private final String name;
+  private final String identity;
   private final Map<String, Object> properties;
   private Consumer<Field> updateConsumer;
   private volatile Session session;
@@ -66,20 +66,20 @@ public class PlayerImpl implements Player {
   /**
    * Constructor.
    *
-   * @param name the player unique name
+   * @param identity the player unique name
    */
-  public PlayerImpl(String name) {
-    this(name, null);
+  public PlayerImpl(String identity) {
+    this(identity, null);
   }
 
   /**
    * Constructor.
    *
-   * @param name    the player unique name
+   * @param identity    the player unique name
    * @param session a session which associates to the player
    */
-  public PlayerImpl(String name, Session session) {
-    this.name = name;
+  public PlayerImpl(String identity, Session session) {
+    this.identity = identity;
     properties = new ConcurrentHashMap<>();
     lastLoginTime = 0L;
     lastJoinedRoomTime = 0L;
@@ -116,8 +116,8 @@ public class PlayerImpl implements Player {
   }
 
   @Override
-  public String getName() {
-    return name;
+  public String getIdentity() {
+    return identity;
   }
 
   @Override
@@ -269,7 +269,7 @@ public class PlayerImpl implements Player {
   @Override
   public void setSession(Session session) {
     if (Objects.nonNull(session)) {
-      session.setName(name);
+      session.setName(identity);
       session.setAssociatedToPlayer(Session.AssociatedState.DONE);
     }
     this.session = session;
@@ -387,7 +387,7 @@ public class PlayerImpl implements Player {
     if (!(object instanceof Player player)) {
       return false;
     } else {
-      return getName().equals(player.getName());
+      return getIdentity().equals(player.getIdentity());
     }
   }
 
@@ -395,14 +395,14 @@ public class PlayerImpl implements Player {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + (Objects.isNull(name) ? 0 : name.hashCode());
+    result = prime * result + (Objects.isNull(identity) ? 0 : identity.hashCode());
     return result;
   }
 
   @Override
   public String toString() {
     return "Player{" +
-        "name='" + name + '\'' +
+        "identity='" + identity + '\'' +
         ", properties=" + properties +
         ", currentRoom=" + (Objects.nonNull(currentRoom) ? currentRoom.getId() : "") +
         ", state=" + state +

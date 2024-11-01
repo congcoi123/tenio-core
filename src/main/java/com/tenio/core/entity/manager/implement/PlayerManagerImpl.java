@@ -75,12 +75,12 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   @Override
   public void addPlayer(Player player) {
-    if (containsPlayerName(player.getName())) {
+    if (containsPlayerName(player.getIdentity())) {
       throw new AddedDuplicatedPlayerException(player, ownerRoom);
     }
 
     synchronized (this) {
-      players.put(player.getName(), player);
+      players.put(player.getIdentity(), player);
       playerCount = players.size();
       readonlyPlayersList = List.copyOf(players.values());
     }
@@ -144,7 +144,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   private void removePlayer(Player player) {
     synchronized (this) {
-      players.remove(player.getName());
+      players.remove(player.getIdentity());
       playerCount = players.size();
       readonlyPlayersList = List.copyOf(players.values());
     }

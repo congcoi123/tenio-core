@@ -20,7 +20,7 @@ class PlayerImplTest {
     assertFalse(actualNewInstanceResult.isInRoom());
     assertFalse(actualNewInstanceResult.isActivated());
     assertFalse(actualNewInstanceResult.getSession().isPresent());
-    assertEquals("Name", actualNewInstanceResult.getName());
+    assertEquals("Name", actualNewInstanceResult.getIdentity());
     assertEquals(0L, actualNewInstanceResult.getLastLoggedInTime());
   }
 
@@ -32,7 +32,7 @@ class PlayerImplTest {
     assertFalse(actualNewInstanceResult.isLoggedIn());
     assertFalse(actualNewInstanceResult.isInRoom());
     assertFalse(actualNewInstanceResult.isActivated());
-    assertEquals("Name", actualNewInstanceResult.getName());
+    assertEquals("Name", actualNewInstanceResult.getIdentity());
     assertEquals(0L, actualNewInstanceResult.getLastLoggedInTime());
   }
 
@@ -45,7 +45,7 @@ class PlayerImplTest {
     assertFalse(actualNewInstanceResult.isInRoom());
     assertFalse(actualNewInstanceResult.isActivated());
     assertFalse(actualNewInstanceResult.getSession().isPresent());
-    assertEquals("Name", actualNewInstanceResult.getName());
+    assertEquals("Name", actualNewInstanceResult.getIdentity());
     assertEquals(0L, actualNewInstanceResult.getLastLoggedInTime());
   }
 }

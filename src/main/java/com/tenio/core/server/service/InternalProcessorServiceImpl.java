@@ -274,7 +274,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
         // When it gets disconnected from client side, the server may not recognise it. In this
         // case, the player is remained on the server side
         if (!keepPlayerOnDisconnection) {
-          playerManager.removePlayerByName(player.getName());
+          playerManager.removePlayerByName(player.getIdentity());
           player.clean();
         }
       } else {

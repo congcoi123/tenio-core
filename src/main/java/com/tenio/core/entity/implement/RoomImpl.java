@@ -287,7 +287,7 @@ public class RoomImpl implements Room {
       throw new PlayerJoinedRoomException(
           String.format(
               "Unable to add player: %s to room due to invalid password provided",
-              player.getName()),
+              player.getIdentity()),
           PlayerJoinedRoomResult.INVALID_CREDENTIALS);
     }
 
@@ -303,7 +303,7 @@ public class RoomImpl implements Room {
           String.format(
               "Unable to add player: %s to room, room is full with maximum participants: %d, "
                   + "spectators: %d",
-              player.getName(), getMaxParticipants(), getMaxSpectators()),
+              player.getIdentity(), getMaxParticipants(), getMaxSpectators()),
           PlayerJoinedRoomResult.ROOM_IS_FULL);
     }
 
@@ -331,7 +331,7 @@ public class RoomImpl implements Room {
           player.setPlayerSlotInCurrentRoom(DEFAULT_SLOT);
           throw new PlayerJoinedRoomException(String
               .format("Unable to set the target slot: %d for the participant: %s", targetSlot,
-                  player.getName()),
+                  player.getIdentity()),
               PlayerJoinedRoomResult.SLOT_UNAVAILABLE_IN_ROOM);
         }
       }
@@ -341,10 +341,10 @@ public class RoomImpl implements Room {
   @Override
   public void removePlayer(Player player) {
     roomPlayerSlotGeneratedStrategy.freeSlotWhenPlayerLeft(player.getPlayerSlotInCurrentRoom());
-    playerManager.removePlayerByName(player.getName());
+    playerManager.removePlayerByName(player.getIdentity());
     player.setCurrentRoom(null);
     getOwner().ifPresent(owner -> {
-      if (owner.getName().equals(player.getName())) {
+      if (owner.getIdentity().equals(player.getIdentity())) {
         setOwner(null);
       }
     });
@@ -354,9 +354,9 @@ public class RoomImpl implements Room {
 
   @Override
   public void switchParticipantToSpectator(Player player) {
-    if (!containsPlayerName(player.getName())) {
+    if (!containsPlayerName(player.getIdentity())) {
       throw new SwitchedPlayerRoleInRoomException(
-          String.format("Player %s was not in room", player.getName()),
+          String.format("Player %s was not in room", player.getIdentity()),
           SwitchedPlayerRoleInRoomResult.PLAYER_WAS_NOT_IN_ROOM);
     }
 
@@ -379,9 +379,9 @@ public class RoomImpl implements Room {
 
   @Override
   public void switchSpectatorToParticipant(Player player, int targetSlot) {
-    if (!containsPlayerName(player.getName())) {
+    if (!containsPlayerName(player.getIdentity())) {
       throw new SwitchedPlayerRoleInRoomException(
-          String.format("Player %s was not in room", player.getName()),
+          String.format("Player %s was not in room", player.getIdentity()),
           SwitchedPlayerRoleInRoomResult.PLAYER_WAS_NOT_IN_ROOM);
     }
 
@@ -404,7 +404,7 @@ public class RoomImpl implements Room {
         } catch (IllegalArgumentException e) {
           throw new SwitchedPlayerRoleInRoomException(String
               .format("Unable to set the target slot: %d for the participant: %s", targetSlot,
-                  player.getName()),
+                  player.getIdentity()),
               SwitchedPlayerRoleInRoomResult.SLOT_UNAVAILABLE_IN_ROOM);
         }
       }
@@ -460,7 +460,7 @@ public class RoomImpl implements Room {
         ", properties=" + properties +
         ", name='" + name + '\'' +
         ", password='" + password + '\'' +
-        ", owner=" + (Objects.nonNull(owner) ? owner.getName() : "") +
+        ", owner=" + (Objects.nonNull(owner) ? owner.getIdentity() : "") +
         ", roomRemoveMode=" + roomRemoveMode +
         ", state=" + state +
         ", activated=" + activated +
@@ -470,8 +470,8 @@ public class RoomImpl implements Room {
         ", participantCount=" + participantCount +
         ", spectatorCount=" + spectatorCount +
         ", participants=" +
-        participants.stream().map(Player::getName).collect(Collectors.toList()) +
-        ", spectators=" + spectators.stream().map(Player::getName).collect(Collectors.toList()) +
+        participants.stream().map(Player::getIdentity).collect(Collectors.toList()) +
+        ", spectators=" + spectators.stream().map(Player::getIdentity).collect(Collectors.toList()) +
         '}';
   }
 

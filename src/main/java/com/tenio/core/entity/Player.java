@@ -36,11 +36,11 @@ import java.util.function.Consumer;
 public interface Player {
 
   /**
-   * Retrieves the player's name which should be unique in the management list and on the server.
+   * Retrieves the player's identity which should be unique in the management list and on the server.
    *
-   * @return the {@link String} player's name
+   * @return the {@link String} player's identity
    */
-  String getName();
+  String getIdentity();
 
   /**
    * Determines whether the player contains a session.

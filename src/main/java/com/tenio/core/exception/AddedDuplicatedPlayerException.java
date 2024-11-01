@@ -54,8 +54,8 @@ public final class AddedDuplicatedPlayerException extends RuntimeException {
    */
   public AddedDuplicatedPlayerException(Player player, Room room) {
     super(Objects.isNull(room)
-        ? String.format("Unable to add player: %s, it already exists", player.getName())
-        : String.format("Unable to add player: %s, it already exists in room: %s", player.getName(),
+        ? String.format("Unable to add player: %s, it already exists", player.getIdentity())
+        : String.format("Unable to add player: %s, it already exists in room: %s", player.getIdentity(),
         room.getName()));
     this.player = player;
     this.room = room;
