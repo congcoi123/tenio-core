@@ -352,9 +352,9 @@ class ServerApiTest {
     var roomIterator = Mockito.mock(Iterator.class);
     var roomList = Mockito.mock(List.class);
 
-    // getPlayerByName(String playerName)
-    Mockito.when(playerManager.getPlayerByName(playerName)).thenReturn(player);
-    Assertions.assertEquals(Optional.ofNullable(player), serverApi.getPlayerByName(playerName));
+    // getPlayerByIdentity(String playerName)
+    Mockito.when(playerManager.getPlayerByIdentity(playerName)).thenReturn(player);
+    Assertions.assertEquals(Optional.ofNullable(player), serverApi.getPlayerByIdentity(playerName));
 
     // getPlayerCount()
     Mockito.when(playerManager.getPlayerCount()).thenReturn(10);

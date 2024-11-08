@@ -122,8 +122,7 @@ public interface ServerApi {
    *                          value should be set to {@code 0}
    * @throws UnsupportedOperationException this method is not supported at the moment
    */
-  default void banPlayer(Player player, String message, PlayerBanMode banMode,
-                         int durationInMinutes,
+  default void banPlayer(Player player, String message, PlayerBanMode banMode, int durationInMinutes,
                          int delayInSeconds) {
     throw new UnsupportedOperationException("Unsupported at the moment");
   }
@@ -164,11 +163,11 @@ public interface ServerApi {
   /**
    * Retrieves a player on the server by using its name.
    *
-   * @param playerName a unique {@link String} value for player's name on the server
+   * @param identity a unique {@link String} value for player's name on the server
    * @return a corresponding instance of optional {@link Player}
    * @see Optional
    */
-  Optional<Player> getPlayerByName(String playerName);
+  Optional<Player> getPlayerByIdentity(String identity);
 
   /**
    * Fetches the current number of players activating on the server.

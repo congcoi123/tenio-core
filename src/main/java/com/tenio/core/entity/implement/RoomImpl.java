@@ -252,13 +252,13 @@ public class RoomImpl implements Room {
   }
 
   @Override
-  public boolean containsPlayerName(String playerName) {
-    return playerManager.containsPlayerName(playerName);
+  public boolean containsPlayerIdentity(String playerIdentity) {
+    return playerManager.containsPlayerIdentity(playerIdentity);
   }
 
   @Override
-  public Optional<Player> getPlayerByName(String playerName) {
-    return Optional.ofNullable(playerManager.getPlayerByName(playerName));
+  public Optional<Player> getPlayerByIdentity(String playerIdentity) {
+    return Optional.ofNullable(playerManager.getPlayerByIdentity(playerIdentity));
   }
 
   @Override
@@ -341,7 +341,7 @@ public class RoomImpl implements Room {
   @Override
   public void removePlayer(Player player) {
     roomPlayerSlotGeneratedStrategy.freeSlotWhenPlayerLeft(player.getPlayerSlotInCurrentRoom());
-    playerManager.removePlayerByName(player.getIdentity());
+    playerManager.removePlayerByIdentity(player.getIdentity());
     player.setCurrentRoom(null);
     getOwner().ifPresent(owner -> {
       if (owner.getIdentity().equals(player.getIdentity())) {
@@ -354,7 +354,7 @@ public class RoomImpl implements Room {
 
   @Override
   public void switchParticipantToSpectator(Player player) {
-    if (!containsPlayerName(player.getIdentity())) {
+    if (!containsPlayerIdentity(player.getIdentity())) {
       throw new SwitchedPlayerRoleInRoomException(
           String.format("Player %s was not in room", player.getIdentity()),
           SwitchedPlayerRoleInRoomResult.PLAYER_WAS_NOT_IN_ROOM);
@@ -379,7 +379,7 @@ public class RoomImpl implements Room {
 
   @Override
   public void switchSpectatorToParticipant(Player player, int targetSlot) {
-    if (!containsPlayerName(player.getIdentity())) {
+    if (!containsPlayerIdentity(player.getIdentity())) {
       throw new SwitchedPlayerRoleInRoomException(
           String.format("Player %s was not in room", player.getIdentity()),
           SwitchedPlayerRoleInRoomResult.PLAYER_WAS_NOT_IN_ROOM);

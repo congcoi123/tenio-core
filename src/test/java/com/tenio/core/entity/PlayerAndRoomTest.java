@@ -76,7 +76,7 @@ class PlayerAndRoomTest {
   public void addNewPlayerShouldReturnSuccess() {
     var player = PlayerImpl.newInstance(testPlayerName);
     playerManager.addPlayer(player);
-    var result = playerManager.getPlayerByName(testPlayerName);
+    var result = playerManager.getPlayerByIdentity(testPlayerName);
 
     assertEquals(player, result);
   }
@@ -95,7 +95,7 @@ class PlayerAndRoomTest {
     var player = PlayerImpl.newInstance(testPlayerName);
     playerManager.addPlayer(player);
 
-    assertTrue(playerManager.containsPlayerName(testPlayerName));
+    assertTrue(playerManager.containsPlayerIdentity(testPlayerName));
   }
 
   @Test
@@ -112,7 +112,7 @@ class PlayerAndRoomTest {
   public void removePlayerShouldReturnSuccess() {
     var player = PlayerImpl.newInstance(testPlayerName);
     playerManager.addPlayer(player);
-    playerManager.removePlayerByName(testPlayerName);
+    playerManager.removePlayerByIdentity(testPlayerName);
 
     assertEquals(0, playerManager.getPlayerCount());
   }

@@ -271,19 +271,19 @@ public interface Room {
   /**
    * Determines whether a player is present in the room.
    *
-   * @param playerName a unique {@link String} player name in the room's player management list
+   * @param playerIdentity a unique {@link String} player name in the room's player management list
    * @return {@code true} when a player can be found, otherwise returns {@code false}
    */
-  boolean containsPlayerName(String playerName);
+  boolean containsPlayerIdentity(String playerIdentity);
 
   /**
    * Retrieves a player by using its name.
    *
-   * @param playerName a unique {@link String} name of player on the server
+   * @param playerIdentity a unique {@link String} name of player on the server
    * @return an instance of optional {@link Player}
    * @see Optional
    */
-  Optional<Player> getPlayerByName(String playerName);
+  Optional<Player> getPlayerByIdentity(String playerIdentity);
 
   /**
    * Retrieves an iterator for a player management list. This method should be used to prevent

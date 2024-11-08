@@ -262,7 +262,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
   private synchronized void processSessionWillBeClosed(Session session,
                                                        PlayerDisconnectMode playerDisconnectMode) {
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
-      var player = playerManager.getPlayerByName(session.getName());
+      var player = playerManager.getPlayerByIdentity(session.getName());
       // the player maybe existed
       if (Objects.nonNull(player)) {
         // player should leave room (if applicable) first
@@ -274,7 +274,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
         // When it gets disconnected from client side, the server may not recognise it. In this
         // case, the player is remained on the server side
         if (!keepPlayerOnDisconnection) {
-          playerManager.removePlayerByName(player.getIdentity());
+          playerManager.removePlayerByIdentity(player.getIdentity());
           player.clean();
         }
       } else {
@@ -295,7 +295,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     var session = (Session) request.getSender();
 
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
-      var player = playerManager.getPlayerByName(session.getName());
+      var player = playerManager.getPlayerByIdentity(session.getName());
       if (Objects.isNull(player)) {
         var illegalValueException = new IllegalArgumentException(
             String.format("Unable to find player for the session: %s", session));

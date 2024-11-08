@@ -74,10 +74,10 @@ public interface PlayerManager extends Manager {
   /**
    * Retrieves a player by using its name.
    *
-   * @param playerName a unique {@link String} name of player on the server
+   * @param playerIdentity a unique {@link String} name of player on the server
    * @return an instance of {@link Player} if present, otherwise {@code null}
    */
-  Player getPlayerByName(String playerName);
+  Player getPlayerByIdentity(String playerIdentity);
 
   /**
    * Retrieves an iterator for a player management list. This method should be used to prevent
@@ -100,19 +100,19 @@ public interface PlayerManager extends Manager {
   /**
    * Removes a player from the management list.
    *
-   * @param playerName the player's name ({@link String} value)
+   * @param playerIdentity the player's name ({@link String} value)
    * @throws RemovedNonExistentPlayerFromRoomException when the player is not present in the
    *                                                   management list
    */
-  void removePlayerByName(String playerName) throws RemovedNonExistentPlayerFromRoomException;
+  void removePlayerByIdentity(String playerIdentity) throws RemovedNonExistentPlayerFromRoomException;
 
   /**
    * Determines whether the management list contains a player by checking its name.
    *
-   * @param playerName the player's name ({@link String} value)
+   * @param playerIdentity the player's name ({@link String} value)
    * @return {@code true} if the player is available, otherwise returns {@code false}
    */
-  boolean containsPlayerName(String playerName);
+  boolean containsPlayerIdentity(String playerIdentity);
 
   /**
    * Retrieves a room of the management list.

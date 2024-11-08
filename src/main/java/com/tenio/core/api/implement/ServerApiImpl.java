@@ -114,7 +114,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
         error(exception, "On the player: ", playerName);
       }
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT,
-          getPlayerByName(playerName).orElse(null), PlayerLoggedInResult.EXCEPTION);
+          getPlayerByIdentity(playerName).orElse(null), PlayerLoggedInResult.EXCEPTION);
     }
   }
 
@@ -151,7 +151,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       } else {
         getEventManager().emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
         String removedPlayer = player.getIdentity();
-        getPlayerManager().removePlayerByName(player.getIdentity());
+        getPlayerManager().removePlayerByIdentity(player.getIdentity());
         if (isDebugEnabled()) {
           debug("DISCONNECTED PLAYER", "Player ", removedPlayer, " was removed");
         }
@@ -204,8 +204,8 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
-  public Optional<Player> getPlayerByName(String playerName) {
-    return Optional.ofNullable(getPlayerManager().getPlayerByName(playerName));
+  public Optional<Player> getPlayerByIdentity(String identity) {
+    return Optional.ofNullable(getPlayerManager().getPlayerByIdentity(identity));
   }
 
   @Override
