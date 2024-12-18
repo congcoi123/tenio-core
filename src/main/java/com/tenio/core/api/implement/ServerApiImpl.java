@@ -273,6 +273,22 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
+  public void changeRoom(Player player, Room room, String roomPassword, int slotInRoom,
+                         boolean asSpectator) {
+    if (Objects.isNull(player) || Objects.isNull(room)) {
+      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
+          PlayerJoinedRoomResult.PLAYER_OR_ROOM_UNAVAILABLE);
+      return;
+    }
+
+    if (player.isInRoom()) {
+      leaveRoom(player, PlayerLeaveRoomMode.CHANGE_ROOM);
+    }
+
+    joinRoom(player, room, roomPassword, slotInRoom, asSpectator);
+  }
+
+  @Override
   public void leaveRoom(Player player, PlayerLeaveRoomMode leaveRoomMode) {
     if (!player.isInRoom()) {
       getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, Optional.empty(),

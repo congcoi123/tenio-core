@@ -44,8 +44,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
@@ -56,7 +54,6 @@ public class RoomImpl implements Room {
   private static final AtomicLong ID_COUNTER = new AtomicLong(1L);
 
   private final long id;
-  private final Lock switchRoleLock;
   private final Map<String, Object> properties;
   private String name;
   private String password;
@@ -71,7 +68,7 @@ public class RoomImpl implements Room {
   private RoomRemoveMode roomRemoveMode;
   private RoomCredentialValidatedStrategy roomCredentialValidatedStrategy;
   private RoomPlayerSlotGeneratedStrategy roomPlayerSlotGeneratedStrategy;
-  private RoomState state;
+  private volatile RoomState state;
 
   private volatile boolean activated;
 
@@ -88,7 +85,6 @@ public class RoomImpl implements Room {
     participantCount = 0;
     owner = null;
     playerManager = null;
-    switchRoleLock = new ReentrantLock();
     properties = new ConcurrentHashMap<>();
     activated = false;
     setRoomRemoveMode(RoomRemoveMode.WHEN_EMPTY);
@@ -282,7 +278,7 @@ public class RoomImpl implements Room {
   }
 
   @Override
-  public void addPlayer(Player player, String password, boolean asSpectator, int targetSlot) {
+  public synchronized void addPlayer(Player player, String password, boolean asSpectator, int targetSlot) {
     if (Objects.nonNull(this.password) && !this.password.equals(password)) {
       throw new PlayerJoinedRoomException(
           String.format(
@@ -339,7 +335,7 @@ public class RoomImpl implements Room {
   }
 
   @Override
-  public void removePlayer(Player player) {
+  public synchronized void removePlayer(Player player) {
     roomPlayerSlotGeneratedStrategy.freeSlotWhenPlayerLeft(player.getPlayerSlotInCurrentRoom());
     playerManager.removePlayerByIdentity(player.getIdentity());
     player.setCurrentRoom(null);
@@ -353,66 +349,56 @@ public class RoomImpl implements Room {
   }
 
   @Override
-  public void switchParticipantToSpectator(Player player) {
+  public synchronized void switchParticipantToSpectator(Player player) {
     if (!containsPlayerIdentity(player.getIdentity())) {
       throw new SwitchedPlayerRoleInRoomException(
           String.format("Player %s was not in room", player.getIdentity()),
           SwitchedPlayerRoleInRoomResult.PLAYER_WAS_NOT_IN_ROOM);
     }
 
-    switchRoleLock.lock();
-    try {
-      if (getSpectatorCount() >= getMaxSpectators()) {
-        throw new SwitchedPlayerRoleInRoomException("All spectator slots were already taken",
-            SwitchedPlayerRoleInRoomResult.SWITCH_NO_SPECTATOR_SLOTS_AVAILABLE);
-      }
-
-      roomPlayerSlotGeneratedStrategy.freeSlotWhenPlayerLeft(player.getPlayerSlotInCurrentRoom());
-      player.setPlayerSlotInCurrentRoom(DEFAULT_SLOT);
-      player.setRoleInRoom(PlayerRoleInRoom.SPECTATOR);
-
-      classifyPlayersByRoles();
-    } finally {
-      switchRoleLock.unlock();
+    if (getSpectatorCount() >= getMaxSpectators()) {
+      throw new SwitchedPlayerRoleInRoomException("All spectator slots were already taken",
+          SwitchedPlayerRoleInRoomResult.SWITCH_NO_SPECTATOR_SLOTS_AVAILABLE);
     }
+
+    roomPlayerSlotGeneratedStrategy.freeSlotWhenPlayerLeft(player.getPlayerSlotInCurrentRoom());
+    player.setPlayerSlotInCurrentRoom(DEFAULT_SLOT);
+    player.setRoleInRoom(PlayerRoleInRoom.SPECTATOR);
+
+    classifyPlayersByRoles();
   }
 
   @Override
-  public void switchSpectatorToParticipant(Player player, int targetSlot) {
+  public synchronized void switchSpectatorToParticipant(Player player, int targetSlot) {
     if (!containsPlayerIdentity(player.getIdentity())) {
       throw new SwitchedPlayerRoleInRoomException(
           String.format("Player %s was not in room", player.getIdentity()),
           SwitchedPlayerRoleInRoomResult.PLAYER_WAS_NOT_IN_ROOM);
     }
 
-    switchRoleLock.lock();
-    try {
-      if (getParticipantCount() >= getMaxParticipants()) {
-        throw new SwitchedPlayerRoleInRoomException("All participant slots were already taken",
-            SwitchedPlayerRoleInRoomResult.SWITCH_NO_PARTICIPANT_SLOTS_AVAILABLE);
-      }
-
-      if (targetSlot == DEFAULT_SLOT) {
-        player.setPlayerSlotInCurrentRoom(
-            roomPlayerSlotGeneratedStrategy.getFreePlayerSlotInRoom());
-        player.setRoleInRoom(PlayerRoleInRoom.PARTICIPANT);
-      } else {
-        try {
-          roomPlayerSlotGeneratedStrategy.tryTakeSlot(targetSlot);
-          player.setPlayerSlotInCurrentRoom(targetSlot);
-          player.setRoleInRoom(PlayerRoleInRoom.PARTICIPANT);
-        } catch (IllegalArgumentException e) {
-          throw new SwitchedPlayerRoleInRoomException(String
-              .format("Unable to set the target slot: %d for the participant: %s", targetSlot,
-                  player.getIdentity()),
-              SwitchedPlayerRoleInRoomResult.SLOT_UNAVAILABLE_IN_ROOM);
-        }
-      }
-
-      classifyPlayersByRoles();
-    } finally {
-      switchRoleLock.unlock();
+    if (getParticipantCount() >= getMaxParticipants()) {
+      throw new SwitchedPlayerRoleInRoomException("All participant slots were already taken",
+          SwitchedPlayerRoleInRoomResult.SWITCH_NO_PARTICIPANT_SLOTS_AVAILABLE);
     }
+
+    if (targetSlot == DEFAULT_SLOT) {
+      player.setPlayerSlotInCurrentRoom(
+          roomPlayerSlotGeneratedStrategy.getFreePlayerSlotInRoom());
+      player.setRoleInRoom(PlayerRoleInRoom.PARTICIPANT);
+    } else {
+      try {
+        roomPlayerSlotGeneratedStrategy.tryTakeSlot(targetSlot);
+        player.setPlayerSlotInCurrentRoom(targetSlot);
+        player.setRoleInRoom(PlayerRoleInRoom.PARTICIPANT);
+      } catch (IllegalArgumentException e) {
+        throw new SwitchedPlayerRoleInRoomException(String
+            .format("Unable to set the target slot: %d for the participant: %s", targetSlot,
+                player.getIdentity()),
+            SwitchedPlayerRoleInRoomResult.SLOT_UNAVAILABLE_IN_ROOM);
+      }
+    }
+
+    classifyPlayersByRoles();
   }
 
   private void classifyPlayersByRoles() {
@@ -470,8 +456,8 @@ public class RoomImpl implements Room {
         ", participantCount=" + participantCount +
         ", spectatorCount=" + spectatorCount +
         ", participants=" +
-        participants.stream().map(Player::getIdentity).collect(Collectors.toList()) +
-        ", spectators=" + spectators.stream().map(Player::getIdentity).collect(Collectors.toList()) +
+        participants.stream().map(Player::getIdentity).toList() +
+        ", spectators=" + spectators.stream().map(Player::getIdentity).toList() +
         '}';
   }
 

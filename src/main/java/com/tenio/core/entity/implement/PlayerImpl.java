@@ -136,7 +136,7 @@ public class PlayerImpl implements Player {
   }
 
   @Override
-  public void setState(PlayerState state) {
+  public synchronized void setState(PlayerState state) {
     this.state = state;
     if (Objects.nonNull(updateConsumer)) {
       updateConsumer.accept(Field.STATE);
@@ -149,7 +149,7 @@ public class PlayerImpl implements Player {
   }
 
   @Override
-  public void setActivated(boolean activated) {
+  public synchronized void setActivated(boolean activated) {
     this.activated = activated;
     if (Objects.nonNull(updateConsumer)) {
       updateConsumer.accept(Field.ACTIVATION);
@@ -162,7 +162,7 @@ public class PlayerImpl implements Player {
   }
 
   @Override
-  public void setLoggedIn(boolean loggedIn) {
+  public synchronized void setLoggedIn(boolean loggedIn) {
     this.loggedIn = loggedIn;
     if (this.loggedIn) {
       setLastLoggedInTime();
@@ -227,7 +227,7 @@ public class PlayerImpl implements Player {
   }
 
   @Override
-  public void setNeverDeported(boolean flag) {
+  public synchronized void setNeverDeported(boolean flag) {
     deportedFlag = flag;
     if (Objects.nonNull(updateConsumer)) {
       updateConsumer.accept(Field.DEPORTATION);
@@ -267,7 +267,7 @@ public class PlayerImpl implements Player {
   }
 
   @Override
-  public void setSession(Session session) {
+  public synchronized void setSession(Session session) {
     if (Objects.nonNull(session)) {
       session.setName(identity);
       session.setAssociatedToPlayer(Session.AssociatedState.DONE);
@@ -286,7 +286,7 @@ public class PlayerImpl implements Player {
   }
 
   @Override
-  public void setRoleInRoom(PlayerRoleInRoom roleInRoom) {
+  public synchronized void setRoleInRoom(PlayerRoleInRoom roleInRoom) {
     this.roleInRoom = roleInRoom;
     if (Objects.nonNull(updateConsumer)) {
       updateConsumer.accept(Field.ROLE_IN_ROOM);
@@ -299,7 +299,7 @@ public class PlayerImpl implements Player {
   }
 
   @Override
-  public void setCurrentRoom(Room room) {
+  public synchronized void setCurrentRoom(Room room) {
     currentRoom = room;
     if (Objects.isNull(currentRoom)) {
       playerSlotInCurrentRoom = Room.NIL_SLOT;
@@ -324,7 +324,7 @@ public class PlayerImpl implements Player {
   }
 
   @Override
-  public void setPlayerSlotInCurrentRoom(int slot) {
+  public synchronized void setPlayerSlotInCurrentRoom(int slot) {
     playerSlotInCurrentRoom = slot;
     if (Objects.nonNull(updateConsumer)) {
       updateConsumer.accept(Field.SLOT_IN_ROOM);
