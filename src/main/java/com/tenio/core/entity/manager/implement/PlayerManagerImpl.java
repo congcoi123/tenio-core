@@ -33,34 +33,29 @@ import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import com.tenio.core.exception.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entity.session.Session;
-import java.util.ArrayList;
-import java.util.HashMap;
+
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import javax.annotation.concurrent.GuardedBy;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * An implemented class is for player management.
  */
 public final class PlayerManagerImpl extends AbstractManager implements PlayerManager {
 
-  @GuardedBy("this")
   private final Map<String, Player> players;
-
-  private List<Player> readonlyPlayersList;
-  private volatile Room ownerRoom;
-  private volatile int playerCount;
+  private final AtomicReference<Room> ownerRoom;
+  // Non thread-safe, one-time setup
   private int maxIdleTimeInSecond;
   private int maxIdleTimeNeverDeportedInSecond;
 
   private PlayerManagerImpl(EventManager eventManager) {
     super(eventManager);
-    players = new HashMap<>();
-    readonlyPlayersList = new ArrayList<>();
-    ownerRoom = null;
-    playerCount = 0;
+    players = new ConcurrentHashMap<>();
+    ownerRoom = new AtomicReference<>(null);
   }
 
   /**
@@ -76,14 +71,10 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public void addPlayer(Player player) {
     if (containsPlayerIdentity(player.getIdentity())) {
-      throw new AddedDuplicatedPlayerException(player, ownerRoom);
+      throw new AddedDuplicatedPlayerException(player, ownerRoom.get());
     }
 
-    synchronized (this) {
-      players.put(player.getIdentity(), player);
-      playerCount = players.size();
-      readonlyPlayersList = List.copyOf(players.values());
-    }
+    players.put(player.getIdentity(), player);
   }
 
   @Override
@@ -116,68 +107,50 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   @Override
   public Player getPlayerByIdentity(String playerIdentity) {
-    synchronized (players) {
-      return players.get(playerIdentity);
-    }
+    return players.get(playerIdentity);
   }
 
   @Override
   public Iterator<Player> getPlayerIterator() {
-    synchronized (this) {
-      return players.values().iterator();
-    }
+    return players.values().iterator();
   }
 
   @Override
   public List<Player> getReadonlyPlayersList() {
-    return readonlyPlayersList;
+    return players.values().stream().toList();
   }
 
   @Override
   public void removePlayerByIdentity(String playerIdentity) {
     if (!containsPlayerIdentity(playerIdentity)) {
-      throw new RemovedNonExistentPlayerFromRoomException(playerIdentity, ownerRoom);
+      throw new RemovedNonExistentPlayerFromRoomException(playerIdentity, ownerRoom.get());
     }
 
     removePlayer(playerIdentity);
   }
 
-  private void removePlayer(Player player) {
-    synchronized (this) {
-      players.remove(player.getIdentity());
-      playerCount = players.size();
-      readonlyPlayersList = List.copyOf(players.values());
-    }
-  }
-
   private void removePlayer(String playerName) {
-    synchronized (this) {
-      players.remove(playerName);
-      playerCount = players.size();
-      readonlyPlayersList = List.copyOf(players.values());
-    }
+    players.remove(playerName);
   }
 
   @Override
   public boolean containsPlayerIdentity(String playerIdentity) {
-    synchronized (this) {
-      return players.containsKey(playerIdentity);
-    }
+    return players.containsKey(playerIdentity);
   }
 
   @Override
   public Room getOwnerRoom() {
-    return ownerRoom;
+    return ownerRoom.get();
   }
 
   @Override
   public void setOwnerRoom(Room room) {
-    ownerRoom = room;
+    ownerRoom.set(room);
   }
 
   @Override
   public int getPlayerCount() {
-    return playerCount;
+    return players.size();
   }
 
   @Override
@@ -202,12 +175,6 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   @Override
   public void clear() {
-    synchronized (this) {
-      var iterator = new ArrayList<>(players.values()).iterator();
-      while (iterator.hasNext()) {
-        var player = iterator.next();
-        removePlayer(player);
-      }
-    }
+    players.clear();
   }
 }

@@ -28,7 +28,9 @@ import com.tenio.core.exception.PacketQueueFullException;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
+
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The implementation for packet queue.
@@ -38,12 +40,20 @@ import java.util.TreeSet;
 public final class PacketQueueImpl implements PacketQueue {
 
   private final TreeSet<Packet> queue;
+  private final AtomicInteger size;
+  // Non thread-safe, one-time setup
   private PacketQueuePolicy packetQueuePolicy;
   private int maxSize;
-  private volatile int size;
 
+  /**
+   * Constructor.
+   *
+   * @see PacketImpl#compareTo(Packet)
+   */
   private PacketQueueImpl() {
+    // Provide a comparator
     queue = new TreeSet<>();
+    size = new AtomicInteger(0);
   }
 
   /**
@@ -62,7 +72,6 @@ public final class PacketQueueImpl implements PacketQueue {
         return queue.last();
       }
     }
-
     return null;
   }
 
@@ -70,29 +79,27 @@ public final class PacketQueueImpl implements PacketQueue {
   public Packet take() {
     synchronized (queue) {
       if (!isEmpty()) {
-        var packet = queue.last();
-        queue.remove(packet);
-        size = queue.size();
+        Packet packet = queue.pollLast();
+        size.set(queue.size());
         return packet;
       }
     }
-
     return null;
   }
 
   @Override
   public boolean isEmpty() {
-    return size == 0;
+    return size.get() == 0;
   }
 
   @Override
   public boolean isFull() {
-    return size >= maxSize;
+    return size.get() >= maxSize;
   }
 
   @Override
   public int getSize() {
-    return size;
+    return size.get();
   }
 
   @Override
@@ -112,7 +119,7 @@ public final class PacketQueueImpl implements PacketQueue {
 
   @Override
   public float getPercentageUsed() {
-    return maxSize == 0 ? 0.0f : (float) (size * 100) / (float) maxSize;
+    return getMaxSize() == 0 ? 0.0f : ((float) size.get() * 100) / getMaxSize();
   }
 
   @Override
@@ -123,7 +130,7 @@ public final class PacketQueueImpl implements PacketQueue {
     packetQueuePolicy.applyPolicy(this, packet);
     synchronized (queue) {
       queue.add(packet);
-      size = queue.size();
+      size.set(queue.size());
     }
   }
 
@@ -131,7 +138,7 @@ public final class PacketQueueImpl implements PacketQueue {
   public void clear() {
     synchronized (queue) {
       queue.clear();
-      size = 0;
+      size.set(0);
     }
   }
 

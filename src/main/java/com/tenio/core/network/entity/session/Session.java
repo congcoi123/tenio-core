@@ -194,11 +194,6 @@ public interface Session {
   void setSelectionKey(SelectionKey selectionKey);
 
   /**
-   * Initializes all processed to handle packet receives from clients side.
-   */
-  void createPacketSocketHandler();
-
-  /**
    * Retrieves the current processing state on a packet.
    *
    * @return the {@link PacketReadState} current processing state
@@ -312,13 +307,6 @@ public interface Session {
    * @return the creation time of session in milliseconds ({@code long} value)
    */
   long getCreatedTime();
-
-  /**
-   * Sets creation time to the session.
-   *
-   * @param timestamp the creation time of session in milliseconds ({@code long} value)
-   */
-  void setCreatedTime(long timestamp);
 
   /**
    * Retrieves the last activity time of session.
@@ -534,13 +522,6 @@ public interface Session {
    * session for communication
    */
   String getFullServerIpAddress();
-
-  /**
-   * Retrieves the session manager instance.
-   *
-   * @return the {@link SessionManager} instance.
-   */
-  SessionManager getSessionManager();
 
   /**
    * Sets a session manager instance.

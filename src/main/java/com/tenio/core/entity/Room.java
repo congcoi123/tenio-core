@@ -160,13 +160,6 @@ public interface Room {
   void setOwner(Player owner);
 
   /**
-   * Retrieves a player manager for the room.
-   *
-   * @return a {@link PlayerManager} instance
-   */
-  PlayerManager getPlayerManager();
-
-  /**
    * Sets a new player manager for the room.
    *
    * @param playerManager a {@link PlayerManager} instance
@@ -447,15 +440,6 @@ public interface Room {
   boolean isFull();
 
   /**
-   * Retrieves a strategy to generate slot positions in the room.
-   *
-   * @return an implementation of {@link RoomPlayerSlotGeneratedStrategy}, in case this value is
-   * {@code null}, then the default implementation will be used
-   * @see DefaultRoomPlayerSlotGeneratedStrategy
-   */
-  RoomPlayerSlotGeneratedStrategy getPlayerSlotGeneratedStrategy();
-
-  /**
    * Sets a strategy to generate slot positions in the room.
    *
    * @param roomPlayerSlotGeneratedStrategy an implementation of
@@ -463,15 +447,6 @@ public interface Room {
    */
   void setPlayerSlotGeneratedStrategy(
       RoomPlayerSlotGeneratedStrategy roomPlayerSlotGeneratedStrategy);
-
-  /**
-   * Retrieves a strategy to validate credentials used to allow players get in the room.
-   *
-   * @return an implementation of {@link RoomCredentialValidatedStrategy}, in case this value is
-   * {@code null}, then the default implementation will be used
-   * @see DefaultRoomCredentialValidatedStrategy
-   */
-  RoomCredentialValidatedStrategy getRoomCredentialValidatedStrategy();
 
   /**
    * Sets a strategy to validate credentials used to allow players get in the room.

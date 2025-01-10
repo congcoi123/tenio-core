@@ -43,7 +43,8 @@ public final class DefaultConnectionFilter implements ConnectionFilter {
 
   private final Set<String> bannedAddresses;
   private final Map<String, AtomicInteger> addressMap;
-  private volatile int maxConnectionsPerIp;
+  // This is not thread-safe, one-time setup
+  private int maxConnectionsPerIp;
 
   /**
    * Initialization.

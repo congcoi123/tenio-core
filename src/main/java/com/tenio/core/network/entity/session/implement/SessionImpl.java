@@ -45,7 +45,9 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import kcp.Ukcp;
 
 /**
@@ -62,11 +64,12 @@ public final class SessionImpl implements Session {
   private static final AtomicLong ID_COUNTER = new AtomicLong(1L);
 
   private final long id;
-  private final AtomicLong readBytes;
-  private final AtomicLong readMessages;
-  private final AtomicLong writtenBytes;
-  private final AtomicLong droppedPackets;
-  private volatile String name;
+  private final long createdTime;
+  private final AtomicReference<String> name;
+
+  // They are not thread-safe, one-time setup
+  private int maxIdleTimeInSecond;
+
   private SessionManager sessionManager;
   private SocketChannel socketChannel;
   private SelectionKey selectionKey;
@@ -79,49 +82,53 @@ public final class SessionImpl implements Session {
   private ProcessedPacket processedPacket;
   private PendingPacket pendingPacket;
   private PacketQueue packetQueue;
-  private volatile long createdTime;
-  private volatile long lastReadTime;
-  private volatile long lastWriteTime;
-  private volatile long lastActivityTime;
-  private volatile long inactivatedTime;
 
-  private volatile SocketAddress datagramRemoteSocketAddress;
-  private volatile String clientAddress;
-  private volatile int clientPort;
-  private volatile int udpConvey;
+  private SocketAddress datagramRemoteSocketAddress;
+  private String clientAddress;
+  private int clientPort;
+  private int udpConvey;
   private int serverPort;
   private String serverAddress;
 
-  private int maxIdleTimeInSecond;
+  // Frequent update variables
+  private final AtomicBoolean activated;
+  private final AtomicReference<AssociatedState> associatedState;
+  private final AtomicBoolean hasUdp;
+  private final AtomicBoolean hasKcp;
 
-  private volatile boolean activated;
-  private volatile AssociatedState associatedState;
-  private volatile boolean hasUdp;
-  private volatile boolean hasKcp;
+  private final AtomicLong lastReadTime;
+  private final AtomicLong lastWriteTime;
+  private final AtomicLong lastActivityTime;
+  private final AtomicLong inactivatedTime;
+
+  // Statistics, no important data, could be delayed on update
+  private long readBytes;
+  private long readMessages;
+  private long writtenBytes;
+  private long droppedPackets;
 
   private SessionImpl() {
     id = ID_COUNTER.getAndIncrement();
+
+    name = new AtomicReference<>(null);
 
     transportType = TransportType.UNKNOWN;
     packetQueue = null;
     connectionFilter = null;
 
-    readBytes = new AtomicLong(0L);
-    readMessages = new AtomicLong(0L);
-    writtenBytes = new AtomicLong(0L);
-    droppedPackets = new AtomicLong(0L);
-
-    inactivatedTime = 0L;
+    inactivatedTime = new AtomicLong(0L);
     udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
-    activated = false;
-    associatedState = AssociatedState.NONE;
-    hasUdp = false;
-    hasKcp = false;
+    activated = new AtomicBoolean(false);
+    associatedState = new AtomicReference<>(AssociatedState.NONE);
+    hasUdp = new AtomicBoolean(false);
+    hasKcp = new AtomicBoolean(false);
 
-    setCreatedTime(now());
-    setLastReadTime(now());
-    setLastWriteTime(now());
-    setLastActivityTime(now());
+    lastReadTime = new AtomicLong(now());
+    lastWriteTime = new AtomicLong(now());
+    lastActivityTime = new AtomicLong(now());
+
+    createdTime = now();
+    maxIdleTimeInSecond = 0;
   }
 
   /**
@@ -140,22 +147,22 @@ public final class SessionImpl implements Session {
 
   @Override
   public String getName() {
-    return name;
+    return name.get();
   }
 
   @Override
   public void setName(String name) {
-    this.name = name;
+    this.name.set(name);
   }
 
   @Override
   public boolean isAssociatedToPlayer(AssociatedState associatedState) {
-    return this.associatedState == associatedState;
+    return this.associatedState.get() == associatedState;
   }
 
   @Override
   public void setAssociatedToPlayer(AssociatedState associatedState) {
-    this.associatedState = associatedState;
+    this.associatedState.set(associatedState);
   }
 
   @Override
@@ -186,12 +193,12 @@ public final class SessionImpl implements Session {
 
   @Override
   public boolean containsUdp() {
-    return hasUdp;
+    return hasUdp.get();
   }
 
   @Override
   public boolean containsKcp() {
-    return hasKcp;
+    return hasKcp.get();
   }
 
   @Override
@@ -219,7 +226,6 @@ public final class SessionImpl implements Session {
     if (Objects.nonNull(socketChannel.socket()) && !socketChannel.socket().isClosed()) {
       transportType = TransportType.TCP;
       createPacketSocketHandler();
-
       this.socketChannel = socketChannel;
 
       serverAddress = this.socketChannel.socket().getLocalAddress().getHostAddress();
@@ -231,13 +237,6 @@ public final class SessionImpl implements Session {
       clientAddress = remoteAddress.getHostAddress();
       clientPort = socketAddress.getPort();
     }
-  }
-
-  @Override
-  public void createPacketSocketHandler() {
-    packetReadState = PacketReadState.WAIT_NEW_PACKET;
-    processedPacket = ProcessedPacket.newInstance();
-    pendingPacket = PendingPacket.newInstance();
   }
 
   @Override
@@ -281,10 +280,10 @@ public final class SessionImpl implements Session {
     if (Objects.isNull(this.datagramChannel)) {
       this.datagramRemoteSocketAddress = null;
       this.udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
-      this.hasUdp = false;
+      this.hasUdp.set(false);
     } else {
       this.udpConvey = udpConvey;
-      this.hasUdp = true;
+      this.hasUdp.set(true);
     }
   }
 
@@ -305,7 +304,7 @@ public final class SessionImpl implements Session {
     }
 
     this.kcpChannel = kcpChannel;
-    this.hasKcp = Objects.nonNull(kcpChannel);
+    this.hasKcp.set(Objects.nonNull(kcpChannel));
   }
 
   @Override
@@ -362,80 +361,75 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void setCreatedTime(long timestamp) {
-    createdTime = timestamp;
-  }
-
-  @Override
   public long getLastActivityTime() {
-    return lastActivityTime;
+    return lastActivityTime.get();
   }
 
   @Override
   public void setLastActivityTime(long timestamp) {
-    lastActivityTime = timestamp;
+    lastActivityTime.set(timestamp);
   }
 
   @Override
   public long getLastReadTime() {
-    return lastReadTime;
+    return lastReadTime.get();
   }
 
   @Override
   public void setLastReadTime(long timestamp) {
-    lastReadTime = timestamp;
-    setLastActivityTime(lastReadTime);
+    lastReadTime.set(timestamp);
+    setLastActivityTime(timestamp);
   }
 
   @Override
   public long getLastWriteTime() {
-    return lastWriteTime;
+    return lastWriteTime.get();
   }
 
   @Override
   public void setLastWriteTime(long timestamp) {
-    lastWriteTime = timestamp;
-    setLastActivityTime(lastWriteTime);
+    lastWriteTime.set(timestamp);
+    setLastActivityTime(timestamp);
   }
 
   @Override
   public long getReadBytes() {
-    return readBytes.get();
+    return readBytes;
   }
 
   @Override
   public void addReadBytes(long bytes) {
-    readBytes.addAndGet(bytes);
+    readBytes += bytes;
   }
 
   @Override
   public long getWrittenBytes() {
-    return writtenBytes.get();
+    return writtenBytes;
   }
 
   @Override
   public void addWrittenBytes(long bytes) {
-    writtenBytes.addAndGet(bytes);
+    writtenBytes += bytes;
   }
 
   @Override
   public long getReadMessages() {
-    return readMessages.get();
+    return readMessages;
   }
 
   @Override
   public void increaseReadMessages() {
-    readMessages.incrementAndGet();
+    readMessages++;
   }
 
   @Override
   public long getDroppedPackets() {
-    return droppedPackets.get();
+    return droppedPackets;
   }
 
   @Override
   public void addDroppedPackets(int packets) {
-    droppedPackets.addAndGet(packets);
+    droppedPackets += packets;
   }
 
   @Override
@@ -454,32 +448,32 @@ public final class SessionImpl implements Session {
   }
 
   private boolean isConnectionIdle() {
-    if (getMaxIdleTimeInSeconds() > 0) {
+    if (maxIdleTimeInSecond > 0) {
       long elapsedSinceLastActivity = TimeUtility.currentTimeMillis() - getLastActivityTime();
-      return elapsedSinceLastActivity / 1000L > (long) getMaxIdleTimeInSeconds();
+      return elapsedSinceLastActivity / 1000L > (long) maxIdleTimeInSecond;
     }
     return false;
   }
 
   @Override
   public boolean isActivated() {
-    return activated;
+    return activated.get();
   }
 
   @Override
   public void activate() {
-    activated = true;
+    activated.set(true);
   }
 
   @Override
   public void deactivate() {
-    activated = false;
-    inactivatedTime = TimeUtility.currentTimeMillis();
+    activated.set(false);
+    inactivatedTime.set(TimeUtility.currentTimeMillis());
   }
 
   @Override
   public long getInactivatedTime() {
-    return inactivatedTime;
+    return inactivatedTime.get();
   }
 
   @Override
@@ -513,24 +507,18 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public SessionManager getSessionManager() {
-    return sessionManager;
-  }
-
-  @Override
   public void setSessionManager(SessionManager sessionManager) {
     this.sessionManager = sessionManager;
   }
 
   @Override
   public void remove() {
-    getSessionManager().removeSession(this);
+    sessionManager.removeSession(this);
   }
 
   @Override
   public void close(ConnectionDisconnectMode connectionDisconnectMode,
-                    PlayerDisconnectMode playerDisconnectMode)
-      throws IOException {
+                    PlayerDisconnectMode playerDisconnectMode) throws IOException {
     if (!isActivated()) {
       return;
     }
@@ -566,8 +554,14 @@ public final class SessionImpl implements Session {
         break;
     }
 
-    getSessionManager().emitEvent(ServerEvent.SESSION_WILL_BE_CLOSED, this,
+    sessionManager.emitEvent(ServerEvent.SESSION_WILL_BE_CLOSED, this,
         connectionDisconnectMode, playerDisconnectMode);
+  }
+
+  private void createPacketSocketHandler() {
+    packetReadState = PacketReadState.WAIT_NEW_PACKET;
+    processedPacket = ProcessedPacket.newInstance();
+    pendingPacket = PendingPacket.newInstance();
   }
 
   private long now() {
@@ -602,27 +596,27 @@ public final class SessionImpl implements Session {
   public String toString() {
     return "Session{" +
         "id=" + id +
-        ", name='" + name + '\'' +
+        ", name='" + name.get() + '\'' +
         ", transportType=" + transportType +
         ", createdTime=" + createdTime +
-        ", lastReadTime=" + lastReadTime +
-        ", lastWriteTime=" + lastWriteTime +
-        ", lastActivityTime=" + lastActivityTime +
+        ", lastReadTime=" + lastReadTime.get() +
+        ", lastWriteTime=" + lastWriteTime.get() +
+        ", lastActivityTime=" + lastActivityTime.get() +
         ", readBytes=" + readBytes +
         ", writtenBytes=" + writtenBytes +
         ", droppedPackets=" + droppedPackets +
-        ", inactivatedTime=" + inactivatedTime +
+        ", inactivatedTime=" + inactivatedTime.get() +
         ", datagramRemoteSocketAddress=" + datagramRemoteSocketAddress +
         ", clientAddress='" + clientAddress + '\'' +
         ", clientPort=" + clientPort +
         ", serverPort=" + serverPort +
         ", serverAddress='" + serverAddress + '\'' +
         ", maxIdleTimeInSecond=" + maxIdleTimeInSecond +
-        ", activated=" + activated +
-        ", associatedState=" + associatedState +
-        ", hasUdp=" + hasUdp +
+        ", activated=" + activated.get() +
+        ", associatedState=" + associatedState.get() +
+        ", hasUdp=" + hasUdp.get() +
         ", udpConvey=" + udpConvey +
-        ", hasKcp=" + hasKcp +
+        ", hasKcp=" + hasKcp.get() +
         ", kcpChannel=" + kcpChannel +
         '}';
   }

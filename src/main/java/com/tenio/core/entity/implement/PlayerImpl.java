@@ -34,6 +34,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
@@ -44,24 +48,26 @@ public class PlayerImpl implements Player {
   private final String identity;
   private final Map<String, Object> properties;
   private Consumer<Field> updateConsumer;
-  private volatile Session session;
-  private volatile Room currentRoom;
-  private volatile PlayerState state;
-  private volatile PlayerRoleInRoom roleInRoom;
+  private final AtomicReference<Session> session;
+  private final AtomicReference<Room> currentRoom;
+  private final AtomicReference<PlayerState> state;
+  private final AtomicReference<PlayerRoleInRoom> roleInRoom;
 
-  private volatile long lastLoginTime;
-  private volatile long lastJoinedRoomTime;
-  private volatile long lastReadTime;
-  private volatile long lastWriteTime;
-  private volatile long lastActivityTime;
+  private final AtomicLong lastLoginTime;
+  private final AtomicLong lastJoinedRoomTime;
+  private final AtomicLong lastReadTime;
+  private final AtomicLong lastWriteTime;
+  private final AtomicLong lastActivityTime;
 
+  private final AtomicInteger playerSlotInCurrentRoom;
+
+  private final AtomicBoolean loggedIn;
+  private final AtomicBoolean activated;
+  private final AtomicBoolean deportedFlag;
+
+  // These variables should be one-time setup and would not be thread-safe!
   private int maxIdleTimeInSecond;
   private int maxIdleTimeNeverDeportedInSecond;
-  private volatile int playerSlotInCurrentRoom;
-
-  private volatile boolean loggedIn;
-  private volatile boolean activated;
-  private volatile boolean deportedFlag;
 
   /**
    * Constructor.
@@ -80,18 +86,22 @@ public class PlayerImpl implements Player {
    */
   public PlayerImpl(String identity, Session session) {
     this.identity = identity;
+    this.session = new AtomicReference<>(session);
     properties = new ConcurrentHashMap<>();
-    lastLoginTime = 0L;
-    lastJoinedRoomTime = 0L;
-    setCurrentRoom(null);
-    setRoleInRoom(PlayerRoleInRoom.SPECTATOR);
-    setSession(session);
-    setLoggedIn(false);
-    setActivated(false);
-    setLastReadTime(now());
-    setLastWriteTime(now());
-    setLastActivityTime(now());
-    setNeverDeported(false);
+    currentRoom = new AtomicReference<>(null);
+    state = new AtomicReference<>(null);
+    roleInRoom = new AtomicReference<>(PlayerRoleInRoom.SPECTATOR);
+    lastLoginTime = new AtomicLong(0L);
+    lastJoinedRoomTime = new AtomicLong(0L);
+    lastReadTime = new AtomicLong(now());
+    lastWriteTime = new AtomicLong(now());
+    lastActivityTime = new AtomicLong(now());
+    playerSlotInCurrentRoom = new AtomicInteger(Room.NIL_SLOT);
+    loggedIn = new AtomicBoolean(false);
+    activated = new AtomicBoolean(false);
+    deportedFlag = new AtomicBoolean(false);
+    maxIdleTimeInSecond = 0;
+    maxIdleTimeNeverDeportedInSecond = 0;
   }
 
   /**
@@ -122,88 +132,84 @@ public class PlayerImpl implements Player {
 
   @Override
   public boolean containsSession() {
-    return Objects.nonNull(session);
+    return Objects.nonNull(session.get());
   }
 
   @Override
   public boolean isState(PlayerState state) {
-    return this.state == state;
+    return this.state.get() == state;
   }
 
   @Override
   public PlayerState getState() {
-    return state;
+    return state.get();
   }
 
   @Override
-  public synchronized void setState(PlayerState state) {
-    this.state = state;
-    if (Objects.nonNull(updateConsumer)) {
-      updateConsumer.accept(Field.STATE);
-    }
+  public void setState(PlayerState state) {
+    this.state.set(state);
+    notifyUpdate(Field.STATE);
   }
 
   @Override
   public boolean isActivated() {
-    return activated;
+    return activated.get();
   }
 
   @Override
-  public synchronized void setActivated(boolean activated) {
-    this.activated = activated;
-    if (Objects.nonNull(updateConsumer)) {
-      updateConsumer.accept(Field.ACTIVATION);
-    }
+  public void setActivated(boolean activated) {
+    this.activated.set(activated);
+    notifyUpdate(Field.ACTIVATION);
   }
 
   @Override
   public boolean isLoggedIn() {
-    return loggedIn;
+    return loggedIn.get();
   }
 
   @Override
-  public synchronized void setLoggedIn(boolean loggedIn) {
-    this.loggedIn = loggedIn;
-    if (this.loggedIn) {
+  public void setLoggedIn(boolean loggedIn) {
+    this.loggedIn.set(loggedIn);
+    if (loggedIn) {
       setLastLoggedInTime();
     }
   }
 
   @Override
   public long getLastLoggedInTime() {
-    return lastLoginTime;
+    return lastLoginTime.get();
   }
 
   @Override
   public long getLastActivityTime() {
-    return lastActivityTime;
+    return lastActivityTime.get();
   }
 
   @Override
   public void setLastActivityTime(long timestamp) {
-    lastActivityTime = timestamp;
+    lastActivityTime.set(timestamp);
   }
 
   @Override
   public long getLastReadTime() {
-    return lastReadTime;
+    return lastReadTime.get();
   }
 
   @Override
   public void setLastReadTime(long timestamp) {
-    lastReadTime = timestamp;
-    setLastActivityTime(lastReadTime);
+    lastReadTime.set(timestamp);
+    setLastActivityTime(timestamp);
   }
 
   @Override
   public long getLastWriteTime() {
-    return lastWriteTime;
+    return lastWriteTime.get();
   }
 
   @Override
   public void setLastWriteTime(long timestamp) {
-    lastWriteTime = timestamp;
-    setLastActivityTime(lastWriteTime);
+    lastWriteTime.set(timestamp);
+    setLastActivityTime(timestamp);
   }
 
   @Override
@@ -223,15 +229,13 @@ public class PlayerImpl implements Player {
 
   @Override
   public boolean isNeverDeported() {
-    return deportedFlag;
+    return deportedFlag.get();
   }
 
   @Override
-  public synchronized void setNeverDeported(boolean flag) {
-    deportedFlag = flag;
-    if (Objects.nonNull(updateConsumer)) {
-      updateConsumer.accept(Field.DEPORTATION);
-    }
+  public void setNeverDeported(boolean flag) {
+    deportedFlag.set(flag);
+    notifyUpdate(Field.DEPORTATION);
   }
 
   @Override
@@ -250,85 +254,74 @@ public class PlayerImpl implements Player {
   }
 
   private boolean isConnectionIdle(int maxIdleTimeInSecond) {
-    if (maxIdleTimeInSecond > 0) {
-      long elapsedSinceLastActivity = now() - getLastActivityTime();
-      return elapsedSinceLastActivity / 1000L > (long) maxIdleTimeInSecond;
-    }
-    return false;
+    return maxIdleTimeInSecond > 0 &&
+        ((now() - getLastActivityTime()) / 1000L) > (long) maxIdleTimeInSecond;
   }
 
   private void setLastLoggedInTime() {
-    lastLoginTime = now();
+    lastLoginTime.set(now());
   }
 
   @Override
   public Optional<Session> getSession() {
-    return Optional.ofNullable(session);
+    return Optional.ofNullable(session.get());
   }
 
   @Override
-  public synchronized void setSession(Session session) {
+  public void setSession(Session session) {
     if (Objects.nonNull(session)) {
       session.setName(identity);
       session.setAssociatedToPlayer(Session.AssociatedState.DONE);
     }
-    this.session = session;
+    this.session.set(session);
   }
 
   @Override
   public boolean isInRoom() {
-    return Objects.nonNull(currentRoom);
+    return Objects.nonNull(currentRoom.get());
   }
 
   @Override
   public PlayerRoleInRoom getRoleInRoom() {
-    return roleInRoom;
+    return roleInRoom.get();
   }
 
   @Override
-  public synchronized void setRoleInRoom(PlayerRoleInRoom roleInRoom) {
-    this.roleInRoom = roleInRoom;
-    if (Objects.nonNull(updateConsumer)) {
-      updateConsumer.accept(Field.ROLE_IN_ROOM);
-    }
+  public void setRoleInRoom(PlayerRoleInRoom roleInRoom) {
+    this.roleInRoom.set(roleInRoom);
+    notifyUpdate(Field.ROLE_IN_ROOM);
   }
 
   @Override
   public Optional<Room> getCurrentRoom() {
-    return Optional.ofNullable(currentRoom);
+    return Optional.ofNullable(currentRoom.get());
   }
 
   @Override
-  public synchronized void setCurrentRoom(Room room) {
-    currentRoom = room;
-    if (Objects.isNull(currentRoom)) {
-      playerSlotInCurrentRoom = Room.NIL_SLOT;
-    } else {
-      playerSlotInCurrentRoom = Room.DEFAULT_SLOT;
-    }
+  public void setCurrentRoom(Room room) {
+    currentRoom.set(room);
+    playerSlotInCurrentRoom.set(Objects.isNull(room) ? Room.NIL_SLOT : Room.DEFAULT_SLOT);
     setLastJoinedRoomTime();
   }
 
   @Override
   public long getLastJoinedRoomTime() {
-    return lastJoinedRoomTime;
+    return lastJoinedRoomTime.get();
   }
 
   private void setLastJoinedRoomTime() {
-    lastJoinedRoomTime = now();
+    lastJoinedRoomTime.set(now());
   }
 
   @Override
   public int getPlayerSlotInCurrentRoom() {
-    return playerSlotInCurrentRoom;
+    return playerSlotInCurrentRoom.get();
   }
 
   @Override
-  public synchronized void setPlayerSlotInCurrentRoom(int slot) {
-    playerSlotInCurrentRoom = slot;
-    if (Objects.nonNull(updateConsumer)) {
-      updateConsumer.accept(Field.SLOT_IN_ROOM);
-    }
+  public void setPlayerSlotInCurrentRoom(int slot) {
+    playerSlotInCurrentRoom.set(slot);
+    notifyUpdate(Field.SLOT_IN_ROOM);
   }
 
   @Override
@@ -339,9 +332,7 @@ public class PlayerImpl implements Player {
   @Override
   public void setProperty(String key, Object value) {
     properties.put(key, value);
-    if (Objects.nonNull(updateConsumer)) {
-      updateConsumer.accept(Field.PROPERTY);
-    }
+    notifyUpdate(Field.PROPERTY);
   }
 
   @Override
@@ -352,17 +343,13 @@ public class PlayerImpl implements Player {
   @Override
   public void removeProperty(String key) {
     properties.remove(key);
-    if (Objects.nonNull(updateConsumer)) {
-      updateConsumer.accept(Field.PROPERTY);
-    }
+    notifyUpdate(Field.PROPERTY);
   }
 
   @Override
   public void clearProperties() {
     properties.clear();
-    if (Objects.nonNull(updateConsumer)) {
-      updateConsumer.accept(Field.PROPERTY);
-    }
+    notifyUpdate(Field.PROPERTY);
   }
 
   @Override
@@ -382,21 +369,22 @@ public class PlayerImpl implements Player {
     return TimeUtility.currentTimeMillis();
   }
 
+  // This is not thread-safe
+  private void notifyUpdate(Field field) {
+    if (Objects.nonNull(updateConsumer)) {
+      updateConsumer.accept(field);
+    }
+  }
+
   @Override
   public boolean equals(Object object) {
-    if (!(object instanceof Player player)) {
-      return false;
-    } else {
-      return getIdentity().equals(player.getIdentity());
-    }
+    return (object instanceof Player player) && identity.equals(player.getIdentity());
   }
 
   @Override
   public int hashCode() {
     final int prime = 31;
-    int result = 1;
-    result = prime * result + (Objects.isNull(identity) ? 0 : identity.hashCode());
-    return result;
+    return prime * (Objects.isNull(identity) ? 0 : identity.hashCode());
   }
 
   @Override
@@ -404,21 +392,21 @@ public class PlayerImpl implements Player {
     return "Player{" +
         "identity='" + identity + '\'' +
         ", properties=" + properties +
-        ", currentRoom=" + (Objects.nonNull(currentRoom) ? currentRoom.getId() : "") +
-        ", state=" + state +
-        ", roleInRoom=" + roleInRoom +
-        ", lastLoginTime=" + lastLoginTime +
-        ", lastJoinedRoomTime=" + lastJoinedRoomTime +
-        ", lastReadTime=" + lastReadTime +
-        ", lastWriteTime=" + lastWriteTime +
-        ", lastActivityTime=" + lastActivityTime +
+        ", currentRoom=" + (Objects.nonNull(currentRoom.get()) ? currentRoom.get().getId() : "") +
+        ", state=" + state.get() +
+        ", roleInRoom=" + roleInRoom.get() +
+        ", lastLoginTime=" + lastLoginTime.get() +
+        ", lastJoinedRoomTime=" + lastJoinedRoomTime.get() +
+        ", lastReadTime=" + lastReadTime.get() +
+        ", lastWriteTime=" + lastWriteTime.get() +
+        ", lastActivityTime=" + lastActivityTime.get() +
         ", maxIdleTimeInSecond=" + maxIdleTimeInSecond +
         ", maxIdleTimeNeverDeportedInSecond=" + maxIdleTimeNeverDeportedInSecond +
-        ", playerSlotInCurrentRoom=" + playerSlotInCurrentRoom +
-        ", loggedIn=" + loggedIn +
-        ", activated=" + activated +
-        ", deportedFlag=" + deportedFlag +
-        ", session=" + session +
+        ", playerSlotInCurrentRoom=" + playerSlotInCurrentRoom.get() +
+        ", loggedIn=" + loggedIn.get() +
+        ", activated=" + activated.get() +
+        ", deportedFlag=" + deportedFlag.get() +
+        ", session=" + session.get() +
         '}';
   }
 }

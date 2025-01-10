@@ -179,12 +179,7 @@ public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
 
   @Override
   public boolean equals(Object object) {
-    if (!(object instanceof Packet)) {
-      return false;
-    } else {
-      var packet = (Packet) object;
-      return getId() == packet.getId();
-    }
+    return (object instanceof Packet packet) && (getId() == packet.getId());
   }
 
   /**

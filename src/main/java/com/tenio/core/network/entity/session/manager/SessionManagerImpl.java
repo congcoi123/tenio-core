@@ -34,17 +34,19 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.implement.SessionImpl;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import io.netty.channel.Channel;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.channels.DatagramChannel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.concurrent.GuardedBy;
 import kcp.Ukcp;
+
+import javax.annotation.concurrent.GuardedBy;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The implementation for session manager.
@@ -65,11 +67,12 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private final Map<Integer, Session> sessionByDatagrams;
   @GuardedBy("this")
   private final Map<Integer, Session> sessionByKcps;
-  private List<Session> readonlySessionsList;
+  private final List<Session> readonlySessionsList;
+  private final AtomicInteger sessionCount;
+  // Non thread-safe, one-time setup
   private PacketQueuePolicy packetQueuePolicy;
   private ConnectionFilter connectionFilter;
   private int packetQueueSize;
-  private volatile int sessionCount;
   private int maxIdleTimeInSeconds;
 
   private SessionManagerImpl(EventManager eventManager) {
@@ -82,8 +85,9 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     sessionByKcps = new HashMap<>();
     readonlySessionsList = new ArrayList<>();
 
-    sessionCount = 0;
+    sessionCount = new AtomicInteger(0);
     packetQueueSize = DEFAULT_PACKET_QUEUE_SIZE;
+    maxIdleTimeInSeconds = 0;
     packetQueuePolicy = null;
     connectionFilter = null;
   }
@@ -117,8 +121,9 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
       sessionBySockets.put(session.getSocketChannel(), session);
-      sessionCount = sessionByIds.size();
-      readonlySessionsList = List.copyOf(sessionByIds.values());
+      sessionCount.set(sessionByIds.size());
+      readonlySessionsList.clear();
+      readonlySessionsList.addAll(sessionByIds.values());
     }
     return session;
   }
@@ -193,8 +198,9 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
       sessionByWebSockets.put(webSocketChannel, session);
-      sessionCount = sessionByIds.size();
-      readonlySessionsList = List.copyOf(sessionByIds.values());
+      sessionCount.set(sessionByIds.size());
+      readonlySessionsList.clear();
+      readonlySessionsList.addAll(sessionByIds.values());
     }
     return session;
   }
@@ -223,8 +229,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   @Override
   public void setPacketQueuePolicy(Class<? extends PacketQueuePolicy> clazz)
       throws InstantiationException, IllegalAccessException, IllegalArgumentException,
-      InvocationTargetException,
-      NoSuchMethodException, SecurityException {
+      InvocationTargetException, NoSuchMethodException, SecurityException {
     packetQueuePolicy = clazz.getDeclaredConstructor().newInstance();
   }
 
@@ -253,13 +258,14 @@ public final class SessionManagerImpl extends AbstractManager implements Session
         }
       }
       sessionByIds.remove(session.getId());
-      sessionCount = sessionByIds.size();
-      readonlySessionsList = List.copyOf(sessionByIds.values());
+      sessionCount.set(sessionByIds.size());
+      readonlySessionsList.clear();
+      readonlySessionsList.addAll(sessionByIds.values());
     }
   }
 
   @Override
-  public List<Session> getReadonlySessionsList() {
+  public synchronized List<Session> getReadonlySessionsList() {
     return readonlySessionsList;
   }
 
@@ -270,7 +276,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public int getSessionCount() {
-    return sessionCount;
+    return sessionCount.get();
   }
 
   @Override
