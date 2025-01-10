@@ -234,6 +234,11 @@ public class RoomImpl implements Room {
   }
 
   @Override
+  public int getPlayerCount() {
+    return playerManager.getPlayerCount();
+  }
+
+  @Override
   public int getParticipantCount() {
     return getReadonlyParticipantsList().size();
   }
@@ -379,7 +384,8 @@ public class RoomImpl implements Room {
     classifyPlayersByRoles();
   }
 
-  private synchronized void classifyPlayersByRoles() {
+  // Non thread-safe
+  private void classifyPlayersByRoles() {
     participants.clear();
     participants.addAll(getReadonlyPlayersList().stream()
         .filter(player -> player.getRoleInRoom() == PlayerRoleInRoom.PARTICIPANT)

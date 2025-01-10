@@ -248,6 +248,13 @@ public interface Room {
   void setCapacity(int maxParticipants, int maxSpectators) throws IllegalArgumentException;
 
   /**
+   * Retrieves the current number of players (participants + spectators) in the room.
+   *
+   * @return the current number of players ({@code integer} value)
+   */
+  int getPlayerCount();
+
+  /**
    * Retrieves the current number of participants in the room.
    *
    * @return the current number of participants ({@code integer} value)
