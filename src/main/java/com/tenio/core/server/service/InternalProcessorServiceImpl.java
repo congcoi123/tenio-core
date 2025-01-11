@@ -228,7 +228,6 @@ public final class InternalProcessorServiceImpl extends AbstractController
         player.setSession(session);
         player.setLastReadTime(now());
         player.setLastWriteTime(now());
-        player.setLastActivityTime(now());
         eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player, session,
             PlayerReconnectedResult.SUCCESS);
       } else {

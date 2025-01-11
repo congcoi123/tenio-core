@@ -34,7 +34,8 @@ import com.tenio.core.exception.RemovedNonExistentPlayerFromRoomException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entity.session.Session;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,13 +49,15 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   private final Map<String, Player> players;
   private final AtomicReference<Room> ownerRoom;
-  // Non thread-safe, one-time setup
+  private volatile List<Player> readOnlyPlayersList;
+  private volatile int playerCount;
   private int maxIdleTimeInSecond;
   private int maxIdleTimeNeverDeportedInSecond;
 
   private PlayerManagerImpl(EventManager eventManager) {
     super(eventManager);
-    players = new ConcurrentHashMap<>();
+    players = new HashMap<>();
+    readOnlyPlayersList = new ArrayList<>();
     ownerRoom = new AtomicReference<>(null);
   }
 
@@ -74,18 +77,21 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
       throw new AddedDuplicatedPlayerException(player, ownerRoom.get());
     }
 
-    players.put(player.getIdentity(), player);
+    synchronized (this) {
+      players.put(player.getIdentity(), player);
+      readOnlyPlayersList = players.values().stream().toList();
+      playerCount = readOnlyPlayersList.size();
+    }
   }
 
   @Override
   public Player createPlayer(String playerName) {
-    var player = PlayerImpl.newInstance(playerName);
+    Player player = PlayerImpl.newInstance(playerName);
     player.setActivated(true);
     player.setLoggedIn(true);
     player.setMaxIdleTimeInSeconds(maxIdleTimeInSecond);
     player.setMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeportedInSecond);
     addPlayer(player);
-
     return player;
   }
 
@@ -95,29 +101,28 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
       throw new NullPointerException("Unable to assign a null session for the player");
     }
 
-    var player = PlayerImpl.newInstance(playerName, session);
+    Player player = PlayerImpl.newInstance(playerName, session);
     player.setActivated(true);
     player.setLoggedIn(true);
     player.setMaxIdleTimeInSeconds(maxIdleTimeInSecond);
     player.setMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeportedInSecond);
     addPlayer(player);
-
     return player;
   }
 
   @Override
-  public Player getPlayerByIdentity(String playerIdentity) {
+  public synchronized Player getPlayerByIdentity(String playerIdentity) {
     return players.get(playerIdentity);
   }
 
   @Override
-  public Iterator<Player> getPlayerIterator() {
+  public synchronized Iterator<Player> getPlayerIterator() {
     return players.values().iterator();
   }
 
   @Override
   public List<Player> getReadonlyPlayersList() {
-    return players.values().stream().toList();
+    return readOnlyPlayersList;
   }
 
   @Override
@@ -126,15 +131,15 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
       throw new RemovedNonExistentPlayerFromRoomException(playerIdentity, ownerRoom.get());
     }
 
-    removePlayer(playerIdentity);
-  }
-
-  private void removePlayer(String playerName) {
-    players.remove(playerName);
+    synchronized (this) {
+      players.remove(playerIdentity);
+      readOnlyPlayersList = players.values().stream().toList();
+      playerCount = readOnlyPlayersList.size();
+    }
   }
 
   @Override
-  public boolean containsPlayerIdentity(String playerIdentity) {
+  public synchronized boolean containsPlayerIdentity(String playerIdentity) {
     return players.containsKey(playerIdentity);
   }
 
@@ -150,7 +155,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   @Override
   public int getPlayerCount() {
-    return players.size();
+    return playerCount;
   }
 
   @Override
@@ -174,7 +179,9 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public void clear() {
+  public synchronized void clear() {
     players.clear();
+    readOnlyPlayersList = new ArrayList<>();
+    playerCount = 0;
   }
 }

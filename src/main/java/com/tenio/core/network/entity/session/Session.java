@@ -316,13 +316,6 @@ public interface Session {
   long getLastActivityTime();
 
   /**
-   * Sets the last activity time for the session.
-   *
-   * @param timestamp the last activity time in milliseconds ({@code long} value)
-   */
-  void setLastActivityTime(long timestamp);
-
-  /**
    * Retrieves the last time when the session receives the last byte of data from client side.
    *
    * @return the last reading new data time in milliseconds ({@code long} value)
@@ -496,32 +489,6 @@ public interface Session {
    * the session for communication
    */
   int getClientPort();
-
-  /**
-   * Retrieves IP address information of the server which is using the TCP/WebSocket session for
-   * communication.
-   *
-   * @return a {@link String} value, IP address information of the server which is using the
-   * session for communication
-   */
-  String getServerAddress();
-
-  /**
-   * Retrieves port number of the server which is using the TCP/WebSocket session for communication.
-   *
-   * @return an {@code integer} value, the port number of the server which is using by the
-   * session for communication
-   */
-  int getServerPort();
-
-  /**
-   * Retrieves full IP address information of the server which is using the TCP/WebSocket session
-   * for communication.
-   *
-   * @return a {@link String} value, full IP address information of the server which is using by the
-   * session for communication
-   */
-  String getFullServerIpAddress();
 
   /**
    * Sets a session manager instance.

@@ -47,6 +47,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * An implemented class is for a room using in the server.
@@ -57,17 +58,16 @@ public class RoomImpl implements Room {
 
   private final long id;
   private final Map<String, Object> properties;
-  private final AtomicReference<String> name;
-  private final AtomicReference<String> password;
-  private final List<Player> participants;
-  private final AtomicInteger maxParticipants;
-  private final List<Player> spectators;
-  private final AtomicInteger maxSpectators;
   private final AtomicReference<Player> owner;
-  private final AtomicReference<RoomRemoveMode> roomRemoveMode;
   private final AtomicReference<RoomState> state;
-  private final AtomicBoolean activated;
-  // They are not thread-safe, one-time setup
+  private volatile String name;
+  private volatile String password;
+  private volatile List<Player> participants;
+  private volatile int maxParticipants;
+  private volatile List<Player> spectators;
+  private volatile int maxSpectators;
+  private volatile RoomRemoveMode roomRemoveMode;
+  private volatile boolean activated;
   private PlayerManager playerManager;
   private RoomCredentialValidatedStrategy roomCredentialValidatedStrategy;
   private RoomPlayerSlotGeneratedStrategy roomPlayerSlotGeneratedStrategy;
@@ -77,17 +77,11 @@ public class RoomImpl implements Room {
    */
   public RoomImpl() {
     id = ID_COUNTER.getAndIncrement();
-    name = new AtomicReference<>(null);
-    password = new AtomicReference<>(null);
+    properties = new ConcurrentHashMap<>();
     state = new AtomicReference<>(null);
-    roomRemoveMode = new AtomicReference<>(null);
-    maxParticipants = new AtomicInteger(0);
-    maxSpectators = new AtomicInteger(0);
     spectators = new ArrayList<>();
     participants = new ArrayList<>();
     owner = new AtomicReference<>(null);
-    properties = new ConcurrentHashMap<>();
-    activated = new AtomicBoolean(false);
     setRoomRemoveMode(RoomRemoveMode.WHEN_EMPTY);
   }
 
@@ -107,24 +101,24 @@ public class RoomImpl implements Room {
 
   @Override
   public String getName() {
-    return name.get();
+    return name;
   }
 
   @Override
   public void setName(String name) {
     roomCredentialValidatedStrategy.validateName(name);
-    this.name.set(name);
+    this.name = name;
   }
 
   @Override
   public String getPassword() {
-    return password.get();
+    return password;
   }
 
   @Override
   public void setPassword(String password) {
     roomCredentialValidatedStrategy.validatePassword(password);
-    this.password.set(password);
+    this.password = password;
   }
 
   @Override
@@ -139,27 +133,27 @@ public class RoomImpl implements Room {
 
   @Override
   public boolean isPublic() {
-    return Objects.isNull(password.get());
+    return Objects.isNull(password);
   }
 
   @Override
   public int getMaxParticipants() {
-    return maxParticipants.get();
+    return maxParticipants;
   }
 
   @Override
   public void setMaxParticipants(int maxParticipants) {
-    this.maxParticipants.set(maxParticipants);
+    this.maxParticipants = maxParticipants;
   }
 
   @Override
   public int getMaxSpectators() {
-    return maxSpectators.get();
+    return maxSpectators;
   }
 
   @Override
   public void setMaxSpectators(int maxSpectators) {
-    this.maxSpectators.set(maxSpectators);
+    this.maxSpectators = maxSpectators;
   }
 
   @Override
@@ -179,22 +173,22 @@ public class RoomImpl implements Room {
 
   @Override
   public boolean isActivated() {
-    return activated.get();
+    return activated;
   }
 
   @Override
   public void setActivated(boolean activated) {
-    this.activated.set(activated);
+    this.activated = activated;
   }
 
   @Override
   public RoomRemoveMode getRoomRemoveMode() {
-    return roomRemoveMode.get();
+    return roomRemoveMode;
   }
 
   @Override
   public void setRoomRemoveMode(RoomRemoveMode roomRemoveMode) {
-    this.roomRemoveMode.set(roomRemoveMode);
+    this.roomRemoveMode = roomRemoveMode;
   }
 
   @Override
@@ -224,13 +218,13 @@ public class RoomImpl implements Room {
 
   @Override
   public int getCapacity() {
-    return maxParticipants.get() + maxSpectators.get();
+    return maxParticipants + maxSpectators;
   }
 
   @Override
   public void setCapacity(int maxParticipants, int maxSpectators) {
-    this.maxParticipants.set(maxParticipants);
-    this.maxSpectators.set(maxSpectators);
+    this.maxParticipants = maxParticipants;
+    this.maxSpectators = maxSpectators;
   }
 
   @Override
@@ -269,18 +263,18 @@ public class RoomImpl implements Room {
   }
 
   @Override
-  public synchronized List<Player> getReadonlyParticipantsList() {
+  public List<Player> getReadonlyParticipantsList() {
     return participants;
   }
 
   @Override
-  public synchronized List<Player> getReadonlySpectatorsList() {
+  public List<Player> getReadonlySpectatorsList() {
     return spectators;
   }
 
   @Override
   public synchronized void addPlayer(Player player, String password, boolean asSpectator, int targetSlot) {
-    if (Objects.nonNull(this.password.get()) && !this.password.get().equals(password)) {
+    if (Objects.nonNull(this.password) && !this.password.equals(password)) {
       throw new PlayerJoinedRoomException(
           String.format("Unable to add player: %s to room due to invalid password provided", player.getIdentity()),
           PlayerJoinedRoomResult.INVALID_CREDENTIALS);
@@ -386,14 +380,12 @@ public class RoomImpl implements Room {
 
   // Non thread-safe
   private void classifyPlayersByRoles() {
-    participants.clear();
-    participants.addAll(getReadonlyPlayersList().stream()
+    participants = getReadonlyPlayersList().stream()
         .filter(player -> player.getRoleInRoom() == PlayerRoleInRoom.PARTICIPANT)
-        .toList());
-    spectators.clear();
-    spectators.addAll(getReadonlyPlayersList().stream()
+        .toList();
+    spectators = getReadonlyPlayersList().stream()
         .filter(player -> player.getRoleInRoom() == PlayerRoleInRoom.SPECTATOR)
-        .toList());
+        .toList();
   }
 
   private void allocateSlotToPlayer(Player player, int targetSlot) {
@@ -423,7 +415,6 @@ public class RoomImpl implements Room {
   public boolean isFull() {
     return playerManager.getPlayerCount() == getCapacity();
   }
-
 
   @Override
   public void setPlayerSlotGeneratedStrategy(
@@ -455,17 +446,16 @@ public class RoomImpl implements Room {
     return "Room{" +
         "id=" + id +
         ", properties=" + properties +
-        ", name='" + name.get() + '\'' +
-        ", password='" + password.get() + '\'' +
-        ", owner=" + (Objects.nonNull(owner.get()) ? owner.get().getIdentity() : "") +
-        ", roomRemoveMode=" + roomRemoveMode.get() +
+        ", owner=" + owner.get() +
         ", state=" + state.get() +
-        ", activated=" + activated.get() +
-        ", maxParticipants=" + maxParticipants.get() +
-        ", maxSpectators=" + maxSpectators.get() +
-        ", playerCount=" + playerManager.getPlayerCount() +
-        ", participants=" + participants.stream().map(Player::getIdentity).toList() +
-        ", spectators=" + spectators.stream().map(Player::getIdentity).toList() +
+        ", name='" + name + '\'' +
+        ", password='" + password + '\'' +
+        ", participants=" + participants +
+        ", maxParticipants=" + maxParticipants +
+        ", spectators=" + spectators +
+        ", maxSpectators=" + maxSpectators +
+        ", roomRemoveMode=" + roomRemoveMode +
+        ", activated=" + activated +
         '}';
   }
 }

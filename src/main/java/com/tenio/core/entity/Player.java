@@ -114,13 +114,6 @@ public interface Player {
   long getLastActivityTime();
 
   /**
-   * Sets the last activity time for the player.
-   *
-   * @param timestamp the last activity time in milliseconds ({@code long} value)
-   */
-  void setLastActivityTime(long timestamp);
-
-  /**
    * Retrieves the last time when the player receives the last byte of data.
    *
    * @return the last reading new data time in milliseconds ({@code long} value)
