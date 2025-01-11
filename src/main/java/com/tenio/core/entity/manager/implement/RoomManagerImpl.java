@@ -73,16 +73,6 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   }
 
   @Override
-  public int getMaxRooms() {
-    return maxRooms;
-  }
-
-  @Override
-  public void setMaxRooms(int maxRooms) {
-    this.maxRooms = maxRooms;
-  }
-
-  @Override
   public void addRoom(Room room) {
     if (containsRoomId(room.getId())) {
       throw new AddedDuplicatedRoomException(room);
@@ -219,5 +209,15 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   @Override
   public int getRoomCount() {
     return roomCount;
+  }
+
+  @Override
+  public int getMaxRooms() {
+    return maxRooms;
+  }
+
+  @Override
+  public void configureMaxRooms(int maxRooms) {
+    this.maxRooms = maxRooms;
   }
 }

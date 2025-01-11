@@ -164,7 +164,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public void setMaxIdleTimeInSeconds(int seconds) {
+  public void configureMaxIdleTimeInSeconds(int seconds) {
     maxIdleTimeInSecond = seconds;
   }
 
@@ -174,7 +174,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public void setMaxIdleTimeNeverDeportedInSeconds(int seconds) {
+  public void configureMaxIdleTimeNeverDeportedInSeconds(int seconds) {
     maxIdleTimeNeverDeportedInSecond = seconds;
   }
 

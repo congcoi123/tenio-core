@@ -116,7 +116,7 @@ public class KcpHandler implements KcpListener {
     }
     var session = sessionManager.getSessionByKcp(ukcp);
     if (Objects.nonNull(session) && session.containsKcp()) {
-      session.setKcpChannel(null);
+      session.configureKcpChannel(null);
     }
   }
 

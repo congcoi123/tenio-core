@@ -152,7 +152,7 @@ public interface PlayerManager extends Manager {
    * @param seconds the maximum time in seconds ({@code integer} value) which allows the
    *                player to get in IDLE state
    */
-  void setMaxIdleTimeInSeconds(int seconds);
+  void configureMaxIdleTimeInSeconds(int seconds);
 
   /**
    * Retrieves the maximum time in seconds which allows the player to get in IDLE state (Do not
@@ -171,7 +171,7 @@ public interface PlayerManager extends Manager {
    * @param seconds the maximum time in seconds ({@code integer} value) which allows the
    *                player to get in IDLE state
    */
-  void setMaxIdleTimeNeverDeportedInSeconds(int seconds);
+  void configureMaxIdleTimeNeverDeportedInSeconds(int seconds);
 
   /**
    * Removes all players from the list.

@@ -64,6 +64,7 @@ public final class SessionImpl implements Session {
 
   private final long id;
   private final long createdTime;
+  private final AtomicReference<AssociatedState> associatedState;
   private volatile String name;
 
   private SessionManager sessionManager;
@@ -73,24 +74,23 @@ public final class SessionImpl implements Session {
   private Ukcp kcpChannel;
   private Channel webSocketChannel;
   private ConnectionFilter connectionFilter;
+  private PacketQueue packetQueue;
   private PacketReadState packetReadState;
   private ProcessedPacket processedPacket;
   private PendingPacket pendingPacket;
-  private PacketQueue packetQueue;
-  private volatile TransportType transportType;
+  private int maxIdleTimeInSecond;
 
+  private volatile TransportType transportType;
   private volatile SocketAddress datagramRemoteSocketAddress;
   private volatile String clientAddress;
   private volatile int clientPort;
   private volatile int udpConvey;
-  private volatile int maxIdleTimeInSecond;
 
   private volatile long inactivatedTime;
   private volatile long lastActivityTime;
   private volatile boolean activated;
   private volatile boolean hasUdp;
   private volatile boolean hasKcp;
-  private final AtomicReference<AssociatedState> associatedState;
 
   private SessionImpl() {
     id = ID_COUNTER.getAndIncrement();
@@ -146,7 +146,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void setPacketQueue(PacketQueue packetQueue) {
+  public void configurePacketQueue(PacketQueue packetQueue) {
     this.packetQueue = packetQueue;
   }
 
@@ -181,7 +181,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void setSocketChannel(SocketChannel socketChannel) {
+  public void configureSocketChannel(SocketChannel socketChannel) {
     if (getTransportType() != TransportType.UNKNOWN) {
       throw new IllegalCallerException(
           String.format("Unable to add another connection type, the current connection is: %s",
@@ -211,7 +211,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void setSelectionKey(SelectionKey selectionKey) {
+  public void configureSelectionKey(SelectionKey selectionKey) {
     this.selectionKey = selectionKey;
   }
 
@@ -241,7 +241,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void setDatagramChannel(DatagramChannel datagramChannel, int udpConvey) {
+  public void configureDatagramChannel(DatagramChannel datagramChannel, int udpConvey) {
     this.datagramChannel = datagramChannel;
     if (Objects.isNull(this.datagramChannel)) {
       datagramRemoteSocketAddress = null;
@@ -264,7 +264,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void setKcpChannel(Ukcp kcpChannel) {
+  public void configureKcpChannel(Ukcp kcpChannel) {
     if (Objects.nonNull(this.kcpChannel) && this.kcpChannel.isActive()) {
       this.kcpChannel.close();
     }
@@ -289,7 +289,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void setWebSocketChannel(Channel webSocketChannel) {
+  public void configureWebSocketChannel(Channel webSocketChannel) {
     if (transportType != TransportType.UNKNOWN) {
       throw new IllegalCallerException(
           String.format("Unable to add another connection type, the current connection is: %s",
@@ -312,7 +312,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void setConnectionFilter(ConnectionFilter connectionFilter) {
+  public void configureConnectionFilter(ConnectionFilter connectionFilter) {
     this.connectionFilter = connectionFilter;
   }
 
@@ -392,7 +392,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void setMaxIdleTimeInSeconds(int seconds) {
+  public void configureMaxIdleTimeInSeconds(int seconds) {
     maxIdleTimeInSecond = seconds;
   }
 
@@ -442,7 +442,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void setSessionManager(SessionManager sessionManager) {
+  public void configureSessionManager(SessionManager sessionManager) {
     this.sessionManager = sessionManager;
   }
 
@@ -463,7 +463,7 @@ public final class SessionImpl implements Session {
 
     if (Objects.nonNull(packetQueue)) {
       packetQueue.clear();
-      setPacketQueue(null);
+      configurePacketQueue(null);
     }
 
     switch (transportType) {

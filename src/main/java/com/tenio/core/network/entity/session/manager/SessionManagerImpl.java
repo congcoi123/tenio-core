@@ -104,12 +104,12 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   @Override
   public Session createSocketSession(SocketChannel socketChannel, SelectionKey selectionKey) {
     Session session = SessionImpl.newInstance();
-    session.setSocketChannel(socketChannel);
-    session.setSelectionKey(selectionKey);
-    session.setSessionManager(this);
-    session.setPacketQueue(createNewPacketQueue());
-    session.setConnectionFilter(connectionFilter);
-    session.setMaxIdleTimeInSeconds(maxIdleTimeInSeconds);
+    session.configureSocketChannel(socketChannel);
+    session.configureSelectionKey(selectionKey);
+    session.configureSessionManager(this);
+    session.configurePacketQueue(createNewPacketQueue());
+    session.configureConnectionFilter(connectionFilter);
+    session.configureMaxIdleTimeInSeconds(maxIdleTimeInSeconds);
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
       sessionBySockets.put(session.getSocketChannel(), session);
@@ -139,7 +139,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
           String.format("Unable to add kcp channel for the non-TCP session: %s", session));
     }
     synchronized (sessionByDatagrams) {
-      session.setDatagramChannel(datagramChannel, udpConvey);
+      session.configureDatagramChannel(datagramChannel, udpConvey);
       sessionByDatagrams.put(udpConvey, session);
     }
   }
@@ -158,7 +158,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
           String.format("Unable to add datagram channel for the non-TCP session: %s", session));
     }
     synchronized (sessionByKcps) {
-      session.setKcpChannel(kcpChannel);
+      session.configureKcpChannel(kcpChannel);
       sessionByKcps.put(kcpChannel.getConv(), session);
     }
   }
@@ -178,11 +178,11 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   @Override
   public Session createWebSocketSession(Channel webSocketChannel) {
     Session session = SessionImpl.newInstance();
-    session.setWebSocketChannel(webSocketChannel);
-    session.setSessionManager(this);
-    session.setPacketQueue(createNewPacketQueue());
-    session.setConnectionFilter(connectionFilter);
-    session.setMaxIdleTimeInSeconds(maxIdleTimeInSeconds);
+    session.configureWebSocketChannel(webSocketChannel);
+    session.configureSessionManager(this);
+    session.configurePacketQueue(createNewPacketQueue());
+    session.configureConnectionFilter(connectionFilter);
+    session.configureMaxIdleTimeInSeconds(maxIdleTimeInSeconds);
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
       sessionByWebSockets.put(webSocketChannel, session);
@@ -231,11 +231,11 @@ public final class SessionManagerImpl extends AbstractManager implements Session
         case TCP -> {
           if (session.containsUdp()) {
             sessionByDatagrams.remove(session.getUdpConveyId());
-            session.setDatagramChannel(null, Session.EMPTY_DATAGRAM_CONVEY_ID);
+            session.configureDatagramChannel(null, Session.EMPTY_DATAGRAM_CONVEY_ID);
           }
           if (session.containsKcp()) {
             sessionByKcps.remove(session.getKcpChannel().getConv());
-            session.setKcpChannel(null);
+            session.configureKcpChannel(null);
           }
           sessionBySockets.remove(session.getSocketChannel());
         }
