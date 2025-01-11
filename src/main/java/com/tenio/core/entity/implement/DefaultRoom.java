@@ -43,16 +43,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * An implemented class is for a room using in the server.
  */
-public class RoomImpl implements Room {
+public class DefaultRoom implements Room {
 
   private static final AtomicLong ID_COUNTER = new AtomicLong(1L);
 
@@ -60,6 +57,7 @@ public class RoomImpl implements Room {
   private final Map<String, Object> properties;
   private final AtomicReference<Player> owner;
   private final AtomicReference<RoomState> state;
+
   private volatile String name;
   private volatile String password;
   private volatile List<Player> participants;
@@ -68,6 +66,7 @@ public class RoomImpl implements Room {
   private volatile int maxSpectators;
   private volatile RoomRemoveMode roomRemoveMode;
   private volatile boolean activated;
+
   private PlayerManager playerManager;
   private RoomCredentialValidatedStrategy roomCredentialValidatedStrategy;
   private RoomPlayerSlotGeneratedStrategy roomPlayerSlotGeneratedStrategy;
@@ -75,7 +74,7 @@ public class RoomImpl implements Room {
   /**
    * Constructor.
    */
-  public RoomImpl() {
+  public DefaultRoom() {
     id = ID_COUNTER.getAndIncrement();
     properties = new ConcurrentHashMap<>();
     state = new AtomicReference<>(null);
@@ -91,7 +90,7 @@ public class RoomImpl implements Room {
    * @return a new instance
    */
   public static Room newInstance() {
-    return new RoomImpl();
+    return new DefaultRoom();
   }
 
   @Override
@@ -137,26 +136,6 @@ public class RoomImpl implements Room {
   }
 
   @Override
-  public int getMaxParticipants() {
-    return maxParticipants;
-  }
-
-  @Override
-  public void setMaxParticipants(int maxParticipants) {
-    this.maxParticipants = maxParticipants;
-  }
-
-  @Override
-  public int getMaxSpectators() {
-    return maxSpectators;
-  }
-
-  @Override
-  public void setMaxSpectators(int maxSpectators) {
-    this.maxSpectators = maxSpectators;
-  }
-
-  @Override
   public Optional<Player> getOwner() {
     return Optional.ofNullable(owner.get());
   }
@@ -164,11 +143,6 @@ public class RoomImpl implements Room {
   @Override
   public void setOwner(Player owner) {
     this.owner.set(owner);
-  }
-
-  @Override
-  public void setPlayerManager(PlayerManager playerManager) {
-    this.playerManager = playerManager;
   }
 
   @Override
@@ -214,17 +188,6 @@ public class RoomImpl implements Room {
   @Override
   public void clearProperties() {
     properties.clear();
-  }
-
-  @Override
-  public int getCapacity() {
-    return maxParticipants + maxSpectators;
-  }
-
-  @Override
-  public void setCapacity(int maxParticipants, int maxSpectators) {
-    this.maxParticipants = maxParticipants;
-    this.maxSpectators = maxSpectators;
   }
 
   @Override
@@ -417,13 +380,49 @@ public class RoomImpl implements Room {
   }
 
   @Override
-  public void setPlayerSlotGeneratedStrategy(
+  public int getMaxParticipants() {
+    return maxParticipants;
+  }
+
+  @Override
+  public void setMaxParticipants(int maxParticipants) {
+    this.maxParticipants = maxParticipants;
+  }
+
+  @Override
+  public int getMaxSpectators() {
+    return maxSpectators;
+  }
+
+  @Override
+  public void setMaxSpectators(int maxSpectators) {
+    this.maxSpectators = maxSpectators;
+  }
+
+  @Override
+  public int getCapacity() {
+    return maxParticipants + maxSpectators;
+  }
+
+  @Override
+  public void setCapacity(int maxParticipants, int maxSpectators) {
+    this.maxParticipants = maxParticipants;
+    this.maxSpectators = maxSpectators;
+  }
+
+  @Override
+  public void configurePlayerManager(PlayerManager playerManager) {
+    this.playerManager = playerManager;
+  }
+
+  @Override
+  public void configurePlayerSlotGeneratedStrategy(
       RoomPlayerSlotGeneratedStrategy roomPlayerSlotGeneratedStrategy) {
     this.roomPlayerSlotGeneratedStrategy = roomPlayerSlotGeneratedStrategy;
   }
 
   @Override
-  public void setRoomCredentialValidatedStrategy(
+  public void configureRoomCredentialValidatedStrategy(
       RoomCredentialValidatedStrategy roomCredentialValidatedStrategy) {
     this.roomCredentialValidatedStrategy = roomCredentialValidatedStrategy;
   }
@@ -443,7 +442,7 @@ public class RoomImpl implements Room {
 
   @Override
   public String toString() {
-    return "Room{" +
+    return "DefaultRoom{" +
         "id=" + id +
         ", properties=" + properties +
         ", owner=" + owner.get() +

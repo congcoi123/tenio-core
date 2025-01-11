@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.tenio.core.configuration.Configuration;
 import com.tenio.core.entity.implement.DefaultPlayer;
-import com.tenio.core.entity.implement.RoomImpl;
+import com.tenio.core.entity.implement.DefaultRoom;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.manager.implement.PlayerManagerImpl;
@@ -120,7 +120,7 @@ class PlayerAndRoomTest {
   @Test
   @Disabled
   public void createNewRoomShouldReturnSuccess() {
-    var room = RoomImpl.newInstance();
+    var room = DefaultRoom.newInstance();
     roomManager.addRoom(room);
 
     assertTrue(roomManager.containsRoomId(0));
@@ -129,8 +129,8 @@ class PlayerAndRoomTest {
   @Test
   public void createDuplicatedRoomShouldCauseException() {
     assertThrows(AddedDuplicatedRoomException.class, () -> {
-      var room = RoomImpl.newInstance();
-      room.setPlayerManager(Mockito.mock(PlayerManager.class));
+      var room = DefaultRoom.newInstance();
+      room.configurePlayerManager(Mockito.mock(PlayerManager.class));
       roomManager.addRoom(room);
       roomManager.addRoom(room);
     });

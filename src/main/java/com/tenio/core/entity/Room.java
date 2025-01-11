@@ -29,8 +29,6 @@ import com.tenio.core.entity.define.room.PlayerRoleInRoom;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
-import com.tenio.core.entity.setting.strategy.implement.DefaultRoomCredentialValidatedStrategy;
-import com.tenio.core.entity.setting.strategy.implement.DefaultRoomPlayerSlotGeneratedStrategy;
 import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import com.tenio.core.exception.PlayerJoinedRoomException;
 import com.tenio.core.exception.RemovedNonExistentPlayerFromRoomException;
@@ -115,36 +113,6 @@ public interface Room {
   boolean isPublic();
 
   /**
-   * Retrieves the maximum number of participants allowing in the room.
-   *
-   * @return the maximum number of participants ({@code integer} value)
-   */
-  int getMaxParticipants();
-
-  /**
-   * Sets the maximum number of participants allowing in the room.
-   *
-   * @param maxParticipants the maximum number of participants ({@code integer} value)
-   * @throws IllegalArgumentException when an invalid value is used
-   */
-  void setMaxParticipants(int maxParticipants) throws IllegalArgumentException;
-
-  /**
-   * Retrieves the maximum number of spectators allowing in the room.
-   *
-   * @return the maximum number of spectators ({@code integer} value)
-   */
-  int getMaxSpectators();
-
-  /**
-   * Sets the maximum number of spectators allowing in the room.
-   *
-   * @param maxSpectators the maximum number of spectators ({@code integer} value)
-   * @throws IllegalArgumentException when an invalid value is used
-   */
-  void setMaxSpectators(int maxSpectators) throws IllegalArgumentException;
-
-  /**
    * Retrieves the room's owner.
    *
    * @return the optional {@link Player} as the room's owner
@@ -158,13 +126,6 @@ public interface Room {
    * @param owner a {@link Player} is set to be the room's owner
    */
   void setOwner(Player owner);
-
-  /**
-   * Sets a new player manager for the room.
-   *
-   * @param playerManager a {@link PlayerManager} instance
-   */
-  void setPlayerManager(PlayerManager playerManager);
 
   /**
    * Determines whether the room is activated.
@@ -230,22 +191,6 @@ public interface Room {
    * Removes all properties of the room.
    */
   void clearProperties();
-
-  /**
-   * Retrieves the total number of entities allowed to be in the room (participants and spectators).
-   *
-   * @return the total number of entities ({@code integer} value)
-   */
-  int getCapacity();
-
-  /**
-   * Sets the limitation values for participants and spectators.
-   *
-   * @param maxParticipants the maximum number of participants ({@code integer} value)
-   * @param maxSpectators   the maximum number of spectators ({@code integer} value)
-   * @throws IllegalArgumentException when an invalid value is used
-   */
-  void setCapacity(int maxParticipants, int maxSpectators) throws IllegalArgumentException;
 
   /**
    * Retrieves the current number of players (participants + spectators) in the room.
@@ -322,7 +267,6 @@ public interface Room {
    * @see PlayerRoleInRoom#SPECTATOR
    */
   List<Player> getReadonlySpectatorsList();
-
 
   /**
    * Adds a player to the room.
@@ -447,12 +391,65 @@ public interface Room {
   boolean isFull();
 
   /**
+   * Retrieves the maximum number of participants allowing in the room.
+   *
+   * @return the maximum number of participants ({@code integer} value)
+   */
+  int getMaxParticipants();
+
+  /**
+   * Sets the maximum number of participants allowing in the room.
+   *
+   * @param maxParticipants the maximum number of participants ({@code integer} value)
+   * @throws IllegalArgumentException when an invalid value is used
+   */
+  void setMaxParticipants(int maxParticipants) throws IllegalArgumentException;
+
+  /**
+   * Retrieves the maximum number of spectators allowing in the room.
+   *
+   * @return the maximum number of spectators ({@code integer} value)
+   */
+  int getMaxSpectators();
+
+  /**
+   * Sets the maximum number of spectators allowing in the room.
+   *
+   * @param maxSpectators the maximum number of spectators ({@code integer} value)
+   * @throws IllegalArgumentException when an invalid value is used
+   */
+  void setMaxSpectators(int maxSpectators) throws IllegalArgumentException;
+
+  /**
+   * Retrieves the total number of entities allowed to be in the room (participants and spectators).
+   *
+   * @return the total number of entities ({@code integer} value)
+   */
+  int getCapacity();
+
+  /**
+   * Sets the limitation values for participants and spectators.
+   *
+   * @param maxParticipants the maximum number of participants ({@code integer} value)
+   * @param maxSpectators   the maximum number of spectators ({@code integer} value)
+   * @throws IllegalArgumentException when an invalid value is used
+   */
+  void setCapacity(int maxParticipants, int maxSpectators) throws IllegalArgumentException;
+
+  /**
+   * Sets a new player manager for the room.
+   *
+   * @param playerManager a {@link PlayerManager} instance
+   */
+  void configurePlayerManager(PlayerManager playerManager);
+
+  /**
    * Sets a strategy to generate slot positions in the room.
    *
    * @param roomPlayerSlotGeneratedStrategy an implementation of
    *                                        {@link RoomPlayerSlotGeneratedStrategy}
    */
-  void setPlayerSlotGeneratedStrategy(
+  void configurePlayerSlotGeneratedStrategy(
       RoomPlayerSlotGeneratedStrategy roomPlayerSlotGeneratedStrategy);
 
   /**
@@ -461,7 +458,7 @@ public interface Room {
    * @param roomCredentialValidatedStrategy an implementation of
    *                                        {@link RoomCredentialValidatedStrategy}
    */
-  void setRoomCredentialValidatedStrategy(
+  void configureRoomCredentialValidatedStrategy(
       RoomCredentialValidatedStrategy roomCredentialValidatedStrategy);
 
   /**

@@ -8,10 +8,10 @@ import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import org.junit.jupiter.api.Test;
 
-class RoomImplTest {
+class DefaultRoomTest {
   @Test
   void testNewInstance() {
-    Room actualNewInstanceResult = RoomImpl.newInstance();
+    Room actualNewInstanceResult = DefaultRoom.newInstance();
     assertFalse(actualNewInstanceResult.isActivated());
     assertEquals(0, actualNewInstanceResult.getSpectatorCount());
     assertEquals(RoomRemoveMode.WHEN_EMPTY, actualNewInstanceResult.getRoomRemoveMode());

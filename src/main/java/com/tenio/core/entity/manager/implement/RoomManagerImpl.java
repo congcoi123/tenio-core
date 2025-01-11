@@ -27,7 +27,7 @@ package com.tenio.core.entity.manager.implement;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.result.RoomCreatedResult;
-import com.tenio.core.entity.implement.RoomImpl;
+import com.tenio.core.entity.implement.DefaultRoom;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.setting.InitialRoomSetting;
 import com.tenio.core.event.implement.EventManager;
@@ -104,15 +104,15 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
               roomCount), RoomCreatedResult.REACHED_MAX_ROOMS);
     }
 
-    room.setPlayerSlotGeneratedStrategy(roomSetting.getRoomPlayerSlotGeneratedStrategy());
-    room.setRoomCredentialValidatedStrategy(roomSetting.getRoomCredentialValidatedStrategy());
+    room.configurePlayerManager(PlayerManagerImpl.newInstance(eventManager));
+    room.configurePlayerSlotGeneratedStrategy(roomSetting.getRoomPlayerSlotGeneratedStrategy());
+    room.configureRoomCredentialValidatedStrategy(roomSetting.getRoomCredentialValidatedStrategy());
     room.setRoomRemoveMode(roomSetting.getRoomRemoveMode());
     room.setName(roomSetting.getName());
     room.setPassword(roomSetting.getPassword());
     room.setActivated(roomSetting.isActivated());
     room.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
     room.setOwner(player);
-    room.setPlayerManager(PlayerManagerImpl.newInstance(eventManager));
     if (Objects.nonNull(roomSetting.getProperties())) {
       roomSetting.getProperties().forEach(room::setProperty);
     }
@@ -129,16 +129,16 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
               roomCount), RoomCreatedResult.REACHED_MAX_ROOMS);
     }
 
-    var room = RoomImpl.newInstance();
-    room.setPlayerSlotGeneratedStrategy(roomSetting.getRoomPlayerSlotGeneratedStrategy());
-    room.setRoomCredentialValidatedStrategy(roomSetting.getRoomCredentialValidatedStrategy());
+    var room = DefaultRoom.newInstance();
+    room.configurePlayerManager(PlayerManagerImpl.newInstance(eventManager));
+    room.configurePlayerSlotGeneratedStrategy(roomSetting.getRoomPlayerSlotGeneratedStrategy());
+    room.configureRoomCredentialValidatedStrategy(roomSetting.getRoomCredentialValidatedStrategy());
     room.setRoomRemoveMode(roomSetting.getRoomRemoveMode());
     room.setName(roomSetting.getName());
     room.setPassword(roomSetting.getPassword());
     room.setActivated(roomSetting.isActivated());
     room.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
     room.setOwner(player);
-    room.setPlayerManager(PlayerManagerImpl.newInstance(eventManager));
     if (Objects.nonNull(roomSetting.getProperties())) {
       roomSetting.getProperties().forEach(room::setProperty);
     }
