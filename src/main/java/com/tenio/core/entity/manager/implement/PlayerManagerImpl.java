@@ -26,7 +26,7 @@ package com.tenio.core.entity.manager.implement;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
-import com.tenio.core.entity.implement.PlayerImpl;
+import com.tenio.core.entity.implement.DefaultPlayer;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.AddedDuplicatedPlayerException;
@@ -86,11 +86,11 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   @Override
   public Player createPlayer(String playerName) {
-    Player player = PlayerImpl.newInstance(playerName);
+    Player player = DefaultPlayer.newInstance(playerName);
+    player.configureMaxIdleTimeInSeconds(maxIdleTimeInSecond);
+    player.configureMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeportedInSecond);
     player.setActivated(true);
     player.setLoggedIn(true);
-    player.setMaxIdleTimeInSeconds(maxIdleTimeInSecond);
-    player.setMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeportedInSecond);
     addPlayer(player);
     return player;
   }
@@ -101,11 +101,11 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
       throw new NullPointerException("Unable to assign a null session for the player");
     }
 
-    Player player = PlayerImpl.newInstance(playerName, session);
+    Player player = DefaultPlayer.newInstance(playerName, session);
+    player.configureMaxIdleTimeInSeconds(maxIdleTimeInSecond);
+    player.configureMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeportedInSecond);
     player.setActivated(true);
     player.setLoggedIn(true);
-    player.setMaxIdleTimeInSeconds(maxIdleTimeInSecond);
-    player.setMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeportedInSecond);
     addPlayer(player);
     return player;
   }

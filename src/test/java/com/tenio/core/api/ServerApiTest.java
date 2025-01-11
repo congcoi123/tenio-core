@@ -38,7 +38,7 @@ import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 import com.tenio.core.entity.define.result.PlayerLeftRoomResult;
 import com.tenio.core.entity.define.result.PlayerLoggedInResult;
 import com.tenio.core.entity.define.result.RoomCreatedResult;
-import com.tenio.core.entity.implement.PlayerImpl;
+import com.tenio.core.entity.implement.DefaultPlayer;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.setting.InitialRoomSetting;
@@ -108,7 +108,7 @@ class ServerApiTest {
     Mockito.when(server.getEventManager()).thenReturn(eventManager);
 
     var loginName = "test";
-    var loginPlayer = PlayerImpl.newInstance(loginName);
+    var loginPlayer = DefaultPlayer.newInstance(loginName);
     Mockito.when(playerManager.createPlayer(loginName)).thenReturn(loginPlayer);
     serverApi.login(loginName);
     Mockito.verify(eventManager, Mockito.times(1))
@@ -123,7 +123,7 @@ class ServerApiTest {
     Mockito.when(server.getEventManager()).thenReturn(eventManager);
 
     var loginName = "test";
-    var loginPlayer = PlayerImpl.newInstance(loginName);
+    var loginPlayer = DefaultPlayer.newInstance(loginName);
     Mockito.doThrow(new AddedDuplicatedPlayerException(loginPlayer, Mockito.mock(Room.class)))
         .when(playerManager).createPlayer(loginName);
     serverApi.login(loginName);
@@ -139,7 +139,7 @@ class ServerApiTest {
     Mockito.when(server.getEventManager()).thenReturn(eventManager);
 
     var loginName = "test";
-    var loginPlayer = PlayerImpl.newInstance(loginName);
+    var loginPlayer = DefaultPlayer.newInstance(loginName);
     var loginSession = SessionImpl.newInstance();
     Mockito.when(playerManager.createPlayerWithSession(loginName, loginSession))
         .thenReturn(loginPlayer);
@@ -173,7 +173,7 @@ class ServerApiTest {
     Mockito.when(server.getEventManager()).thenReturn(eventManager);
 
     var loginName = "test";
-    var loginPlayer = PlayerImpl.newInstance(loginName);
+    var loginPlayer = DefaultPlayer.newInstance(loginName);
     var loginSession = SessionImpl.newInstance();
     Mockito.doThrow(new AddedDuplicatedPlayerException(loginPlayer, Mockito.mock(Room.class)))
         .when(playerManager).createPlayerWithSession(loginName, loginSession);

@@ -142,24 +142,6 @@ public interface Player {
   void setLastWriteTime(long timestamp);
 
   /**
-   * Retrieves the maximum time in seconds which allows the player to get in IDLE state (Do not
-   * perform any action, such as reading or writing data).
-   *
-   * @return the maximum time in seconds ({@code integer} value) which allows the player to
-   * get in IDLE state
-   */
-  int getMaxIdleTimeInSeconds();
-
-  /**
-   * Sets the maximum time in seconds which allows the player to get in IDLE state (Do not
-   * perform any action, such as reading or writing data).
-   *
-   * @param seconds the maximum time in seconds ({@code integer} value) which allows the
-   *                player to get in IDLE state
-   */
-  void setMaxIdleTimeInSeconds(int seconds);
-
-  /**
    * Determines whether the player got in IDLE state (Do not perform any action, such as reading
    * or writing data).
    *
@@ -185,26 +167,6 @@ public interface Player {
    * @since 0.5.0
    */
   void setNeverDeported(boolean flag);
-
-  /**
-   * Retrieves the maximum time in seconds which allows the player to get in IDLE state (Do not
-   * perform any action, such as reading or writing data) in case of never deported selection.
-   *
-   * @return the maximum time in seconds ({@code integer} value) which allows the player to
-   * get in IDLE state
-   * @since 0.5.0
-   */
-  int getMaxIdleTimeNeverDeportedInSeconds();
-
-  /**
-   * Sets the maximum time in seconds which allows the player to get in IDLE state (Do not
-   * perform any action, such as reading or writing data) in case of never deported selection.
-   *
-   * @param seconds the maximum time in seconds ({@code integer} value) which allows the
-   *                player to get in IDLE state
-   * @since 0.5.0
-   */
-  void setMaxIdleTimeNeverDeportedInSeconds(int seconds);
 
   /**
    * Determines whether the player got in IDLE state (Do not perform any action, such as reading
@@ -336,6 +298,44 @@ public interface Player {
    * Wipes out all the player's information.
    */
   void clean();
+
+  /**
+   * Retrieves the maximum time in seconds which allows the player to get in IDLE state (Do not
+   * perform any action, such as reading or writing data).
+   *
+   * @return the maximum time in seconds ({@code integer} value) which allows the player to
+   * get in IDLE state
+   */
+  int getMaxIdleTimeInSeconds();
+
+  /**
+   * Sets the maximum time in seconds which allows the player to get in IDLE state (Do not
+   * perform any action, such as reading or writing data).
+   *
+   * @param seconds the maximum time in seconds ({@code integer} value) which allows the
+   *                player to get in IDLE state
+   */
+  void configureMaxIdleTimeInSeconds(int seconds);
+
+  /**
+   * Retrieves the maximum time in seconds which allows the player to get in IDLE state (Do not
+   * perform any action, such as reading or writing data) in case of never deported selection.
+   *
+   * @return the maximum time in seconds ({@code integer} value) which allows the player to
+   * get in IDLE state
+   * @since 0.5.0
+   */
+  int getMaxIdleTimeNeverDeportedInSeconds();
+
+  /**
+   * Sets the maximum time in seconds which allows the player to get in IDLE state (Do not
+   * perform any action, such as reading or writing data) in case of never deported selection.
+   *
+   * @param seconds the maximum time in seconds ({@code integer} value) which allows the
+   *                player to get in IDLE state
+   * @since 0.5.0
+   */
+  void configureMaxIdleTimeNeverDeportedInSeconds(int seconds);
 
   /**
    * All the support fields that can be triggered as events.

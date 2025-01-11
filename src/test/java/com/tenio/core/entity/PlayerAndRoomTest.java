@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.tenio.core.configuration.Configuration;
-import com.tenio.core.entity.implement.PlayerImpl;
+import com.tenio.core.entity.implement.DefaultPlayer;
 import com.tenio.core.entity.implement.RoomImpl;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
@@ -74,7 +74,7 @@ class PlayerAndRoomTest {
 
   @Test
   public void addNewPlayerShouldReturnSuccess() {
-    var player = PlayerImpl.newInstance(testPlayerName);
+    var player = DefaultPlayer.newInstance(testPlayerName);
     playerManager.addPlayer(player);
     var result = playerManager.getPlayerByIdentity(testPlayerName);
 
@@ -84,7 +84,7 @@ class PlayerAndRoomTest {
   @Test
   public void addDuplicatedPlayerShouldCauseException() {
     assertThrows(AddedDuplicatedPlayerException.class, () -> {
-      var player = PlayerImpl.newInstance(testPlayerName);
+      var player = DefaultPlayer.newInstance(testPlayerName);
       playerManager.addPlayer(player);
       playerManager.addPlayer(player);
     });
@@ -92,7 +92,7 @@ class PlayerAndRoomTest {
 
   @Test
   public void checkContainPlayerShouldReturnSuccess() {
-    var player = PlayerImpl.newInstance(testPlayerName);
+    var player = DefaultPlayer.newInstance(testPlayerName);
     playerManager.addPlayer(player);
 
     assertTrue(playerManager.containsPlayerIdentity(testPlayerName));
@@ -101,7 +101,7 @@ class PlayerAndRoomTest {
   @Test
   public void countPlayersShouldReturnTrueValue() {
     for (int i = 0; i < 10; i++) {
-      var player = PlayerImpl.newInstance(testPlayerName + i);
+      var player = DefaultPlayer.newInstance(testPlayerName + i);
       playerManager.addPlayer(player);
     }
 
@@ -110,7 +110,7 @@ class PlayerAndRoomTest {
 
   @Test
   public void removePlayerShouldReturnSuccess() {
-    var player = PlayerImpl.newInstance(testPlayerName);
+    var player = DefaultPlayer.newInstance(testPlayerName);
     playerManager.addPlayer(player);
     playerManager.removePlayerByIdentity(testPlayerName);
 

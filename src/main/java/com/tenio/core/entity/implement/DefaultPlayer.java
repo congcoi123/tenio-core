@@ -40,7 +40,7 @@ import java.util.function.Consumer;
 /**
  * An implemented class is for a player using on the server.
  */
-public class PlayerImpl implements Player {
+public class DefaultPlayer implements Player {
 
   private final String identity;
   private final Map<String, Object> properties;
@@ -70,7 +70,7 @@ public class PlayerImpl implements Player {
    *
    * @param identity the player unique name
    */
-  public PlayerImpl(String identity) {
+  public DefaultPlayer(String identity) {
     this(identity, null);
   }
 
@@ -80,7 +80,7 @@ public class PlayerImpl implements Player {
    * @param identity    the player unique name
    * @param session a session which associates to the player
    */
-  public PlayerImpl(String identity, Session session) {
+  public DefaultPlayer(String identity, Session session) {
     this.identity = identity;
     this.session = new AtomicReference<>(session);
     properties = new ConcurrentHashMap<>();
@@ -100,7 +100,7 @@ public class PlayerImpl implements Player {
    * @return a new instance
    */
   public static Player newInstance(String name) {
-    return new PlayerImpl(name);
+    return new DefaultPlayer(name);
   }
 
   /**
@@ -111,7 +111,7 @@ public class PlayerImpl implements Player {
    * @return a new instance
    */
   public static Player newInstance(String name, Session session) {
-    return new PlayerImpl(name, session);
+    return new DefaultPlayer(name, session);
   }
 
   @Override
@@ -197,16 +197,6 @@ public class PlayerImpl implements Player {
   }
 
   @Override
-  public int getMaxIdleTimeInSeconds() {
-    return maxIdleTimeInSecond;
-  }
-
-  @Override
-  public void setMaxIdleTimeInSeconds(int seconds) {
-    maxIdleTimeInSecond = seconds;
-  }
-
-  @Override
   public boolean isIdle() {
     return isConnectionIdle(getMaxIdleTimeInSeconds());
   }
@@ -223,27 +213,8 @@ public class PlayerImpl implements Player {
   }
 
   @Override
-  public int getMaxIdleTimeNeverDeportedInSeconds() {
-    return maxIdleTimeNeverDeportedInSecond;
-  }
-
-  @Override
-  public void setMaxIdleTimeNeverDeportedInSeconds(int seconds) {
-    maxIdleTimeNeverDeportedInSecond = seconds;
-  }
-
-  @Override
   public boolean isIdleNeverDeported() {
     return isNeverDeported() && isConnectionIdle(getMaxIdleTimeNeverDeportedInSeconds());
-  }
-
-  private boolean isConnectionIdle(int maxIdleTimeInSecond) {
-    return (maxIdleTimeInSecond > 0) &&
-        (((now() - getLastActivityTime()) / 1000L) > maxIdleTimeInSecond);
-  }
-
-  private void setLastLoggedInTime() {
-    lastLoginTime = now();
   }
 
   @Override
@@ -291,10 +262,6 @@ public class PlayerImpl implements Player {
   @Override
   public long getLastJoinedRoomTime() {
     return lastJoinedRoomTime;
-  }
-
-  private void setLastJoinedRoomTime() {
-    lastJoinedRoomTime = now();
   }
 
   @Override
@@ -349,6 +316,39 @@ public class PlayerImpl implements Player {
     clearProperties();
   }
 
+  @Override
+  public int getMaxIdleTimeInSeconds() {
+    return maxIdleTimeInSecond;
+  }
+
+  @Override
+  public void configureMaxIdleTimeInSeconds(int seconds) {
+    maxIdleTimeInSecond = seconds;
+  }
+
+  @Override
+  public int getMaxIdleTimeNeverDeportedInSeconds() {
+    return maxIdleTimeNeverDeportedInSecond;
+  }
+
+  @Override
+  public void configureMaxIdleTimeNeverDeportedInSeconds(int seconds) {
+    maxIdleTimeNeverDeportedInSecond = seconds;
+  }
+
+  private boolean isConnectionIdle(int maxIdleTimeInSecond) {
+    return (maxIdleTimeInSecond > 0) &&
+        (((now() - getLastActivityTime()) / 1000L) > maxIdleTimeInSecond);
+  }
+
+  private void setLastLoggedInTime() {
+    lastLoginTime = now();
+  }
+
+  private void setLastJoinedRoomTime() {
+    lastJoinedRoomTime = now();
+  }
+
   private void setLastActivityTime(long timestamp) {
     lastActivityTime = timestamp;
   }
@@ -377,7 +377,7 @@ public class PlayerImpl implements Player {
 
   @Override
   public String toString() {
-    return "Player{" +
+    return "DefaultPlayer{" +
         "identity='" + identity + '\'' +
         ", properties=" + properties +
         ", session=" + session.get() +
