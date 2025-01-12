@@ -89,8 +89,9 @@ public class DefaultPlayer implements Player {
     state = new AtomicReference<>(null);
     roleInRoom = new AtomicReference<>(PlayerRoleInRoom.SPECTATOR);
     playerSlotInCurrentRoom = Room.NIL_SLOT;
-    setLastReadTime(now());
-    setLastWriteTime(now());
+    long currentTime = now();
+    setLastReadTime(currentTime);
+    setLastWriteTime(currentTime);
   }
 
   /**

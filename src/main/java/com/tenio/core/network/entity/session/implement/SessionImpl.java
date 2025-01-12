@@ -92,7 +92,10 @@ public final class SessionImpl implements Session {
     transportType = TransportType.UNKNOWN;
     udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
     associatedState = new AtomicReference<>(AssociatedState.NONE);
-    createdTime = now();
+    long currentTime = now();
+    createdTime = currentTime;
+    setLastReadTime(currentTime);
+    setLastWriteTime(currentTime);
   }
 
   /**
