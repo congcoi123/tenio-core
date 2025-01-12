@@ -155,7 +155,7 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
       }
       if (session.isActivated()) {
         ByteBuf byteBuf = Unpooled.wrappedBuffer(packet.getData());
-        session.getKcpChannel().write(byteBuf);
+        session.fetchKcpChannel().write(byteBuf);
         byteBuf.release();
         session.addWrittenBytes(packet.getOriginalSize());
         networkWriterStatistic.updateWrittenBytes(packet.getOriginalSize());

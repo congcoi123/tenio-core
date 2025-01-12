@@ -321,7 +321,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
         return;
       }
       if (session.isActivated()) {
-        session.getWebSocketChannel()
+        session.fetchWebSocketChannel()
             .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(packet.getData())));
         session.addWrittenBytes(packet.getOriginalSize());
         networkWriterStatistic.updateWrittenBytes(packet.getOriginalSize());

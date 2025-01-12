@@ -109,7 +109,7 @@ public interface Session {
    *
    * @return an instance of {@link PacketQueue}
    */
-  PacketQueue getPacketQueue();
+  PacketQueue fetchPacketQueue();
 
   /**
    * Sets a packet queue to session which is using to send messages to clients side.
@@ -167,7 +167,7 @@ public interface Session {
    *
    * @return an instance of {@link SocketChannel}
    */
-  SocketChannel getSocketChannel();
+  SocketChannel fetchSocketChannel();
 
   /**
    * Sets a socket (TCP) channel, which is using to communicate via TCP protocol.
@@ -184,7 +184,7 @@ public interface Session {
    *
    * @return an instance of {@link SelectionKey}
    */
-  SelectionKey getSelectionKey();
+  SelectionKey fetchSelectionKey();
 
   /**
    * Sets a selection key for socket (TCP) channel, which is using to switch between channels.
@@ -226,7 +226,7 @@ public interface Session {
    *
    * @return a {@link DatagramChannel} which is using for communication via UDP channel
    */
-  DatagramChannel getDatagramChannel();
+  DatagramChannel fetchDatagramChannel();
 
   /**
    * Declares a UDP channel that the session is able to use.
@@ -249,7 +249,7 @@ public interface Session {
    *
    * @return a {@link Ukcp} which is using for communication via KCP channel
    */
-  Ukcp getKcpChannel();
+  Ukcp fetchKcpChannel();
 
   /**
    * Declares a KCP channel that the session is able to use.
@@ -281,7 +281,7 @@ public interface Session {
    *
    * @return the {@link Channel} WebSocket channel instance
    */
-  Channel getWebSocketChannel();
+  Channel fetchWebSocketChannel();
 
   /**
    * Sets a WebSocket channel which is using for communication between the server and client
@@ -409,15 +409,6 @@ public interface Session {
    *                      side
    */
   void addDroppedPackets(int numberPackets);
-
-  /**
-   * Retrieves the maximum time in seconds which allows the session to get in IDLE state (Do not
-   * perform any action, such as reading or writing data).
-   *
-   * @return the maximum time in seconds ({@code integer} value) which allows the session to
-   * get in IDLE state
-   */
-  int getMaxIdleTimeInSeconds();
 
   /**
    * Sets the maximum time in seconds which allows the session to get in IDLE state (Do not

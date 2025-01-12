@@ -36,11 +36,17 @@ import com.tenio.core.exception.SwitchedPlayerRoleInRoomException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * The abstract room entity used on the server.
  */
 public interface Room {
+
+  /**
+   * IDs generator.
+   */
+  AtomicLong ID_COUNTER = new AtomicLong(1L);
 
   /**
    * The value indicates that a player has no slot position value in the room.

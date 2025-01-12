@@ -159,7 +159,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public int getMaxIdleTimeInSeconds() {
+  public int fetchMaxIdleTimeInSeconds() {
     return maxIdleTimeInSecond;
   }
 
@@ -169,7 +169,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public int getMaxIdleTimeNeverDeportedInSeconds() {
+  public int fetchMaxIdleTimeNeverDeportedInSeconds() {
     return maxIdleTimeNeverDeportedInSecond;
   }
 

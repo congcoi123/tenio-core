@@ -54,8 +54,6 @@ import java.nio.channels.SocketChannel;
  */
 public final class SessionManagerImpl extends AbstractManager implements SessionManager {
 
-  private static final int DEFAULT_PACKET_QUEUE_SIZE = 100;
-
   @GuardedBy("this")
   private final Map<Long, Session> sessionByIds;
   @GuardedBy("this")
@@ -66,10 +64,10 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private final Map<Integer, Session> sessionByDatagrams;
   @GuardedBy("this")
   private final Map<Integer, Session> sessionByKcps;
-  private PacketQueuePolicy packetQueuePolicy;
-  private ConnectionFilter connectionFilter;
   private volatile List<Session> readonlySessionsList;
   private volatile int sessionCount;
+  private PacketQueuePolicy packetQueuePolicy;
+  private ConnectionFilter connectionFilter;
   private int packetQueueSize;
   private int maxIdleTimeInSeconds;
 
@@ -107,12 +105,12 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     session.configureSocketChannel(socketChannel);
     session.configureSelectionKey(selectionKey);
     session.configureSessionManager(this);
-    session.configurePacketQueue(createNewPacketQueue());
+    session.configurePacketQueue(configureNewPacketQueue());
     session.configureConnectionFilter(connectionFilter);
     session.configureMaxIdleTimeInSeconds(maxIdleTimeInSeconds);
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
-      sessionBySockets.put(session.getSocketChannel(), session);
+      sessionBySockets.put(session.fetchSocketChannel(), session);
       readonlySessionsList = sessionByIds.values().stream().toList();
       sessionCount = readonlySessionsList.size();
     }
@@ -171,7 +169,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   }
 
   @Override
-  public void setConnectionFilter(ConnectionFilter connectionFilter) {
+  public void configureConnectionFilter(ConnectionFilter connectionFilter) {
     this.connectionFilter = connectionFilter;
   }
 
@@ -180,7 +178,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     Session session = SessionImpl.newInstance();
     session.configureWebSocketChannel(webSocketChannel);
     session.configureSessionManager(this);
-    session.configurePacketQueue(createNewPacketQueue());
+    session.configurePacketQueue(configureNewPacketQueue());
     session.configureConnectionFilter(connectionFilter);
     session.configureMaxIdleTimeInSeconds(maxIdleTimeInSeconds);
     synchronized (this) {
@@ -205,22 +203,15 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     }
   }
 
-  private PacketQueue createNewPacketQueue() {
-    PacketQueue packetQueue = PacketQueueImpl.newInstance();
-    packetQueue.setMaxSize(packetQueueSize);
-    packetQueue.setPacketQueuePolicy(packetQueuePolicy);
-    return packetQueue;
-  }
-
   @Override
-  public void setPacketQueuePolicy(Class<? extends PacketQueuePolicy> clazz)
+  public void configurePacketQueuePolicy(Class<? extends PacketQueuePolicy> clazz)
       throws InstantiationException, IllegalAccessException, IllegalArgumentException,
       InvocationTargetException, NoSuchMethodException, SecurityException {
     packetQueuePolicy = clazz.getDeclaredConstructor().newInstance();
   }
 
   @Override
-  public void setPacketQueueSize(int queueSize) {
+  public void configurePacketQueueSize(int queueSize) {
     packetQueueSize = queueSize;
   }
 
@@ -234,12 +225,12 @@ public final class SessionManagerImpl extends AbstractManager implements Session
             session.configureDatagramChannel(null, Session.EMPTY_DATAGRAM_CONVEY_ID);
           }
           if (session.containsKcp()) {
-            sessionByKcps.remove(session.getKcpChannel().getConv());
+            sessionByKcps.remove(session.fetchKcpChannel().getConv());
             session.configureKcpChannel(null);
           }
-          sessionBySockets.remove(session.getSocketChannel());
+          sessionBySockets.remove(session.fetchSocketChannel());
         }
-        case WEB_SOCKET -> sessionByWebSockets.remove(session.getWebSocketChannel());
+        case WEB_SOCKET -> sessionByWebSockets.remove(session.fetchWebSocketChannel());
         default -> {
         }
       }
@@ -255,17 +246,24 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   }
 
   @Override
-  public void emitEvent(ServerEvent event, Object... params) {
-    eventManager.emit(event, params);
-  }
-
-  @Override
   public int getSessionCount() {
     return sessionCount;
   }
 
   @Override
-  public void setMaxIdleTimeInSeconds(int seconds) {
+  public void configureMaxIdleTimeInSeconds(int seconds) {
     maxIdleTimeInSeconds = seconds;
+  }
+
+  @Override
+  public void emitEvent(ServerEvent event, Object... params) {
+    eventManager.emit(event, params);
+  }
+
+  private PacketQueue configureNewPacketQueue() {
+    PacketQueue packetQueue = PacketQueueImpl.newInstance();
+    packetQueue.setMaxSize(packetQueueSize);
+    packetQueue.setPacketQueuePolicy(packetQueuePolicy);
+    return packetQueue;
   }
 }

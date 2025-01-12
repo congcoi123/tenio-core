@@ -48,8 +48,6 @@ import java.util.stream.Collectors;
  */
 public final class RoomManagerImpl extends AbstractManager implements RoomManager {
 
-  private static final int DEFAULT_MAX_ROOMS = 100;
-
   private final Map<Long, Room> rooms;
   private volatile List<Room> readOnlyRoomsList;
   private volatile int roomCount;
@@ -88,7 +86,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   public void addRoomWithOwner(Room room, InitialRoomSetting roomSetting, Player player)
       throws AddedDuplicatedRoomException {
     int roomCount = getRoomCount();
-    if (roomCount >= getMaxRooms()) {
+    if (roomCount >= maxRooms) {
       throw new CreatedRoomException(
           String.format("Unable to create new room, reached limited the maximum room number: %d",
               roomCount), RoomCreatedResult.REACHED_MAX_ROOMS);
@@ -113,7 +111,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   @Override
   public Room createRoomWithOwner(InitialRoomSetting roomSetting, Player player) {
     int roomCount = getRoomCount();
-    if (roomCount >= getMaxRooms()) {
+    if (roomCount >= maxRooms) {
       throw new CreatedRoomException(
           String.format("Unable to create new room, reached limited the maximum room number: %d",
               roomCount), RoomCreatedResult.REACHED_MAX_ROOMS);
@@ -209,11 +207,6 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   @Override
   public int getRoomCount() {
     return roomCount;
-  }
-
-  @Override
-  public int getMaxRooms() {
-    return maxRooms;
   }
 
   @Override

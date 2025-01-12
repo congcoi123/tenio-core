@@ -44,11 +44,12 @@ public class DefaultPlayer implements Player {
 
   private final String identity;
   private final Map<String, Object> properties;
-  private final AtomicReference<Session> session;
   private final AtomicReference<Room> currentRoom;
   private final AtomicReference<PlayerState> state;
   private final AtomicReference<PlayerRoleInRoom> roleInRoom;
   private Consumer<Field> updateConsumer;
+
+  private volatile Session session;
 
   private volatile long lastLoginTime;
   private volatile long lastJoinedRoomTime;
@@ -82,7 +83,7 @@ public class DefaultPlayer implements Player {
    */
   public DefaultPlayer(String identity, Session session) {
     this.identity = identity;
-    this.session = new AtomicReference<>(session);
+    this.session = session;
     properties = new ConcurrentHashMap<>();
     currentRoom = new AtomicReference<>(null);
     state = new AtomicReference<>(null);
@@ -121,7 +122,7 @@ public class DefaultPlayer implements Player {
 
   @Override
   public boolean containsSession() {
-    return Objects.nonNull(session.get());
+    return Objects.nonNull(session);
   }
 
   @Override
@@ -198,7 +199,7 @@ public class DefaultPlayer implements Player {
 
   @Override
   public boolean isIdle() {
-    return isConnectionIdle(getMaxIdleTimeInSeconds());
+    return isConnectionIdle(maxIdleTimeInSecond);
   }
 
   @Override
@@ -214,12 +215,12 @@ public class DefaultPlayer implements Player {
 
   @Override
   public boolean isIdleNeverDeported() {
-    return isNeverDeported() && isConnectionIdle(getMaxIdleTimeNeverDeportedInSeconds());
+    return isNeverDeported() && isConnectionIdle(maxIdleTimeNeverDeportedInSecond);
   }
 
   @Override
   public Optional<Session> getSession() {
-    return Optional.ofNullable(session.get());
+    return Optional.ofNullable(session);
   }
 
   @Override
@@ -228,7 +229,7 @@ public class DefaultPlayer implements Player {
       session.setName(identity);
       session.setAssociatedToPlayer(Session.AssociatedState.DONE);
     }
-    this.session.set(session);
+    this.session = session;
   }
 
   @Override
@@ -317,18 +318,8 @@ public class DefaultPlayer implements Player {
   }
 
   @Override
-  public int getMaxIdleTimeInSeconds() {
-    return maxIdleTimeInSecond;
-  }
-
-  @Override
   public void configureMaxIdleTimeInSeconds(int seconds) {
     maxIdleTimeInSecond = seconds;
-  }
-
-  @Override
-  public int getMaxIdleTimeNeverDeportedInSeconds() {
-    return maxIdleTimeNeverDeportedInSecond;
   }
 
   @Override
@@ -380,7 +371,7 @@ public class DefaultPlayer implements Player {
     return "DefaultPlayer{" +
         "identity='" + identity + '\'' +
         ", properties=" + properties +
-        ", session=" + session.get() +
+        ", session=" + session +
         ", currentRoom=" + currentRoom.get() +
         ", state=" + state.get() +
         ", roleInRoom=" + roleInRoom.get() +

@@ -74,11 +74,11 @@ public final class SessionImpl implements Session {
   private Ukcp kcpChannel;
   private Channel webSocketChannel;
   private ConnectionFilter connectionFilter;
+
   private PacketQueue packetQueue;
-  private PacketReadState packetReadState;
   private ProcessedPacket processedPacket;
-  private PendingPacket pendingPacket;
-  private int maxIdleTimeInSecond;
+  private volatile PendingPacket pendingPacket;
+  private volatile PacketReadState packetReadState;
 
   private volatile TransportType transportType;
   private volatile SocketAddress datagramRemoteSocketAddress;
@@ -91,6 +91,8 @@ public final class SessionImpl implements Session {
   private volatile boolean activated;
   private volatile boolean hasUdp;
   private volatile boolean hasKcp;
+
+  private int maxIdleTimeInSecond;
 
   private SessionImpl() {
     id = ID_COUNTER.getAndIncrement();
@@ -141,7 +143,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public PacketQueue getPacketQueue() {
+  public PacketQueue fetchPacketQueue() {
     return packetQueue;
   }
 
@@ -176,7 +178,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public SocketChannel getSocketChannel() {
+  public SocketChannel fetchSocketChannel() {
     return socketChannel;
   }
 
@@ -194,7 +196,7 @@ public final class SessionImpl implements Session {
 
     if (Objects.nonNull(socketChannel.socket()) && !socketChannel.socket().isClosed()) {
       transportType = TransportType.TCP;
-      createPacketSocketHandler();
+      configurePacketSocketHandler();
       this.socketChannel = socketChannel;
 
       InetSocketAddress socketAddress =
@@ -206,7 +208,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public SelectionKey getSelectionKey() {
+  public SelectionKey fetchSelectionKey() {
     return selectionKey;
   }
 
@@ -236,7 +238,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public DatagramChannel getDatagramChannel() {
+  public DatagramChannel fetchDatagramChannel() {
     return datagramChannel;
   }
 
@@ -259,7 +261,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public Ukcp getKcpChannel() {
+  public Ukcp fetchKcpChannel() {
     return kcpChannel;
   }
 
@@ -284,7 +286,7 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public Channel getWebSocketChannel() {
+  public Channel fetchWebSocketChannel() {
     return webSocketChannel;
   }
 
@@ -387,11 +389,6 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public int getMaxIdleTimeInSeconds() {
-    return maxIdleTimeInSecond;
-  }
-
-  @Override
   public void configureMaxIdleTimeInSeconds(int seconds) {
     maxIdleTimeInSecond = seconds;
   }
@@ -463,7 +460,6 @@ public final class SessionImpl implements Session {
 
     if (Objects.nonNull(packetQueue)) {
       packetQueue.clear();
-      configurePacketQueue(null);
     }
 
     switch (transportType) {
@@ -493,7 +489,7 @@ public final class SessionImpl implements Session {
         connectionDisconnectMode, playerDisconnectMode);
   }
 
-  private void createPacketSocketHandler() {
+  private void configurePacketSocketHandler() {
     packetReadState = PacketReadState.WAIT_NEW_PACKET;
     processedPacket = ProcessedPacket.newInstance();
     pendingPacket = PendingPacket.newInstance();

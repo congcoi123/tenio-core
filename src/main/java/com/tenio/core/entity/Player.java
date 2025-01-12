@@ -300,15 +300,6 @@ public interface Player {
   void clean();
 
   /**
-   * Retrieves the maximum time in seconds which allows the player to get in IDLE state (Do not
-   * perform any action, such as reading or writing data).
-   *
-   * @return the maximum time in seconds ({@code integer} value) which allows the player to
-   * get in IDLE state
-   */
-  int getMaxIdleTimeInSeconds();
-
-  /**
    * Sets the maximum time in seconds which allows the player to get in IDLE state (Do not
    * perform any action, such as reading or writing data).
    *
@@ -316,16 +307,6 @@ public interface Player {
    *                player to get in IDLE state
    */
   void configureMaxIdleTimeInSeconds(int seconds);
-
-  /**
-   * Retrieves the maximum time in seconds which allows the player to get in IDLE state (Do not
-   * perform any action, such as reading or writing data) in case of never deported selection.
-   *
-   * @return the maximum time in seconds ({@code integer} value) which allows the player to
-   * get in IDLE state
-   * @since 0.5.0
-   */
-  int getMaxIdleTimeNeverDeportedInSeconds();
 
   /**
    * Sets the maximum time in seconds which allows the player to get in IDLE state (Do not

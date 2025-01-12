@@ -43,15 +43,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * An implemented class is for a room using in the server.
  */
 public class DefaultRoom implements Room {
-
-  private static final AtomicLong ID_COUNTER = new AtomicLong(1L);
 
   private final long id;
   private final Map<String, Object> properties;

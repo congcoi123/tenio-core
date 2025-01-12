@@ -204,7 +204,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
 
     webSocketService.setConnectionFilter(connectionFilter);
     socketService.setConnectionFilter(connectionFilter);
-    sessionManager.setConnectionFilter(connectionFilter);
+    sessionManager.configureConnectionFilter(connectionFilter);
   }
 
   @Override
@@ -290,7 +290,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
 
   @Override
   public void setSessionMaxIdleTimeInSeconds(int seconds) {
-    sessionManager.setMaxIdleTimeInSeconds(seconds);
+    sessionManager.configureMaxIdleTimeInSeconds(seconds);
   }
 
   @Override
@@ -298,12 +298,12 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
       throws InstantiationException, IllegalAccessException, IllegalArgumentException,
       InvocationTargetException,
       NoSuchMethodException, SecurityException {
-    sessionManager.setPacketQueuePolicy(clazz);
+    sessionManager.configurePacketQueuePolicy(clazz);
   }
 
   @Override
   public void setPacketQueueSize(int queueSize) {
-    sessionManager.setPacketQueueSize(queueSize);
+    sessionManager.configurePacketQueueSize(queueSize);
   }
 
   @Override

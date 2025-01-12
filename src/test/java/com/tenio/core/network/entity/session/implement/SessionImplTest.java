@@ -15,6 +15,6 @@ class SessionImplTest {
     assertFalse(actualNewInstanceResult.isAssociatedToPlayer(Session.AssociatedState.DONE));
     assertFalse(actualNewInstanceResult.isActivated());
     assertEquals(TransportType.UNKNOWN, actualNewInstanceResult.getTransportType());
-    assertNull(actualNewInstanceResult.getPacketQueue());
+    assertNull(actualNewInstanceResult.fetchPacketQueue());
   }
 }
