@@ -39,11 +39,8 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public final class DefaultConnectionFilter implements ConnectionFilter {
 
-  private static final int DEFAULT_MAX_CONNECTIONS_PER_IP = 10;
-
   private final Set<String> bannedAddresses;
   private final Map<String, AtomicInteger> addressMap;
-  // This is not thread-safe, one-time setup
   private int maxConnectionsPerIp;
 
   /**
@@ -117,12 +114,7 @@ public final class DefaultConnectionFilter implements ConnectionFilter {
   }
 
   @Override
-  public int getMaxConnectionsPerIp() {
-    return maxConnectionsPerIp;
-  }
-
-  @Override
-  public void setMaxConnectionsPerIp(int maxConnections) {
+  public void configureMaxConnectionsPerIp(int maxConnections) {
     maxConnectionsPerIp = maxConnections;
   }
 

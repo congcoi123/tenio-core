@@ -258,7 +258,7 @@ public interface Session {
    *
    * @return a {@link Ukcp} which is using for communication via KCP channel
    */
-  Ukcp fetchKcpChannel();
+  Ukcp getKcpChannel();
 
   /**
    * Declares a KCP channel that the session is able to use.
@@ -266,7 +266,7 @@ public interface Session {
    * @param kcpChannel a {@link Ukcp} which is using for communication via KCP
    *                   channel (there will be some channels opened on the server side)
    */
-  void configureKcpChannel(Ukcp kcpChannel);
+  void setKcpChannel(Ukcp kcpChannel);
 
   /**
    * Retrieves the remote address associating to the client side whenever the server receives

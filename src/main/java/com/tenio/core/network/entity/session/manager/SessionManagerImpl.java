@@ -156,7 +156,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
           String.format("Unable to add datagram channel for the non-TCP session: %s", session));
     }
     synchronized (sessionByKcps) {
-      session.configureKcpChannel(kcpChannel);
+      session.setKcpChannel(kcpChannel);
       sessionByKcps.put(kcpChannel.getConv(), session);
     }
   }
@@ -225,8 +225,8 @@ public final class SessionManagerImpl extends AbstractManager implements Session
             session.configureDatagramChannel(null, Session.EMPTY_DATAGRAM_CONVEY_ID);
           }
           if (session.containsKcp()) {
-            sessionByKcps.remove(session.fetchKcpChannel().getConv());
-            session.configureKcpChannel(null);
+            sessionByKcps.remove(session.getKcpChannel().getConv());
+            session.setKcpChannel(null);
           }
           sessionBySockets.remove(session.fetchSocketChannel());
         }

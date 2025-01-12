@@ -64,7 +64,6 @@ public final class SessionImpl implements Session {
   private SocketChannel socketChannel;
   private SelectionKey selectionKey;
   private DatagramChannel datagramChannel;
-  private Ukcp kcpChannel;
   private Channel webSocketChannel;
   private ConnectionFilter connectionFilter;
 
@@ -73,6 +72,7 @@ public final class SessionImpl implements Session {
   private volatile PendingPacket pendingPacket;
   private volatile PacketReadState packetReadState;
 
+  private volatile Ukcp kcpChannel;
   private volatile TransportType transportType;
   private volatile SocketAddress datagramRemoteSocketAddress;
   private volatile String clientAddress;
@@ -192,7 +192,9 @@ public final class SessionImpl implements Session {
 
     if (Objects.nonNull(socketChannel.socket()) && !socketChannel.socket().isClosed()) {
       transportType = TransportType.TCP;
-      configurePacketSocketHandler();
+      packetReadState = PacketReadState.WAIT_NEW_PACKET;
+      processedPacket = ProcessedPacket.newInstance();
+      pendingPacket = PendingPacket.newInstance();
       this.socketChannel = socketChannel;
 
       InetSocketAddress socketAddress =
@@ -257,12 +259,12 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public Ukcp fetchKcpChannel() {
+  public Ukcp getKcpChannel() {
     return kcpChannel;
   }
 
   @Override
-  public void configureKcpChannel(Ukcp kcpChannel) {
+  public void setKcpChannel(Ukcp kcpChannel) {
     if (Objects.nonNull(this.kcpChannel) && this.kcpChannel.isActive()) {
       this.kcpChannel.close();
     }
@@ -331,6 +333,7 @@ public final class SessionImpl implements Session {
 
   @Override
   public void setLastReadTime(long timestamp) {
+    // Reversed
     setLastActivityTime(timestamp);
   }
 
@@ -341,6 +344,7 @@ public final class SessionImpl implements Session {
 
   @Override
   public void setLastWriteTime(long timestamp) {
+    // Reversed
     setLastActivityTime(timestamp);
   }
 
@@ -483,12 +487,6 @@ public final class SessionImpl implements Session {
 
     sessionManager.emitEvent(ServerEvent.SESSION_WILL_BE_CLOSED, this,
         connectionDisconnectMode, playerDisconnectMode);
-  }
-
-  private void configurePacketSocketHandler() {
-    packetReadState = PacketReadState.WAIT_NEW_PACKET;
-    processedPacket = ProcessedPacket.newInstance();
-    pendingPacket = PendingPacket.newInstance();
   }
 
   private void setLastActivityTime(long timestamp) {

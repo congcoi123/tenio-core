@@ -200,7 +200,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
       InvocationTargetException,
       NoSuchMethodException, SecurityException {
     var connectionFilter = clazz.getDeclaredConstructor().newInstance();
-    connectionFilter.setMaxConnectionsPerIp(maxConnectionsPerIp);
+    connectionFilter.configureMaxConnectionsPerIp(maxConnectionsPerIp);
 
     webSocketService.setConnectionFilter(connectionFilter);
     socketService.setConnectionFilter(connectionFilter);

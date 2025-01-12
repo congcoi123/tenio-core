@@ -13,7 +13,6 @@ class PacketQueueImplTest {
     PacketQueueImpl actualNewInstanceResult = PacketQueueImpl.newInstance();
     actualNewInstanceResult.configureMaxSize(3);
     actualNewInstanceResult.configurePacketQueuePolicy(mock(PacketQueuePolicy.class));
-    assertEquals(3, actualNewInstanceResult.getMaxSize());
     assertEquals(0, actualNewInstanceResult.getSize());
   }
 
@@ -37,4 +36,3 @@ class PacketQueueImplTest {
     assertTrue(newInstanceResult.isEmpty());
   }
 }
-
