@@ -255,7 +255,6 @@ public final class InternalProcessorServiceImpl extends AbstractController
       eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
           ConnectionEstablishedResult.SUCCESS);
     }
-
   }
 
   private synchronized void processSessionWillBeClosed(Session session,

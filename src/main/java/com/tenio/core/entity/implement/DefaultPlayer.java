@@ -83,13 +83,13 @@ public class DefaultPlayer implements Player {
    */
   public DefaultPlayer(String identity, Session session) {
     this.identity = identity;
-    this.session = session;
     properties = new ConcurrentHashMap<>();
     currentRoom = new AtomicReference<>(null);
     state = new AtomicReference<>(null);
     roleInRoom = new AtomicReference<>(PlayerRoleInRoom.SPECTATOR);
     playerSlotInCurrentRoom = Room.NIL_SLOT;
     long currentTime = now();
+    setSession(session);
     setLastReadTime(currentTime);
     setLastWriteTime(currentTime);
   }
