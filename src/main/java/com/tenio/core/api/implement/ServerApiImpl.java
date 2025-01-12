@@ -121,9 +121,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   @Override
   public void login(Player player) {
     try {
-      player.configureMaxIdleTimeInSeconds(getPlayerManager().fetchMaxIdleTimeInSeconds());
-      player.setActivated(true);
-      player.setLoggedIn(true);
+      getPlayerManager().configureInitialPlayer(player);
       getPlayerManager().addPlayer(player);
 
       getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,

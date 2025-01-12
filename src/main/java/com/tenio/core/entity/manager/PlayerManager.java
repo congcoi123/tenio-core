@@ -72,6 +72,14 @@ public interface PlayerManager extends Manager {
       throws AddedDuplicatedPlayerException, NullPointerException;
 
   /**
+   * Configures basic info when a player is initially created, or before it is added into
+   * the management list.
+   *
+   * @param player the target player
+   */
+  void configureInitialPlayer(Player player);
+
+  /**
    * Retrieves a player by using its name.
    *
    * @param playerIdentity a unique {@link String} name of player on the server
@@ -137,15 +145,6 @@ public interface PlayerManager extends Manager {
   int getPlayerCount();
 
   /**
-   * Retrieves the maximum time in seconds which allows the player to get in IDLE state (Do not
-   * perform any action, such as reading or writing data).
-   *
-   * @return the maximum time in seconds ({@code integer} value) which allows the player to
-   * get in IDLE state
-   */
-  int fetchMaxIdleTimeInSeconds();
-
-  /**
    * Sets the maximum time in seconds which allows the player to get in IDLE state (Do not
    * perform any action, such as reading or writing data).
    *
@@ -153,16 +152,6 @@ public interface PlayerManager extends Manager {
    *                player to get in IDLE state
    */
   void configureMaxIdleTimeInSeconds(int seconds);
-
-  /**
-   * Retrieves the maximum time in seconds which allows the player to get in IDLE state (Do not
-   * perform any action, such as reading or writing data) in case of never deported selection.
-   *
-   * @return the maximum time in seconds ({@code integer} value) which allows the player to
-   * get in IDLE state
-   * @since 0.5.0
-   */
-  int fetchMaxIdleTimeNeverDeportedInSeconds();
 
   /**
    * Sets the maximum time in seconds which allows the player to get in IDLE state (Do not

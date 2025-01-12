@@ -87,10 +87,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public Player createPlayer(String playerName) {
     Player player = DefaultPlayer.newInstance(playerName);
-    player.configureMaxIdleTimeInSeconds(maxIdleTimeInSecond);
-    player.configureMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeportedInSecond);
-    player.setActivated(true);
-    player.setLoggedIn(true);
+    configureInitialPlayer(player);
     addPlayer(player);
     return player;
   }
@@ -102,12 +99,21 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     }
 
     Player player = DefaultPlayer.newInstance(playerName, session);
+    configureInitialPlayer(player);
+    addPlayer(player);
+    return player;
+  }
+
+  @Override
+  public void configureInitialPlayer(Player player) {
+    if (Objects.isNull(player)) {
+      throw new NullPointerException("Unable to process an unavailable player");
+    }
+
     player.configureMaxIdleTimeInSeconds(maxIdleTimeInSecond);
     player.configureMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeportedInSecond);
     player.setActivated(true);
     player.setLoggedIn(true);
-    addPlayer(player);
-    return player;
   }
 
   @Override
@@ -159,18 +165,8 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public int fetchMaxIdleTimeInSeconds() {
-    return maxIdleTimeInSecond;
-  }
-
-  @Override
   public void configureMaxIdleTimeInSeconds(int seconds) {
     maxIdleTimeInSecond = seconds;
-  }
-
-  @Override
-  public int fetchMaxIdleTimeNeverDeportedInSeconds() {
-    return maxIdleTimeNeverDeportedInSecond;
   }
 
   @Override
