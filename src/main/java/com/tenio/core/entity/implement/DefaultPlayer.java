@@ -88,10 +88,9 @@ public class DefaultPlayer implements Player {
     currentRoom = new AtomicReference<>(null);
     state = new AtomicReference<>(null);
     roleInRoom = new AtomicReference<>(PlayerRoleInRoom.SPECTATOR);
-    lastReadTime = now();
-    lastWriteTime = now();
-    lastActivityTime = now();
     playerSlotInCurrentRoom = Room.NIL_SLOT;
+    setLastReadTime(now());
+    setLastWriteTime(now());
   }
 
   /**
@@ -327,6 +326,10 @@ public class DefaultPlayer implements Player {
     maxIdleTimeNeverDeportedInSecond = seconds;
   }
 
+  protected long now() {
+    return TimeUtility.currentTimeMillis();
+  }
+
   private boolean isConnectionIdle(int maxIdleTimeInSecond) {
     return (maxIdleTimeInSecond > 0) &&
         (((now() - getLastActivityTime()) / 1000L) > maxIdleTimeInSecond);
@@ -342,10 +345,6 @@ public class DefaultPlayer implements Player {
 
   private void setLastActivityTime(long timestamp) {
     lastActivityTime = timestamp;
-  }
-
-  private long now() {
-    return TimeUtility.currentTimeMillis();
   }
 
   // This is not thread-safe
