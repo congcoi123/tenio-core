@@ -45,7 +45,6 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import kcp.Ukcp;
 
@@ -55,12 +54,6 @@ import kcp.Ukcp;
  * @see Session
  */
 public final class SessionImpl implements Session {
-
-  /**
-   * The maximum time that this session is allowed to be orphan.
-   */
-  private static final long ORPHAN_ALLOWANCE_TIME_IN_MILLISECONDS = 3000L;
-  private static final AtomicLong ID_COUNTER = new AtomicLong(1L);
 
   private final long id;
   private final long createdTime;
@@ -521,10 +514,7 @@ public final class SessionImpl implements Session {
    */
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + (int) (id ^ (id >>> 32));
-    return result;
+    return Long.hashCode(id);
   }
 
   @Override

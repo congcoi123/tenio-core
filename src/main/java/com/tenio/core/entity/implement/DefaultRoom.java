@@ -424,7 +424,7 @@ public class DefaultRoom implements Room {
   
   @Override
   public boolean equals(Object object) {
-    return (object instanceof Room room) && (room.getId() == getId());
+    return (object instanceof Room room) && (room.getId() == id);
   }
 
   @Override

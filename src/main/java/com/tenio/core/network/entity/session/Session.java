@@ -41,6 +41,7 @@ import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.atomic.AtomicLong;
 import kcp.Ukcp;
 
 /**
@@ -48,6 +49,14 @@ import kcp.Ukcp;
  */
 public interface Session {
 
+  /**
+   * IDs generator.
+   */
+  AtomicLong ID_COUNTER = new AtomicLong(1L);
+  /**
+   * The maximum time that this session is allowed to be orphan.
+   */
+  long ORPHAN_ALLOWANCE_TIME_IN_MILLISECONDS = 3000L;
   /**
    * The default UDP convey ID.
    */

@@ -31,7 +31,6 @@ import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * The implementation for packet.
@@ -39,8 +38,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * @see Packet
  */
 public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
-
-  private static final AtomicLong ID_COUNTER = new AtomicLong(1L);
 
   private final long id;
   private final long createdTime;
@@ -58,8 +55,6 @@ public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
     createdTime = TimeUtility.currentTimeMillis();
     transportType = TransportType.UNKNOWN;
     priority = ResponsePriority.NORMAL;
-    encrypted = false;
-    last = false;
   }
 
   /**
@@ -191,10 +186,7 @@ public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
    */
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + (int) (id ^ (id >>> 32));
-    return result;
+    return Long.hashCode(id);
   }
 
   @Override
