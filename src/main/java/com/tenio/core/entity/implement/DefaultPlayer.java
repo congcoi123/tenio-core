@@ -361,8 +361,7 @@ public class DefaultPlayer implements Player {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    return prime * (Objects.isNull(identity) ? 0 : identity.hashCode());
+    return Objects.isNull(identity) ? 0 : identity.hashCode();
   }
 
   @Override
