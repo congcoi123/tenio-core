@@ -233,7 +233,7 @@ public class DefaultRoom implements Room {
   }
 
   @Override
-  public synchronized void addPlayer(Player player, String password, boolean asSpectator, int targetSlot) {
+  public void addPlayer(Player player, String password, boolean asSpectator, int targetSlot) {
     if (Objects.nonNull(this.password) && !this.password.equals(password)) {
       throw new PlayerJoinedRoomException(
           String.format("Unable to add player: %s to room due to invalid password provided", player.getIdentity()),
@@ -272,7 +272,7 @@ public class DefaultRoom implements Room {
   }
 
   @Override
-  public synchronized void removePlayer(Player player) {
+  public void removePlayer(Player player) {
     roomPlayerSlotGeneratedStrategy.freeSlotWhenPlayerLeft(player.getPlayerSlotInCurrentRoom());
     playerManager.removePlayerByIdentity(player.getIdentity());
     player.setCurrentRoom(null);
@@ -286,7 +286,7 @@ public class DefaultRoom implements Room {
   }
 
   @Override
-  public synchronized void switchParticipantToSpectator(Player player) {
+  public void switchParticipantToSpectator(Player player) {
     if (!containsPlayerIdentity(player.getIdentity())) {
       throw new SwitchedPlayerRoleInRoomException(
           String.format("Player %s was not in room", player.getIdentity()),
@@ -306,7 +306,7 @@ public class DefaultRoom implements Room {
   }
 
   @Override
-  public synchronized void switchSpectatorToParticipant(Player player, int targetSlot) {
+  public void switchSpectatorToParticipant(Player player, int targetSlot) {
     if (!containsPlayerIdentity(player.getIdentity())) {
       throw new SwitchedPlayerRoleInRoomException(
           String.format("Player %s was not in room", player.getIdentity()),
@@ -338,8 +338,7 @@ public class DefaultRoom implements Room {
     classifyPlayersByRoles();
   }
 
-  // Non thread-safe
-  private void classifyPlayersByRoles() {
+  private synchronized void classifyPlayersByRoles() {
     participants = getReadonlyPlayersList().stream()
         .filter(player -> player.getRoleInRoom() == PlayerRoleInRoom.PARTICIPANT)
         .toList();
@@ -360,8 +359,7 @@ public class DefaultRoom implements Room {
         player.setPlayerSlotInCurrentRoom(DEFAULT_SLOT);
         throw new PlayerJoinedRoomException(String
             .format("Unable to set the target slot: %d for the participant: %s", targetSlot,
-                player.getIdentity()),
-            PlayerJoinedRoomResult.SLOT_UNAVAILABLE_IN_ROOM);
+                player.getIdentity()), PlayerJoinedRoomResult.SLOT_UNAVAILABLE_IN_ROOM);
       }
     }
   }
@@ -426,15 +424,12 @@ public class DefaultRoom implements Room {
   
   @Override
   public boolean equals(Object object) {
-    return (object instanceof Room room) && room.getId() == getId();
+    return (object instanceof Room room) && (room.getId() == getId());
   }
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + (int) (id ^ (id >>> 32));
-    return result;
+    return Long.hashCode(id);
   }
 
   @Override
