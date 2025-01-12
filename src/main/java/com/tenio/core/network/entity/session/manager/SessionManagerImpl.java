@@ -262,8 +262,8 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   private PacketQueue configureNewPacketQueue() {
     PacketQueue packetQueue = PacketQueueImpl.newInstance();
-    packetQueue.setMaxSize(packetQueueSize);
-    packetQueue.setPacketQueuePolicy(packetQueuePolicy);
+    packetQueue.configureMaxSize(packetQueueSize);
+    packetQueue.configurePacketQueuePolicy(packetQueuePolicy);
     return packetQueue;
   }
 }
