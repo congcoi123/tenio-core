@@ -111,7 +111,7 @@ public final class PacketQueueImpl implements PacketQueue {
 
   @Override
   public float getPercentageUsed() {
-    return maxSize == 0 ? 0.0f : ((float) size * 100) / maxSize;
+    return maxSize == 0 ? 0.0f : (((float) size * 100) / maxSize);
   }
 
   @Override

@@ -117,7 +117,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
               roomCount), RoomCreatedResult.REACHED_MAX_ROOMS);
     }
 
-    var room = DefaultRoom.newInstance();
+    Room room = DefaultRoom.newInstance();
     room.configurePlayerManager(PlayerManagerImpl.newInstance(eventManager));
     room.configurePlayerSlotGeneratedStrategy(roomSetting.getRoomPlayerSlotGeneratedStrategy());
     room.configureRoomCredentialValidatedStrategy(roomSetting.getRoomCredentialValidatedStrategy());
@@ -142,8 +142,8 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   }
 
   @Override
-  public synchronized boolean containsRoomName(String roomName) {
-    return rooms.values().stream().anyMatch(room -> room.getName().equals(roomName));
+  public boolean containsRoomName(String roomName) {
+    return readOnlyRoomsList.stream().anyMatch(room -> room.getName().equals(roomName));
   }
 
   @Override
