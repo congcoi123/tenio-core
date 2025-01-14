@@ -124,7 +124,7 @@ class ServerApiTest {
 
     var loginName = "test";
     var loginPlayer = DefaultPlayer.newInstance(loginName);
-    Mockito.doThrow(new AddedDuplicatedPlayerException(loginPlayer, Mockito.mock(Room.class)))
+    Mockito.doThrow(new AddedDuplicatedPlayerException(loginPlayer))
         .when(playerManager).createPlayer(loginName);
     serverApi.login(loginName);
     Mockito.verify(eventManager, Mockito.times(1))
@@ -175,7 +175,7 @@ class ServerApiTest {
     var loginName = "test";
     var loginPlayer = DefaultPlayer.newInstance(loginName);
     var loginSession = SessionImpl.newInstance();
-    Mockito.doThrow(new AddedDuplicatedPlayerException(loginPlayer, Mockito.mock(Room.class)))
+    Mockito.doThrow(new AddedDuplicatedPlayerException(loginPlayer))
         .when(playerManager).createPlayerWithSession(loginName, loginSession);
     serverApi.login(loginName, loginSession);
     Mockito.verify(eventManager, Mockito.times(1))
@@ -468,7 +468,7 @@ class ServerApiTest {
 
     var player = Mockito.mock(Player.class);
     var room = Mockito.mock(Room.class);
-    Mockito.doThrow(new AddedDuplicatedPlayerException(player, room)).when(room).addPlayer(player
+    Mockito.doThrow(new AddedDuplicatedPlayerException(player)).when(room).addPlayer(player
         , "test", false, 1);
     serverApi.joinRoom(player, room, "test", 1, false);
 

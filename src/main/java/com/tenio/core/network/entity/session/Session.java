@@ -103,6 +103,16 @@ public interface Session {
   void setAssociatedToPlayer(AssociatedState associatedState);
 
   /**
+   * Updates associated state in thread-safe.
+   *
+   * @param expectedState the current expected state
+   * @param newState      new state
+   * @return {@code true} if the update is successful, otherwise returns {@code false}
+   * @since 0.6.1
+   */
+  boolean transitionAssociatedState(AssociatedState expectedState, AssociatedState newState);
+
+  /**
    * In allowance period of time, if the session can not be associated to any player, it is
    * considered as an orphan session and will be removed.
    *

@@ -103,11 +103,10 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   }
 
   private void halting() throws ServiceRuntimeException {
-    if (stopping.get()) {
+    if (!stopping.compareAndSet(false, true)) {
       return;
     }
 
-    stopping.set(true);
     activated = false;
 
     onShutdown();

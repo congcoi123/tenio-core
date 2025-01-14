@@ -105,11 +105,10 @@ public abstract class AbstractController extends AbstractManager implements Cont
   }
 
   private void attemptToShutdown() {
-    if (stopping.get()) {
+    if (!stopping.compareAndSet(false, true)) {
       return;
     }
 
-    stopping.set(true);
     activated = false;
 
     if (isInfoEnabled()) {

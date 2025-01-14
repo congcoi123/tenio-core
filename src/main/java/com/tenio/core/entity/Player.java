@@ -72,6 +72,16 @@ public interface Player {
   void setState(PlayerState state);
 
   /**
+   * Updates state in thread-safe.
+   *
+   * @param expectedState the current expected state
+   * @param newState      new state
+   * @return {@code true} if the update is successful, otherwise returns {@code false}
+   * @since 0.6.1
+   */
+  boolean transitionState(PlayerState expectedState, PlayerState newState);
+
+  /**
    * Determines whether the player is activated.
    *
    * @return {@code true} if the player is activated, otherwise returns {@code false}
@@ -213,6 +223,16 @@ public interface Player {
    * @param roleInRoom the {@link PlayerRoleInRoom}
    */
   void setRoleInRoom(PlayerRoleInRoom roleInRoom);
+
+  /**
+   * Updates role in thread-safe.
+   *
+   * @param expectedRole the current expected role
+   * @param newRole      new role
+   * @return {@code true} if the update is successful, otherwise returns {@code false}
+   * @since 0.6.1
+   */
+  boolean transitionRole(PlayerRoleInRoom expectedRole, PlayerRoleInRoom newRole);
 
   /**
    * Retrieves the current room which the player is in.

@@ -166,13 +166,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
   private synchronized void processSessionRequestsConnection(Request request) {
     // Check if it's a reconnection request first
     var session = (Session) request.getSender();
+
     // We only consider the fresh session
-    if (!session.isAssociatedToPlayer(Session.AssociatedState.NONE)) {
+    if (!session.transitionAssociatedState(Session.AssociatedState.NONE, Session.AssociatedState.DOING)) {
       return;
     }
-
-    // Processing
-    session.setAssociatedToPlayer(Session.AssociatedState.DOING);
 
     var message = request.getMessage();
 

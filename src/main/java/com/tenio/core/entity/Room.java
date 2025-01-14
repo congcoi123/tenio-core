@@ -31,7 +31,7 @@ import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
 import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import com.tenio.core.exception.PlayerJoinedRoomException;
-import com.tenio.core.exception.RemovedNonExistentPlayerFromRoomException;
+import com.tenio.core.exception.RemovedNonExistentPlayerException;
 import com.tenio.core.exception.SwitchedPlayerRoleInRoomException;
 import java.util.Iterator;
 import java.util.List;
@@ -109,6 +109,16 @@ public interface Room {
    * @param state the new {@link RoomState} value
    */
   void setState(RoomState state);
+
+  /**
+   * Updates state in thread-safe.
+   *
+   * @param expectedState the current expected state
+   * @param newState      new state
+   * @return {@code true} if the update is successful, otherwise returns {@code false}
+   * @since 0.6.1
+   */
+  boolean transitionState(RoomState expectedState, RoomState newState);
 
   /**
    * Determines whether the room is public which means it does not contain any credential and
@@ -344,10 +354,10 @@ public interface Room {
    * Removes a player from its current room.
    *
    * @param player the leaving {@link Player}
-   * @throws RemovedNonExistentPlayerFromRoomException when the player has already left the room,
+   * @throws RemovedNonExistentPlayerException when the player has already left the room,
    *                                                   but it is mentioned again
    */
-  void removePlayer(Player player) throws RemovedNonExistentPlayerFromRoomException;
+  void removePlayer(Player player) throws RemovedNonExistentPlayerException;
 
   /**
    * Changes a player's role from "participant" to "spectator" in the room.

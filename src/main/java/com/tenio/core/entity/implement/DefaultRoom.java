@@ -52,11 +52,11 @@ public class DefaultRoom implements Room {
 
   private final long id;
   private final Map<String, Object> properties;
-  private final AtomicReference<Player> owner;
   private final AtomicReference<RoomState> state;
 
   private volatile String name;
   private volatile String password;
+  private volatile Player owner;
   private volatile List<Player> participants;
   private volatile int maxParticipants;
   private volatile List<Player> spectators;
@@ -77,7 +77,6 @@ public class DefaultRoom implements Room {
     state = new AtomicReference<>(null);
     spectators = new ArrayList<>();
     participants = new ArrayList<>();
-    owner = new AtomicReference<>(null);
     setRoomRemoveMode(RoomRemoveMode.WHEN_EMPTY);
   }
 
@@ -128,18 +127,23 @@ public class DefaultRoom implements Room {
   }
 
   @Override
+  public boolean transitionState(RoomState expectedState, RoomState newState) {
+    return state.compareAndSet(expectedState, newState);
+  }
+
+  @Override
   public boolean isPublic() {
     return Objects.isNull(password);
   }
 
   @Override
   public Optional<Player> getOwner() {
-    return Optional.ofNullable(owner.get());
+    return Optional.ofNullable(owner);
   }
 
   @Override
   public void setOwner(Player owner) {
-    this.owner.set(owner);
+    this.owner = owner;
   }
 
   @Override
@@ -437,7 +441,7 @@ public class DefaultRoom implements Room {
     return "DefaultRoom{" +
         "id=" + id +
         ", properties=" + properties +
-        ", owner=" + owner.get() +
+        ", owner=" + owner +
         ", state=" + state.get() +
         ", name='" + name + '\'' +
         ", password='" + password + '\'' +

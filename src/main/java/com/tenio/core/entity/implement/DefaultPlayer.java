@@ -44,11 +44,11 @@ public class DefaultPlayer implements Player {
 
   private final String identity;
   private final Map<String, Object> properties;
-  private final AtomicReference<Room> currentRoom;
   private final AtomicReference<PlayerState> state;
   private final AtomicReference<PlayerRoleInRoom> roleInRoom;
   private Consumer<Field> updateConsumer;
 
+  private volatile Room currentRoom;
   private volatile Session session;
 
   private volatile long lastLoginTime;
@@ -84,7 +84,6 @@ public class DefaultPlayer implements Player {
   public DefaultPlayer(String identity, Session session) {
     this.identity = identity;
     properties = new ConcurrentHashMap<>();
-    currentRoom = new AtomicReference<>(null);
     state = new AtomicReference<>(null);
     roleInRoom = new AtomicReference<>(PlayerRoleInRoom.SPECTATOR);
     playerSlotInCurrentRoom = Room.NIL_SLOT;
@@ -139,6 +138,15 @@ public class DefaultPlayer implements Player {
   public void setState(PlayerState state) {
     this.state.set(state);
     notifyUpdate(Field.STATE);
+  }
+
+  @Override
+  public boolean transitionState(PlayerState expectedState, PlayerState newState) {
+    if (state.compareAndSet(expectedState, newState)) {
+      notifyUpdate(Field.STATE);
+      return true;
+    }
+    return false;
   }
 
   @Override
@@ -234,7 +242,7 @@ public class DefaultPlayer implements Player {
 
   @Override
   public boolean isInRoom() {
-    return Objects.nonNull(currentRoom.get());
+    return Objects.nonNull(currentRoom);
   }
 
   @Override
@@ -249,13 +257,22 @@ public class DefaultPlayer implements Player {
   }
 
   @Override
+  public boolean transitionRole(PlayerRoleInRoom expectedRole, PlayerRoleInRoom newRole) {
+    if (roleInRoom.compareAndSet(expectedRole, newRole)) {
+      notifyUpdate(Field.ROLE_IN_ROOM);
+      return true;
+    }
+    return false;
+  }
+
+  @Override
   public Optional<Room> getCurrentRoom() {
-    return Optional.ofNullable(currentRoom.get());
+    return Optional.ofNullable(currentRoom);
   }
 
   @Override
   public void setCurrentRoom(Room room) {
-    currentRoom.set(room);
+    currentRoom = room;
     setPlayerSlotInCurrentRoom(Objects.isNull(room) ? Room.NIL_SLOT : Room.DEFAULT_SLOT);
     setLastJoinedRoomTime();
   }
@@ -371,7 +388,7 @@ public class DefaultPlayer implements Player {
         "identity='" + identity + '\'' +
         ", properties=" + properties +
         ", session=" + session +
-        ", currentRoom=" + currentRoom.get() +
+        ", currentRoom=" + currentRoom +
         ", state=" + state.get() +
         ", roleInRoom=" + roleInRoom.get() +
         ", lastLoginTime=" + lastLoginTime +

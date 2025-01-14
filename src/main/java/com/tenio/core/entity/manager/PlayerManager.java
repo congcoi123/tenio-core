@@ -25,9 +25,8 @@ THE SOFTWARE.
 package com.tenio.core.entity.manager;
 
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.Room;
 import com.tenio.core.exception.AddedDuplicatedPlayerException;
-import com.tenio.core.exception.RemovedNonExistentPlayerFromRoomException;
+import com.tenio.core.exception.RemovedNonExistentPlayerException;
 import com.tenio.core.manager.Manager;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Iterator;
@@ -109,10 +108,10 @@ public interface PlayerManager extends Manager {
    * Removes a player from the management list.
    *
    * @param playerIdentity the player's name ({@link String} value)
-   * @throws RemovedNonExistentPlayerFromRoomException when the player is not present in the
+   * @throws RemovedNonExistentPlayerException when the player is not present in the
    *                                                   management list
    */
-  void removePlayerByIdentity(String playerIdentity) throws RemovedNonExistentPlayerFromRoomException;
+  void removePlayerByIdentity(String playerIdentity) throws RemovedNonExistentPlayerException;
 
   /**
    * Determines whether the management list contains a player by checking its name.
@@ -121,21 +120,6 @@ public interface PlayerManager extends Manager {
    * @return {@code true} if the player is available, otherwise returns {@code false}
    */
   boolean containsPlayerIdentity(String playerIdentity);
-
-  /**
-   * Retrieves a room of the management list.
-   *
-   * @return an instance of {@link Room} if present, otherwise {@code null}
-   */
-  Room getOwnerRoom();
-
-  /**
-   * Adds the management list to a room.
-   *
-   * @param room an instance of {@link Room}, this value can be {@code null}. In that case,
-   *             the management list does not belong to any room
-   */
-  void setOwnerRoom(Room room);
 
   /**
    * Retrieves the current number of players in the management list.

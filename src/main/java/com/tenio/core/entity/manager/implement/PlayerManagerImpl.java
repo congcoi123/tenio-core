@@ -25,12 +25,11 @@ THE SOFTWARE.
 package com.tenio.core.entity.manager.implement;
 
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.Room;
 import com.tenio.core.entity.implement.DefaultPlayer;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.AddedDuplicatedPlayerException;
-import com.tenio.core.exception.RemovedNonExistentPlayerFromRoomException;
+import com.tenio.core.exception.RemovedNonExistentPlayerException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entity.session.Session;
 
@@ -40,7 +39,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * An implemented class is for player management.
@@ -48,7 +46,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class PlayerManagerImpl extends AbstractManager implements PlayerManager {
 
   private final Map<String, Player> players;
-  private final AtomicReference<Room> ownerRoom;
   private volatile List<Player> readOnlyPlayersList;
   private volatile int playerCount;
   private int maxIdleTimeInSecond;
@@ -58,7 +55,6 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     super(eventManager);
     players = new HashMap<>();
     readOnlyPlayersList = new ArrayList<>();
-    ownerRoom = new AtomicReference<>(null);
   }
 
   /**
@@ -74,7 +70,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public void addPlayer(Player player) {
     if (containsPlayerIdentity(player.getIdentity())) {
-      throw new AddedDuplicatedPlayerException(player, ownerRoom.get());
+      throw new AddedDuplicatedPlayerException(player);
     }
 
     synchronized (this) {
@@ -134,7 +130,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public void removePlayerByIdentity(String playerIdentity) {
     if (!containsPlayerIdentity(playerIdentity)) {
-      throw new RemovedNonExistentPlayerFromRoomException(playerIdentity, ownerRoom.get());
+      throw new RemovedNonExistentPlayerException(playerIdentity);
     }
 
     synchronized (this) {
@@ -147,16 +143,6 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   @Override
   public synchronized boolean containsPlayerIdentity(String playerIdentity) {
     return players.containsKey(playerIdentity);
-  }
-
-  @Override
-  public Room getOwnerRoom() {
-    return ownerRoom.get();
-  }
-
-  @Override
-  public void setOwnerRoom(Room room) {
-    ownerRoom.set(room);
   }
 
   @Override

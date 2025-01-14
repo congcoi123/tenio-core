@@ -133,6 +133,11 @@ public final class SessionImpl implements Session {
   }
 
   @Override
+  public boolean transitionAssociatedState(AssociatedState expectedState, AssociatedState newState) {
+    return associatedState.compareAndSet(expectedState, newState);
+  }
+
+  @Override
   public boolean isOrphan() {
     return (!isAssociatedToPlayer(AssociatedState.DONE) &&
         (now() - createdTime) >= ORPHAN_ALLOWANCE_TIME_IN_MILLISECONDS);

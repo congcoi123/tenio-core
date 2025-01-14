@@ -47,7 +47,7 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import com.tenio.core.exception.CreatedRoomException;
 import com.tenio.core.exception.PlayerJoinedRoomException;
-import com.tenio.core.exception.RemovedNonExistentPlayerFromRoomException;
+import com.tenio.core.exception.RemovedNonExistentPlayerException;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.server.Server;
@@ -155,7 +155,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
         }
         player.clean();
       }
-    } catch (RemovedNonExistentPlayerFromRoomException | IOException exception) {
+    } catch (RemovedNonExistentPlayerException | IOException exception) {
       if (isErrorEnabled()) {
         error(exception, "Remove player: ", player.getIdentity(), " with issue");
       }
@@ -265,8 +265,8 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
           exception.getResult());
     } catch (AddedDuplicatedPlayerException exception) {
-      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, exception.getPlayer(),
-          exception.getRoom(), PlayerJoinedRoomResult.DUPLICATED_PLAYER);
+      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
+          PlayerJoinedRoomResult.DUPLICATED_PLAYER);
     }
   }
 
@@ -301,7 +301,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       optionalRoom.ifPresent(room -> room.removePlayer(player));
       getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, optionalRoom,
           leaveRoomMode, PlayerLeftRoomResult.SUCCESS);
-    } catch (RemovedNonExistentPlayerFromRoomException exception) {
+    } catch (RemovedNonExistentPlayerException exception) {
       getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, optionalRoom,
           leaveRoomMode, PlayerLeftRoomResult.PLAYER_ALREADY_LEFT_ROOM);
     }
