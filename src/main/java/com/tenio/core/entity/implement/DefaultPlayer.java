@@ -78,8 +78,8 @@ public class DefaultPlayer implements Player {
   /**
    * Constructor.
    *
-   * @param identity    the player unique name
-   * @param session a session which associates to the player
+   * @param identity the player unique name
+   * @param session  a session which associates to the player
    */
   public DefaultPlayer(String identity, Session session) {
     this.identity = identity;
@@ -181,6 +181,10 @@ public class DefaultPlayer implements Player {
   @Override
   public long getLastActivityTime() {
     return lastActivityTime;
+  }
+
+  private void setLastActivityTime(long timestamp) {
+    lastActivityTime = timestamp;
   }
 
   @Override
@@ -344,6 +348,12 @@ public class DefaultPlayer implements Player {
     maxIdleTimeNeverDeportedInSecond = seconds;
   }
 
+  /**
+   * Retrieves current time in milliseconds.
+   *
+   * @return current time in milliseconds
+   * @see TimeUtility#currentTimeMillis()
+   */
   protected long now() {
     return TimeUtility.currentTimeMillis();
   }
@@ -359,10 +369,6 @@ public class DefaultPlayer implements Player {
 
   private void setLastJoinedRoomTime() {
     lastJoinedRoomTime = now();
-  }
-
-  private void setLastActivityTime(long timestamp) {
-    lastActivityTime = timestamp;
   }
 
   // This is not thread-safe

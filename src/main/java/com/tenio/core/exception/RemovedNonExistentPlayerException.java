@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.exception;
 
-import com.tenio.core.entity.Room;
 import java.io.Serial;
 
 /**
@@ -39,7 +38,6 @@ public final class RemovedNonExistentPlayerException extends RuntimeException {
    * Initialization.
    *
    * @param playerIdentity the {@link Object} of player's identity
-   * @param room           the {@link Room} instance
    */
   public RemovedNonExistentPlayerException(Object playerIdentity) {
     super(String.format("Unable to remove player: %s, the player did not exist",
