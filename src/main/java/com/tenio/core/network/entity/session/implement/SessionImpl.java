@@ -112,6 +112,17 @@ public final class SessionImpl implements Session {
     return new SessionImpl();
   }
 
+  /**
+   * Special instance which is built for TCP.
+   *
+   * @return a new instance of {@link Session}
+   */
+  public static Session newInstanceForTcp() {
+    SessionImpl session = new SessionImpl();
+    session.createPacketSocketHandler();
+    return session;
+  }
+
   @Override
   public long getId() {
     return id;
@@ -212,9 +223,7 @@ public final class SessionImpl implements Session {
 
     if (Objects.nonNull(socketChannel.socket()) && !socketChannel.socket().isClosed()) {
       transportType = TransportType.TCP;
-      packetReadState = PacketReadState.WAIT_NEW_PACKET;
-      processedPacket = ProcessedPacket.newInstance();
-      pendingPacket = PendingPacket.newInstance();
+      createPacketSocketHandler();
       this.socketChannel = socketChannel;
 
       InetSocketAddress socketAddress =
@@ -513,6 +522,12 @@ public final class SessionImpl implements Session {
   private void setAssociatedState(AssociatedState associatedState) {
     this.associatedState = associatedState;
     atomicAssociatedState.set(associatedState);
+  }
+
+  private void createPacketSocketHandler() {
+    packetReadState = PacketReadState.WAIT_NEW_PACKET;
+    processedPacket = ProcessedPacket.newInstance();
+    pendingPacket = PendingPacket.newInstance();
   }
 
   private long now() {
