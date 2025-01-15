@@ -74,9 +74,10 @@ public class DefaultRoom implements Room {
   public DefaultRoom() {
     id = ID_COUNTER.getAndIncrement();
     properties = new ConcurrentHashMap<>();
-    state = new AtomicReference<>(null);
+    state = new AtomicReference<>();
     spectators = new ArrayList<>();
     participants = new ArrayList<>();
+    setState(null);
     setRoomRemoveMode(RoomRemoveMode.WHEN_EMPTY);
   }
 
@@ -114,6 +115,11 @@ public class DefaultRoom implements Room {
   public void setPassword(String password) {
     roomCredentialValidatedStrategy.validatePassword(password);
     this.password = password;
+  }
+
+  @Override
+  public boolean isState(RoomState state) {
+    return getState() == state;
   }
 
   @Override

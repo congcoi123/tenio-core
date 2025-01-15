@@ -45,6 +45,7 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import kcp.Ukcp;
 
@@ -57,7 +58,10 @@ public final class SessionImpl implements Session {
 
   private final long id;
   private final long createdTime;
-  private final AtomicReference<AssociatedState> associatedState;
+  private final AtomicBoolean atomicActivated;
+  private final AtomicReference<AssociatedState> atomicAssociatedState;
+  private volatile boolean activated;
+  private volatile AssociatedState associatedState;
   private volatile String name;
 
   private SessionManager sessionManager;
@@ -81,7 +85,6 @@ public final class SessionImpl implements Session {
 
   private volatile long inactivatedTime;
   private volatile long lastActivityTime;
-  private volatile boolean activated;
   private volatile boolean hasUdp;
   private volatile boolean hasKcp;
 
@@ -91,7 +94,9 @@ public final class SessionImpl implements Session {
     id = ID_COUNTER.getAndIncrement();
     transportType = TransportType.UNKNOWN;
     udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
-    associatedState = new AtomicReference<>(AssociatedState.NONE);
+    atomicAssociatedState = new AtomicReference<>();
+    atomicActivated = new AtomicBoolean();
+    setAssociatedState(AssociatedState.NONE);
     long currentTime = now();
     createdTime = currentTime;
     setLastReadTime(currentTime);
@@ -124,17 +129,27 @@ public final class SessionImpl implements Session {
 
   @Override
   public boolean isAssociatedToPlayer(AssociatedState associatedState) {
-    return this.associatedState.get() == associatedState;
+    return this.associatedState == associatedState;
   }
 
   @Override
   public void setAssociatedToPlayer(AssociatedState associatedState) {
-    this.associatedState.set(associatedState);
+    if (this.associatedState != associatedState) {
+      synchronized (this) {
+        if (this.associatedState != associatedState) {
+          setAssociatedState(associatedState);
+        }
+      }
+    }
   }
 
   @Override
   public boolean transitionAssociatedState(AssociatedState expectedState, AssociatedState newState) {
-    return associatedState.compareAndSet(expectedState, newState);
+    if (atomicAssociatedState.compareAndSet(expectedState, newState)) {
+      associatedState = newState;
+      return true;
+    }
+    return false;
   }
 
   @Override
@@ -413,14 +428,9 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public void activate() {
+  public synchronized void activate() {
     activated = true;
-  }
-
-  @Override
-  public void deactivate() {
-    activated = false;
-    inactivatedTime = now();
+    atomicActivated.set(true);
   }
 
   @Override
@@ -456,10 +466,12 @@ public final class SessionImpl implements Session {
   @Override
   public void close(ConnectionDisconnectMode connectionDisconnectMode,
                     PlayerDisconnectMode playerDisconnectMode) throws IOException {
-    if (!isActivated()) {
+    if (atomicActivated.compareAndSet(true, false)) {
+      activated = false;
+      inactivatedTime = now();
+    } else {
       return;
     }
-    deactivate();
 
     connectionFilter.removeAddress(clientAddress);
 
@@ -496,6 +508,11 @@ public final class SessionImpl implements Session {
 
   private void setLastActivityTime(long timestamp) {
     lastActivityTime = timestamp;
+  }
+
+  private void setAssociatedState(AssociatedState associatedState) {
+    this.associatedState = associatedState;
+    atomicAssociatedState.set(associatedState);
   }
 
   private long now() {

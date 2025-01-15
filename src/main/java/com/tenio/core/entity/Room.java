@@ -97,6 +97,14 @@ public interface Room {
   void setPassword(String password) throws IllegalArgumentException;
 
   /**
+   * Determines whether the room is in a particular state.
+   *
+   * @param state a {@link RoomState} is in judgment
+   * @return {@code true} if the room in that state, otherwise returns {@code false}
+   */
+  boolean isState(RoomState state);
+
+  /**
    * Retrieves the current room's state.
    *
    * @return the current {@link RoomState}

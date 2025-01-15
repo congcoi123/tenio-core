@@ -163,7 +163,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     }
   }
 
-  private synchronized void processSessionRequestsConnection(Request request) {
+  private void processSessionRequestsConnection(Request request) {
     // Check if it's a reconnection request first
     var session = (Session) request.getSender();
 
@@ -255,7 +255,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     }
   }
 
-  private synchronized void processSessionWillBeClosed(Session session,
+  private void processSessionWillBeClosed(Session session,
                                                        PlayerDisconnectMode playerDisconnectMode) {
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByIdentity(session.getName());
@@ -306,7 +306,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     }
   }
 
-  private synchronized void processDatagramChannelReadMessageForTheFirstTime(Request request) {
+  private void processDatagramChannelReadMessageForTheFirstTime(Request request) {
     var message = request.getMessage();
 
     // verify the datagram channel accessing request

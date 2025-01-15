@@ -462,11 +462,6 @@ public interface Session {
   void activate();
 
   /**
-   * Deactivates the session (Not be able to perform actions, such as reading or writing data).
-   */
-  void deactivate();
-
-  /**
    * Retrieves how long since the session is inactivated.
    *
    * @return how long since the session is inactivated in milliseconds ({@code long} value)

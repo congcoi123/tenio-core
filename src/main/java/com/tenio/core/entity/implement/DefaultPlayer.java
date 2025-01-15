@@ -84,8 +84,10 @@ public class DefaultPlayer implements Player {
   public DefaultPlayer(String identity, Session session) {
     this.identity = identity;
     properties = new ConcurrentHashMap<>();
-    state = new AtomicReference<>(null);
-    roleInRoom = new AtomicReference<>(PlayerRoleInRoom.SPECTATOR);
+    state = new AtomicReference<>();
+    roleInRoom = new AtomicReference<>();
+    setState(null);
+    setRoleInRoom(PlayerRoleInRoom.SPECTATOR);
     playerSlotInCurrentRoom = Room.NIL_SLOT;
     long currentTime = now();
     setSession(session);
@@ -126,7 +128,7 @@ public class DefaultPlayer implements Player {
 
   @Override
   public boolean isState(PlayerState state) {
-    return this.state.get() == state;
+    return getState() == state;
   }
 
   @Override

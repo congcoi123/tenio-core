@@ -107,20 +107,19 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         return;
       }
 
-      synchronized (readableSelector) {
-        // readable selector was registered by OP_READ interested only socket channels,
-        // but in some cases, we can receive "can writable" signal from those sockets
-        var readyKeys = readableSelector.selectedKeys();
-        var keyIterator = readyKeys.iterator();
+      // readable selector was registered by OP_READ interested only socket channels,
+      // but in some cases, we can receive "can writable" signal from those sockets
+      var readyKeys = readableSelector.selectedKeys();
+      var keyIterator = readyKeys.iterator();
 
-        while (keyIterator.hasNext()) {
-          selectionKey = keyIterator.next();
-          // once a key is proceeded, it should be removed from the process to prevent
-          // duplicating manipulation
-          keyIterator.remove();
+      while (keyIterator.hasNext()) {
+        selectionKey = keyIterator.next();
+        // once a key is proceeded, it should be removed from the process to prevent
+        // duplicating manipulation
+        keyIterator.remove();
 
-          if (selectionKey.isValid()) {
-            var channel = selectionKey.channel();
+        if (selectionKey.isValid()) {
+          try (var channel = selectionKey.channel()) {
             // we already registered 2 types of channels for this selector and need to
             // separate the processes
             if (channel instanceof SocketChannel) {
