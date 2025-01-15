@@ -95,10 +95,6 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   }
 
   private void readIncomingSocketData(ByteBuffer readerBuffer) {
-    SocketChannel socketChannel;
-    DatagramChannel datagramChannel;
-    SelectionKey selectionKey;
-
     try {
       // blocks until at least one channel is ready for the events you registered for
       int countReadyKeys = readableSelector.select(1);
@@ -109,24 +105,23 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
       // readable selector was registered by OP_READ interested only socket channels,
       // but in some cases, we can receive "can writable" signal from those sockets
-      var readyKeys = readableSelector.selectedKeys();
-      var keyIterator = readyKeys.iterator();
+      synchronized (readableSelector) {
+        var readyKeys = readableSelector.selectedKeys();
+        var keyIterator = readyKeys.iterator();
 
-      while (keyIterator.hasNext()) {
-        selectionKey = keyIterator.next();
-        // once a key is proceeded, it should be removed from the process to prevent
-        // duplicating manipulation
-        keyIterator.remove();
+        while (keyIterator.hasNext()) {
+          SelectionKey selectionKey = keyIterator.next();
+          // once a key is proceeded, it should be removed from the process to prevent
+          // duplicating manipulation
+          keyIterator.remove();
 
-        if (selectionKey.isValid()) {
-          try (var channel = selectionKey.channel()) {
+          if (selectionKey.isValid()) {
+            var channel = selectionKey.channel();
             // we already registered 2 types of channels for this selector and need to
             // separate the processes
-            if (channel instanceof SocketChannel) {
-              socketChannel = (SocketChannel) channel;
+            if (channel instanceof SocketChannel socketChannel) {
               readTcpData(socketChannel, selectionKey, readerBuffer);
-            } else if (channel instanceof DatagramChannel) {
-              datagramChannel = (DatagramChannel) channel;
+            } else if (channel instanceof DatagramChannel datagramChannel) {
               readUpdData(datagramChannel, selectionKey, readerBuffer);
             }
           }
