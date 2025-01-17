@@ -185,6 +185,11 @@ public class DefaultPlayer implements Player {
     return lastActivityTime;
   }
 
+  @Override
+  public long getInactiveTimeInSeconds() {
+    return (now() - getLastActivityTime()) / 1000L;
+  }
+
   private void setLastActivityTime(long timestamp) {
     lastActivityTime = timestamp;
   }
