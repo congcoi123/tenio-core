@@ -469,13 +469,15 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public synchronized void close(ConnectionDisconnectMode connectionDisconnectMode,
+  public void close(ConnectionDisconnectMode connectionDisconnectMode,
                     PlayerDisconnectMode playerDisconnectMode) throws IOException {
-    if (!activated) {
-      return;
+    synchronized (this) {
+      if (!activated) {
+        return;
+      }
+      activated = false;
     }
-
-    activated = false;
+    
     inactivatedTime = now();
 
     connectionFilter.removeAddress(clientAddress);
