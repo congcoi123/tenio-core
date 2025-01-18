@@ -366,8 +366,7 @@ public class DefaultPlayer implements Player {
   }
 
   private boolean isConnectionIdle(int maxIdleTimeInSecond) {
-    return (maxIdleTimeInSecond > 0) &&
-        (((now() - getLastActivityTime()) / 1000L) > maxIdleTimeInSecond);
+    return (maxIdleTimeInSecond > 0) && (getInactiveTimeInSeconds() > maxIdleTimeInSecond);
   }
 
   private void setLastLoggedInTime() {
