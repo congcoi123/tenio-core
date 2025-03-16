@@ -38,6 +38,7 @@ import org.junit.runner.RunWith;
     "com.tenio.core.configuration",
     "com.tenio.core.controller",
     "com.tenio.core.entity",
+    "com.tenio.core.exception",
     "com.tenio.core.event",
     "com.tenio.core.monitoring",
     "com.tenio.core.network",

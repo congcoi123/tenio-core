@@ -31,7 +31,48 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * An abstract player entity used on the server.
+ * The Player interface represents a player entity in the game server.
+ * A player is a fundamental entity that can:
+ * <ul>
+ *   <li>Connect to the server through one or more sessions</li>
+ *   <li>Join and leave rooms</li>
+ *   <li>Participate in game activities</li>
+ *   <li>Maintain state and properties</li>
+ *   <li>Be monitored for activity and connection status</li>
+ * </ul>
+ * 
+ * <p>The player lifecycle typically involves:
+ * <ol>
+ *   <li>Creation and initialization</li>
+ *   <li>Connection establishment (optional)</li>
+ *   <li>Room joining (optional)</li>
+ *   <li>Activity monitoring</li>
+ *   <li>Cleanup and removal</li>
+ * </ol>
+ * 
+ * <p>Key features:
+ * <ul>
+ *   <li>Unique identity management</li>
+ *   <li>Session handling for network communication</li>
+ *   <li>State management and transitions</li>
+ *   <li>Room participation tracking</li>
+ *   <li>Activity monitoring and timeout handling</li>
+ *   <li>Property management for game-specific data</li>
+ * </ul>
+ * 
+ * <p>Performance considerations:
+ * <ul>
+ *   <li>Player instances should be managed efficiently to handle large numbers of concurrent users</li>
+ *   <li>State transitions should be thread-safe</li>
+ *   <li>Property access should be optimized for frequent reads</li>
+ *   <li>Activity tracking should have minimal overhead</li>
+ * </ul>
+ * 
+ * @see Session
+ * @see Room
+ * @see PlayerState
+ * @see PlayerRoleInRoom
+ * @since 0.5.0
  */
 public interface Player {
 

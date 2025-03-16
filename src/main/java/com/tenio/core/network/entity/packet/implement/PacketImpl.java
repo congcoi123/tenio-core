@@ -30,12 +30,28 @@ import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
-import java.util.Objects;
 
 /**
- * The implementation for packet.
- *
+ * The implementation of the {@link Packet} interface. This class represents a network packet
+ * that can be transmitted between server and clients. It supports various transport types,
+ * priorities, and can handle both encrypted and unencrypted data. The packet can be fragmented
+ * for large data transmission and supports multiple recipients.
+ * 
+ * <p>Key features:
+ * <ul>
+ * <li>Unique packet identification</li>
+ * <li>Binary data handling</li>
+ * <li>Transport type specification (TCP, UDP, WebSocket)</li>
+ * <li>Priority-based handling</li>
+ * <li>Encryption support</li>
+ * <li>Multiple recipient support</li>
+ * <li>Packet fragmentation for large data</li>
+ * </ul>
+ * 
  * @see Packet
+ * @see TransportType
+ * @see ResponsePriority
+ * @see Session
  */
 public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
 
@@ -58,7 +74,13 @@ public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
   }
 
   /**
-   * Creates a new instance of packet.
+   * Creates a new instance of packet with default settings:
+   * <ul>
+   * <li>Unique ID generated from atomic counter</li>
+   * <li>Creation timestamp set to current time</li>
+   * <li>Transport type set to UNKNOWN</li>
+   * <li>Priority set to NORMAL</li>
+   * </ul>
    *
    * @return a new instance of {@link Packet}
    */
@@ -159,7 +181,7 @@ public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
 
   @Override
   public boolean isFragmented() {
-    return Objects.nonNull(fragmentBuffer);
+    return fragmentBuffer != null && fragmentBuffer.length > 0;
   }
 
   @Override
@@ -169,12 +191,16 @@ public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
 
   @Override
   public void setMarkedAsLast(boolean markedAsLast) {
-    this.last = markedAsLast;
+    last = markedAsLast;
   }
 
   @Override
   public boolean equals(Object object) {
-    return (object instanceof Packet packet) && (getId() == packet.getId());
+    if (!(object instanceof Packet packet)) {
+      return false;
+    } else {
+      return getId() == packet.getId();
+    }
   }
 
   /**
@@ -190,11 +216,8 @@ public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
   }
 
   @Override
-  public int compareTo(Packet packet2) {
-    var packet1 = this;
-    return packet1.getPriority().getValue() != packet2.getPriority().getValue()
-        ? Integer.compare(packet1.getPriority().getValue(), packet2.getPriority().getValue())
-        : Long.compare(packet2.getId(), packet1.getId());
+  public int compareTo(Packet packet) {
+    return Long.compare(getId(), packet.getId());
   }
 
   @Override
@@ -202,27 +225,23 @@ public final class PacketImpl implements Packet, Comparable<Packet>, Cloneable {
     return "Packet{" +
         "id=" + id +
         ", createdTime=" + createdTime +
-        ", data(bytes)=" + (Objects.nonNull(data) ? data.length : "null") +
+        ", data=" + (data == null ? "null" : data.length + " bytes") +
         ", priority=" + priority +
         ", encrypted=" + encrypted +
         ", transportType=" + transportType +
         ", originalSize=" + originalSize +
-        ", recipients=" + recipients +
+        ", recipients=" + (recipients == null ? "null" : recipients.size() + " recipients") +
+        ", fragmentBuffer=" + (fragmentBuffer == null ? "null" : fragmentBuffer.length + " bytes") +
         ", last=" + last +
-        ", fragmentBuffer(bytes)=" + (Objects.nonNull(fragmentBuffer) ? fragmentBuffer.length : "null") +
         '}';
   }
 
   @Override
   public Packet clone() {
-    var packet = PacketImpl.newInstance();
-    packet.setData(data);
-    packet.setFragmentBuffer(fragmentBuffer);
-    packet.setPriority(priority);
-    packet.setEncrypted(encrypted);
-    packet.setRecipients(recipients);
-    packet.setTransportType(transportType);
-    packet.setMarkedAsLast(last);
-    return packet;
+    try {
+      return (Packet) super.clone();
+    } catch (CloneNotSupportedException e) {
+      throw new AssertionError();
+    }
   }
 }

@@ -71,9 +71,6 @@ public final class SystemCommandManager extends SystemLogger {
    * @param command The command handler
    */
   public synchronized void registerCommand(String label, AbstractSystemCommandHandler command) {
-    if (isDebugEnabled()) {
-      debug("SYSTEM_COMMAND", "Registered command > ", label);
-    }
     label = label.toLowerCase();
 
     // checks availability
@@ -93,10 +90,6 @@ public final class SystemCommandManager extends SystemLogger {
    * @param label The command label
    */
   public synchronized void unregisterCommand(String label) {
-    if (isDebugEnabled()) {
-      debug("SYSTEM_COMMAND", "Unregistered command > ", label);
-    }
-
     annotations.remove(label);
     commands.remove(label);
   }

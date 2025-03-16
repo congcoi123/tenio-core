@@ -24,14 +24,48 @@ THE SOFTWARE.
 
 package com.tenio.core.bootstrap;
 
+import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.annotation.Bootstrap;
 import com.tenio.core.bootstrap.injector.Injector;
-import com.tenio.common.logger.SystemLogger;
 import java.util.Objects;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 
 /**
- * The creation of a boostrap.
+ * The Bootstrapper is responsible for initializing and configuring the dependency injection system.
+ * It works in conjunction with the {@link Injector} to scan packages, create beans, and wire
+ * dependencies.
+ * 
+ * <p>Key responsibilities:
+ * <ul>
+ * <li>Package scanning for annotated classes</li>
+ * <li>Bean creation and initialization</li>
+ * <li>Dependency injection configuration</li>
+ * <li>Servlet mapping setup</li>
+ * <li>Command manager initialization</li>
+ * </ul>
+ * 
+ * <p>The bootstrapper uses the following annotations to identify components:
+ * <ul>
+ * <li>{@code @Bootstrap} - Marks the application entry point</li>
+ * <li>{@code @Component} - Identifies injectable components</li>
+ * <li>{@code @Bean} - Marks methods that produce beans</li>
+ * <li>{@code @RestController} - Identifies REST endpoints</li>
+ * </ul>
+ * 
+ * <p>Usage example:
+ * <pre>
+ * &#64;Bootstrap
+ * public class MyApplication {
+ *     public static void main(String[] args) {
+ *         var bootstrapper = Bootstrapper.newInstance();
+ *         bootstrapper.run(MyApplication.class, "com.example.package");
+ *     }
+ * }
+ * </pre>
+ * 
+ * @see Bootstrap
+ * @see Injector
+ * @see BootstrapHandler
  */
 public final class Bootstrapper extends SystemLogger {
 
@@ -48,21 +82,34 @@ public final class Bootstrapper extends SystemLogger {
   }
 
   /**
-   * Creates a new instance.
+   * Creates a new singleton instance of the Bootstrapper.
+   * This method ensures that only one instance of the bootstrapper exists.
    *
-   * @return a new instance of {@link Bootstrapper}
+   * @return the singleton {@link Bootstrapper} instance
    */
   public static Bootstrapper newInstance() {
     return instance;
   }
 
   /**
-   * Start the bootstrapping.
+   * Starts the bootstrapping process for the application.
+   * This method performs the following steps:
+   * <ol>
+   * <li>Validates the entry class has {@code @Bootstrap} annotation</li>
+   * <li>Initializes the dependency injection system</li>
+   * <li>Scans specified packages for components</li>
+   * <li>Creates and configures the bootstrap handler</li>
+   * <li>Sets up servlet mappings and command managers</li>
+   * </ol>
    *
-   * @param entryClass a {@link Class} in the root package
-   * @param packages   the scanning {@link String} package names
-   * @return {@code true} if successful, otherwise {@code false}
-   * @throws Exception when any exceptions occurred
+   * @param entryClass the {@link Class} which is placed in the root package and must be
+   *                   annotated with {@code @Bootstrap}
+   * @param packages   the scanning package names to search for components
+   * @return {@code true} if bootstrapping was successful, {@code false} otherwise
+   * @throws Exception when any initialization or configuration error occurs
+   * 
+   * @see Bootstrap
+   * @see BootstrapHandler
    */
   public boolean run(Class<?> entryClass, String... packages) throws Exception {
     boolean hasExtApplicationAnnotation = entryClass.isAnnotationPresent(Bootstrap.class);
@@ -79,6 +126,13 @@ public final class Bootstrapper extends SystemLogger {
     }
   }
 
+  /**
+   * Initializes the dependency injection system by scanning packages for components.
+   * This method is synchronized to ensure thread-safe initialization of the injector.
+   *
+   * @param entryClass the root class for package scanning
+   * @param packages   additional package names to scan
+   */
   private void start(Class<?> entryClass, String... packages) {
     try {
       synchronized (Bootstrapper.class) {
@@ -92,9 +146,11 @@ public final class Bootstrapper extends SystemLogger {
   }
 
   /**
-   * Retrieves an instance of bootstrap handler.
+   * Retrieves the bootstrap handler instance that was created during initialization.
+   * The bootstrap handler manages the lifecycle of server components and handles
+   * configuration after dependency injection is complete.
    *
-   * @return a {@link BootstrapHandler} instance
+   * @return the configured {@link BootstrapHandler} instance
    */
   public BootstrapHandler getBootstrapHandler() {
     return bootstrapHandler;

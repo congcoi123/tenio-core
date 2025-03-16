@@ -27,6 +27,7 @@ package com.tenio.core.bootstrap;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,7 +39,6 @@ import com.tenio.core.bootstrap.test.impl.TestClassAlone;
 import com.tenio.core.bootstrap.test.impl.TestClassCCopy;
 import com.tenio.core.bootstrap.test.inf.TestInterfaceA;
 import com.tenio.core.bootstrap.test.inf.TestInterfaceC;
-import com.tenio.core.custom.DisabledTestFindingSolution;
 import com.tenio.core.exception.DuplicatedBeanCreationException;
 import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
 import com.tenio.core.exception.NoImplementedClassFoundException;
@@ -172,8 +172,64 @@ class InjectorTest {
     );
   }
 
-  @DisabledTestFindingSolution
-  @DisplayName("Attempt fetching null bean should return null")
+  @Test
+  @DisplayName("Reset should clear all maps and managers")
+  void resetShouldClearAllMapsAndManagers() 
+      throws ClassNotFoundException, InvocationTargetException, InstantiationException,
+      IllegalAccessException, NoSuchMethodException, DuplicatedBeanCreationException {
+    // First populate with some data
+    injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.test.impl");
+    
+    // Get initial state
+    var initialBean = injector.getBean(BootstrapComponent.class);
+    var initialServletMap = injector.getServletBeansMap();
+    var initialSystemCmdMgr = injector.getSystemCommandManager();
+    var initialClientCmdMgr = injector.getClientCommandManager();
+    
+    assertTrue(initialBean != null || !initialServletMap.isEmpty() || 
+        !initialSystemCmdMgr.getHandlers().isEmpty() || !initialClientCmdMgr.getHandlers().isEmpty(),
+        "Should have some data before reset");
+    
+    // Reset
+    injector.getClass().getDeclaredMethod("reset").setAccessible(true);
+    injector.getClass().getDeclaredMethod("reset").invoke(injector);
+    
+    // Verify everything is cleared
+    assertAll("resetShouldClearAllMapsAndManagers",
+        () -> assertNull(injector.getBean(BootstrapComponent.class)),
+        () -> assertTrue(injector.getServletBeansMap().isEmpty()),
+        () -> assertTrue(injector.getSystemCommandManager().getHandlers().isEmpty()),
+        () -> assertTrue(injector.getClientCommandManager().getHandlers().isEmpty())
+    );
+  }
+
+  @Test
+  @DisplayName("Servlet beans map should be accessible")
+  void getServletBeansMapShouldBeAccessible() {
+    var servletMap = injector.getServletBeansMap();
+    assertNotNull(servletMap);
+    assertTrue(servletMap.isEmpty()); // Initially empty
+  }
+
+  @Test
+  @DisplayName("System command manager should be accessible")
+  void getSystemCommandManagerShouldBeAccessible() {
+    var systemCmdMgr = injector.getSystemCommandManager();
+    assertNotNull(systemCmdMgr);
+    assertTrue(systemCmdMgr.getHandlers().isEmpty()); // Initially empty
+  }
+
+  @Test
+  @DisplayName("Client command manager should be accessible")
+  void getClientCommandManagerShouldBeAccessible() {
+    var clientCmdMgr = injector.getClientCommandManager();
+    assertNotNull(clientCmdMgr);
+    assertTrue(clientCmdMgr.getHandlers().isEmpty()); // Initially empty
+  }
+
+  @Test
+  @DisplayName("Get bean should return null for non-existent bean")
   void getNullBeanShouldReturnNull() {
+    assertNull(injector.getBean(Object.class));
   }
 }

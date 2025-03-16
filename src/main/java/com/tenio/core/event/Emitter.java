@@ -36,5 +36,6 @@ public interface Emitter<T> {
    * @param params parameters those will be sent to subscribers
    * @return an {@link Object} subscribes' result
    */
+  @SuppressWarnings({"unchecked", "varargs"})
   Object emit(T... params);
 }

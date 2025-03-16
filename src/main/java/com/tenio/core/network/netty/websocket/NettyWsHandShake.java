@@ -34,7 +34,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import java.util.Objects;
-import javax.annotation.Nonnull;
 
 /**
  * <a href="https://en.wikipedia.org/wiki/WebSocket">WebSocket</a> is distinct
@@ -84,7 +83,7 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void channelRead(@Nonnull ChannelHandlerContext ctx, @Nonnull Object raw) {
+  public void channelRead(ChannelHandlerContext ctx, Object raw) {
 
     // check the request for handshake
     if (raw instanceof HttpRequest httpRequest) {

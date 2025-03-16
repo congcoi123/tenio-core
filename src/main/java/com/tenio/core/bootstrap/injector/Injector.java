@@ -43,6 +43,7 @@ import com.tenio.core.command.client.AbstractClientCommandHandler;
 import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.system.AbstractSystemCommandHandler;
 import com.tenio.core.command.system.SystemCommandManager;
+import com.tenio.core.entity.Player;
 import com.tenio.core.exception.DuplicatedBeanCreationException;
 import com.tenio.core.exception.IllegalDefinedAccessControlException;
 import com.tenio.core.exception.IllegalReturnTypeException;
@@ -65,9 +66,42 @@ import javax.annotation.concurrent.ThreadSafe;
 import org.reflections.Reflections;
 
 /**
- * The Injector class supports creating the mechanism for autowiring.
- *
- * @see ClassLoaderUtility
+ * The Injector class is the core component of the dependency injection system.
+ * It manages the creation, configuration, and lifecycle of all beans (objects) in the application.
+ * 
+ * <p>Key features:
+ * <ul>
+ * <li>Automatic bean discovery and instantiation</li>
+ * <li>Support for constructor, field, and method injection</li>
+ * <li>Qualifier-based dependency resolution</li>
+ * <li>Thread-safe bean management</li>
+ * <li>Support for singleton and prototype scopes</li>
+ * <li>Integration with REST controllers and servlets</li>
+ * <li>System and client command handling</li>
+ * </ul>
+ * 
+ * <p>The injector uses reflection to:
+ * <ul>
+ * <li>Scan packages for annotated classes</li>
+ * <li>Create instances of components</li>
+ * <li>Wire dependencies between components</li>
+ * <li>Manage bean lifecycle</li>
+ * </ul>
+ * 
+ * <p>Supported annotations:
+ * <ul>
+ * <li>{@code @Component} - Marks a class as a managed component</li>
+ * <li>{@code @Autowired} - Injects dependencies into fields</li>
+ * <li>{@code @Bean} - Declares a method that produces a bean</li>
+ * <li>{@code @BeanFactory} - Marks a class that produces beans</li>
+ * <li>{@code @RestController} - Marks a class as a REST endpoint</li>
+ * </ul>
+ * 
+ * @see Component
+ * @see Autowired
+ * @see Bean
+ * @see BeanFactory
+ * @see RestController
  */
 @ThreadSafe
 public final class Injector extends SystemLogger {
@@ -76,32 +110,54 @@ public final class Injector extends SystemLogger {
 
   /**
    * A map contains keys are interfaces and values hold keys' implemented classes.
-   *
-   * <p>This map is protected by the class instance to ensure thread-safe.
+   * This map is protected by the class instance to ensure thread-safety.
+   * 
+   * <p>The map structure is:
+   * <ul>
+   * <li>Key: Interface class</li>
+   * <li>Value: Implementation class</li>
+   * </ul>
    */
   private final Map<Class<?>, Class<?>> classesMap;
+
   /**
    * A map has keys are {@link #classesMap}'s key implemented classes and the value are keys'
-   * instances.
-   *
-   * <p>This map is protected by the class instance to ensure thread-safe.
+   * instances. This map is protected by the class instance to ensure thread-safety.
+   * 
+   * <p>The map structure is:
+   * <ul>
+   * <li>Key: BeanClass (class type + qualifier name)</li>
+   * <li>Value: Bean instance</li>
+   * </ul>
    */
   private final Map<BeanClass, Object> classBeansMap;
+
   /**
    * A set of classes that are created by {@link Bean} and {@link BeanFactory} annotations.
-   * This map is protected by the class instance to ensure thread-safe.
+   * This set is protected by the class instance to ensure thread-safety.
    */
   private final Set<Class<?>> manualClassesSet;
+
   /**
-   * A map is using to initialize restful servlets.
+   * A map for managing REST servlet instances.
+   * 
+   * <p>The map structure is:
+   * <ul>
+   * <li>Key: Servlet path/URL pattern</li>
+   * <li>Value: HttpServlet instance</li>
+   * </ul>
    */
   private final Map<String, HttpServlet> servletBeansMap;
+
   /**
-   * The object manages all supported system commands.
+   * The manager for system-level commands.
+   * Handles internal server commands and operations.
    */
   private final SystemCommandManager systemCommandManager;
+
   /**
-   * The object manages all self-defined user commands.
+   * The manager for client-level commands.
+   * Handles commands initiated by connected clients.
    */
   private final ClientCommandManager clientCommandManager;
 
@@ -119,9 +175,10 @@ public final class Injector extends SystemLogger {
   }
 
   /**
-   * Returns an instance of the injector.
+   * Returns the singleton instance of the injector.
+   * This method ensures that only one instance of the injector exists in the application.
    *
-   * @return an instance of the injector
+   * @return the singleton {@link Injector} instance
    */
   public static Injector newInstance() {
     return instance;
@@ -182,7 +239,9 @@ public final class Injector extends SystemLogger {
     // The implemented class is defined with the "Component" annotation declared inside it
     // in case you need more annotations with the same effect with this one, you should put them
     // in here
-    var listAnnotations = new Class[] {
+    // Suppressing unchecked warning because generic array creation is not allowed in Java
+    @SuppressWarnings("unchecked")
+    Class<? extends java.lang.annotation.Annotation>[] listAnnotations = new Class[] {
         Component.class,
         EventHandler.class,
         Setting.class
@@ -347,7 +406,7 @@ public final class Injector extends SystemLogger {
         try {
           var clientCommandAnnotation = clazz.getAnnotation(ClientCommand.class);
           var clientCommandInstance = clazz.getDeclaredConstructor().newInstance();
-          if (clientCommandInstance instanceof AbstractClientCommandHandler handler) {
+          if (clientCommandInstance instanceof AbstractClientCommandHandler<?> handler) {
             // manages by the class bean system
             var beanClass =
                 new BeanClass(clazz, String.valueOf(clientCommandAnnotation.value()));
@@ -357,7 +416,13 @@ public final class Injector extends SystemLogger {
             classBeansMap.put(beanClass, clientCommandInstance);
             // add to its own management system
             handler.setCommandManager(clientCommandManager);
-            clientCommandManager.registerCommand(clientCommandAnnotation.value(), handler);
+            
+            // Add a type check before casting
+            if (handler instanceof AbstractClientCommandHandler<?>) {
+              @SuppressWarnings("unchecked") // Safe cast after type verification
+              AbstractClientCommandHandler<Player> playerHandler = (AbstractClientCommandHandler<Player>) handler;
+              clientCommandManager.registerCommand(clientCommandAnnotation.value(), playerHandler);
+            }
           } else {
             if (isErrorEnabled()) {
               error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
@@ -405,7 +470,7 @@ public final class Injector extends SystemLogger {
    * @param clazz the interface class
    * @return a bean (an instance of the interface)
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // Safe cast because we ensure type consistency in the scanPackages method
   public <T> T getBean(Class<T> clazz) {
     var optional = classesMap.entrySet().stream()
         .filter(entry -> entry.getValue() == clazz).findFirst();
@@ -484,7 +549,8 @@ public final class Injector extends SystemLogger {
       return classBeansMap.get(beanClass);
     }
 
-    if (Objects.nonNull(implementedClass) && !manualClassesSet.contains(beanClass)) {
+    // Check if the class is in the manual classes set (created by @Bean or @BeanFactory)
+    if (Objects.nonNull(implementedClass) && !manualClassesSet.contains(implementedClass)) {
       if (classBeansMap.containsKey(beanClass)) {
         throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
       }
@@ -496,8 +562,8 @@ public final class Injector extends SystemLogger {
     return null;
   }
 
-  private boolean isClassAnnotated(Class<?> clazz, Class<?>[] annotations) {
-    for (Class annotation : annotations) {
+  private boolean isClassAnnotated(Class<?> clazz, Class<? extends java.lang.annotation.Annotation>[] annotations) {
+    for (Class<? extends java.lang.annotation.Annotation> annotation : annotations) {
       if (clazz.isAnnotationPresent(annotation)) {
         return true;
       }

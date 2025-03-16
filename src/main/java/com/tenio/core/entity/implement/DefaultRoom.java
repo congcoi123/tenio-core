@@ -46,7 +46,30 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * An implemented class is for a room using in the server.
+ * The default implementation of a room in the server. A room represents a virtual space where
+ * players can gather and interact. It supports various features including:
+ * 
+ * <p>Key features:
+ * <ul>
+ * <li>Room state management</li>
+ * <li>Password protection</li>
+ * <li>Player roles (participants and spectators)</li>
+ * <li>Room ownership</li>
+ * <li>Capacity limits for participants and spectators</li>
+ * <li>Custom properties storage</li>
+ * <li>Room removal policies</li>
+ * </ul>
+ * 
+ * <p>The room maintains thread-safe collections for storing players and properties, and uses
+ * atomic references for state management to ensure consistency in concurrent operations.
+ * 
+ * <p>Room validation and slot generation strategies can be configured to customize room
+ * behavior according to game requirements.
+ *
+ * @see Room
+ * @see Player
+ * @see RoomState
+ * @see RoomRemoveMode
  */
 public class DefaultRoom implements Room {
 
@@ -69,7 +92,14 @@ public class DefaultRoom implements Room {
   private RoomPlayerSlotGeneratedStrategy roomPlayerSlotGeneratedStrategy;
 
   /**
-   * Constructor.
+   * Creates a new room instance with default settings:
+   * <ul>
+   * <li>Unique ID generated from atomic counter</li>
+   * <li>Empty participants and spectators lists</li>
+   * <li>Initial state set to null</li>
+   * <li>Room remove mode set to WHEN_EMPTY</li>
+   * <li>Thread-safe property storage</li>
+   * </ul>
    */
   public DefaultRoom() {
     id = ID_COUNTER.getAndIncrement();
@@ -82,9 +112,9 @@ public class DefaultRoom implements Room {
   }
 
   /**
-   * Create a new instance.
+   * Creates a new room instance.
    *
-   * @return a new instance
+   * @return a new {@link Room} instance with default configuration
    */
   public static Room newInstance() {
     return new DefaultRoom();

@@ -70,13 +70,13 @@ public final class ConnectionEventHandler {
   private EventAccessDatagramChannelRequestValidation eventAccessDatagramChannelRequestValidation;
 
   @AutowiredAcceptNull
-  private EventAccessDatagramChannelRequestValidationResult eventAccessDatagramChannelRequestValidationResult;
+  private EventAccessDatagramChannelRequestValidationResult<Player> eventAccessDatagramChannelRequestValidationResult;
 
   @AutowiredAcceptNull
   private EventAccessKcpChannelRequestValidation eventAccessKcpChannelRequestValidation;
 
   @AutowiredAcceptNull
-  private EventAccessKcpChannelRequestValidationResult eventAccessKcpChannelRequestValidationResult;
+  private EventAccessKcpChannelRequestValidationResult<Player> eventAccessKcpChannelRequestValidationResult;
 
   /**
    * Initialization.
@@ -85,29 +85,30 @@ public final class ConnectionEventHandler {
    */
   public void initialize(EventManager eventManager) {
 
-    final var eventSocketConnectionRefusedOp = Optional.ofNullable(eventSocketConnectionRefused);
-    final var eventWebSocketConnectionRefusedOp =
+    final Optional<EventSocketConnectionRefused> eventSocketConnectionRefusedOp = 
+        Optional.ofNullable(eventSocketConnectionRefused);
+    final Optional<EventWebSocketConnectionRefused> eventWebSocketConnectionRefusedOp =
         Optional.ofNullable(eventWebSocketConnectionRefused);
 
-    final var eventConnectionEstablishedResultOp =
+    final Optional<EventConnectionEstablishedResult> eventConnectionEstablishedResultOp =
         Optional.ofNullable(eventConnectionEstablishedResult);
-    final var eventWriteMessageToConnectionOp =
+    final Optional<EventWriteMessageToConnection> eventWriteMessageToConnectionOp =
         Optional.ofNullable(eventWriteMessageToConnection);
 
-    final var eventAccessDatagramChannelRequestValidationOp =
+    final Optional<EventAccessDatagramChannelRequestValidation> eventAccessDatagramChannelRequestValidationOp =
         Optional.ofNullable(eventAccessDatagramChannelRequestValidation);
-    final var eventAccessDatagramChannelRequestValidationResultOp =
+    final Optional<EventAccessDatagramChannelRequestValidationResult<Player>> eventAccessDatagramChannelRequestValidationResultOp =
         Optional.ofNullable(eventAccessDatagramChannelRequestValidationResult);
 
-    final var eventAccessKcpChannelRequestValidationOp =
+    final Optional<EventAccessKcpChannelRequestValidation> eventAccessKcpChannelRequestValidationOp =
         Optional.ofNullable(eventAccessKcpChannelRequestValidation);
-    final var eventAccessKcpChannelRequestValidationResultOp =
+    final Optional<EventAccessKcpChannelRequestValidationResult<Player>> eventAccessKcpChannelRequestValidationResultOp =
         Optional.ofNullable(eventAccessKcpChannelRequestValidationResult);
 
     eventSocketConnectionRefusedOp.ifPresent(
         event -> eventManager.on(ServerEvent.SOCKET_CONNECTION_REFUSED, params -> {
-          var socketChannel = (SocketChannel) params[0];
-          var exception = (RefusedConnectionAddressException) params[1];
+          SocketChannel socketChannel = (SocketChannel) params[0];
+          RefusedConnectionAddressException exception = (RefusedConnectionAddressException) params[1];
 
           event.handle(socketChannel, exception);
 
@@ -116,8 +117,8 @@ public final class ConnectionEventHandler {
 
     eventWebSocketConnectionRefusedOp.ifPresent(
         event -> eventManager.on(ServerEvent.WEBSOCKET_CONNECTION_REFUSED, params -> {
-          var channel = (Channel) params[0];
-          var exception = (RefusedConnectionAddressException) params[1];
+          Channel channel = (Channel) params[0];
+          RefusedConnectionAddressException exception = (RefusedConnectionAddressException) params[1];
 
           event.handle(channel, exception);
 
@@ -126,9 +127,9 @@ public final class ConnectionEventHandler {
 
     eventConnectionEstablishedResultOp.ifPresent(
         event -> eventManager.on(ServerEvent.CONNECTION_ESTABLISHED_RESULT, params -> {
-          var session = (Session) params[0];
-          var message = (DataCollection) params[1];
-          var result = (ConnectionEstablishedResult) params[2];
+          Session session = (Session) params[0];
+          DataCollection message = (DataCollection) params[1];
+          ConnectionEstablishedResult result = (ConnectionEstablishedResult) params[2];
 
           event.handle(session, message, result);
 
@@ -137,8 +138,8 @@ public final class ConnectionEventHandler {
 
     eventWriteMessageToConnectionOp.ifPresent(
         event -> eventManager.on(ServerEvent.SESSION_WRITE_MESSAGE, params -> {
-          var session = (Session) params[0];
-          var packet = (Packet) params[1];
+          Session session = (Session) params[0];
+          Packet packet = (Packet) params[1];
           session.setLastWriteTime(TimeUtility.currentTimeMillis());
 
           event.handle(session, packet);
@@ -148,16 +149,17 @@ public final class ConnectionEventHandler {
 
     eventAccessDatagramChannelRequestValidationOp.ifPresent(
         event -> eventManager.on(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION, params -> {
-          var message = (DataCollection) params[0];
+          DataCollection message = (DataCollection) params[0];
 
           return event.handle(message);
         }));
 
     eventAccessDatagramChannelRequestValidationResultOp.ifPresent(
         event -> eventManager.on(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, params -> {
-          var player = (Optional<Player>) params[0];
-          var udpConv = (int) params[1];
-          var result = (AccessDatagramChannelResult) params[2];
+          @SuppressWarnings("unchecked") // Safe cast as we control the event parameters
+          Optional<Player> player = (Optional<Player>) params[0];
+          int udpConv = (int) params[1];
+          AccessDatagramChannelResult result = (AccessDatagramChannelResult) params[2];
 
           event.handle(player, udpConv, result);
 
@@ -166,15 +168,16 @@ public final class ConnectionEventHandler {
 
     eventAccessKcpChannelRequestValidationOp.ifPresent(
         event -> eventManager.on(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION, params -> {
-          var message = (DataCollection) params[0];
+          DataCollection message = (DataCollection) params[0];
 
           return event.handle(message);
         }));
 
     eventAccessKcpChannelRequestValidationResultOp.ifPresent(
         event -> eventManager.on(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT, params -> {
-          var player = (Optional<Player>) params[0];
-          var result = (AccessDatagramChannelResult) params[1];
+          @SuppressWarnings("unchecked") // Safe cast as we control the event parameters
+          Optional<Player> player = (Optional<Player>) params[0];
+          AccessDatagramChannelResult result = (AccessDatagramChannelResult) params[1];
 
           event.handle(player, result);
 

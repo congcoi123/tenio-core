@@ -25,7 +25,36 @@ THE SOFTWARE.
 package com.tenio.core.network.zero.codec.packet;
 
 /**
- * The packet header contains all settings for a packet by combining some conditions.
+ * The PacketHeader class represents the metadata and flags associated with a network packet.
+ * It encapsulates information about the packet's encoding, compression, size, and encryption status.
+ * 
+ * <p>Key features:
+ * <ul>
+ * <li>Binary/text data format indication</li>
+ * <li>Compression status tracking</li>
+ * <li>Large packet size handling</li>
+ * <li>Encryption status indication</li>
+ * </ul>
+ * 
+ * <p>The header is used by the packet encoder/decoder to determine how to process the packet data.
+ * Each flag in the header affects the packet processing pipeline:
+ * <ul>
+ * <li>Binary flag: Determines if data should be processed as binary or text</li>
+ * <li>Compression flag: Triggers compression/decompression</li>
+ * <li>Big size flag: Enables large packet handling</li>
+ * <li>Encryption flag: Enables encryption/decryption</li>
+ * </ul>
+ * 
+ * <p>Usage example:
+ * <pre>
+ * var header = PacketHeader.newInstance(true, true, false, true);
+ * if (header.isBinary() and header.isCompressed()) {
+ *     // Handle compressed binary data
+ * }
+ * </pre>
+ * 
+ * @see com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder
+ * @see com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder
  */
 public final class PacketHeader {
 
@@ -42,55 +71,61 @@ public final class PacketHeader {
   }
 
   /**
-   * Initialization.
+   * Creates a new packet header instance with the specified flags.
+   * The flags determine how the packet data should be processed:
+   * <ul>
+   * <li>Binary: Data is in binary format (true) or text format (false)</li>
+   * <li>Compressed: Data should be compressed/decompressed</li>
+   * <li>Big sized: Data exceeds standard packet size limits</li>
+   * <li>Encrypted: Data requires encryption/decryption</li>
+   * </ul>
    *
-   * @param binary     sets to {@code true} if the data is written by binary, otherwise
-   *                   {@code false}
-   * @param compressed sets to {@code true} if the data is compressed, otherwise
-   *                   {@code false}
-   * @param bigSized   sets to {@code true} if the data size is considered big size,
-   *                   otherwise returns {@code false}
-   * @param encrypted  sets to {@code true} if the data is encrypted, otherwise
-   *                   {@code false}
-   * @return a new instance of {@link PacketHeader}
+   * @param binary     {@code true} if the data is in binary format, {@code false} for text format
+   * @param compressed {@code true} if the data is compressed, {@code false} otherwise
+   * @param bigSized   {@code true} if the data size exceeds standard limits, {@code false} otherwise
+   * @param encrypted  {@code true} if the data is encrypted, {@code false} otherwise
+   * @return a new {@link PacketHeader} instance with the specified flags
    */
   public static PacketHeader newInstance(boolean binary, boolean compressed, boolean bigSized,
-                                         boolean encrypted) {
+                                       boolean encrypted) {
     return new PacketHeader(binary, compressed, bigSized, encrypted);
   }
 
   /**
-   * Determines whether the data is written by binary.
+   * Checks if the packet data is in binary format.
+   * Binary format indicates that the data should be processed as raw bytes rather than text.
    *
-   * @return {@code true} if the data is written by binary, otherwise returns {@code false}
+   * @return {@code true} if the data is in binary format, {@code false} for text format
    */
   public boolean isBinary() {
     return binary;
   }
 
   /**
-   * Determines whether the data is compressed.
+   * Checks if the packet data is compressed.
+   * Compressed data requires decompression before it can be processed.
    *
-   * @return {@code true} if the data is compressed, otherwise returns {@code false}
+   * @return {@code true} if the data is compressed, {@code false} otherwise
    */
   public boolean isCompressed() {
     return compressed;
   }
 
   /**
-   * Determines whether the data size is big.
+   * Checks if the packet data exceeds standard size limits.
+   * Big sized packets may require special handling or fragmentation.
    *
-   * @return {@code true} if the data size is considered as big size, otherwise
-   * {@code false}
+   * @return {@code true} if the data size exceeds standard limits, {@code false} otherwise
    */
   public boolean isBigSized() {
     return bigSized;
   }
 
   /**
-   * Determines whether the data is encrypted.
+   * Checks if the packet data is encrypted.
+   * Encrypted data requires decryption before it can be processed.
    *
-   * @return {@code true} if the data is encrypted, otherwise returns {@code false}
+   * @return {@code true} if the data is encrypted, {@code false} otherwise
    */
   public boolean isEncrypted() {
     return encrypted;

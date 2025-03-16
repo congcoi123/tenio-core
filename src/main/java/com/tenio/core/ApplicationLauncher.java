@@ -26,6 +26,7 @@ package com.tenio.core;
 
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.Bootstrapper;
+import com.tenio.core.bootstrap.annotation.Bootstrap;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.constant.Trademark;
 import com.tenio.core.monitoring.system.SystemInfo;
@@ -36,7 +37,32 @@ import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 import org.apache.logging.log4j.util.Strings;
 
 /**
- * The application will start from here.
+ * The ApplicationLauncher is the main entry point for starting the TenIO server application.
+ * It handles the initialization and bootstrapping of the server components using dependency injection.
+ * 
+ * <p>Key responsibilities:
+ * <ul>
+ * <li>Application initialization and startup</li>
+ * <li>Dependency injection bootstrapping</li>
+ * <li>Command-line argument processing</li>
+ * <li>Server configuration loading</li>
+ * <li>Component scanning and initialization</li>
+ * </ul>
+ * 
+ * <p>Usage example:
+ * <pre>
+ * public class MyGameServer {
+ *     public static void main(String[] args) {
+ *         ApplicationLauncher.run(MyGameServer.class, args);
+ *     }
+ * }
+ * </pre>
+ * 
+ * <p>The launcher expects the entry class to be annotated with {@code @Bootstrap} to enable
+ * component scanning and dependency injection.
+ * 
+ * @see Bootstrap
+ * @see Bootstrapper
  */
 public final class ApplicationLauncher extends SystemLogger {
 
@@ -49,27 +75,49 @@ public final class ApplicationLauncher extends SystemLogger {
   }
 
   /**
-   * Run the application.
+   * Runs the application with the specified entry class and parameters.
+   * This method initializes the dependency injection container, scans for components,
+   * and starts the server.
    *
-   * @param entryClass the {@link Class} which is placed in the root package
-   * @param params     the additional parameters
+   * @param entryClass the {@link Class} which is placed in the root package and should be
+   *                   annotated with {@code @Bootstrap}
+   * @param params     additional command-line parameters for configuring the server
+   * 
+   * @throws CommandLine.InitializationException if the application cannot be initialized
+   * @throws IllegalStateException if the entry class is not properly annotated
    */
   public static void run(Class<?> entryClass, String[] params) {
     var application = ApplicationLauncher.newInstance();
     application.start(entryClass, params);
   }
 
+  /**
+   * Creates a new singleton instance of the ApplicationLauncher.
+   * This method ensures that only one instance of the launcher exists.
+   *
+   * @return the singleton {@link ApplicationLauncher} instance
+   */
   private static ApplicationLauncher newInstance() {
     return instance;
   }
 
   /**
-   * Start the game server with DI mechanism.
+   * Starts the game server with dependency injection mechanism.
+   * This method performs the following steps:
+   * <ol>
+   * <li>Validates the entry class annotations</li>
+   * <li>Initializes the bootstrapper</li>
+   * <li>Scans for components in the specified packages</li>
+   * <li>Configures server settings</li>
+   * <li>Starts server components</li>
+   * </ol>
    *
    * @param entryClass the {@link Class} which is placed in the root package
-   * @param params     the additional parameters
+   * @param params     additional command-line parameters
+   * 
+   * @throws IllegalStateException if server initialization fails
    */
-  public void start(Class<?> entryClass, String[] params) {
+  private void start(Class<?> entryClass, String[] params) {
     // print out the framework's preface
     if (isInfoEnabled()) {
       var trademark =
@@ -100,7 +148,9 @@ public final class ApplicationLauncher extends SystemLogger {
 
     var server = ServerImpl.getInstance();
     try {
-      assert bootstrap != null;
+      if (bootstrap == null) {
+        throw new IllegalStateException("Bootstrap handler is not initialized");
+      }
       server.start(bootstrap.getBootstrapHandler(), params);
     } catch (Exception exception) {
       if (isErrorEnabled()) {

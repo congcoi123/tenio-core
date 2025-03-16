@@ -41,6 +41,15 @@ public final class DefaultPacketQueuePolicy implements PacketQueuePolicy {
 
   @Override
   public void applyPolicy(PacketQueue packetQueue, Packet packet) {
+    if (packet == null) {
+      return; // Skip null packets
+    }
+    
+    // Check for NON_GUARANTEED priority when queue is not empty
+    if (!packetQueue.isEmpty() && packet.getPriority() == ResponsePriority.NON_GUARANTEED) {
+      throw new PacketQueuePolicyViolationException(packet, packetQueue.getPercentageUsed());
+    }
+    
     float percentageUsed = packetQueue.getPercentageUsed();
 
     if (percentageUsed >= THREE_QUARTERS_FULL && percentageUsed < NINETY_PERCENT_FULL) {

@@ -39,7 +39,60 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * The abstract room entity used on the server.
+ * The Room interface represents a virtual space in the game server where players can gather and interact.
+ * A room is a fundamental container that:
+ * <ul>
+ *   <li>Manages a group of players</li>
+ *   <li>Controls access through credentials</li>
+ *   <li>Maintains room state and properties</li>
+ *   <li>Handles player roles (participants and spectators)</li>
+ *   <li>Manages player slots and capacity</li>
+ * </ul>
+ * 
+ * <p>Room lifecycle:
+ * <ol>
+ *   <li>Creation with initial settings</li>
+ *   <li>Player joining and role assignment</li>
+ *   <li>State management during gameplay</li>
+ *   <li>Player role transitions</li>
+ *   <li>Player departure handling</li>
+ *   <li>Room cleanup when empty (configurable)</li>
+ * </ol>
+ * 
+ * <p>Key features:
+ * <ul>
+ *   <li>Unique room identification</li>
+ *   <li>Access control through passwords</li>
+ *   <li>Flexible player capacity management</li>
+ *   <li>Separate participant and spectator handling</li>
+ *   <li>Thread-safe state transitions</li>
+ *   <li>Custom property management</li>
+ * </ul>
+ * 
+ * <p>Performance considerations:
+ * <ul>
+ *   <li>Efficient player list management for frequent access</li>
+ *   <li>Optimized role transition operations</li>
+ *   <li>Thread-safe property access</li>
+ *   <li>Minimal overhead for player slot management</li>
+ *   <li>Efficient room state updates</li>
+ * </ul>
+ * 
+ * <p>Implementation guidelines:
+ * <ul>
+ *   <li>Use concurrent data structures for thread safety</li>
+ *   <li>Implement efficient player lookup mechanisms</li>
+ *   <li>Handle edge cases in player role transitions</li>
+ *   <li>Maintain consistency in room state transitions</li>
+ *   <li>Provide clear error handling for invalid operations</li>
+ * </ul>
+ * 
+ * @see Player
+ * @see PlayerManager
+ * @see RoomState
+ * @see PlayerRoleInRoom
+ * @see RoomRemoveMode
+ * @since 0.5.0
  */
 public interface Room {
 

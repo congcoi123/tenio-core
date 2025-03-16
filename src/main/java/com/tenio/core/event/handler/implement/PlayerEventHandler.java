@@ -50,22 +50,22 @@ import java.util.Optional;
 public final class PlayerEventHandler {
 
   @AutowiredAcceptNull
-  private EventPlayerLoggedinResult eventPlayerLoggedInResult;
+  private EventPlayerLoggedinResult<Player> eventPlayerLoggedInResult;
 
   @AutowiredAcceptNull
-  private EventPlayerReconnectRequestHandle eventPlayerReconnectRequestHandle;
+  private EventPlayerReconnectRequestHandle<Player> eventPlayerReconnectRequestHandle;
 
   @AutowiredAcceptNull
-  private EventPlayerReconnectedResult eventPlayerReconnectedResult;
+  private EventPlayerReconnectedResult<Player> eventPlayerReconnectedResult;
 
   @AutowiredAcceptNull
-  private EventReceivedMessageFromPlayer eventReceivedMessageFromPlayer;
+  private EventReceivedMessageFromPlayer<Player> eventReceivedMessageFromPlayer;
 
   @AutowiredAcceptNull
-  private EventSendMessageToPlayer eventSendMessageToPlayer;
+  private EventSendMessageToPlayer<Player> eventSendMessageToPlayer;
 
   @AutowiredAcceptNull
-  private EventDisconnectPlayer eventDisconnectPlayer;
+  private EventDisconnectPlayer<Player> eventDisconnectPlayer;
 
   /**
    * Initialization.
@@ -74,26 +74,26 @@ public final class PlayerEventHandler {
    */
   public void initialize(EventManager eventManager) {
 
-    final var eventPlayerLoggedInResultOp =
+    final Optional<EventPlayerLoggedinResult<Player>> eventPlayerLoggedInResultOp =
         Optional.ofNullable(eventPlayerLoggedInResult);
 
-    final var eventPlayerReconnectRequestHandleOp =
+    final Optional<EventPlayerReconnectRequestHandle<Player>> eventPlayerReconnectRequestHandleOp =
         Optional.ofNullable(eventPlayerReconnectRequestHandle);
-    final var eventPlayerReconnectedResultOp =
+    final Optional<EventPlayerReconnectedResult<Player>> eventPlayerReconnectedResultOp =
         Optional.ofNullable(eventPlayerReconnectedResult);
 
-    final var eventReceivedMessageFromPlayerOp =
+    final Optional<EventReceivedMessageFromPlayer<Player>> eventReceivedMessageFromPlayerOp =
         Optional.ofNullable(eventReceivedMessageFromPlayer);
-    final var eventSendMessageToPlayerOp =
+    final Optional<EventSendMessageToPlayer<Player>> eventSendMessageToPlayerOp =
         Optional.ofNullable(eventSendMessageToPlayer);
 
-    final var eventDisconnectPlayerOp =
+    final Optional<EventDisconnectPlayer<Player>> eventDisconnectPlayerOp =
         Optional.ofNullable(eventDisconnectPlayer);
 
     eventPlayerLoggedInResultOp.ifPresent(
         event -> eventManager.on(ServerEvent.PLAYER_LOGGEDIN_RESULT, params -> {
-          var player = (Player) params[0];
-          var result = (PlayerLoggedInResult) params[1];
+          Player player = (Player) params[0];
+          PlayerLoggedInResult result = (PlayerLoggedInResult) params[1];
 
           event.handle(player, result);
 
@@ -102,17 +102,17 @@ public final class PlayerEventHandler {
 
     eventPlayerReconnectRequestHandleOp.ifPresent(
         event -> eventManager.on(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLE, params -> {
-          var session = (Session) params[0];
-          var message = (DataCollection) params[1];
+          Session session = (Session) params[0];
+          DataCollection message = (DataCollection) params[1];
 
           return event.handle(session, message);
         }));
 
     eventPlayerReconnectedResultOp.ifPresent(
         event -> eventManager.on(ServerEvent.PLAYER_RECONNECTED_RESULT, params -> {
-          var player = (Player) params[0];
-          var session = (Session) params[1];
-          var result = (PlayerReconnectedResult) params[2];
+          Player player = (Player) params[0];
+          Session session = (Session) params[1];
+          PlayerReconnectedResult result = (PlayerReconnectedResult) params[2];
 
           event.handle(player, session, result);
 
@@ -121,8 +121,8 @@ public final class PlayerEventHandler {
 
     eventReceivedMessageFromPlayerOp.ifPresent(
         event -> eventManager.on(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, params -> {
-          var player = (Player) params[0];
-          var message = (DataCollection) params[1];
+          Player player = (Player) params[0];
+          DataCollection message = (DataCollection) params[1];
           player.setLastReadTime(TimeUtility.currentTimeMillis());
 
           event.handle(player, message);
@@ -132,8 +132,8 @@ public final class PlayerEventHandler {
 
     eventSendMessageToPlayerOp.ifPresent(
         event -> eventManager.on(ServerEvent.SEND_MESSAGE_TO_PLAYER, params -> {
-          var player = (Player) params[0];
-          var message = (DataCollection) params[1];
+          Player player = (Player) params[0];
+          DataCollection message = (DataCollection) params[1];
           player.setLastWriteTime(TimeUtility.currentTimeMillis());
 
           event.handle(player, message);
@@ -143,8 +143,8 @@ public final class PlayerEventHandler {
 
     eventDisconnectPlayerOp.ifPresent(event -> eventManager.on(ServerEvent.DISCONNECT_PLAYER,
         params -> {
-          var player = (Player) params[0];
-          var mode = (PlayerDisconnectMode) params[1];
+          Player player = (Player) params[0];
+          PlayerDisconnectMode mode = (PlayerDisconnectMode) params[1];
 
           event.handle(player, mode);
 

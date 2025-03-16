@@ -25,19 +25,79 @@ THE SOFTWARE.
 package com.tenio.core.exception;
 
 import com.tenio.core.bootstrap.annotation.Component;
+import com.tenio.core.bootstrap.annotation.Autowired;
 
 /**
- * This exception would be thrown when there are more than 1 {@link Component} annotation
- * associated with classes that implement a same interface.
+ * Exception thrown when multiple implementations of an interface or abstract class are found
+ * during dependency injection, and no qualifier is specified to disambiguate which implementation
+ * should be used.
+ * 
+ * <p>This exception typically occurs when:
+ * <ul>
+ * <li>Multiple classes annotated with {@code @Component} implement the same interface</li>
+ * <li>An {@code @Autowired} field has multiple candidate implementations</li>
+ * <li>No qualifier is specified to select a specific implementation</li>
+ * <li>The bean name doesn't match any implementation</li>
+ * </ul>
+ * 
+ * <p>To resolve this exception:
+ * <ul>
+ * <li>Add a qualifier to specify which implementation to inject</li>
+ * <li>Use unique bean names for each implementation</li>
+ * <li>Make one implementation primary</li>
+ * <li>Remove duplicate implementations if they're not needed</li>
+ * </ul>
+ * 
+ * <p>Example scenario:
+ * <pre>
+ * // Interface
+ * public interface PaymentService {
+ *     void processPayment(double amount);
+ * }
+ * 
+ * // First implementation
+ * &#64;Component
+ * public class CreditCardPaymentService implements PaymentService {
+ *     public void processPayment(double amount) { ... }
+ * }
+ * 
+ * // Second implementation
+ * &#64;Component
+ * public class PayPalPaymentService implements PaymentService {
+ *     public void processPayment(double amount) { ... }
+ * }
+ * 
+ * // This will throw MultipleImplementedClassForInterfaceException
+ * public class PaymentController {
+ *     &#64;Autowired
+ *     private PaymentService paymentService;  // Which implementation to use?
+ * }
+ * 
+ * // Fix by adding qualifier
+ * public class PaymentController {
+ *     &#64;Autowired("creditCard")
+ *     private PaymentService paymentService;  // Now uses CreditCardPaymentService
+ * }
+ * </pre>
+ * 
+ * @see Component
+ * @see Autowired
  */
 public final class MultipleImplementedClassForInterfaceException extends RuntimeException {
 
   private static final long serialVersionUID = 9186053637398483773L;
 
   /**
-   * Creates a new instance.
+   * Creates a new MultipleImplementedClassForInterfaceException with details about the ambiguous
+   * interface or abstract class that has multiple implementations.
+   * 
+   * <p>The exception message includes the interface or abstract class name to help identify
+   * which type has conflicting implementations in the container.
    *
-   * @param clazz the interface of which the implementations are more than one class
+   * @param clazz the interface or abstract class that has multiple implementations
+   * 
+   * @see Component
+   * @see Autowired
    */
   public MultipleImplementedClassForInterfaceException(Class<?> clazz) {
     super(String.format("Multiple implementations for the class: %s found", clazz.getName()));
