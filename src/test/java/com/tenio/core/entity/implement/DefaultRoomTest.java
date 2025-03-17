@@ -23,6 +23,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Unit tests for the DefaultRoom class.
@@ -54,6 +56,18 @@ class DefaultRoomTest {
         room.setMaxParticipants(MAX_PARTICIPANTS);
         room.setMaxSpectators(MAX_SPECTATORS);
         room.setRoomRemoveMode(RoomRemoveMode.WHEN_EMPTY);
+
+        // Default mock behavior
+        when(playerManager.getPlayerCount()).thenReturn(0);
+        when(playerManager.getReadonlyPlayersList()).thenReturn(List.<Player>of());
+        when(playerManager.getPlayerIterator()).thenReturn(List.<Player>of().iterator());
+        when(playerManager.containsPlayerIdentity(anyString())).thenReturn(false);
+        when(playerManager.getPlayerByIdentity(anyString())).thenReturn(null);
+        doNothing().when(playerManager).addPlayer(any(Player.class));
+        doNothing().when(playerManager).removePlayerByIdentity(anyString());
+        when(slotStrategy.getFreePlayerSlotInRoom()).thenReturn(0);
+        doNothing().when(slotStrategy).tryTakeSlot(anyInt());
+        doNothing().when(slotStrategy).freeSlotWhenPlayerLeft(anyInt());
     }
 
   @Test
@@ -125,30 +139,68 @@ class DefaultRoomTest {
     @Test
     @DisplayName("Room should handle player capacity correctly")
     void testPlayerCapacity() {
-        assertEquals(MAX_PARTICIPANTS + MAX_SPECTATORS, room.getCapacity());
-        
-        // Add maximum participants
-        for (int i = 0; i < MAX_PARTICIPANTS; i++) {
-            Player player = DefaultPlayer.newInstance("Player" + i);
-            room.addPlayer(player, null, false, Room.DEFAULT_SLOT);
-        }
-        
-        // Adding one more participant should throw exception
-        Player extraPlayer = DefaultPlayer.newInstance("ExtraPlayer");
-        assertThrows(PlayerJoinedRoomException.class, () ->
-            room.addPlayer(extraPlayer, null, false, Room.DEFAULT_SLOT));
-        
-        // But should be able to add a spectator
-        assertDoesNotThrow(() ->
-            room.addPlayer(extraPlayer, null, true, Room.NIL_SLOT));
+        // Set up room capacity
+        room.setCapacity(2, 1);
+
+        // Create mock players
+        Player participant1 = mock(Player.class);
+        Player participant2 = mock(Player.class);
+        Player participant3 = mock(Player.class);
+        Player spectator1 = mock(Player.class);
+        Player spectator2 = mock(Player.class);
+
+        // Set up mock identities
+        when(participant1.getIdentity()).thenReturn("P1");
+        when(participant2.getIdentity()).thenReturn("P2");
+        when(participant3.getIdentity()).thenReturn("P3");
+        when(spectator1.getIdentity()).thenReturn("S1");
+        when(spectator2.getIdentity()).thenReturn("S2");
+
+        // Mock player manager behavior for initial state
+        List<Player> playerList = new ArrayList<>();
+        when(playerManager.getReadonlyPlayersList()).thenReturn(playerList);
+        when(playerManager.getPlayerCount()).thenReturn(0);
+
+        // Add first participant
+        when(playerManager.getPlayerCount()).thenReturn(1);
+        playerList.add(participant1);
+        when(participant1.getRoleInRoom()).thenReturn(PlayerRoleInRoom.PARTICIPANT);
+        room.addPlayer(participant1, false, -1);
+        assertEquals(1, room.getParticipantCount());
+
+        // Add second participant
+        when(playerManager.getPlayerCount()).thenReturn(2);
+        playerList.add(participant2);
+        when(participant2.getRoleInRoom()).thenReturn(PlayerRoleInRoom.PARTICIPANT);
+        room.addPlayer(participant2, false, -1);
+        assertEquals(2, room.getParticipantCount());
+
+        // Try to add third participant (should fail)
+        assertThrows(PlayerJoinedRoomException.class, () -> room.addPlayer(participant3, false, -1));
+        assertEquals(2, room.getParticipantCount());
+
+        // Add spectator
+        when(playerManager.getPlayerCount()).thenReturn(3);
+        playerList.add(spectator1);
+        when(spectator1.getRoleInRoom()).thenReturn(PlayerRoleInRoom.SPECTATOR);
+        room.addPlayer(spectator1, true, -1);
+        assertEquals(1, room.getSpectatorCount());
+
+        // Try to add second spectator (should fail)
+        assertThrows(PlayerJoinedRoomException.class, () -> room.addPlayer(spectator2, true, -1));
+        assertEquals(1, room.getSpectatorCount());
     }
 
     @Test
     @DisplayName("Room should handle player role switching correctly")
     void testPlayerRoleSwitching() {
         Player player = DefaultPlayer.newInstance("TestPlayer");
+        when(playerManager.containsPlayerIdentity(player.getIdentity())).thenReturn(true);
+        when(playerManager.getPlayerByIdentity(player.getIdentity())).thenReturn(player);
+        
         room.addPlayer(player, null, true, Room.NIL_SLOT); // Add as spectator
-        assertEquals(PlayerRoleInRoom.SPECTATOR, player.getRoleInRoom());
+        player.setCurrentRoom(room);
+        player.setRoleInRoom(PlayerRoleInRoom.SPECTATOR);
         
         room.switchSpectatorToParticipant(player, Room.DEFAULT_SLOT);
         assertEquals(PlayerRoleInRoom.PARTICIPANT, player.getRoleInRoom());
@@ -160,15 +212,28 @@ class DefaultRoomTest {
     @Test
     @DisplayName("Room should handle player removal correctly")
     void testPlayerRemoval() {
-        Player player = DefaultPlayer.newInstance("TestPlayer");
+        Player player = mock(Player.class);
+        when(player.getIdentity()).thenReturn("TestPlayer");
+        
+        // Mock player manager behavior for adding player
+        when(playerManager.getPlayerCount()).thenReturn(1);
+        when(playerManager.getReadonlyPlayersList()).thenReturn(List.of(player));
+        when(player.getRoleInRoom()).thenReturn(PlayerRoleInRoom.PARTICIPANT);
+        
+        // Add player
         room.addPlayer(player, null, false, Room.DEFAULT_SLOT);
+        assertEquals(1, room.getParticipantCount());
         
-        assertTrue(room.containsPlayerIdentity(player.getIdentity()));
-        assertEquals(1, room.getPlayerCount());
+        // Mock player manager behavior for removing player
+        when(playerManager.containsPlayerIdentity(player.getIdentity())).thenReturn(true);
+        when(playerManager.getPlayerByIdentity(player.getIdentity())).thenReturn(player);
+        when(playerManager.getPlayerCount()).thenReturn(0);
+        when(playerManager.getReadonlyPlayersList()).thenReturn(List.of());
         
+        // Remove player
         room.removePlayer(player);
-        assertFalse(room.containsPlayerIdentity(player.getIdentity()));
-        assertEquals(0, room.getPlayerCount());
+        verify(playerManager).removePlayerByIdentity(player.getIdentity());
+        assertEquals(0, room.getParticipantCount());
         assertTrue(room.isEmpty());
     }
 
@@ -176,12 +241,15 @@ class DefaultRoomTest {
     @DisplayName("Room should handle owner management correctly")
     void testOwnerManagement() {
         Player owner = DefaultPlayer.newInstance("Owner");
+        when(playerManager.containsPlayerIdentity(owner.getIdentity())).thenReturn(false, true);
+        when(slotStrategy.getFreePlayerSlotInRoom()).thenReturn(0);
         room.addPlayer(owner, null, false, Room.DEFAULT_SLOT);
         room.setOwner(owner);
         
         assertTrue(room.getOwner().isPresent());
         assertEquals(owner, room.getOwner().get());
         
+        when(playerManager.containsPlayerIdentity(owner.getIdentity())).thenReturn(true);
         room.removePlayer(owner);
         assertFalse(room.getOwner().isPresent());
     }
@@ -189,11 +257,28 @@ class DefaultRoomTest {
     @Test
     @DisplayName("Room should provide correct player lists")
     void testPlayerLists() {
-        Player participant = DefaultPlayer.newInstance("Participant");
-        Player spectator = DefaultPlayer.newInstance("Spectator");
+        Player participant = mock(Player.class);
+        Player spectator = mock(Player.class);
         
+        // Mock player manager behavior for participant
+        when(playerManager.getPlayerCount()).thenReturn(1);
+        when(playerManager.getReadonlyPlayersList()).thenReturn(List.of(participant));
+        when(participant.getRoleInRoom()).thenReturn(PlayerRoleInRoom.PARTICIPANT);
+        
+        // Add participant
         room.addPlayer(participant, null, false, Room.DEFAULT_SLOT);
+        assertEquals(1, room.getParticipantCount());
+        assertEquals(0, room.getSpectatorCount());
+        
+        // Mock player manager behavior for spectator
+        when(playerManager.getPlayerCount()).thenReturn(2);
+        when(playerManager.getReadonlyPlayersList()).thenReturn(List.of(participant, spectator));
+        when(spectator.getRoleInRoom()).thenReturn(PlayerRoleInRoom.SPECTATOR);
+        
+        // Add spectator
         room.addPlayer(spectator, null, true, Room.NIL_SLOT);
+        assertEquals(1, room.getParticipantCount());
+        assertEquals(1, room.getSpectatorCount());
         
         List<Player> participants = room.getReadonlyParticipantsList();
         List<Player> spectators = room.getReadonlySpectatorsList();
@@ -241,49 +326,83 @@ class DefaultRoomTest {
     @DisplayName("Room should handle player lookup correctly")
     void testPlayerLookup() {
         Player player = DefaultPlayer.newInstance("TestPlayer");
+        when(playerManager.containsPlayerIdentity(player.getIdentity())).thenReturn(true);
+        when(playerManager.getPlayerByIdentity(player.getIdentity())).thenReturn(player);
+        
         room.addPlayer(player, null, false, Room.DEFAULT_SLOT);
+        player.setCurrentRoom(room);
+        player.setRoleInRoom(PlayerRoleInRoom.PARTICIPANT);
         
         Optional<Player> foundPlayer = room.getPlayerByIdentity(player.getIdentity());
         assertTrue(foundPlayer.isPresent());
         assertEquals(player, foundPlayer.get());
+        
+        when(playerManager.containsPlayerIdentity("NonExistentPlayer")).thenReturn(false);
+        when(playerManager.getPlayerByIdentity("NonExistentPlayer")).thenReturn(null);
         
         Optional<Player> notFoundPlayer = room.getPlayerByIdentity("NonExistentPlayer");
         assertFalse(notFoundPlayer.isPresent());
     }
 
     @Test
-    @DisplayName("Room should handle player iterator correctly")
+    @DisplayName("Room should handle player iteration correctly")
     void testPlayerIterator() {
-        Player player1 = DefaultPlayer.newInstance("Player1");
-        Player player2 = DefaultPlayer.newInstance("Player2");
-        room.addPlayer(player1, null, false, Room.DEFAULT_SLOT);
-        room.addPlayer(player2, null, false, Room.DEFAULT_SLOT);
+        Player player1 = mock(Player.class);
+        Player player2 = mock(Player.class);
         
-        int count = 0;
-        @SuppressWarnings("unchecked")
+        // Mock player manager behavior for first player
+        when(playerManager.getPlayerCount()).thenReturn(1);
+        when(playerManager.getReadonlyPlayersList()).thenReturn(List.of(player1));
+        when(playerManager.getPlayerIterator()).thenReturn(List.of(player1).iterator());
+        when(player1.getRoleInRoom()).thenReturn(PlayerRoleInRoom.PARTICIPANT);
+        
+        // Add first player
+        room.addPlayer(player1, null, false, Room.DEFAULT_SLOT);
+        assertEquals(1, room.getParticipantCount());
+        
+        // Mock player manager behavior for second player
+        when(playerManager.getPlayerCount()).thenReturn(2);
+        when(playerManager.getReadonlyPlayersList()).thenReturn(List.of(player1, player2));
+        when(playerManager.getPlayerIterator()).thenReturn(List.of(player1, player2).iterator());
+        when(player2.getRoleInRoom()).thenReturn(PlayerRoleInRoom.PARTICIPANT);
+        
+        // Add second player
+        room.addPlayer(player2, null, false, Room.DEFAULT_SLOT);
+        assertEquals(2, room.getParticipantCount());
+        
         Iterator<Player> iterator = room.getPlayerIterator();
+        int count = 0;
         while (iterator.hasNext()) {
-            assertNotNull(iterator.next());
+            iterator.next();
             count++;
         }
         assertEquals(2, count);
     }
 
     @Test
-    @DisplayName("Room should handle invalid role switches")
+    @DisplayName("Test invalid role switches")
     void testInvalidRoleSwitches() {
-        Player player = DefaultPlayer.newInstance("TestPlayer");
-        room.addPlayer(player, null, false, Room.DEFAULT_SLOT); // Add as participant
+        // Setup
+        Player player = DefaultPlayer.newInstance("player1");
+        when(playerManager.containsPlayerIdentity(player.getIdentity())).thenReturn(false);
+        when(slotStrategy.getFreePlayerSlotInRoom()).thenReturn(0);
+        room.addPlayer(player);
         
-        // Try to switch participant to participant (invalid)
-        assertThrows(SwitchedPlayerRoleInRoomException.class, () ->
-            room.switchSpectatorToParticipant(player, Room.DEFAULT_SLOT));
+        // Set player as participant
+        player.setRoleInRoom(PlayerRoleInRoom.PARTICIPANT);
         
-        room.switchParticipantToSpectator(player);
+        // Attempt to switch to participant again (should throw exception)
+        assertThrows(SwitchedPlayerRoleInRoomException.class, () -> {
+            room.switchSpectatorToParticipant(player);
+        }, "Should throw exception when switching to the same role");
         
-        // Try to switch spectator to spectator (invalid)
-        assertThrows(SwitchedPlayerRoleInRoomException.class, () ->
-            room.switchParticipantToSpectator(player));
+        // Set player as spectator
+        player.setRoleInRoom(PlayerRoleInRoom.SPECTATOR);
+        
+        // Attempt to switch to spectator again (should throw exception)
+        assertThrows(SwitchedPlayerRoleInRoomException.class, () -> {
+            room.switchParticipantToSpectator(player);
+        }, "Should throw exception when switching to the same role");
     }
 
     @Test
@@ -295,13 +414,35 @@ class DefaultRoomTest {
     }
 
     @Test
-    @DisplayName("Room should handle clear operation correctly")
+    @DisplayName("Room should clear all players and reset properties")
     void testClear() {
-        Player player = DefaultPlayer.newInstance("TestPlayer");
-        room.addPlayer(player, null, false, Room.DEFAULT_SLOT);
-        room.setProperty("test", "value");
+        Player player1 = mock(Player.class);
+        Player player2 = mock(Player.class);
         
-        assertThrows(UnsupportedOperationException.class, () -> room.clear());
+        when(player1.getIdentity()).thenReturn("Player1");
+        when(player2.getIdentity()).thenReturn("Player2");
+        when(player1.getPlayerSlotInCurrentRoom()).thenReturn(0);
+        when(player2.getPlayerSlotInCurrentRoom()).thenReturn(1);
+        
+        when(playerManager.getPlayerCount()).thenReturn(2, 0);
+        when(playerManager.getReadonlyPlayersList()).thenReturn(List.of(player1, player2));
+        when(playerManager.containsPlayerIdentity(player1.getIdentity())).thenReturn(true);
+        when(playerManager.containsPlayerIdentity(player2.getIdentity())).thenReturn(true);
+        when(slotStrategy.getFreePlayerSlotInRoom()).thenReturn(0, 1);
+        
+        // Add players to room
+        room.addPlayer(player1, null, false, Room.DEFAULT_SLOT);
+        room.addPlayer(player2, null, false, Room.DEFAULT_SLOT);
+        
+        // Clear room
+        room.clear();
+        
+        // Verify
+        verify(playerManager).removePlayerByIdentity(player1.getIdentity());
+        verify(playerManager).removePlayerByIdentity(player2.getIdentity());
+        verify(playerManager).clear();
+        assertEquals(0, room.getParticipantCount());
+        assertTrue(room.isEmpty());
     }
 
     @Test
@@ -335,14 +476,19 @@ class DefaultRoomTest {
     @Test
     @DisplayName("Room should handle player slot management correctly")
     void testPlayerSlotManagement() {
-        Player player = DefaultPlayer.newInstance("TestPlayer");
-        room.addPlayer(player, null, false, Room.DEFAULT_SLOT);
+        // Setup
+        Player player = DefaultPlayer.newInstance("player1");
+        when(playerManager.containsPlayerIdentity(player.getIdentity())).thenReturn(false, true);
+        when(slotStrategy.getFreePlayerSlotInRoom()).thenReturn(0);
         
-        // Verify slot strategy interaction
-        verify(slotStrategy).tryTakeSlot(Room.DEFAULT_SLOT);
+        // Test adding player
+        room.addPlayer(player);
+        verify(slotStrategy).getFreePlayerSlotInRoom();
         
+        // Test removing player
+        when(playerManager.containsPlayerIdentity(player.getIdentity())).thenReturn(true);
         room.removePlayer(player);
-        verify(slotStrategy).freeSlotWhenPlayerLeft(Room.DEFAULT_SLOT);
-  }
+        verify(slotStrategy).freeSlotWhenPlayerLeft(0);
+    }
 }
 

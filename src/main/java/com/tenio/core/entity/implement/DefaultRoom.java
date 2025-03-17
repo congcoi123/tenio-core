@@ -35,6 +35,7 @@ import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
 import com.tenio.core.exception.PlayerJoinedRoomException;
+import com.tenio.core.exception.RemovedNonExistentPlayerException;
 import com.tenio.core.exception.SwitchedPlayerRoleInRoomException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -313,6 +314,10 @@ public class DefaultRoom implements Room {
 
   @Override
   public void removePlayer(Player player) {
+    if (!containsPlayerIdentity(player.getIdentity())) {
+      throw new RemovedNonExistentPlayerException(
+          String.format("Player %s was not in room", player.getIdentity()));
+    }
     roomPlayerSlotGeneratedStrategy.freeSlotWhenPlayerLeft(player.getPlayerSlotInCurrentRoom());
     playerManager.removePlayerByIdentity(player.getIdentity());
     player.setCurrentRoom(null);
@@ -421,6 +426,9 @@ public class DefaultRoom implements Room {
 
   @Override
   public void setMaxParticipants(int maxParticipants) {
+    if (maxParticipants < 0) {
+      throw new IllegalArgumentException("Maximum participants cannot be negative");
+    }
     this.maxParticipants = maxParticipants;
   }
 
@@ -431,6 +439,9 @@ public class DefaultRoom implements Room {
 
   @Override
   public void setMaxSpectators(int maxSpectators) {
+    if (maxSpectators < 0) {
+      throw new IllegalArgumentException("Maximum spectators cannot be negative");
+    }
     this.maxSpectators = maxSpectators;
   }
 
@@ -441,6 +452,9 @@ public class DefaultRoom implements Room {
 
   @Override
   public void setCapacity(int maxParticipants, int maxSpectators) {
+    if (maxParticipants < 0 || maxSpectators < 0) {
+      throw new IllegalArgumentException("Maximum participants and spectators cannot be negative");
+    }
     this.maxParticipants = maxParticipants;
     this.maxSpectators = maxSpectators;
   }
@@ -488,5 +502,16 @@ public class DefaultRoom implements Room {
         ", roomRemoveMode=" + roomRemoveMode +
         ", activated=" + activated +
         '}';
+  }
+
+  @Override
+  public void clear() {
+    // First clear the player manager
+    playerManager.clear();
+
+    // Reset room state
+    owner = null;
+    participants = new ArrayList<>();
+    spectators = new ArrayList<>();
   }
 }

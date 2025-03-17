@@ -24,23 +24,29 @@ THE SOFTWARE.
 
 package com.tenio.core.exception;
 
-import java.io.Serial;
-
 /**
- * When the server tries to eliminate a non-existing player from a room.
+ * This exception is thrown when attempting to remove a player that does not exist in a room.
  */
 public final class RemovedNonExistentPlayerException extends RuntimeException {
 
-  @Serial
-  private static final long serialVersionUID = -7604852583321561090L;
+  private static final long serialVersionUID = -1L;
 
   /**
-   * Initialization.
+   * Creates a new instance with a specified message.
    *
-   * @param playerIdentity the {@link Object} of player's identity
+   * @param message the detail message
    */
-  public RemovedNonExistentPlayerException(Object playerIdentity) {
-    super(String.format("Unable to remove player: %s, the player did not exist",
-        playerIdentity.toString()));
+  public RemovedNonExistentPlayerException(String message) {
+    super(message);
+  }
+
+  /**
+   * Creates a new instance with a specified message and cause.
+   *
+   * @param message the detail message
+   * @param cause   the cause
+   */
+  public RemovedNonExistentPlayerException(String message, Throwable cause) {
+    super(message, cause);
   }
 }

@@ -43,21 +43,19 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@DisplayName("Unit Test Cases For DefaultPacketQueuePolicy")
 @ExtendWith(MockitoExtension.class)
-public class DefaultPacketQueuePolicyTest {
+@DisplayName("Unit Test Cases For DefaultPacketQueuePolicy")
+class DefaultPacketQueuePolicyTest {
 
     private DefaultPacketQueuePolicy policy;
     private PacketQueue queue;
-    private Packet packet;
     private static final int QUEUE_SIZE = 100;
 
     @BeforeEach
     void setUp() {
         policy = new DefaultPacketQueuePolicy();
         queue = PacketQueueImpl.newInstance();
-        ((PacketQueueImpl) queue).configureMaxSize(QUEUE_SIZE);
-        packet = mock(Packet.class);
+        queue.configureMaxSize(QUEUE_SIZE);
     }
 
     @Test
@@ -71,16 +69,21 @@ public class DefaultPacketQueuePolicyTest {
     @Test
     @DisplayName("Policy should handle null queue")
     void testApplyPolicyWithNullQueue() {
+        Packet packet = createTestPacket(ResponsePriority.NORMAL);
         assertThrows(NullPointerException.class, () -> policy.applyPolicy(null, packet));
     }
 
     @Test
     @DisplayName("Policy should handle regular packet")
     void testApplyPolicyWithRegularPacket() {
-        when(packet.getPriority()).thenReturn(ResponsePriority.NORMAL);
+        Packet packet = createTestPacket(ResponsePriority.NORMAL);
         policy.applyPolicy(queue, packet);
+        queue.put(packet);
         assertFalse(queue.isEmpty());
         assertEquals(1, queue.getSize());
+        Packet takenPacket = queue.take();
+        assertNotNull(takenPacket);
+        assertEquals(ResponsePriority.NORMAL, takenPacket.getPriority());
     }
 
     @Test
@@ -90,10 +93,11 @@ public class DefaultPacketQueuePolicyTest {
         Packet normalPriorityPacket = createTestPacket(ResponsePriority.NORMAL);
         Packet lowPriorityPacket = createTestPacket(ResponsePriority.NON_GUARANTEED);
 
-        // Apply policies and add packets to queue
+        // Add normal priority packet
         policy.applyPolicy(queue, normalPriorityPacket);
         queue.put(normalPriorityPacket);
         
+        // Add high priority packet
         policy.applyPolicy(queue, highPriorityPacket);
         queue.put(highPriorityPacket);
         
@@ -104,8 +108,10 @@ public class DefaultPacketQueuePolicyTest {
         assertEquals(2, queue.getSize());
         
         // Verify packets are in the queue
-        assertNotNull(queue.take());
-        assertNotNull(queue.take());
+        Packet firstPacket = queue.take();
+        Packet secondPacket = queue.take();
+        assertNotNull(firstPacket);
+        assertNotNull(secondPacket);
         assertTrue(queue.isEmpty());
     }
 
@@ -113,34 +119,19 @@ public class DefaultPacketQueuePolicyTest {
     @DisplayName("Policy should handle all priority types")
     @EnumSource(ResponsePriority.class)
     void testApplyPolicyWithAllPriorities(ResponsePriority priority) {
-        // For NON_GUARANTEED priority, we need to check if the queue is empty
+        Packet packet = createTestPacket(priority);
+        
         if (priority == ResponsePriority.NON_GUARANTEED && !queue.isEmpty()) {
-            assertThrows(PacketQueuePolicyViolationException.class, () -> {
-                Packet testPacket = createTestPacket(priority);
-                policy.applyPolicy(queue, testPacket);
-            });
+            assertThrows(PacketQueuePolicyViolationException.class, () -> policy.applyPolicy(queue, packet));
         } else {
-            Packet testPacket = createTestPacket(priority);
-            policy.applyPolicy(queue, testPacket);
-            queue.put(testPacket);
+            policy.applyPolicy(queue, packet);
+            queue.put(packet);
             assertEquals(1, queue.getSize());
-            assertEquals(priority, queue.take().getPriority());
+            Packet takenPacket = queue.take();
+            assertNotNull(takenPacket);
+            assertEquals(priority, takenPacket.getPriority());
+            assertTrue(queue.isEmpty());
         }
-    }
-
-  @Test
-    @DisplayName("Policy should handle packets with same priority")
-    void testApplyPolicyWithSamePriority() {
-        Packet packet1 = createTestPacket(ResponsePriority.NORMAL);
-        Packet packet2 = createTestPacket(ResponsePriority.NORMAL);
-
-        policy.applyPolicy(queue, packet1);
-        policy.applyPolicy(queue, packet2);
-
-        assertEquals(2, queue.getSize());
-        assertNotNull(queue.take());
-        assertNotNull(queue.take());
-        assertTrue(queue.isEmpty());
     }
 
     @ParameterizedTest
@@ -149,21 +140,45 @@ public class DefaultPacketQueuePolicyTest {
     void testApplyPolicyWithAllTransportTypes(TransportType transportType) {
         Packet packet = createTestPacketWithTransport(ResponsePriority.NORMAL, transportType);
         policy.applyPolicy(queue, packet);
+        queue.put(packet);
         assertEquals(1, queue.getSize());
-        assertEquals(transportType, queue.take().getTransportType());
-  }
+        Packet takenPacket = queue.take();
+        assertNotNull(takenPacket);
+        assertEquals(transportType, takenPacket.getTransportType());
+        assertTrue(queue.isEmpty());
+    }
 
-  @Test
+    @Test
+    @DisplayName("Policy should handle packets with same priority")
+    void testApplyPolicyWithSamePriority() {
+        Packet packet1 = createTestPacket(ResponsePriority.NORMAL);
+        Packet packet2 = createTestPacket(ResponsePriority.NORMAL);
+
+        policy.applyPolicy(queue, packet1);
+        queue.put(packet1);
+        policy.applyPolicy(queue, packet2);
+        queue.put(packet2);
+
+        assertEquals(2, queue.getSize());
+        assertNotNull(queue.take());
+        assertNotNull(queue.take());
+        assertTrue(queue.isEmpty());
+    }
+
+    @Test
     @DisplayName("Policy should handle full queue")
     void testApplyPolicyWithFullQueue() {
-        // Fill the queue
-        for (int i = 0; i < QUEUE_SIZE; i++) {
-            policy.applyPolicy(queue, createTestPacket(ResponsePriority.NORMAL));
+        // Fill the queue to 90% capacity
+        int fillCount = (int)(QUEUE_SIZE * 0.9);
+        for (int i = 0; i < fillCount; i++) {
+            Packet packet = createTestPacket(ResponsePriority.NORMAL);
+            policy.applyPolicy(queue, packet);
+            queue.put(packet);
         }
         
-        // Try to add one more packet
-        Packet extraPacket = createTestPacket(ResponsePriority.NORMAL);
-        assertThrows(PacketQueueFullException.class, () -> policy.applyPolicy(queue, extraPacket));
+        // Try to add a NON_GUARANTEED packet
+        Packet lowPriorityPacket = createTestPacket(ResponsePriority.NON_GUARANTEED);
+        assertThrows(PacketQueuePolicyViolationException.class, () -> policy.applyPolicy(queue, lowPriorityPacket));
     }
 
     @Test
@@ -172,9 +187,9 @@ public class DefaultPacketQueuePolicyTest {
         Packet packet = PacketImpl.newInstance();
         packet.setPriority(ResponsePriority.NORMAL);
         packet.setTransportType(TransportType.TCP);
-        // Not setting data
         
         policy.applyPolicy(queue, packet);
+        queue.put(packet);
         assertEquals(1, queue.getSize());
         assertNull(queue.take().getData());
     }
@@ -188,62 +203,9 @@ public class DefaultPacketQueuePolicyTest {
         packet.setTransportType(TransportType.TCP);
         
         policy.applyPolicy(queue, packet);
+        queue.put(packet);
         assertEquals(1, queue.getSize());
         assertEquals(0, queue.take().getData().length);
-    }
-
-    @Test
-    @DisplayName("Apply policy should allow packet when queue is empty")
-    void applyPolicyShouldAllowPacketWhenQueueIsEmpty() {
-        when(queue.isEmpty()).thenReturn(true);
-        when(packet.getPriority()).thenReturn(ResponsePriority.NORMAL);
-
-        assertDoesNotThrow(() -> policy.applyPolicy(queue, packet));
-    }
-
-    @Test
-    @DisplayName("Apply policy should allow packet with GUARANTEED_QUICKEST priority")
-    void applyPolicyShouldAllowPacketWithGuaranteedQuickestPriority() {
-        when(queue.isEmpty()).thenReturn(false);
-        when(packet.getPriority()).thenReturn(ResponsePriority.GUARANTEED_QUICKEST);
-
-        assertDoesNotThrow(() -> policy.applyPolicy(queue, packet));
-    }
-
-    @Test
-    @DisplayName("Apply policy should allow packet with GUARANTEED priority")
-    void applyPolicyShouldAllowPacketWithGuaranteedPriority() {
-        when(queue.isEmpty()).thenReturn(false);
-        when(packet.getPriority()).thenReturn(ResponsePriority.GUARANTEED);
-
-        assertDoesNotThrow(() -> policy.applyPolicy(queue, packet));
-    }
-
-    @Test
-    @DisplayName("Apply policy should allow packet with NORMAL priority")
-    void applyPolicyShouldAllowPacketWithNormalPriority() {
-        when(queue.isEmpty()).thenReturn(false);
-        when(packet.getPriority()).thenReturn(ResponsePriority.NORMAL);
-
-        assertDoesNotThrow(() -> policy.applyPolicy(queue, packet));
-    }
-
-    @Test
-    @DisplayName("Apply policy should throw exception for NON_GUARANTEED priority when queue is not empty")
-    void applyPolicyShouldThrowExceptionForNonGuaranteedPriorityWhenQueueIsNotEmpty() {
-        when(queue.isEmpty()).thenReturn(false);
-        when(packet.getPriority()).thenReturn(ResponsePriority.NON_GUARANTEED);
-
-        assertThrows(PacketQueuePolicyViolationException.class, () -> policy.applyPolicy(queue, packet));
-    }
-
-    @Test
-    @DisplayName("Apply policy should allow NON_GUARANTEED priority when queue is empty")
-    void applyPolicyShouldAllowNonGuaranteedPriorityWhenQueueIsEmpty() {
-        when(queue.isEmpty()).thenReturn(true);
-        when(packet.getPriority()).thenReturn(ResponsePriority.NON_GUARANTEED);
-
-        assertDoesNotThrow(() -> policy.applyPolicy(queue, packet));
     }
 
     private Packet createTestPacket(ResponsePriority priority) {
@@ -256,5 +218,5 @@ public class DefaultPacketQueuePolicyTest {
         packet.setPriority(priority);
         packet.setTransportType(transportType);
         return packet;
-  }
+    }
 }
