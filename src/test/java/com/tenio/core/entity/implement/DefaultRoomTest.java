@@ -73,14 +73,48 @@ class DefaultRoomTest {
   @Test
     @DisplayName("New instance should be properly initialized")
   void testNewInstance() {
-        assertTrue(room.getId() > 0);
-        assertEquals(ROOM_NAME, room.getName());
-        assertEquals(MAX_PARTICIPANTS, room.getMaxParticipants());
-        assertEquals(MAX_SPECTATORS, room.getMaxSpectators());
-        assertEquals(RoomRemoveMode.WHEN_EMPTY, room.getRoomRemoveMode());
-        assertTrue(room.isEmpty());
-        assertFalse(room.isFull());
-        assertTrue(room.isPublic());
+        Room newRoom = DefaultRoom.newInstance();
+        
+        // Verify room ID
+        assertTrue(newRoom.getId() > 0);
+        
+        // Verify room name
+        assertNull(newRoom.getName());
+        
+        // Verify capacity settings
+        assertEquals(0, newRoom.getMaxParticipants());
+        assertEquals(0, newRoom.getMaxSpectators());
+        assertEquals(0, newRoom.getCapacity());
+        
+        // Verify room removal mode
+        assertEquals(RoomRemoveMode.WHEN_EMPTY, newRoom.getRoomRemoveMode());
+        
+        // Verify player counts
+        assertTrue(newRoom.isEmpty());
+        assertFalse(newRoom.isFull());
+        
+        // Verify room accessibility
+        assertTrue(newRoom.isPublic());
+        assertNull(newRoom.getPassword());
+        
+        // Verify room state
+        assertNull(newRoom.getState());
+        // A null state should be considered equal to null for comparison
+        assertTrue(newRoom.isState(null));
+        
+        // Verify room owner
+        assertFalse(newRoom.getOwner().isPresent());
+        
+        // Verify room activation
+        assertFalse(newRoom.isActivated());
+        
+        // Verify empty player lists
+        assertTrue(newRoom.getReadonlyParticipantsList().isEmpty());
+        assertTrue(newRoom.getReadonlySpectatorsList().isEmpty());
+        
+        // Verify empty properties
+        assertNull(newRoom.getProperty("test"));
+        assertFalse(newRoom.containsProperty("test"));
     }
 
     @Test
@@ -489,6 +523,6 @@ class DefaultRoomTest {
         when(playerManager.containsPlayerIdentity(player.getIdentity())).thenReturn(true);
         room.removePlayer(player);
         verify(slotStrategy).freeSlotWhenPlayerLeft(0);
-    }
+  }
 }
 

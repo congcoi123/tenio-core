@@ -127,7 +127,7 @@ class DefaultRoomPlayerSlotGeneratedStrategyTest {
     @DisplayName("Strategy should handle initialization without room")
     void testInitializationWithoutRoom() {
         strategy = new DefaultRoomPlayerSlotGeneratedStrategy();
-        strategy.initialize();
+        assertThrows(NullPointerException.class, () -> strategy.initialize());
         assertNull(strategy.getRoom());
     }
 
@@ -141,14 +141,22 @@ class DefaultRoomPlayerSlotGeneratedStrategyTest {
     @DisplayName("Strategy should handle slot freeing for various slot numbers")
     @ValueSource(ints = {-1, 0, 1, 100, Integer.MAX_VALUE})
     void testFreeSlotWhenPlayerLeft(int slotNumber) {
-        assertDoesNotThrow(() -> strategy.freeSlotWhenPlayerLeft(slotNumber));
+        if (slotNumber < 0 || slotNumber >= MAX_PARTICIPANTS) {
+            assertThrows(IllegalArgumentException.class, () -> strategy.freeSlotWhenPlayerLeft(slotNumber));
+        } else {
+            assertDoesNotThrow(() -> strategy.freeSlotWhenPlayerLeft(slotNumber));
+        }
     }
 
     @ParameterizedTest
     @DisplayName("Strategy should handle slot taking for various slot numbers")
     @ValueSource(ints = {-1, 0, 1, 100, Integer.MAX_VALUE})
     void testTryTakeSlot(int slotNumber) {
-        assertDoesNotThrow(() -> strategy.tryTakeSlot(slotNumber));
+        if (slotNumber < 0 || slotNumber >= MAX_PARTICIPANTS) {
+            assertThrows(IllegalArgumentException.class, () -> strategy.tryTakeSlot(slotNumber));
+        } else {
+            assertDoesNotThrow(() -> strategy.tryTakeSlot(slotNumber));
+        }
     }
 
     @Test
@@ -180,6 +188,7 @@ class DefaultRoomPlayerSlotGeneratedStrategyTest {
     void testConsecutiveInitializations() {
         strategy.initialize();
         Room newRoom = mock(Room.class);
+        when(newRoom.getMaxParticipants()).thenReturn(MAX_PARTICIPANTS);
         strategy.setRoom(newRoom);
         strategy.initialize();
         assertEquals(newRoom, strategy.getRoom());

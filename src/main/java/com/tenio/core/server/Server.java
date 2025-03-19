@@ -139,4 +139,20 @@ public interface Server {
    * @param markedAsLast marks as this writing is the last one
    */
   void write(Response response, boolean markedAsLast);
+
+  /**
+   * Sets the test mode flag. When in test mode, System.exit() calls are replaced with exceptions.
+   * This method should only be used for testing purposes.
+   *
+   * @param enabled true to enable test mode, false to disable
+   */
+  void setTestMode(boolean enabled);
+
+  /**
+   * Retrieves whether the server is running in test mode.
+   * In test mode, the server will throw exceptions instead of calling System.exit().
+   *
+   * @return true if the server is in test mode, false otherwise
+   */
+  boolean isTestMode();
 }

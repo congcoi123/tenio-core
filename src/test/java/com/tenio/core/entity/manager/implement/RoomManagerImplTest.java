@@ -31,6 +31,7 @@ class RoomManagerImplTest {
     private InitialRoomSetting roomSetting;
     private Player player;
     private static final String ROOM_NAME = "TestRoom";
+    private static final String ROOM_PASSWORD = "TestPassword";
     private static final int MAX_ROOMS = 2;
 
     @BeforeEach
@@ -41,12 +42,17 @@ class RoomManagerImplTest {
 
         // Setup room setting
         roomSetting = mock(InitialRoomSetting.class);
+        RoomCredentialValidatedStrategy credentialStrategy = mock(RoomCredentialValidatedStrategy.class);
+        doNothing().when(credentialStrategy).validateName(anyString());
+        doNothing().when(credentialStrategy).validatePassword(anyString());
+        
         when(roomSetting.getName()).thenReturn(ROOM_NAME);
         when(roomSetting.getMaxParticipants()).thenReturn(10);
         when(roomSetting.getMaxSpectators()).thenReturn(5);
         when(roomSetting.getRoomRemoveMode()).thenReturn(RoomRemoveMode.WHEN_EMPTY);
         when(roomSetting.getRoomPlayerSlotGeneratedStrategy()).thenReturn(mock(RoomPlayerSlotGeneratedStrategy.class));
-        when(roomSetting.getRoomCredentialValidatedStrategy()).thenReturn(mock(RoomCredentialValidatedStrategy.class));
+        when(roomSetting.getRoomCredentialValidatedStrategy()).thenReturn(credentialStrategy);
+        when(roomSetting.getPassword()).thenReturn(ROOM_PASSWORD);
 
         player = mock(Player.class);
         when(player.getIdentity()).thenReturn("TestPlayer");
@@ -69,6 +75,10 @@ class RoomManagerImplTest {
     @DisplayName("Room manager should handle room addition correctly")
     void testAddRoom() {
         Room room = DefaultRoom.newInstance();
+        RoomCredentialValidatedStrategy credentialStrategy = mock(RoomCredentialValidatedStrategy.class);
+        doNothing().when(credentialStrategy).validateName(anyString());
+        doNothing().when(credentialStrategy).validatePassword(anyString());
+        room.configureRoomCredentialValidatedStrategy(credentialStrategy);
         room.setName(ROOM_NAME);
         
         roomManager.addRoom(room);

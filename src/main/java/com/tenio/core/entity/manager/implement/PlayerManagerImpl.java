@@ -53,6 +53,9 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   private PlayerManagerImpl(EventManager eventManager) {
     super(eventManager);
+    if (Objects.isNull(eventManager)) {
+      throw new NullPointerException("Event manager cannot be null");
+    }
     players = new HashMap<>();
     readOnlyPlayersList = new ArrayList<>();
   }
@@ -69,6 +72,10 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   @Override
   public void addPlayer(Player player) {
+    if (Objects.isNull(player)) {
+      throw new NullPointerException("Unable to add a null player");
+    }
+
     if (containsPlayerIdentity(player.getIdentity())) {
       throw new AddedDuplicatedPlayerException(player);
     }

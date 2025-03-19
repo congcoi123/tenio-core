@@ -51,9 +51,9 @@ class SessionImplTest {
         session.configureSessionManager(sessionManager);
     }
 
-    @Test
+  @Test
     @DisplayName("New instance should be properly initialized")
-    void testNewInstance() {
+  void testNewInstance() {
         assertNotNull(session);
         assertFalse(session.isTcp());
         assertFalse(session.containsUdp());
@@ -152,11 +152,59 @@ class SessionImplTest {
     }
 
     @Test
-    @DisplayName("Session should handle orphan state")
-    void testOrphanState() {
-        assertTrue(session.isOrphan());
-        session.setAssociatedToPlayer(AssociatedState.DONE);
-        assertFalse(session.isOrphan());
+    @DisplayName("Session should correctly identify orphan state")
+    void testOrphanState() throws InterruptedException {
+        SessionImpl session = (SessionImpl) SessionImpl.newInstance();
+        assertFalse(session.isOrphan(), "New session should not be orphaned");
+
+        session.setAssociatedToPlayer(Session.AssociatedState.NONE);
+        Thread.sleep(SessionImpl.ORPHAN_ALLOWANCE_TIME_IN_MILLISECONDS + 100);
+        assertTrue(session.isOrphan(), "Session should be orphaned after timeout");
+
+        session.setAssociatedToPlayer(Session.AssociatedState.DONE);
+        assertFalse(session.isOrphan(), "DONE session should not be orphaned");
+    }
+
+    @Test
+    @DisplayName("Session should handle associated state changes")
+    void testAssociatedStateChanges() {
+        SessionImpl session = (SessionImpl) SessionImpl.newInstance();
+        assertTrue(session.isAssociatedToPlayer(Session.AssociatedState.NONE));
+
+        session.setAssociatedToPlayer(Session.AssociatedState.DOING);
+        assertTrue(session.isAssociatedToPlayer(Session.AssociatedState.DOING));
+
+        session.setAssociatedToPlayer(Session.AssociatedState.DONE);
+        assertTrue(session.isAssociatedToPlayer(Session.AssociatedState.DONE));
+    }
+
+    @Test
+    @DisplayName("Session should handle null associated state")
+    void testNullAssociatedState() {
+        SessionImpl session = (SessionImpl) SessionImpl.newInstance();
+        assertThrows(NullPointerException.class, () -> session.setAssociatedToPlayer(null));
+    }
+
+    @Test
+    @DisplayName("Session should handle creation time correctly")
+    void testCreationTime() {
+        SessionImpl session = (SessionImpl) SessionImpl.newInstance();
+        assertTrue(session.getCreatedTime() > 0);
+        assertTrue(session.getCreatedTime() <= System.currentTimeMillis());
+    }
+
+    @Test
+    @DisplayName("Session should handle activity time updates")
+    void testActivityTimeUpdates() {
+        SessionImpl session = (SessionImpl) SessionImpl.newInstance();
+        long initialTime = session.getLastActivityTime();
+        long currentTime = System.currentTimeMillis();
+        
+        session.setLastReadTime(currentTime);
+        assertTrue(session.getLastActivityTime() >= initialTime);
+        
+        session.setLastWriteTime(currentTime);
+        assertTrue(session.getLastActivityTime() >= initialTime);
     }
 
     @Test
@@ -222,5 +270,5 @@ class SessionImplTest {
         SelectionKey selectionKey = mock(SelectionKey.class);
         session.configureSelectionKey(selectionKey);
         assertEquals(selectionKey, session.fetchSelectionKey());
-    }
+  }
 }

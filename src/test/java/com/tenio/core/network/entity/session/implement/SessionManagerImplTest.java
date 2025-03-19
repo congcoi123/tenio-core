@@ -19,6 +19,7 @@ import com.tenio.core.network.security.filter.DefaultConnectionFilter;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.net.InetSocketAddress;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -55,6 +56,12 @@ class SessionManagerImplTest {
     // Arrange
     SocketChannel socketChannel = mock(SocketChannel.class);
     SelectionKey selectionKey = mock(SelectionKey.class);
+    
+    // Mock socket channel behavior
+    when(socketChannel.socket()).thenReturn(mock(java.net.Socket.class));
+    when(socketChannel.socket().isClosed()).thenReturn(false);
+    when(socketChannel.socket().getRemoteSocketAddress())
+        .thenReturn(new InetSocketAddress("localhost", 8080));
     
     // Act
     Session session = sessionManager.createSocketSession(socketChannel, selectionKey);

@@ -55,6 +55,9 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   private RoomManagerImpl(EventManager eventManager) {
     super(eventManager);
+    if (Objects.isNull(eventManager)) {
+      throw new NullPointerException("Event manager cannot be null");
+    }
     rooms = new HashMap<>();
     readOnlyRoomsList = new ArrayList<>();
     maxRooms = DEFAULT_MAX_ROOMS;
@@ -72,6 +75,9 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public void addRoom(Room room) {
+    if (Objects.isNull(room)) {
+      throw new NullPointerException("Room cannot be null");
+    }
     if (containsRoomId(room.getId())) {
       throw new AddedDuplicatedRoomException(room);
     }
@@ -85,6 +91,16 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   @Override
   public void addRoomWithOwner(Room room, InitialRoomSetting roomSetting, Player player)
       throws AddedDuplicatedRoomException {
+    if (Objects.isNull(room)) {
+      throw new NullPointerException("Room cannot be null");
+    }
+    if (Objects.isNull(roomSetting)) {
+      throw new NullPointerException("Room setting cannot be null");
+    }
+    if (Objects.isNull(player)) {
+      throw new NullPointerException("Owner cannot be null");
+    }
+
     int roomCount = getRoomCount();
     if (roomCount >= maxRooms) {
       throw new CreatedRoomException(
@@ -110,6 +126,13 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public Room createRoomWithOwner(InitialRoomSetting roomSetting, Player player) {
+    if (Objects.isNull(roomSetting)) {
+      throw new NullPointerException("Room setting cannot be null");
+    }
+    if (Objects.isNull(player)) {
+      throw new NullPointerException("Owner cannot be null");
+    }
+
     int roomCount = getRoomCount();
     if (roomCount >= maxRooms) {
       throw new CreatedRoomException(
@@ -178,16 +201,31 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public void changeRoomName(Room room, String roomName) {
+    if (Objects.isNull(room)) {
+      throw new NullPointerException("Room cannot be null");
+    }
     room.setName(roomName);
   }
 
   @Override
   public void changeRoomPassword(Room room, String roomPassword) {
+    if (Objects.isNull(room)) {
+      throw new NullPointerException("Room cannot be null");
+    }
     room.setPassword(roomPassword);
   }
 
   @Override
   public void changeRoomCapacity(Room room, int maxParticipants, int maxSpectators) {
+    if (Objects.isNull(room)) {
+      throw new NullPointerException("Room cannot be null");
+    }
+    if (maxParticipants < 0) {
+      throw new IllegalArgumentException("Max participants cannot be negative");
+    }
+    if (maxSpectators < 0) {
+      throw new IllegalArgumentException("Max spectators cannot be negative");
+    }
     if (maxParticipants <= room.getParticipantCount()) {
       throw new IllegalArgumentException(String.format(
           "Unable to assign the new max participants number: %d, "
@@ -211,6 +249,16 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public void configureMaxRooms(int maxRooms) {
+    if (maxRooms < 0) {
+      throw new IllegalArgumentException("Max rooms cannot be negative");
+    }
     this.maxRooms = maxRooms;
+  }
+
+  @Override
+  public synchronized void clear() {
+    rooms.clear();
+    readOnlyRoomsList = new ArrayList<>();
+    roomCount = 0;
   }
 }

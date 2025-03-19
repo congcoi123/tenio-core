@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 @DisplayName("Unit Tests For PlayerManagerImpl")
 class PlayerManagerImplTest {
@@ -31,9 +32,9 @@ class PlayerManagerImplTest {
         playerManager = (PlayerManagerImpl) PlayerManagerImpl.newInstance(eventManager);
     }
 
-    @Test
+  @Test
     @DisplayName("New instance should be properly initialized")
-    void testNewInstance() {
+  void testNewInstance() {
         assertNotNull(playerManager);
         assertEquals(0, playerManager.getPlayerCount());
         assertTrue(playerManager.getReadonlyPlayersList().isEmpty());
@@ -159,7 +160,8 @@ class PlayerManagerImplTest {
         playerManager.addPlayer(player);
         
         assertTrue(player.containsSession());
-        assertEquals(session, player.getSession());
+        assertTrue(player.getSession().isPresent());
+        assertEquals(session, player.getSession().get());
     }
 
     @Test
@@ -169,7 +171,122 @@ class PlayerManagerImplTest {
         playerManager.addPlayer(player);
         
         assertFalse(player.containsSession());
-        assertNull(player.getSession());
+        assertTrue(player.getSession().isEmpty());
     }
+
+    @Test
+    @DisplayName("Player manager should handle max idle time configuration")
+    void testMaxIdleTimeConfiguration() {
+        int maxIdleTime = 60;
+        playerManager.configureMaxIdleTimeInSeconds(maxIdleTime);
+        
+        Player player = playerManager.createPlayer(PLAYER_NAME);
+        assertTrue(player.isActivated());
+        assertTrue(player.isLoggedIn());
+    }
+
+    @Test
+    @DisplayName("Player manager should handle max idle time never deported configuration")
+    void testMaxIdleTimeNeverDeportedConfiguration() {
+        int maxIdleTimeNeverDeported = 120;
+        playerManager.configureMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeported);
+        
+        Player player = playerManager.createPlayer(PLAYER_NAME);
+        assertTrue(player.isActivated());
+        assertTrue(player.isLoggedIn());
+    }
+
+    @Test
+    @DisplayName("Player manager should handle null player in configure initial player")
+    void testConfigureInitialPlayerWithNull() {
+        assertThrows(NullPointerException.class, () -> playerManager.configureInitialPlayer(null));
+    }
+
+    @Test
+    @DisplayName("Player manager should handle null session in create player with session")
+    void testCreatePlayerWithNullSession() {
+        assertThrows(NullPointerException.class, 
+            () -> playerManager.createPlayerWithSession(PLAYER_NAME, null));
+    }
+
+    @Test
+    @DisplayName("Player manager should handle multiple players with same name")
+    void testMultiplePlayersWithSameName() {
+        Player player1 = playerManager.createPlayer(PLAYER_NAME);
+        assertThrows(AddedDuplicatedPlayerException.class, 
+            () -> playerManager.createPlayer(PLAYER_NAME));
+    }
+
+    @Test
+    @DisplayName("Player manager should handle player removal and re-addition")
+    void testPlayerRemovalAndReAddition() {
+        Player player = playerManager.createPlayer(PLAYER_NAME);
+        playerManager.removePlayerByIdentity(PLAYER_NAME);
+        assertFalse(playerManager.containsPlayerIdentity(PLAYER_NAME));
+        
+        Player newPlayer = playerManager.createPlayer(PLAYER_NAME);
+        assertTrue(playerManager.containsPlayerIdentity(PLAYER_NAME));
+        assertNotEquals(player, newPlayer);
+    }
+
+    @Test
+    @DisplayName("Player manager should handle player list consistency")
+    void testPlayerListConsistency() {
+        Player player1 = playerManager.createPlayer(PLAYER_NAME + "1");
+        Player player2 = playerManager.createPlayer(PLAYER_NAME + "2");
+        
+        List<Player> playerList = playerManager.getReadonlyPlayersList();
+        assertEquals(2, playerList.size());
+        assertTrue(playerList.contains(player1));
+        assertTrue(playerList.contains(player2));
+        
+        playerManager.removePlayerByIdentity(player1.getIdentity());
+        playerList = playerManager.getReadonlyPlayersList();
+        assertEquals(1, playerList.size());
+        assertFalse(playerList.contains(player1));
+        assertTrue(playerList.contains(player2));
+    }
+
+    @Test
+    @DisplayName("Player manager should handle clear with active players")
+    void testClearWithActivePlayers() {
+        playerManager.createPlayer(PLAYER_NAME + "1");
+        playerManager.createPlayer(PLAYER_NAME + "2");
+        assertEquals(2, playerManager.getPlayerCount());
+        
+        playerManager.clear();
+        assertEquals(0, playerManager.getPlayerCount());
+        assertTrue(playerManager.getReadonlyPlayersList().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Player manager should handle player with session state changes")
+    void testPlayerWithSessionStateChanges() {
+        Player player = playerManager.createPlayerWithSession(PLAYER_NAME, session);
+        assertTrue(player.containsSession());
+        assertTrue(player.getSession().isPresent());
+        assertEquals(session, player.getSession().get());
+        
+        playerManager.removePlayerByIdentity(PLAYER_NAME);
+        assertFalse(playerManager.containsPlayerIdentity(PLAYER_NAME));
+    }
+
+    @Test
+    @DisplayName("Player manager should maintain count consistency")
+    void testPlayerCountConsistency() {
+        assertEquals(0, playerManager.getPlayerCount());
+        
+        Player player1 = playerManager.createPlayer(PLAYER_NAME + "1");
+        assertEquals(1, playerManager.getPlayerCount());
+        
+        Player player2 = playerManager.createPlayer(PLAYER_NAME + "2");
+        assertEquals(2, playerManager.getPlayerCount());
+        
+        playerManager.removePlayerByIdentity(player1.getIdentity());
+        assertEquals(1, playerManager.getPlayerCount());
+        
+        playerManager.clear();
+        assertEquals(0, playerManager.getPlayerCount());
+  }
 }
 
