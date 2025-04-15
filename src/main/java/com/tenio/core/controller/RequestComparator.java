@@ -26,7 +26,6 @@ package com.tenio.core.controller;
 
 import com.tenio.core.network.entity.protocol.Request;
 import java.util.Comparator;
-import java.util.Objects;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine.InitializationException;
 
 /**
@@ -49,14 +48,14 @@ import org.apache.logging.log4j.core.tools.picocli.CommandLine.InitializationExc
  * 
  * <p>Example usage:
  * <pre>
- * var queue = new PriorityQueue(RequestComparator.newInstance());
+ * PriorityQueue queue = new PriorityQueue(RequestComparator.newInstance());
  * queue.add(new Request(Priority.HIGH));   // Processed first
  * queue.add(new Request(Priority.NORMAL)); // Processed later
  * 
  * // Two requests with same priority
- * var request1 = new Request(Priority.NORMAL); // Created first
+ * Request request1 = new Request(Priority.NORMAL); // Created first
  * Thread.sleep(100);
- * var request2 = new Request(Priority.NORMAL); // Created later
+ * Request request2 = new Request(Priority.NORMAL); // Created later
  * // request1 will be processed before request2
  * </pre>
  * 
@@ -68,7 +67,7 @@ public final class RequestComparator implements Comparator<Request> {
   private static final RequestComparator instance = new RequestComparator();
 
   private RequestComparator() {
-    if (Objects.nonNull(instance)) {
+    if (instance != null) {
       throw new InitializationException("Could not recreate this class' instance");
     }
   }

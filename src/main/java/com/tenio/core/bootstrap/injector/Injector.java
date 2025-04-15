@@ -51,15 +51,16 @@ import com.tenio.core.exception.InvalidRestMappingClassException;
 import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
 import com.tenio.core.exception.NoImplementedClassFoundException;
 import jakarta.servlet.http.HttpServlet;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.concurrent.ThreadSafe;
@@ -162,7 +163,7 @@ public final class Injector extends SystemLogger {
   private final ClientCommandManager clientCommandManager;
 
   private Injector() {
-    if (Objects.nonNull(instance)) {
+    if (instance != null) {
       throw new ExceptionInInitializerError("Could not re-create the class instance");
     }
 
@@ -213,25 +214,25 @@ public final class Injector extends SystemLogger {
     // clean first
     reset();
 
-    var setPackageNames = new HashSet<String>();
+    Set<String> setPackageNames = new HashSet<>();
 
-    if (Objects.nonNull(entryClass)) {
+    if (entryClass != null) {
       setPackageNames.add(entryClass.getPackage().getName());
     }
 
-    if (Objects.nonNull(packages)) {
+    if (packages != null) {
       setPackageNames.addAll(Arrays.asList(packages));
     }
 
     // fetches all classes that are in the same package as the root one
-    var classes = new HashSet<Class<?>>();
+    Set<Class<?>> classes = new HashSet<>();
     // declares a reflection object based on the package of root class
-    var reflections = new Reflections();
-    for (var packageName : setPackageNames) {
-      var packageClasses = ClassLoaderUtility.getClasses(packageName);
+    Reflections reflections = new Reflections();
+    for (String packageName : setPackageNames) {
+      Set<Class<?>> packageClasses = ClassLoaderUtility.getClasses(packageName);
       classes.addAll(packageClasses);
 
-      var reflectionPackage = new Reflections(packageName);
+      Reflections reflectionPackage = new Reflections(packageName);
       reflections.merge(reflectionPackage);
     }
 
@@ -241,18 +242,18 @@ public final class Injector extends SystemLogger {
     // in here
     // Suppressing unchecked warning because generic array creation is not allowed in Java
     @SuppressWarnings("unchecked")
-    Class<? extends java.lang.annotation.Annotation>[] listAnnotations = new Class[] {
+    Class<? extends Annotation>[] listAnnotations = new Class[] {
         Component.class,
         EventHandler.class,
         Setting.class
     };
-    var implementedComponentClasses = new HashSet<Class<?>>();
+    Set<Class<?>> implementedComponentClasses = new HashSet<>();
     Arrays.stream(listAnnotations).forEach(
         annotation -> implementedComponentClasses.addAll(
             reflections.getTypesAnnotatedWith(annotation)));
     // scans all interfaces with their implemented classes
-    for (var implementedClass : implementedComponentClasses) {
-      var classInterfaces = implementedClass.getInterfaces();
+    for (Class<?> implementedClass : implementedComponentClasses) {
+      Class<?>[] classInterfaces = implementedClass.getInterfaces();
       // in case the class has not implemented any interfaces, it still can be created, so put
       // the class into the map
       if (classInterfaces.length == 0) {
@@ -261,20 +262,20 @@ public final class Injector extends SystemLogger {
         // normal case, put the pair of class and interface
         // the interface will be used to retrieved back the corresponding class when we want to
         // create a bean by its interface
-        for (var classInterface : classInterfaces) {
+        for (Class<?> classInterface : classInterfaces) {
           classesMap.put(implementedClass, classInterface);
         }
       }
     }
 
     // Retrieves all classes those are declared by the @Bean annotation
-    var implementedBeanClasses = new HashSet<Class<?>>();
-    var beanFactoryClasses = reflections.getTypesAnnotatedWith(BeanFactory.class);
-    for (var configurationClass : beanFactoryClasses) {
-      for (var method : configurationClass.getMethods()) {
+    Set<Class<?>> implementedBeanClasses = new HashSet<>();
+    Set<Class<?>> beanFactoryClasses = reflections.getTypesAnnotatedWith(BeanFactory.class);
+    for (Class<?> configurationClass : beanFactoryClasses) {
+      for (Method method : configurationClass.getMethods()) {
         if (method.isAnnotationPresent(Bean.class)) {
           if (Modifier.isPublic(method.getModifiers())) {
-            var clazz = method.getReturnType();
+            Class<?> clazz = method.getReturnType();
             if (clazz.isPrimitive()) {
               throw new IllegalReturnTypeException();
             } else if (clazz.equals(Void.TYPE)) {
@@ -290,51 +291,51 @@ public final class Injector extends SystemLogger {
       }
     }
     // append all classes
-    for (var implementedClass : implementedBeanClasses) {
+    for (Class<?> implementedClass : implementedBeanClasses) {
       classesMap.put(implementedClass, implementedClass);
     }
 
     // Add all classes annotated by @RestController
-    var implementedRestClasses =
+    Set<Class<?>> implementedRestClasses =
         new HashSet<>(reflections.getTypesAnnotatedWith(RestController.class));
     // append all classes
-    for (var implementedClass : implementedRestClasses) {
+    for (Class<?> implementedClass : implementedRestClasses) {
       classesMap.put(implementedClass, implementedClass);
     }
 
     // Step 2: We create instances
     // create beans (class instances) based on annotations
-    for (var clazz : classes) {
+    for (Class<?> clazz : classes) {
       // in case you need to create a bean with another annotation, put it in here
       // but notices to put it in "implementedClasses" first
       // create beans automatically
       if (isClassAnnotated(clazz, listAnnotations)) {
-        var beanClass = new BeanClass(clazz, "");
+        BeanClass beanClass = new BeanClass(clazz, "");
         if (classBeansMap.containsKey(beanClass)) {
           throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
         }
-        var bean = clazz.getDeclaredConstructor().newInstance();
+        Object bean = clazz.getDeclaredConstructor().newInstance();
         classBeansMap.put(beanClass, bean);
 
         // create beans manually
       } else if (clazz.isAnnotationPresent(BeanFactory.class)) {
         // fetches all bean instances and save them to classes map
-        var beanFactoryInstance = clazz.getDeclaredConstructor().newInstance();
-        for (var method : clazz.getMethods()) {
+        Object beanFactoryInstance = clazz.getDeclaredConstructor().newInstance();
+        for (Method method : clazz.getMethods()) {
           if (method.isAnnotationPresent(Bean.class)) {
             if (Modifier.isPublic(method.getModifiers())) {
-              var methodClazz = method.getReturnType();
+              Class<?> methodClazz = method.getReturnType();
               if (methodClazz.isPrimitive()) {
                 throw new IllegalReturnTypeException();
               } else if (methodClazz.equals(Void.TYPE)) {
                 throw new IllegalReturnTypeException();
               } else {
-                var beanClass =
+                BeanClass beanClass =
                     new BeanClass(methodClazz, method.getAnnotation(Bean.class).value());
                 if (classBeansMap.containsKey(beanClass)) {
                   throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
                 }
-                var bean = method.invoke(beanFactoryInstance);
+                Object bean = method.invoke(beanFactoryInstance);
                 classBeansMap.put(beanClass, bean);
               }
             } else {
@@ -344,17 +345,17 @@ public final class Injector extends SystemLogger {
         }
       } else if (clazz.isAnnotationPresent(RestController.class)) {
         // fetches all bean instances and save them to rest controller map
-        var restControllerInstance = clazz.getDeclaredConstructor().newInstance();
-        var beanClass =
+        Object restControllerInstance = clazz.getDeclaredConstructor().newInstance();
+        BeanClass beanClass =
             new BeanClass(clazz, clazz.getAnnotation(RestController.class).value());
         if (classBeansMap.containsKey(beanClass)) {
           throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
         }
         classBeansMap.put(beanClass, restControllerInstance);
-        for (var method : clazz.getMethods()) {
+        for (Method method : clazz.getMethods()) {
           if (method.isAnnotationPresent(RestMapping.class)) {
             if (Modifier.isPublic(method.getModifiers())) {
-              var methodClazz = method.getReturnType();
+              Class<?> methodClazz = method.getReturnType();
               if (!methodClazz.equals(HttpServlet.class)) {
                 throw new InvalidRestMappingClassException();
               } else {
@@ -368,7 +369,7 @@ public final class Injector extends SystemLogger {
                 if (servletBeansMap.containsKey(uri)) {
                   throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
                 }
-                var bean = method.invoke(restControllerInstance);
+                Object bean = method.invoke(restControllerInstance);
                 servletBeansMap.put(uri, (HttpServlet) bean);
               }
             } else {
@@ -378,11 +379,11 @@ public final class Injector extends SystemLogger {
         }
       } else if (clazz.isAnnotationPresent(SystemCommand.class)) {
         try {
-          var systemCommandAnnotation = clazz.getAnnotation(SystemCommand.class);
-          var systemCommandInstance = clazz.getDeclaredConstructor().newInstance();
+          SystemCommand systemCommandAnnotation = clazz.getAnnotation(SystemCommand.class);
+          Object systemCommandInstance = clazz.getDeclaredConstructor().newInstance();
           if (systemCommandInstance instanceof AbstractSystemCommandHandler handler) {
             // manages by the class bean system
-            var beanClass =
+            BeanClass beanClass =
                 new BeanClass(clazz, String.valueOf(systemCommandAnnotation.label()));
             if (classBeansMap.containsKey(beanClass)) {
               throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
@@ -404,11 +405,11 @@ public final class Injector extends SystemLogger {
         }
       } else if (clazz.isAnnotationPresent(ClientCommand.class)) {
         try {
-          var clientCommandAnnotation = clazz.getAnnotation(ClientCommand.class);
-          var clientCommandInstance = clazz.getDeclaredConstructor().newInstance();
+          ClientCommand clientCommandAnnotation = clazz.getAnnotation(ClientCommand.class);
+          Object clientCommandInstance = clazz.getDeclaredConstructor().newInstance();
           if (clientCommandInstance instanceof AbstractClientCommandHandler<?> handler) {
             // manages by the class bean system
-            var beanClass =
+            BeanClass beanClass =
                 new BeanClass(clazz, String.valueOf(clientCommandAnnotation.value()));
             if (classBeansMap.containsKey(beanClass)) {
               throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
@@ -416,13 +417,11 @@ public final class Injector extends SystemLogger {
             classBeansMap.put(beanClass, clientCommandInstance);
             // add to its own management system
             handler.setCommandManager(clientCommandManager);
-            
+
             // Add a type check before casting
-            if (handler instanceof AbstractClientCommandHandler<?>) {
-              @SuppressWarnings("unchecked") // Safe cast after type verification
-              AbstractClientCommandHandler<Player> playerHandler = (AbstractClientCommandHandler<Player>) handler;
-              clientCommandManager.registerCommand(clientCommandAnnotation.value(), playerHandler);
-            }
+            @SuppressWarnings("unchecked") // Safe cast after type verification
+            var playerHandler = (AbstractClientCommandHandler<Player>) handler;
+            clientCommandManager.registerCommand(clientCommandAnnotation.value(), playerHandler);
           } else {
             if (isErrorEnabled()) {
               error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
@@ -542,19 +541,19 @@ public final class Injector extends SystemLogger {
       MultipleImplementedClassForInterfaceException, DuplicatedBeanCreationException {
 
     // check classes annotated by @Component and fields annotated by @Autowired
-    var implementedClass = getImplementedClass(classInterface, fieldName, classQualifier);
+    Class<?> implementedClass = getImplementedClass(classInterface, fieldName, classQualifier);
 
-    var beanClass = new BeanClass(implementedClass, nameQualifier);
+    BeanClass beanClass = new BeanClass(implementedClass, nameQualifier);
     if (classBeansMap.containsKey(beanClass)) {
       return classBeansMap.get(beanClass);
     }
 
     // Check if the class is in the manual classes set (created by @Bean or @BeanFactory)
-    if (Objects.nonNull(implementedClass) && !manualClassesSet.contains(implementedClass)) {
+    if (implementedClass != null && !manualClassesSet.contains(implementedClass)) {
       if (classBeansMap.containsKey(beanClass)) {
         throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
       }
-      var bean = implementedClass.getDeclaredConstructor().newInstance();
+      Object bean = implementedClass.getDeclaredConstructor().newInstance();
       classBeansMap.put(beanClass, bean);
       return bean;
     }
@@ -562,8 +561,8 @@ public final class Injector extends SystemLogger {
     return null;
   }
 
-  private boolean isClassAnnotated(Class<?> clazz, Class<? extends java.lang.annotation.Annotation>[] annotations) {
-    for (Class<? extends java.lang.annotation.Annotation> annotation : annotations) {
+  private boolean isClassAnnotated(Class<?> clazz, Class<? extends Annotation>[] annotations) {
+    for (Class<? extends Annotation> annotation : annotations) {
       if (clazz.isAnnotationPresent(annotation)) {
         return true;
       }
@@ -586,7 +585,7 @@ public final class Injector extends SystemLogger {
       // multiple implemented class from the interface, need to be selected by
       // "qualifier" value
       final var findBy =
-          (Objects.isNull(classQualifier)) ? fieldName : classQualifier;
+          classQualifier == null ? fieldName : classQualifier;
       var optional = implementedClasses.stream()
           .filter(entry -> entry.getKey().equals(findBy)).findAny();
       // in case of could not find an appropriately single instance, so throw an exception
@@ -615,13 +614,13 @@ public final class Injector extends SystemLogger {
       InvocationTargetException,
       NoSuchMethodException, SecurityException, ClassNotFoundException,
       DuplicatedBeanCreationException {
-    var fields = findFields(beanClass.clazz());
-    for (var field : fields) {
+    Set<Field> fields = findFields(beanClass.clazz());
+    for (Field field : fields) {
       Class<?> classQualifier = null;
       String nameQualifier = "";
 
       if (field.isAnnotationPresent(AutowiredQualifier.class)) {
-        var classDefault = field.getAnnotation(AutowiredQualifier.class).clazz();
+        Class<?> classDefault = field.getAnnotation(AutowiredQualifier.class).clazz();
         if (!classDefault.equals(AutowiredQualifier.DEFAULT.class)) {
           classQualifier = classDefault;
         }
@@ -630,21 +629,21 @@ public final class Injector extends SystemLogger {
 
       if (field.isAnnotationPresent(AutowiredAcceptNull.class)) {
         try {
-          var fieldInstance =
+          Object fieldInstance =
               getBeanInstanceForInjector(field.getType(), field.getName(), nameQualifier,
                   classQualifier);
-          if (Objects.nonNull(fieldInstance)) {
+          if (fieldInstance != null) {
             field.set(bean, fieldInstance);
             autowire(new BeanClass(fieldInstance.getClass(), nameQualifier), fieldInstance);
           }
-        } catch (NoImplementedClassFoundException e) {
+        } catch (NoImplementedClassFoundException exception) {
           // do nothing
         }
       } else if (field.isAnnotationPresent(Autowired.class)) {
-        var fieldInstance =
+        Object fieldInstance =
             getBeanInstanceForInjector(field.getType(), field.getName(), nameQualifier,
                 classQualifier);
-        if (Objects.nonNull(fieldInstance)) {
+        if (fieldInstance != null) {
           field.set(bean, fieldInstance);
           autowire(new BeanClass(fieldInstance.getClass(), nameQualifier), fieldInstance);
         }
@@ -660,10 +659,10 @@ public final class Injector extends SystemLogger {
    * @return a set of fields in the class
    */
   private Set<Field> findFields(Class<?> clazz) {
-    var fields = new HashSet<Field>();
+    Set<Field> fields = new HashSet<>();
 
-    while (Objects.nonNull(clazz)) {
-      for (var field : clazz.getDeclaredFields()) {
+    while (clazz != null) {
+      for (Field field : clazz.getDeclaredFields()) {
         if (field.isAnnotationPresent(Autowired.class)
             || field.isAnnotationPresent(AutowiredAcceptNull.class)) {
           field.setAccessible(true);
@@ -689,4 +688,3 @@ public final class Injector extends SystemLogger {
     clientCommandManager.clear();
   }
 }
-

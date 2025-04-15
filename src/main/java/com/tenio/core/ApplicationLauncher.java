@@ -30,6 +30,7 @@ import com.tenio.core.bootstrap.annotation.Bootstrap;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.constant.Trademark;
 import com.tenio.core.monitoring.system.SystemInfo;
+import com.tenio.core.server.Server;
 import com.tenio.core.server.ServerImpl;
 import java.util.Arrays;
 import java.util.Objects;
@@ -87,7 +88,7 @@ public final class ApplicationLauncher extends SystemLogger {
    * @throws IllegalStateException if the entry class is not properly annotated
    */
   public static void run(Class<?> entryClass, String[] params) {
-    var application = ApplicationLauncher.newInstance();
+    ApplicationLauncher application = ApplicationLauncher.newInstance();
     application.start(entryClass, params);
   }
 
@@ -126,7 +127,7 @@ public final class ApplicationLauncher extends SystemLogger {
     }
 
     // show system information
-    var systemInfo = new SystemInfo();
+    SystemInfo systemInfo = new SystemInfo();
     systemInfo.logSystemInfo();
     systemInfo.logNetCardsInfo();
     systemInfo.logDiskInfo();
@@ -135,8 +136,10 @@ public final class ApplicationLauncher extends SystemLogger {
     if (Objects.nonNull(entryClass)) {
       bootstrap = Bootstrapper.newInstance();
       try {
-        bootstrap.run(entryClass, CoreConstant.DEFAULT_BOOTSTRAP_PACKAGE,
-            CoreConstant.DEFAULT_EVENT_PACKAGE, CoreConstant.DEFAULT_COMMAND_PACKAGE,
+        bootstrap.run(entryClass,
+            CoreConstant.DEFAULT_BOOTSTRAP_PACKAGE,
+            CoreConstant.DEFAULT_EVENT_PACKAGE,
+            CoreConstant.DEFAULT_COMMAND_PACKAGE,
             CoreConstant.DEFAULT_REST_CONTROLLER_PACKAGE);
       } catch (Exception exception) {
         if (isErrorEnabled()) {
@@ -146,7 +149,7 @@ public final class ApplicationLauncher extends SystemLogger {
       }
     }
 
-    var server = ServerImpl.getInstance();
+    Server server = ServerImpl.getInstance();
     try {
       if (bootstrap == null) {
         throw new IllegalStateException("Bootstrap handler is not initialized");
@@ -164,7 +167,7 @@ public final class ApplicationLauncher extends SystemLogger {
 
     // Keep the main thread running
     try {
-      var currentThread = Thread.currentThread();
+      Thread currentThread = Thread.currentThread();
       currentThread.setName("tenio-main-thread");
       currentThread.setUncaughtExceptionHandler((thread, cause) -> {
         if (isErrorEnabled()) {

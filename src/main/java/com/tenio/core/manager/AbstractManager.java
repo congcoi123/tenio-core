@@ -43,6 +43,9 @@ public abstract class AbstractManager extends SystemLogger {
    * @param eventManager an instance of {@link EventManager}
    */
   protected AbstractManager(EventManager eventManager) {
+    if (eventManager == null) {
+      throw new NullPointerException("Event manager cannot be null");
+    }
     this.eventManager = eventManager;
   }
 }

@@ -35,10 +35,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -59,7 +59,7 @@ public final class SystemCommandManager extends SystemLogger {
    * Constructor.
    */
   public SystemCommandManager() {
-    var threadFactoryWorker =
+    ThreadFactory threadFactoryWorker =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("system-command-worker-%d").build();
     executors = Executors.newCachedThreadPool(threadFactoryWorker);
   }
@@ -71,6 +71,9 @@ public final class SystemCommandManager extends SystemLogger {
    * @param command The command handler
    */
   public synchronized void registerCommand(String label, AbstractSystemCommandHandler command) {
+    if (isDebugEnabled()) {
+      debug("SYSTEM_COMMAND", "Registered command > ", label);
+    }
     label = label.toLowerCase();
 
     // checks availability
@@ -90,6 +93,10 @@ public final class SystemCommandManager extends SystemLogger {
    * @param label The command label
    */
   public synchronized void unregisterCommand(String label) {
+    if (isDebugEnabled()) {
+      debug("SYSTEM_COMMAND", "Unregistered command > ", label);
+    }
+
     annotations.remove(label);
     commands.remove(label);
   }
@@ -154,20 +161,20 @@ public final class SystemCommandManager extends SystemLogger {
     }
 
     // parses message
-    var split = rawMessage.split(" ");
-    var args = new LinkedList<>(Arrays.asList(split));
-    var label = args.remove(0).toLowerCase();
+    String[] split = rawMessage.split(" ");
+    LinkedList<String> args = new LinkedList<>(Arrays.asList(split));
+    String label = args.remove(0).toLowerCase();
 
     // gets command handler
-    var handler = getHandler(label);
+    AbstractSystemCommandHandler handler = getHandler(label);
 
     // checks if the handler is null
-    if (Objects.isNull(handler)) {
+    if (handler == null) {
       return;
     }
 
     // gets the command's annotation
-    var annotation = annotations.get(label);
+    SystemCommand annotation = annotations.get(label);
 
     // invokes execute method for handler
     Runnable runnable = () -> handler.execute(args);

@@ -40,7 +40,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -55,9 +54,6 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   private RoomManagerImpl(EventManager eventManager) {
     super(eventManager);
-    if (Objects.isNull(eventManager)) {
-      throw new NullPointerException("Event manager cannot be null");
-    }
     rooms = new HashMap<>();
     readOnlyRoomsList = new ArrayList<>();
     maxRooms = DEFAULT_MAX_ROOMS;
@@ -75,7 +71,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public void addRoom(Room room) {
-    if (Objects.isNull(room)) {
+    if (room == null) {
       throw new NullPointerException("Room cannot be null");
     }
     if (containsRoomId(room.getId())) {
@@ -91,13 +87,13 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   @Override
   public void addRoomWithOwner(Room room, InitialRoomSetting roomSetting, Player player)
       throws AddedDuplicatedRoomException {
-    if (Objects.isNull(room)) {
+    if (room == null) {
       throw new NullPointerException("Room cannot be null");
     }
-    if (Objects.isNull(roomSetting)) {
+    if (roomSetting == null) {
       throw new NullPointerException("Room setting cannot be null");
     }
-    if (Objects.isNull(player)) {
+    if (player == null) {
       throw new NullPointerException("Owner cannot be null");
     }
 
@@ -117,7 +113,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     room.setActivated(roomSetting.isActivated());
     room.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
     room.setOwner(player);
-    if (Objects.nonNull(roomSetting.getProperties())) {
+    if (roomSetting.getProperties() != null) {
       roomSetting.getProperties().forEach(room::setProperty);
     }
 
@@ -126,10 +122,10 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public Room createRoomWithOwner(InitialRoomSetting roomSetting, Player player) {
-    if (Objects.isNull(roomSetting)) {
+    if (roomSetting == null) {
       throw new NullPointerException("Room setting cannot be null");
     }
-    if (Objects.isNull(player)) {
+    if (player == null) {
       throw new NullPointerException("Owner cannot be null");
     }
 
@@ -150,7 +146,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     room.setActivated(roomSetting.isActivated());
     room.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
     room.setOwner(player);
-    if (Objects.nonNull(roomSetting.getProperties())) {
+    if (roomSetting.getProperties() != null) {
       roomSetting.getProperties().forEach(room::setProperty);
     }
 
@@ -201,7 +197,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public void changeRoomName(Room room, String roomName) {
-    if (Objects.isNull(room)) {
+    if (room == null) {
       throw new NullPointerException("Room cannot be null");
     }
     room.setName(roomName);
@@ -209,7 +205,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public void changeRoomPassword(Room room, String roomPassword) {
-    if (Objects.isNull(room)) {
+    if (room == null) {
       throw new NullPointerException("Room cannot be null");
     }
     room.setPassword(roomPassword);
@@ -217,7 +213,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public void changeRoomCapacity(Room room, int maxParticipants, int maxSpectators) {
-    if (Objects.isNull(room)) {
+    if (room == null) {
       throw new NullPointerException("Room cannot be null");
     }
     if (maxParticipants < 0) {
