@@ -72,7 +72,6 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
     var socketWriterHandler = SocketWriterHandler.newInstance();
     socketWriterHandler.setNetworkWriterStatistic(networkWriterStatistic);
     socketWriterHandler.setSessionTicketsQueue(sessionTicketsQueue);
-    socketWriterHandler.allocateBuffer(getMaxBufferSize());
 
     return socketWriterHandler;
   }
@@ -81,7 +80,6 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
     var datagramWriterHandler = DatagramWriterHandler.newInstance();
     datagramWriterHandler.setNetworkWriterStatistic(networkWriterStatistic);
     datagramWriterHandler.setSessionTicketsQueue(sessionTicketsQueue);
-    datagramWriterHandler.allocateBuffer(getMaxBufferSize());
 
     return datagramWriterHandler;
   }

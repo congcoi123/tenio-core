@@ -27,6 +27,7 @@ package com.tenio.core.network.zero.engine.writer.implement;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.network.support.ByteBufferPool;
 import com.tenio.core.network.zero.engine.writer.WriterHandler;
 import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
@@ -36,9 +37,13 @@ import java.util.concurrent.BlockingQueue;
  */
 public abstract class AbstractWriterHandler extends SystemLogger implements WriterHandler {
 
+  private final ByteBufferPool byteBufferPool;
   private BlockingQueue<Session> sessionTicketsQueue;
   private NetworkWriterStatistic networkWriterStatistic;
-  private ByteBuffer byteBuffer;
+
+  public AbstractWriterHandler(ByteBufferPool byteBufferPool) {
+    this.byteBufferPool = byteBufferPool;
+  }
 
   @Override
   public BlockingQueue<Session> getSessionTicketsQueue() {
@@ -61,12 +66,12 @@ public abstract class AbstractWriterHandler extends SystemLogger implements Writ
   }
 
   @Override
-  public ByteBuffer getBuffer() {
-    return byteBuffer;
+  public ByteBuffer acquireBuffer(int bufferSize) {
+    return byteBufferPool.acquire(bufferSize);
   }
 
   @Override
-  public void allocateBuffer(int capacity) {
-    byteBuffer = ByteBuffer.allocate(capacity);
+  public void releaseBuffer(ByteBuffer byteBuffer) {
+    byteBufferPool.release(byteBuffer);
   }
 }
