@@ -48,6 +48,10 @@
 	</Network>
 
 	<Configuration>
+		<Properties>
+			<!-- Enable virtual threads for better scalability (requires Java 21+) -->
+			<Property name="use-virtual-threads">false</Property>
+		</Properties>
 		<Workers>
 			<Worker name="socket-acceptor">1</Worker>
 			<Worker name="socket-reader">2</Worker>

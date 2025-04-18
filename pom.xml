@@ -60,7 +60,7 @@
         <org.mockito.core.version>5.14.1</org.mockito.core.version>
 
         <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
-        <jdk.release>17</jdk.release>
+        <jdk.release>21</jdk.release>
         <jdk.vendor>oracle</jdk.vendor>
 
         <maven.checkstyle.version>3.1.2</maven.checkstyle.version>
@@ -70,9 +70,36 @@
         <jacoco.maven.plugin.version>0.8.7</jacoco.maven.plugin.version>
         <coveralls.maven.plugin.version>4.3.0</coveralls.maven.plugin.version>
 
-        <maven.compiler.target>17</maven.compiler.target>
-        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>java21</id>
+            <activation>
+                <jdk>[21,)</jdk>
+            </activation>
+            <properties>
+                <java.version>21</java.version>
+                <maven.compiler.source>21</maven.compiler.source>
+                <maven.compiler.target>21</maven.compiler.target>
+                <enable.virtual.threads>true</enable.virtual.threads>
+            </properties>
+        </profile>
+        <profile>
+            <id>default-java</id>
+            <activation>
+                <jdk>(,21)</jdk>
+            </activation>
+            <properties>
+                <java.version>17</java.version>
+                <maven.compiler.source>17</maven.compiler.source>
+                <maven.compiler.target>17</maven.compiler.target>
+                <enable.virtual.threads>false</enable.virtual.threads>
+            </properties>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
@@ -209,6 +236,7 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
+                <filtering>true</filtering>
             </resource>
         </resources>
         <testSourceDirectory>src/test/java</testSourceDirectory>
@@ -338,6 +366,26 @@
                         <version>2.2.3</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <argLine>--enable-preview</argLine>
+                </configuration>
             </plugin>
         </plugins>
     </build>

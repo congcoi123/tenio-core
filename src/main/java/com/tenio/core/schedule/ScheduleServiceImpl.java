@@ -40,6 +40,9 @@ import com.tenio.core.schedule.task.internal.CcuReportTask;
 import com.tenio.core.schedule.task.internal.DeadlockScanTask;
 import com.tenio.core.schedule.task.internal.SystemMonitoringTask;
 import com.tenio.core.schedule.task.internal.TrafficCounterTask;
+import com.tenio.core.utility.ThreadUtility;
+
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * The implementation for the schedule service.
@@ -62,6 +65,8 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
   private boolean enableTrafficCounterTask;
   private boolean initialized;
   private boolean stopping;
+  
+  private ScheduledExecutorService scheduledExecutorService;
 
   private ScheduleServiceImpl(EventManager eventManager) {
     super(eventManager);
@@ -90,12 +95,10 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
 
   @Override
   public void initialize() {
-    initializeTasks();
-    initialized = true;
-  }
-
-  private void initializeTasks() {
+    // Create a virtual thread executor for scheduled tasks
+    scheduledExecutorService = ThreadUtility.newVirtualThreadScheduledExecutor("schedule-task-%d");
     taskManager = TaskManagerImpl.newInstance();
+    initialized = true;
   }
 
   @Override
@@ -104,20 +107,20 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
       info("START SERVICE", buildgen(getName(), " (", 1, ")"));
     }
 
-    taskManager.create("auto-disconnect-player", autoDisconnectPlayerTask.run());
-    taskManager.create("auto-clean-orphan-session", autoCleanOrphanSessionTask.run());
-    taskManager.create("auto-remove-room", autoRemoveRoomTask.run());
+    taskManager.create("auto-disconnect-player", autoDisconnectPlayerTask.run(scheduledExecutorService));
+    taskManager.create("auto-clean-orphan-session", autoCleanOrphanSessionTask.run(scheduledExecutorService));
+    taskManager.create("auto-remove-room", autoRemoveRoomTask.run(scheduledExecutorService));
     if (enableCcuReportTask) {
-      taskManager.create("ccu-report", ccuReportTask.run());
+      taskManager.create("ccu-report", ccuReportTask.run(scheduledExecutorService));
     }
     if (enableDeadLockScanTask) {
-      taskManager.create("dead-lock", deadlockScanTask.run());
+      taskManager.create("dead-lock", deadlockScanTask.run(scheduledExecutorService));
     }
     if (enableSystemMonitoringTask) {
-      taskManager.create("system-monitoring", systemMonitoringTask.run());
+      taskManager.create("system-monitoring", systemMonitoringTask.run(scheduledExecutorService));
     }
     if (enableTrafficCounterTask) {
-      taskManager.create("traffic-counter", trafficCounterTask.run());
+      taskManager.create("traffic-counter", trafficCounterTask.run(scheduledExecutorService));
     }
   }
 
@@ -135,6 +138,9 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
 
   private void attemptToShutdown() {
     taskManager.clear();
+    if (scheduledExecutorService != null) {
+      scheduledExecutorService.shutdown();
+    }
 
     if (isInfoEnabled()) {
       info("STOPPED SERVICE", buildgen(getName(), " (", 1, ")"));

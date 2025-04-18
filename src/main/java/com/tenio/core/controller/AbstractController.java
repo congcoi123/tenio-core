@@ -30,6 +30,7 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RequestQueueFullException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entity.protocol.Request;
+import com.tenio.core.utility.ThreadUtility;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -175,7 +176,33 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   @Override
   public void initialize() {
-    initializeWorkers();
+    // Create a virtual thread executor for request processing
+    executorService = ThreadUtility.newVirtualThreadExecutor("controller-worker-%d", executorSize);
+    requestQueue = new PriorityBlockingQueue<>(maxQueueSize, RequestComparator.newInstance());
+    
+    for (int i = 0; i < executorSize; i++) {
+      try {
+        Thread.sleep(100L);
+      } catch (InterruptedException exception) {
+        if (isErrorEnabled()) {
+          error(exception);
+        }
+      }
+      executorService.execute(this);
+    }
+
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
+        try {
+          attemptToShutdown();
+        } catch (Exception exception) {
+          if (isErrorEnabled()) {
+            error(exception);
+          }
+        }
+      }
+    }));
+
     initialized = true;
   }
 
