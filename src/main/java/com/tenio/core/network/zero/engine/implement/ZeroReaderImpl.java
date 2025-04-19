@@ -71,7 +71,8 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   private ZeroReaderImpl(EventManager eventManager) {
     super(eventManager);
     setName("reader");
-    byteBufferPool = new ByteBufferPool();
+    byteBufferPool = new ByteBufferPool(ByteBufferPool.DEFAULT_MAX_POOL_SIZE_PER_BUCKET,
+        getMaxBufferSize());
   }
 
   /**
