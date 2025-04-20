@@ -81,6 +81,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
     var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
     executorService = Executors.newFixedThreadPool(executorSize, threadFactory);
+    executorService = Executors.newVirtualThreadPerTaskExecutor();
     for (int i = 0; i < executorSize; i++) {
       try {
         Thread.sleep(100L);

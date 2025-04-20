@@ -80,7 +80,7 @@ public final class ConfigurationAssessment {
   }
 
   private void checkDataSerialization() {
-    var dataSerialization = configuration.getString(CoreConfigurationType.DATA_SERIALIZATION);
+    var dataSerialization = configuration.getString(CoreConfigurationType.PROP_DATA_SERIALIZATION);
     if (Objects.isNull(DataType.getByValue(dataSerialization))) {
       throw new ConfigurationException(String.format("Data Serialization Type {%s} is not " +
               "supported, please reference to the supporting list: %s", dataSerialization,

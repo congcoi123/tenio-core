@@ -191,12 +191,20 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   INTERVAL_SYSTEM_MONITORING("system-monitoring-interval"),
   /**
+   * Determines whether to use virtual threads for network and task processing.
+   * When enabled, the server will use virtual threads for better scalability.
+   * Requires Java 21 or later. Default value is {@code false}.
+   *
+   * @since 0.7.0
+   */
+  PROP_USE_VIRTUAL_THREADS("use-virtual-threads"),
+  /**
    * Sets the data serialization mechanism is in use, currently, there are 2 types supported:
    * (internal) zero and msgpack.
    *
    * @see DataType
    */
-  DATA_SERIALIZATION("data-serialization"),
+  PROP_DATA_SERIALIZATION("data-serialization"),
   /**
    * Sets the maximum size of a packet queue. Notes that every {@link Session} has its own queue,
    * and this setting applies for all of them.
@@ -298,16 +306,7 @@ public enum CoreConfigurationType implements ConfigurationType {
    *
    * @since 0.5.0
    */
-  NETWORK_HTTP("http-configuration"),
-  /**
-   * Determines whether to use virtual threads for network and task processing.
-   * When enabled, the server will use virtual threads for better scalability.
-   * Requires Java 21 or later.
-   * Default value is false.
-   *
-   * @since 0.7.0
-   */
-  PROP_USE_VIRTUAL_THREADS("use-virtual-threads");
+  NETWORK_HTTP("http-configuration");
 
   // Reverse-lookup map for getting a type from a value
   private static final Map<String, CoreConfigurationType> lookup = new HashMap<>();
@@ -321,10 +320,6 @@ public enum CoreConfigurationType implements ConfigurationType {
   private final String value;
 
   CoreConfigurationType(final String value) {
-    this.value = value;
-  }
-
-  CoreConfigurationType(final String value, final String defaultValue) {
     this.value = value;
   }
 
