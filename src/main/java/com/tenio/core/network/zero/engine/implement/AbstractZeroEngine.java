@@ -33,6 +33,7 @@ import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.zero.engine.ZeroEngine;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
+import com.tenio.core.utility.ThreadUtility;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -202,7 +203,32 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
 
   @Override
   public void initialize() {
-    initializeWorkers();
+    // Create a virtual thread executor for network operations
+    executorService = ThreadUtility.newVirtualThreadExecutor("network-worker-%d", executorSize);
+    
+    for (int i = 0; i < executorSize; i++) {
+      try {
+        Thread.sleep(100L);
+      } catch (InterruptedException exception) {
+        if (isErrorEnabled()) {
+          error(exception);
+        }
+      }
+      executorService.execute(this);
+    }
+
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
+        try {
+          halting();
+        } catch (Exception exception) {
+          if (isErrorEnabled()) {
+            error(exception);
+          }
+        }
+      }
+    }));
+
     onInitialized();
   }
 

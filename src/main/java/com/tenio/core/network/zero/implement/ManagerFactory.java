@@ -1,0 +1,105 @@
+/*
+The MIT License
+
+Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+package com.tenio.core.network.zero.implement;
+
+import com.tenio.common.configuration.Configuration;
+import com.tenio.core.configuration.define.CoreConfigurationType;
+import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.network.entity.player.manager.PlayerManager;
+import com.tenio.core.network.entity.room.manager.RoomManager;
+import com.tenio.core.network.entity.session.manager.SessionManager;
+import com.tenio.core.network.entity.session.manager.implement.DefaultSessionManager;
+import com.tenio.core.network.entity.player.manager.implement.DefaultPlayerManager;
+import com.tenio.core.network.entity.room.manager.implement.DefaultRoomManager;
+
+/**
+ * Factory class for creating manager implementations.
+ */
+public final class ManagerFactory {
+
+  private static final boolean ENABLE_VIRTUAL_THREADS = Boolean.parseBoolean(
+      System.getProperty("enable.virtual.threads", "false"));
+
+  private ManagerFactory() {
+    throw new UnsupportedOperationException("This class cannot be instantiated");
+  }
+
+  /**
+   * Creates a new instance of the appropriate session manager based on configuration.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @param configuration the server configuration
+   * @return a new instance of session manager implementation
+   */
+  public static SessionManager newSessionManager(EventManager eventManager,
+                                               Configuration configuration) {
+    boolean useVirtualThreads = ENABLE_VIRTUAL_THREADS && 
+        configuration.getBoolean(CoreConfigurationType.PROP_USE_VIRTUAL_THREADS);
+    
+    if (useVirtualThreads) {
+      return VirtualSessionManager.newInstance(eventManager);
+    } else {
+      return DefaultSessionManager.newInstance(eventManager);
+    }
+  }
+
+  /**
+   * Creates a new instance of the appropriate player manager based on configuration.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @param configuration the server configuration
+   * @return a new instance of player manager implementation
+   */
+  public static PlayerManager newPlayerManager(EventManager eventManager,
+                                             Configuration configuration) {
+    boolean useVirtualThreads = ENABLE_VIRTUAL_THREADS && 
+        configuration.getBoolean(CoreConfigurationType.PROP_USE_VIRTUAL_THREADS);
+    
+    if (useVirtualThreads) {
+      return VirtualPlayerManager.newInstance(eventManager);
+    } else {
+      return DefaultPlayerManager.newInstance(eventManager);
+    }
+  }
+
+  /**
+   * Creates a new instance of the appropriate room manager based on configuration.
+   *
+   * @param eventManager the instance of {@link EventManager}
+   * @param configuration the server configuration
+   * @return a new instance of room manager implementation
+   */
+  public static RoomManager newRoomManager(EventManager eventManager,
+                                         Configuration configuration) {
+    boolean useVirtualThreads = ENABLE_VIRTUAL_THREADS && 
+        configuration.getBoolean(CoreConfigurationType.PROP_USE_VIRTUAL_THREADS);
+    
+    if (useVirtualThreads) {
+      return VirtualRoomManager.newInstance(eventManager);
+    } else {
+      return DefaultRoomManager.newInstance(eventManager);
+    }
+  }
+} 

@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.schedule.task.internal;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
@@ -33,7 +32,7 @@ import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.schedule.task.AbstractSystemTask;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -62,20 +61,16 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
   }
 
   @Override
-  public ScheduledFuture<?> run() {
-    var threadFactoryTask =
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-clean-orphan-session-task" +
-            "-%d").build();
-    var threadFactoryWorker =
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-clean-orphan-worker-%d").build();
-    var executors = Executors.newCachedThreadPool(threadFactoryWorker);
-    return Executors.newSingleThreadScheduledExecutor(threadFactoryTask).scheduleAtFixedRate(
+  public ScheduledFuture<?> run(ScheduledExecutorService executorService) {
+    return executorService.scheduleAtFixedRate(
         () -> {
           if (isDebugEnabled()) {
             debug("AUTO CLEAN ORPHAN SESSION",
                 "Checking orphan sessions in ", sessionManager.getSessionCount(), " entities");
           }
-          executors.execute(() -> {
+          
+          // Create a virtual thread for processing
+          Thread.ofVirtual().name("orphan-session-cleaner").start(() -> {
             Iterator<Session> iterator = sessionManager.getReadonlySessionsList().listIterator();
             while (iterator.hasNext()) {
               Session session = iterator.next();

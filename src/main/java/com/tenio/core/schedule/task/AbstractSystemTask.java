@@ -27,11 +27,14 @@ package com.tenio.core.schedule.task;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.common.task.Task;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.manager.AbstractManager;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 /**
- * The abstract task for system related schedule.
+ * The abstract class for system tasks.
  */
-public abstract class AbstractSystemTask extends SystemLogger implements Task {
+public abstract class AbstractSystemTask extends AbstractManager implements Task {
 
   private static final int DEFAULT_INITIAL_DELAY_IN_SECONDS = 60;
   private static final int DEFAULT_INTERVAL_IN_SECONDS = 60;
@@ -55,17 +58,35 @@ public abstract class AbstractSystemTask extends SystemLogger implements Task {
    * @param eventManager the event manager
    */
   protected AbstractSystemTask(EventManager eventManager) {
+    super(eventManager);
     this.eventManager = eventManager;
     interval = DEFAULT_INTERVAL_IN_SECONDS;
     initialDelay = DEFAULT_INITIAL_DELAY_IN_SECONDS;
   }
 
   /**
-   * Set the interval.
+   * Runs the task with the provided executor service.
    *
-   * @param interval the value
+   * @param executorService the {@link ScheduledExecutorService} to use for scheduling
+   * @return a {@link ScheduledFuture} representing pending completion of the task
+   */
+  public abstract ScheduledFuture<?> run(ScheduledExecutorService executorService);
+
+  /**
+   * Sets the interval for the task.
+   *
+   * @param interval the interval in seconds
    */
   public void setInterval(int interval) {
     this.interval = interval;
+  }
+
+  /**
+   * Sets the initial delay for the task.
+   *
+   * @param initialDelay the initial delay in seconds
+   */
+  public void setInitialDelay(int initialDelay) {
+    this.initialDelay = initialDelay;
   }
 }

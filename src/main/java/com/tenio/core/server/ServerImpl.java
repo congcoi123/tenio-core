@@ -141,7 +141,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     this.configuration = configuration;
 
     dataType =
-        DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION));
+        DataType.getByValue(configuration.getString(CoreConfigurationType.PROP_DATA_SERIALIZATION));
     serverName = configuration.getString(CoreConfigurationType.SERVER_NAME);
 
     if (isInfoEnabled()) {
@@ -289,7 +289,7 @@ public final class ServerImpl extends SystemLogger implements Server {
             configuration.getInt(CoreConfigurationType.WORKER_WEBSOCKET_PRODUCER));
 
     networkService.setDataType(
-        DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION)));
+        DataType.getByValue(configuration.getString(CoreConfigurationType.PROP_DATA_SERIALIZATION)));
 
     networkService.setWebSocketReceiverBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_RECEIVER_BUFFER_SIZE));
@@ -343,7 +343,7 @@ public final class ServerImpl extends SystemLogger implements Server {
 
   private void setupInternalProcessorService(Configuration configuration) {
     internalProcessorService.setDataType(
-        DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION)));
+        DataType.getByValue(configuration.getString(CoreConfigurationType.PROP_DATA_SERIALIZATION)));
     internalProcessorService
         .setMaxNumberPlayers(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS));
     internalProcessorService.setSessionManager(networkService.getSessionManager());
