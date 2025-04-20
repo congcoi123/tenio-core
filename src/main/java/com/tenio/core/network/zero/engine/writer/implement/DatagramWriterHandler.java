@@ -27,7 +27,7 @@ package com.tenio.core.network.zero.engine.writer.implement;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.support.ByteBufferPool;
+import com.tenio.core.network.support.DirectByteBufferPool;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -38,7 +38,7 @@ import java.util.Objects;
 public final class DatagramWriterHandler extends AbstractWriterHandler {
 
   private DatagramWriterHandler() {
-    super(new ByteBufferPool());
+    super(new DirectByteBufferPool());
   }
 
   /**

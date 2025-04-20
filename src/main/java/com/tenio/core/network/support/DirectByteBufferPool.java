@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  *
  * @since 0.6.2
  */
-public final class ByteBufferPool {
+public final class DirectByteBufferPool {
 
   /** Default maximum number of buffers to keep in each size bucket. */
   public static final int DEFAULT_MAX_POOL_SIZE_PER_BUCKET = 50;
@@ -51,21 +51,21 @@ public final class ByteBufferPool {
   private final int bufferSize;
 
   /**
-   * Creates a new ByteBufferPool with the specified maximum pool size per bucket.
+   * Creates a new DirectByteBufferPool with the specified maximum pool size per bucket.
    *
    * @param maxPoolSizePerBucket the maximum number of buffers to keep in each size bucket
    * @param bufferSize the buffer size
    */
-  public ByteBufferPool(int maxPoolSizePerBucket, int bufferSize) {
+  public DirectByteBufferPool(int maxPoolSizePerBucket, int bufferSize) {
     this.maxPoolSizePerBucket = maxPoolSizePerBucket;
     this.bufferSize = bufferSize;
     poolMap = new ConcurrentHashMap<>();
   }
 
   /**
-   * Creates a new ByteBufferPool with the default maximum pool size per bucket.
+   * Creates a new DirectByteBufferPool with the default maximum pool size per bucket.
    */
-  public ByteBufferPool() {
+  public DirectByteBufferPool() {
     this(DEFAULT_MAX_POOL_SIZE_PER_BUCKET, DEFAULT_BUFFER_SIZE);
   }
 

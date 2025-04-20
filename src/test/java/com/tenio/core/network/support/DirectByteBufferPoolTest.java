@@ -7,22 +7,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Test class for {@link ByteBufferPool}.
+ * Test class for {@link DirectByteBufferPool}.
  */
-class ByteBufferPoolTest {
+class DirectByteBufferPoolTest {
 
-  private ByteBufferPool pool;
+  private DirectByteBufferPool pool;
 
   @BeforeEach
   void setUp() {
-    pool = new ByteBufferPool(2, ByteBufferPool.DEFAULT_BUFFER_SIZE); // Small pool size for testing
+    pool = new DirectByteBufferPool(2, DirectByteBufferPool.DEFAULT_BUFFER_SIZE); // Small pool size for testing
   }
 
   @Test
   void testAcquireWithDefaultSize() {
     ByteBuffer buffer = pool.acquire();
     assertNotNull(buffer);
-    assertEquals(ByteBufferPool.DEFAULT_BUFFER_SIZE, buffer.capacity());
+    assertEquals(DirectByteBufferPool.DEFAULT_BUFFER_SIZE, buffer.capacity());
     assertTrue(buffer.isDirect());
   }
 
@@ -39,7 +39,7 @@ class ByteBufferPoolTest {
   void testAcquireWithInvalidSize() {
     ByteBuffer buffer = pool.acquire(-1);
     assertNotNull(buffer);
-    assertEquals(ByteBufferPool.DEFAULT_BUFFER_SIZE, buffer.capacity());
+    assertEquals(DirectByteBufferPool.DEFAULT_BUFFER_SIZE, buffer.capacity());
   }
 
   @Test

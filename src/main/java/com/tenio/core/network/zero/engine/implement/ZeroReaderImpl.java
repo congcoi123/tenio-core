@@ -34,7 +34,7 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
-import com.tenio.core.network.support.ByteBufferPool;
+import com.tenio.core.network.support.DirectByteBufferPool;
 import com.tenio.core.network.zero.engine.ZeroReader;
 import com.tenio.core.network.zero.engine.listener.ZeroAcceptorListener;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
@@ -61,7 +61,7 @@ import javassist.NotFoundException;
 public final class ZeroReaderImpl extends AbstractZeroEngine
     implements ZeroReader, ZeroReaderListener {
 
-  private final ByteBufferPool byteBufferPool;
+  private final DirectByteBufferPool byteBufferPool;
   private DataType dataType;
   private ZeroAcceptorListener zeroAcceptorListener;
   private ZeroWriterListener zeroWriterListener;
@@ -71,7 +71,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   private ZeroReaderImpl(EventManager eventManager) {
     super(eventManager);
     setName("reader");
-    byteBufferPool = new ByteBufferPool(ByteBufferPool.DEFAULT_MAX_POOL_SIZE_PER_BUCKET,
+    byteBufferPool = new DirectByteBufferPool(DirectByteBufferPool.DEFAULT_MAX_POOL_SIZE_PER_BUCKET,
         getMaxBufferSize());
   }
 
