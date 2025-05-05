@@ -26,7 +26,11 @@ package com.tenio.core.bootstrap;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.tenio.core.bootstrap.annotation.Bootstrap;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.DisplayName;
@@ -46,5 +50,51 @@ class BootstrapperTest {
       constructor.setAccessible(true);
       constructor.newInstance();
     });
+  }
+
+  @Test
+  @DisplayName("Run should return true when class has @Bootstrap annotation")
+  void runShouldReturnTrueWithBootstrapAnnotation() throws Exception {
+    @Bootstrap
+    class TestBootstrapClass {}
+    
+    assertTrue(bootstrapper.run(TestBootstrapClass.class));
+  }
+
+  @Test
+  @DisplayName("Run should return false when class lacks @Bootstrap annotation")
+  void runShouldReturnFalseWithoutBootstrapAnnotation() throws Exception {
+    class TestNonBootstrapClass {}
+    
+    assertFalse(bootstrapper.run(TestNonBootstrapClass.class));
+  }
+
+  @Test
+  @DisplayName("Get bootstrap handler should return null before run")
+  void getBootstrapHandlerShouldReturnNullBeforeRun() {
+    assertNull(bootstrapper.getBootstrapHandler());
+  }
+
+  @Test
+  @DisplayName("Get bootstrap handler should return instance after successful run")
+  void getBootstrapHandlerShouldReturnInstanceAfterRun() throws Exception {
+    @Bootstrap
+    class TestBootstrapClass {}
+    
+    bootstrapper.run(TestBootstrapClass.class);
+    assertNotNull(bootstrapper.getBootstrapHandler());
+  }
+
+  @Test
+  @DisplayName("Run should handle errors during initialization")
+  void runShouldHandleInitializationErrors() throws Exception {
+    @Bootstrap
+    class TestErrorClass {
+      public TestErrorClass() {
+        throw new RuntimeException("Test initialization error");
+      }
+    }
+    
+    assertThrows(Exception.class, () -> bootstrapper.run(TestErrorClass.class));
   }
 }

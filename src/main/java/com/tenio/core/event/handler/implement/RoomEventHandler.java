@@ -53,25 +53,25 @@ import java.util.Optional;
 public final class RoomEventHandler {
 
   @AutowiredAcceptNull
-  private EventPlayerAfterLeftRoom eventPlayerAfterLeftRoom;
+  private EventPlayerAfterLeftRoom<Player, Room> eventPlayerAfterLeftRoom;
 
   @AutowiredAcceptNull
-  private EventPlayerBeforeLeaveRoom eventPlayerBeforeLeaveRoom;
+  private EventPlayerBeforeLeaveRoom<Player, Room> eventPlayerBeforeLeaveRoom;
 
   @AutowiredAcceptNull
-  private EventPlayerJoinedRoomResult eventPlayerJoinedRoomResult;
+  private EventPlayerJoinedRoomResult<Player, Room> eventPlayerJoinedRoomResult;
 
   @AutowiredAcceptNull
-  private EventRoomCreatedResult eventRoomCreatedResult;
+  private EventRoomCreatedResult<Room> eventRoomCreatedResult;
 
   @AutowiredAcceptNull
-  private EventRoomWillBeRemoved eventRoomWillBeRemoved;
+  private EventRoomWillBeRemoved<Room> eventRoomWillBeRemoved;
 
   @AutowiredAcceptNull
-  private EventSwitchParticipantToSpectatorResult eventSwitchParticipantToSpectatorResult;
+  private EventSwitchParticipantToSpectatorResult<Player, Room> eventSwitchParticipantToSpectatorResult;
 
   @AutowiredAcceptNull
-  private EventSwitchSpectatorToParticipantResult eventSwitchSpectatorToParticipantResult;
+  private EventSwitchSpectatorToParticipantResult<Player, Room> eventSwitchSpectatorToParticipantResult;
 
   /**
    * Initialization.
@@ -80,29 +80,30 @@ public final class RoomEventHandler {
    */
   public void initialize(EventManager eventManager) {
 
-    final var eventPlayerAfterLeftRoomOp =
+    final Optional<EventPlayerAfterLeftRoom<Player, Room>> eventPlayerAfterLeftRoomOp =
         Optional.ofNullable(eventPlayerAfterLeftRoom);
-    final var eventPlayerBeforeLeaveRoomOp =
+    final Optional<EventPlayerBeforeLeaveRoom<Player, Room>> eventPlayerBeforeLeaveRoomOp =
         Optional.ofNullable(eventPlayerBeforeLeaveRoom);
-    final var eventPlayerJoinedRoomResultOp =
+    final Optional<EventPlayerJoinedRoomResult<Player, Room>> eventPlayerJoinedRoomResultOp =
         Optional.ofNullable(eventPlayerJoinedRoomResult);
 
-    final var eventRoomCreatedResultOp =
+    final Optional<EventRoomCreatedResult<Room>> eventRoomCreatedResultOp =
         Optional.ofNullable(eventRoomCreatedResult);
-    final var eventRoomWillBeRemovedOp =
+    final Optional<EventRoomWillBeRemoved<Room>> eventRoomWillBeRemovedOp =
         Optional.ofNullable(eventRoomWillBeRemoved);
 
-    final var eventSwitchParticipantToSpectatorResultOp =
+    final Optional<EventSwitchParticipantToSpectatorResult<Player, Room>> eventSwitchParticipantToSpectatorResultOp =
         Optional.ofNullable(eventSwitchParticipantToSpectatorResult);
-    final var eventSwitchSpectatorToParticipantResultOp =
+    final Optional<EventSwitchSpectatorToParticipantResult<Player, Room>> eventSwitchSpectatorToParticipantResultOp =
         Optional.ofNullable(eventSwitchSpectatorToParticipantResult);
 
     eventPlayerAfterLeftRoomOp.ifPresent(
         event -> eventManager.on(ServerEvent.PLAYER_AFTER_LEFT_ROOM, params -> {
-          var player = (Player) params[0];
-          var room = (Optional<Room>) params[1];
-          var mode = (PlayerLeaveRoomMode) (params[2]);
-          var result = (PlayerLeftRoomResult) (params[3]);
+          Player player = (Player) params[0];
+          @SuppressWarnings("unchecked") // Safe cast as we control the event parameters
+          Optional<Room> room = (Optional<Room>) params[1];
+          PlayerLeaveRoomMode mode = (PlayerLeaveRoomMode) (params[2]);
+          PlayerLeftRoomResult result = (PlayerLeftRoomResult) (params[3]);
 
           event.handle(player, room, mode, result);
 
@@ -111,9 +112,10 @@ public final class RoomEventHandler {
 
     eventPlayerBeforeLeaveRoomOp.ifPresent(
         event -> eventManager.on(ServerEvent.PLAYER_BEFORE_LEAVE_ROOM, params -> {
-          var player = (Player) params[0];
-          var room = (Optional<Room>) params[1];
-          var mode = (PlayerLeaveRoomMode) (params[2]);
+          Player player = (Player) params[0];
+          @SuppressWarnings("unchecked") // Safe cast as we control the event parameters
+          Optional<Room> room = (Optional<Room>) params[1];
+          PlayerLeaveRoomMode mode = (PlayerLeaveRoomMode) (params[2]);
 
           event.handle(player, room, mode);
 
@@ -122,20 +124,21 @@ public final class RoomEventHandler {
 
     eventPlayerJoinedRoomResultOp.ifPresent(
         event -> eventManager.on(ServerEvent.PLAYER_JOINED_ROOM_RESULT, params -> {
-          var player = (Player) params[0];
-          var room = (Room) params[1];
-          var result = (PlayerJoinedRoomResult) params[2];
+          Player player = (Player) params[0];
+          Room room = (Room) params[1];
+          PlayerJoinedRoomResult result = (PlayerJoinedRoomResult) params[2];
 
           event.handle(player, room, result);
 
           return null;
         }));
 
-    eventRoomCreatedResultOp.ifPresent(event -> eventManager.on(ServerEvent.ROOM_CREATED_RESULT,
-        params -> {
-          var room = (Optional<Room>) params[0];
-          var setting = (InitialRoomSetting) params[1];
-          var result = (RoomCreatedResult) params[2];
+    eventRoomCreatedResultOp.ifPresent(
+        event -> eventManager.on(ServerEvent.ROOM_CREATED_RESULT, params -> {
+          @SuppressWarnings("unchecked") // Safe cast as we control the event parameters
+          Optional<Room> room = (Optional<Room>) params[0];
+          InitialRoomSetting setting = (InitialRoomSetting) params[1];
+          RoomCreatedResult result = (RoomCreatedResult) params[2];
 
           event.handle(room, setting, result);
 
@@ -144,8 +147,8 @@ public final class RoomEventHandler {
 
     eventRoomWillBeRemovedOp.ifPresent(
         event -> eventManager.on(ServerEvent.ROOM_WILL_BE_REMOVED, params -> {
-          var room = (Room) params[0];
-          var mode = (RoomRemoveMode) params[1];
+          Room room = (Room) params[0];
+          RoomRemoveMode mode = (RoomRemoveMode) params[1];
 
           event.handle(room, mode);
 
@@ -154,9 +157,9 @@ public final class RoomEventHandler {
 
     eventSwitchParticipantToSpectatorResultOp.ifPresent(
         event -> eventManager.on(ServerEvent.SWITCH_PARTICIPANT_TO_SPECTATOR, params -> {
-          var player = (Player) params[0];
-          var room = (Room) params[1];
-          var result = (SwitchedPlayerRoleInRoomResult) params[2];
+          Player player = (Player) params[0];
+          Room room = (Room) params[1];
+          SwitchedPlayerRoleInRoomResult result = (SwitchedPlayerRoleInRoomResult) params[2];
 
           event.handle(player, room, result);
 
@@ -165,9 +168,9 @@ public final class RoomEventHandler {
 
     eventSwitchSpectatorToParticipantResultOp.ifPresent(
         event -> eventManager.on(ServerEvent.SWITCH_SPECTATOR_TO_PARTICIPANT, params -> {
-          var player = (Player) params[0];
-          var room = (Room) params[1];
-          var result = (SwitchedPlayerRoleInRoomResult) params[2];
+          Player player = (Player) params[0];
+          Room room = (Room) params[1];
+          SwitchedPlayerRoleInRoomResult result = (SwitchedPlayerRoleInRoomResult) params[2];
 
           event.handle(player, room, result);
 

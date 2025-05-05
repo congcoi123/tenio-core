@@ -26,16 +26,71 @@ package com.tenio.core.network.entity.packet;
 
 import com.tenio.core.network.define.ResponsePriority;
 import com.tenio.core.network.define.TransportType;
-import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * The smallest unit to hold and transfer data from the server to clients.
- *
- * @see PacketQueue
- * @see PacketQueuePolicy
+ * The Packet interface represents a network packet in the game server's communication system.
+ * It provides a standardized way to handle data transmission between the server and clients,
+ * supporting different transport protocols and priority levels.
+ * 
+ * <p>Core features:
+ * <ul>
+ *   <li>Binary data encapsulation</li>
+ *   <li>Transport protocol specification</li>
+ *   <li>Priority-based handling</li>
+ *   <li>Encryption support</li>
+ *   <li>Data integrity verification</li>
+ * </ul>
+ * 
+ * <p>Packet lifecycle:
+ * <ol>
+ *   <li>Creation with data payload</li>
+ *   <li>Transport type assignment</li>
+ *   <li>Priority level setting</li>
+ *   <li>Optional encryption</li>
+ *   <li>Transmission handling</li>
+ *   <li>Cleanup</li>
+ * </ol>
+ * 
+ * <p>Performance considerations:
+ * <ul>
+ *   <li>Efficient memory usage for data storage</li>
+ *   <li>Minimal overhead in packet creation</li>
+ *   <li>Optimized data serialization</li>
+ *   <li>Fast priority queue handling</li>
+ *   <li>Efficient encryption/decryption</li>
+ * </ul>
+ * 
+ * <p>Implementation guidelines:
+ * <ul>
+ *   <li>Use direct byte buffers for large packets</li>
+ *   <li>Implement pooling for frequent packet creation</li>
+ *   <li>Handle transport-specific requirements</li>
+ *   <li>Ensure thread-safe operations</li>
+ *   <li>Implement proper cleanup mechanisms</li>
+ * </ul>
+ * 
+ * <p>Usage example:
+ * <pre>{@code
+ * // Create a new packet
+ * Packet packet = PacketImpl.newInstance();
+ * 
+ * // Set packet data and properties
+ * packet.setData(data);
+ * packet.setTransportType(TransportType.TCP);
+ * packet.setPriority(ResponsePriority.HIGH);
+ * 
+ * // Optional encryption
+ * if (requiresEncryption) {
+ *     packet.setEncrypted(true);
+ * }
+ * }</pre>
+ * 
+ * @see TransportType
+ * @see ResponsePriority
+ * @since 0.5.0
  */
 public interface Packet {
 

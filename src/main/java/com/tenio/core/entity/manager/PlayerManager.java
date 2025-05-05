@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.entity.manager;
 
 import com.tenio.core.entity.Player;
+import com.tenio.core.entity.define.result.PlayerLoggedInResult;
 import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import com.tenio.core.exception.RemovedNonExistentPlayerException;
 import com.tenio.core.manager.Manager;
@@ -33,8 +34,70 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * All supported APIs for the player management. A management can belong to a room or live stand
- * alone.
+ * The PlayerManager interface provides a comprehensive system for managing player entities in the game server.
+ * It handles the complete lifecycle of players from creation to removal, ensuring thread-safe operations
+ * and efficient player tracking.
+ * 
+ * <p>Core responsibilities:
+ * <ul>
+ *   <li>Player lifecycle management (creation, configuration, removal)</li>
+ *   <li>Session association and management</li>
+ *   <li>Player lookup and iteration</li>
+ *   <li>Concurrent access handling</li>
+ *   <li>Player state monitoring</li>
+ * </ul>
+ * 
+ * <p>Key features:
+ * <ul>
+ *   <li>Thread-safe player operations</li>
+ *   <li>Efficient player lookup by identity</li>
+ *   <li>Session-based player creation</li>
+ *   <li>Automatic player configuration</li>
+ *   <li>Idle time management</li>
+ *   <li>Read-only player list access</li>
+ * </ul>
+ * 
+ * <p>Performance considerations:
+ * <ul>
+ *   <li>Optimized for frequent player lookups</li>
+ *   <li>Efficient concurrent access patterns</li>
+ *   <li>Minimal lock contention</li>
+ *   <li>Memory-efficient player tracking</li>
+ *   <li>Fast player iteration support</li>
+ * </ul>
+ * 
+ * <p>Implementation guidelines:
+ * <ul>
+ *   <li>Use concurrent collections for thread safety</li>
+ *   <li>Implement efficient player indexing</li>
+ *   <li>Maintain consistent player state</li>
+ *   <li>Handle edge cases in player lifecycle</li>
+ *   <li>Provide clear error handling</li>
+ * </ul>
+ * 
+ * <p>Usage example:
+ * <pre>{@code
+ * // Create a new player
+ * Player player = playerManager.createPlayer("playerName");
+ * 
+ * // Add session to player
+ * playerManager.createPlayerWithSession("playerName", session);
+ * 
+ * // Remove player
+ * playerManager.removePlayerByIdentity("playerName");
+ * 
+ * // Iterate over players safely
+ * playerManager.getReadonlyPlayersList().forEach(p -> {
+ *     // Process each player
+ * });
+ * }</pre>
+ * 
+ * @see Player
+ * @see Session
+ * @see PlayerLoggedInResult
+ * @see AddedDuplicatedPlayerException
+ * @see RemovedNonExistentPlayerException
+ * @since 0.5.0
  */
 public interface PlayerManager extends Manager {
 

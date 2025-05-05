@@ -46,6 +46,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.Objects;
 
 /**
  * The implementation for session manager.
@@ -101,19 +102,29 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public Session createSocketSession(SocketChannel socketChannel, SelectionKey selectionKey) {
-    Session session = SessionImpl.newInstance();
+    if (Objects.isNull(socketChannel)) {
+      throw new IllegalArgumentException("Socket channel cannot be null");
+    }
+    if (Objects.isNull(selectionKey)) {
+      throw new IllegalArgumentException("Selection key cannot be null");
+    }
+
+    Session session = SessionImpl.newInstanceForTcp();
     session.configureSocketChannel(socketChannel);
     session.configureSelectionKey(selectionKey);
     session.configureSessionManager(this);
     session.configurePacketQueue(configureNewPacketQueue());
     session.configureConnectionFilter(connectionFilter);
     session.configureMaxIdleTimeInSeconds(maxIdleTimeInSeconds);
+
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
       sessionBySockets.put(session.fetchSocketChannel(), session);
-      readonlySessionsList = sessionByIds.values().stream().toList();
+      readonlySessionsList = new ArrayList<>(sessionByIds.values());
       sessionCount = readonlySessionsList.size();
     }
+    
+    emitEvent(ServerEvent.SESSION_REQUEST_CONNECTION, session);
     return session;
   }
 
@@ -132,14 +143,23 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public void addDatagramForSession(DatagramChannel datagramChannel, int udpConvey, Session session) {
+    if (Objects.isNull(datagramChannel)) {
+      throw new IllegalArgumentException("Datagram channel cannot be null");
+    }
+    if (Objects.isNull(session)) {
+      throw new IllegalArgumentException("Session cannot be null");
+    }
     if (!session.isTcp()) {
       throw new IllegalArgumentException(
           String.format("Unable to add kcp channel for the non-TCP session: %s", session));
     }
+
     synchronized (sessionByDatagrams) {
       session.configureDatagramChannel(datagramChannel, udpConvey);
       sessionByDatagrams.put(udpConvey, session);
     }
+    
+    emitEvent(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT, session, datagramChannel, udpConvey);
   }
 
   @Override
@@ -151,14 +171,23 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public void addKcpForSession(Ukcp kcpChannel, Session session) throws IllegalArgumentException {
+    if (Objects.isNull(kcpChannel)) {
+      throw new IllegalArgumentException("KCP channel cannot be null");
+    }
+    if (Objects.isNull(session)) {
+      throw new IllegalArgumentException("Session cannot be null");
+    }
     if (!session.isTcp()) {
       throw new IllegalArgumentException(
           String.format("Unable to add datagram channel for the non-TCP session: %s", session));
     }
+
     synchronized (sessionByKcps) {
       session.setKcpChannel(kcpChannel);
       sessionByKcps.put(kcpChannel.getConv(), session);
     }
+    
+    emitEvent(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT, session, kcpChannel);
   }
 
   @Override
@@ -175,18 +204,25 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public Session createWebSocketSession(Channel webSocketChannel) {
+    if (Objects.isNull(webSocketChannel)) {
+      throw new IllegalArgumentException("WebSocket channel cannot be null");
+    }
+
     Session session = SessionImpl.newInstance();
     session.configureWebSocketChannel(webSocketChannel);
     session.configureSessionManager(this);
     session.configurePacketQueue(configureNewPacketQueue());
     session.configureConnectionFilter(connectionFilter);
     session.configureMaxIdleTimeInSeconds(maxIdleTimeInSeconds);
+    
     synchronized (this) {
       sessionByIds.put(session.getId(), session);
       sessionByWebSockets.put(webSocketChannel, session);
-      readonlySessionsList = sessionByIds.values().stream().toList();
+      readonlySessionsList = new ArrayList<>(sessionByIds.values());
       sessionCount = readonlySessionsList.size();
     }
+
+    emitEvent(ServerEvent.SESSION_REQUEST_CONNECTION, session);
     return session;
   }
 
@@ -217,6 +253,10 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public void removeSession(Session session) {
+    if (Objects.isNull(session)) {
+      return;
+    }
+
     synchronized (this) {
       switch (session.getTransportType()) {
         case TCP -> {
@@ -235,9 +275,11 @@ public final class SessionManagerImpl extends AbstractManager implements Session
         }
       }
       sessionByIds.remove(session.getId());
-      readonlySessionsList = sessionByIds.values().stream().toList();
+      readonlySessionsList = new ArrayList<>(sessionByIds.values());
       sessionCount = readonlySessionsList.size();
     }
+
+    emitEvent(ServerEvent.SESSION_WILL_BE_CLOSED, session);
   }
 
   @Override

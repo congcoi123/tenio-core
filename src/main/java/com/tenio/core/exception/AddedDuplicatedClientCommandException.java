@@ -42,7 +42,7 @@ public final class AddedDuplicatedClientCommandException extends RuntimeExceptio
    * @param commandHandler the available {@link AbstractClientCommandHandler} instance
    */
   public AddedDuplicatedClientCommandException(Short code,
-                                               AbstractClientCommandHandler commandHandler) {
+                                               AbstractClientCommandHandler<?> commandHandler) {
     super(
         String.format("Unable to add label {%d}, it already exists > {%s}",
             code, commandHandler.toString()));

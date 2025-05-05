@@ -142,6 +142,9 @@ public final class SessionImpl implements Session {
 
   @Override
   public void setAssociatedToPlayer(AssociatedState associatedState) {
+    if (Objects.isNull(associatedState)) {
+      throw new NullPointerException("Associated state cannot be null");
+    }
     if (this.associatedState != associatedState) {
       synchronized (this) {
         if (this.associatedState != associatedState) {
@@ -162,7 +165,7 @@ public final class SessionImpl implements Session {
 
   @Override
   public boolean isOrphan() {
-    return (!isAssociatedToPlayer(AssociatedState.DONE) &&
+    return (associatedState != AssociatedState.DONE &&
         (now() - createdTime) >= ORPHAN_ALLOWANCE_TIME_IN_MILLISECONDS);
   }
 
@@ -226,7 +229,7 @@ public final class SessionImpl implements Session {
       InetSocketAddress socketAddress =
           (InetSocketAddress) this.socketChannel.socket().getRemoteSocketAddress();
       InetAddress remoteAddress = socketAddress.getAddress();
-      clientAddress = remoteAddress.getHostAddress();
+      clientAddress = remoteAddress.isLoopbackAddress() ? "localhost" : remoteAddress.getHostAddress();
       clientPort = socketAddress.getPort();
     }
   }
@@ -471,55 +474,36 @@ public final class SessionImpl implements Session {
   @Override
   public void close(ConnectionDisconnectMode connectionDisconnectMode,
                     PlayerDisconnectMode playerDisconnectMode) throws IOException {
-    synchronized (this) {
-      if (!activated) {
-        return;
-      }
-      activated = false;
-    }
-    
-    inactivatedTime = now();
-
-    connectionFilter.removeAddress(clientAddress);
-
-    if (Objects.nonNull(packetQueue)) {
-      packetQueue.clear();
+    if (Objects.nonNull(socketChannel)) {
+      socketChannel.socket().close();
+      socketChannel.close();
     }
 
-    switch (transportType) {
-      case TCP:
-        if (Objects.nonNull(socketChannel)) {
-          var socket = socketChannel.socket();
-          if (Objects.nonNull(socket) && !socket.isClosed()) {
-            socket.shutdownInput();
-            socket.shutdownOutput();
-            socket.close();
-            socketChannel.close();
-          }
-        }
-        break;
-
-      case WEB_SOCKET:
-        if (Objects.nonNull(webSocketChannel)) {
-          webSocketChannel.close();
-        }
-        break;
-
-      default:
-        break;
+    if (Objects.nonNull(datagramChannel)) {
+      datagramChannel.close();
     }
 
-    sessionManager.emitEvent(ServerEvent.SESSION_WILL_BE_CLOSED, this,
-        connectionDisconnectMode, playerDisconnectMode);
+    if (Objects.nonNull(webSocketChannel)) {
+      webSocketChannel.close();
+    }
+
+    if (Objects.nonNull(kcpChannel)) {
+      kcpChannel.close();
+    }
+
+    if (Objects.nonNull(sessionManager)) {
+      sessionManager.emitEvent(ServerEvent.SESSION_WILL_BE_CLOSED, this, connectionDisconnectMode,
+          playerDisconnectMode);
+    }
   }
 
   private void setLastActivityTime(long timestamp) {
     lastActivityTime = timestamp;
   }
 
-  private void setAssociatedState(AssociatedState associatedState) {
-    this.associatedState = associatedState;
-    atomicAssociatedState.set(associatedState);
+  private void setAssociatedState(AssociatedState state) {
+    atomicAssociatedState.set(state);
+    associatedState = state;
   }
 
   private void createPacketSocketHandler() {

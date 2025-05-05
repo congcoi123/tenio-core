@@ -25,21 +25,72 @@ THE SOFTWARE.
 package com.tenio.core.exception;
 
 /**
- * When a declared event is in missing on defining its subscriber.
+ * Exception thrown when an event is declared but no subscribers are defined to handle it.
+ * This exception helps maintain the integrity of the event system by ensuring that all
+ * declared events have corresponding handlers.
+ * 
+ * <p>This exception typically occurs when:
+ * <ul>
+ * <li>An event is declared but no class implements its subscriber interface</li>
+ * <li>The subscriber class exists but is not properly registered</li>
+ * <li>The subscriber class is missing required annotations</li>
+ * <li>The subscriber interface is not properly implemented</li>
+ * </ul>
+ * 
+ * <p>To resolve this exception:
+ * <ul>
+ * <li>Implement the missing subscriber interfaces</li>
+ * <li>Register all event subscribers with the event system</li>
+ * <li>Ensure subscriber classes are properly annotated</li>
+ * <li>Verify subscriber method signatures match event requirements</li>
+ * </ul>
+ * 
+ * <p>Example scenario:
+ * <pre>
+ * // Event interface
+ * public interface PlayerJoinedEvent {
+ *     void onPlayerJoined(Player player);
+ * }
+ * 
+ * // Event declaration without subscriber
+ * public class GameEventManager {
+ *     public void firePlayerJoined(Player player) {
+ *         // Will throw NotDefinedSubscribersException
+ *         // because no class implements PlayerJoinedEvent
+ *     }
+ * }
+ * 
+ * // Fix by adding subscriber
+ * public class PlayerEventHandler implements PlayerJoinedEvent {
+ *     public void onPlayerJoined(Player player) {
+ *         // Handle player joined event
+ *     }
+ * }
+ * </pre>
  */
 public final class NotDefinedSubscribersException extends RuntimeException {
 
   private static final long serialVersionUID = 4569867192216119437L;
 
   /**
-   * Creates a new exception.
+   * Creates a new NotDefinedSubscribersException with details about the missing subscribers.
+   * The exception message includes a list of interfaces that need to be implemented to handle
+   * the declared events.
    *
-   * @param classes an array of {@link Class} that are missing in declaration
+   * @param classes array of {@link Class} objects representing the subscriber interfaces that
+   *                need to be implemented
    */
   public NotDefinedSubscribersException(Class<?>... classes) {
     super(getMessage(classes));
   }
 
+  /**
+   * Formats the exception message by listing all missing subscriber interfaces.
+   * The message is formatted as "Need to implement interfaces: interface1, interface2, ..."
+   *
+   * @param classes array of {@link Class} objects representing the missing subscriber interfaces
+   * @return formatted error message string
+   */
   private static String getMessage(Class<?>... classes) {
     var builder = new StringBuilder();
     builder.append("Need to implement interfaces: ");

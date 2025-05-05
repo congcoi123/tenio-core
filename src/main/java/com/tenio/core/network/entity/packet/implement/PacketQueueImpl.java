@@ -29,7 +29,7 @@ import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 
-import java.util.TreeSet;
+import java.util.LinkedList;
 
 /**
  * The implementation for packet queue.
@@ -38,7 +38,7 @@ import java.util.TreeSet;
  */
 public final class PacketQueueImpl implements PacketQueue {
 
-  private final TreeSet<Packet> queue;
+  private final LinkedList<Packet> queue;
   private volatile int size;
   private PacketQueuePolicy packetQueuePolicy;
   private int maxSize;
@@ -49,8 +49,9 @@ public final class PacketQueueImpl implements PacketQueue {
    * @see PacketImpl#compareTo(Packet)
    */
   private PacketQueueImpl() {
-    // Provide a comparator
-    queue = new TreeSet<>();
+    queue = new LinkedList<>();
+    // Set a reasonable default max size
+    maxSize = 100;
   }
 
   /**
@@ -66,7 +67,7 @@ public final class PacketQueueImpl implements PacketQueue {
   public Packet peek() {
     synchronized (queue) {
       if (!isEmpty()) {
-        return queue.last();
+        return queue.getFirst();
       }
     }
     return null;
@@ -76,7 +77,7 @@ public final class PacketQueueImpl implements PacketQueue {
   public Packet take() {
     synchronized (queue) {
       if (!isEmpty()) {
-        Packet packet = queue.pollLast();
+        Packet packet = queue.removeFirst();
         size = queue.size();
         return packet;
       }
@@ -120,9 +121,12 @@ public final class PacketQueueImpl implements PacketQueue {
       throw new PacketQueueFullException(queue.size());
     }
 
-    packetQueuePolicy.applyPolicy(this, packet);
+    if (packetQueuePolicy != null) {
+      packetQueuePolicy.applyPolicy(this, packet);
+    }
+    
     synchronized (queue) {
-      queue.add(packet);
+      queue.addLast(packet);
       size = queue.size();
     }
   }

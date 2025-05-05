@@ -93,6 +93,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   private DataType dataType;
   private long startedTime;
   private String serverName;
+  private boolean testMode = false;
 
   private ServerImpl() {
     eventManager = EventManager.newInstance();
@@ -120,6 +121,22 @@ public final class ServerImpl extends SystemLogger implements Server {
 
   @Override
   public void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception {
+    if (Objects.isNull(bootstrapHandler)) {
+      if (isTestMode()) {
+        throw new IllegalArgumentException("Bootstrap handler cannot be null");
+      } else {
+        System.exit(1);
+      }
+    }
+
+    if (Objects.isNull(params)) {
+      if (isTestMode()) {
+        throw new IllegalArgumentException("Parameters cannot be null");
+      } else {
+        System.exit(1);
+      }
+    }
+
     // record the started time
     startedTime = TimeUtility.currentTimeMillis();
 
@@ -478,5 +495,26 @@ public final class ServerImpl extends SystemLogger implements Server {
   @Override
   public void write(Response response, boolean markedAsLast) {
     networkService.write(response, markedAsLast);
+  }
+
+  /**
+   * Sets the test mode flag. When in test mode, System.exit() calls are replaced with exceptions.
+   * This method should only be used for testing purposes.
+   *
+   * @param enabled true to enable test mode, false to disable
+   */
+  @Override
+  public void setTestMode(boolean enabled) {
+    testMode = enabled;
+  }
+
+  /**
+   * Returns whether the server is running in test mode.
+   *
+   * @return true if in test mode, false otherwise
+   */
+  @Override
+  public boolean isTestMode() {
+    return testMode;
   }
 }

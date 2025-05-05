@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.entity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -40,10 +41,11 @@ import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import com.tenio.core.exception.AddedDuplicatedRoomException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+@DisplayName("Unit Test Cases For Player And Room")
 class PlayerAndRoomTest {
 
   private EventManager eventManager;
@@ -73,24 +75,27 @@ class PlayerAndRoomTest {
   }
 
   @Test
+  @DisplayName("Add new player should return success")
   public void addNewPlayerShouldReturnSuccess() {
-    var player = DefaultPlayer.newInstance(testPlayerName);
+    Player player = DefaultPlayer.newInstance(testPlayerName);
     playerManager.addPlayer(player);
-    var result = playerManager.getPlayerByIdentity(testPlayerName);
+    Player result = playerManager.getPlayerByIdentity(testPlayerName);
 
     assertEquals(player, result);
   }
 
   @Test
+  @DisplayName("Add duplicated player should cause exception")
   public void addDuplicatedPlayerShouldCauseException() {
     assertThrows(AddedDuplicatedPlayerException.class, () -> {
-      var player = DefaultPlayer.newInstance(testPlayerName);
+      Player player = DefaultPlayer.newInstance(testPlayerName);
       playerManager.addPlayer(player);
       playerManager.addPlayer(player);
     });
   }
 
   @Test
+  @DisplayName("Check contain player should return success")
   public void checkContainPlayerShouldReturnSuccess() {
     var player = DefaultPlayer.newInstance(testPlayerName);
     playerManager.addPlayer(player);
@@ -99,9 +104,10 @@ class PlayerAndRoomTest {
   }
 
   @Test
-  public void countPlayersShouldReturnTrueValue() {
+  @DisplayName("Get player count should return correct value")
+  public void getPlayerCountShouldReturnCorrectValue() {
     for (int i = 0; i < 10; i++) {
-      var player = DefaultPlayer.newInstance(testPlayerName + i);
+      Player player = DefaultPlayer.newInstance(testPlayerName + i);
       playerManager.addPlayer(player);
     }
 
@@ -109,24 +115,35 @@ class PlayerAndRoomTest {
   }
 
   @Test
+  @DisplayName("Remove player should return success")
   public void removePlayerShouldReturnSuccess() {
-    var player = DefaultPlayer.newInstance(testPlayerName);
+    Player player = DefaultPlayer.newInstance(testPlayerName);
     playerManager.addPlayer(player);
     playerManager.removePlayerByIdentity(testPlayerName);
 
-    assertEquals(0, playerManager.getPlayerCount());
+    assertNull(playerManager.getPlayerByIdentity(testPlayerName));
   }
 
   @Test
-  @Disabled
-  public void createNewRoomShouldReturnSuccess() {
-    var room = DefaultRoom.newInstance();
+  @DisplayName("Get player by identity should return correct player")
+  public void getPlayerByIdentityShouldReturnCorrectPlayer() {
+    Player player = DefaultPlayer.newInstance(testPlayerName);
+    playerManager.addPlayer(player);
+
+    assertEquals(player, playerManager.getPlayerByIdentity(testPlayerName));
+  }
+
+  @Test
+  @DisplayName("Create room should return success")
+  public void createRoomShouldReturnSuccess() {
+    Room room = DefaultRoom.newInstance();
     roomManager.addRoom(room);
 
-    assertTrue(roomManager.containsRoomId(0));
+    assertEquals(room, roomManager.getRoomById(room.getId()));
   }
 
   @Test
+  @DisplayName("Create duplicated room should cause exception")
   public void createDuplicatedRoomShouldCauseException() {
     assertThrows(AddedDuplicatedRoomException.class, () -> {
       var room = DefaultRoom.newInstance();

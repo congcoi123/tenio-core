@@ -40,7 +40,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -72,6 +71,9 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public void addRoom(Room room) {
+    if (room == null) {
+      throw new NullPointerException("Room cannot be null");
+    }
     if (containsRoomId(room.getId())) {
       throw new AddedDuplicatedRoomException(room);
     }
@@ -85,6 +87,16 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   @Override
   public void addRoomWithOwner(Room room, InitialRoomSetting roomSetting, Player player)
       throws AddedDuplicatedRoomException {
+    if (room == null) {
+      throw new NullPointerException("Room cannot be null");
+    }
+    if (roomSetting == null) {
+      throw new NullPointerException("Room setting cannot be null");
+    }
+    if (player == null) {
+      throw new NullPointerException("Owner cannot be null");
+    }
+
     int roomCount = getRoomCount();
     if (roomCount >= maxRooms) {
       throw new CreatedRoomException(
@@ -101,7 +113,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     room.setActivated(roomSetting.isActivated());
     room.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
     room.setOwner(player);
-    if (Objects.nonNull(roomSetting.getProperties())) {
+    if (roomSetting.getProperties() != null) {
       roomSetting.getProperties().forEach(room::setProperty);
     }
 
@@ -110,6 +122,13 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public Room createRoomWithOwner(InitialRoomSetting roomSetting, Player player) {
+    if (roomSetting == null) {
+      throw new NullPointerException("Room setting cannot be null");
+    }
+    if (player == null) {
+      throw new NullPointerException("Owner cannot be null");
+    }
+
     int roomCount = getRoomCount();
     if (roomCount >= maxRooms) {
       throw new CreatedRoomException(
@@ -127,7 +146,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     room.setActivated(roomSetting.isActivated());
     room.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
     room.setOwner(player);
-    if (Objects.nonNull(roomSetting.getProperties())) {
+    if (roomSetting.getProperties() != null) {
       roomSetting.getProperties().forEach(room::setProperty);
     }
 
@@ -178,16 +197,31 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public void changeRoomName(Room room, String roomName) {
+    if (room == null) {
+      throw new NullPointerException("Room cannot be null");
+    }
     room.setName(roomName);
   }
 
   @Override
   public void changeRoomPassword(Room room, String roomPassword) {
+    if (room == null) {
+      throw new NullPointerException("Room cannot be null");
+    }
     room.setPassword(roomPassword);
   }
 
   @Override
   public void changeRoomCapacity(Room room, int maxParticipants, int maxSpectators) {
+    if (room == null) {
+      throw new NullPointerException("Room cannot be null");
+    }
+    if (maxParticipants < 0) {
+      throw new IllegalArgumentException("Max participants cannot be negative");
+    }
+    if (maxSpectators < 0) {
+      throw new IllegalArgumentException("Max spectators cannot be negative");
+    }
     if (maxParticipants <= room.getParticipantCount()) {
       throw new IllegalArgumentException(String.format(
           "Unable to assign the new max participants number: %d, "
@@ -211,6 +245,16 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   @Override
   public void configureMaxRooms(int maxRooms) {
+    if (maxRooms < 0) {
+      throw new IllegalArgumentException("Max rooms cannot be negative");
+    }
     this.maxRooms = maxRooms;
+  }
+
+  @Override
+  public synchronized void clear() {
+    rooms.clear();
+    readOnlyRoomsList = new ArrayList<>();
+    roomCount = 0;
   }
 }

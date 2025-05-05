@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * An implemented class is for player management.
@@ -69,6 +68,10 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   @Override
   public void addPlayer(Player player) {
+    if (player == null) {
+      throw new NullPointerException("Unable to add a null player");
+    }
+
     if (containsPlayerIdentity(player.getIdentity())) {
       throw new AddedDuplicatedPlayerException(player);
     }
@@ -90,7 +93,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   @Override
   public Player createPlayerWithSession(String playerName, Session session) {
-    if (Objects.isNull(session)) {
+    if (session == null) {
       throw new NullPointerException("Unable to assign a null session for the player");
     }
 
@@ -102,7 +105,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
   @Override
   public void configureInitialPlayer(Player player) {
-    if (Objects.isNull(player)) {
+    if (player == null) {
       throw new NullPointerException("Unable to process an unavailable player");
     }
 

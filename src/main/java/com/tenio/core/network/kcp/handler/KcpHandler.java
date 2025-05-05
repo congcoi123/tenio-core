@@ -80,10 +80,10 @@ public class KcpHandler implements KcpListener {
 
   @Override
   public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
-    var binary = new byte[byteBuf.readableBytes()];
+    byte[] binary = new byte[byteBuf.readableBytes()];
     byteBuf.getBytes(byteBuf.readerIndex(), binary);
 
-    var message = DataUtility.binaryToCollection(dataType, binary);
+    DataCollection message = DataUtility.binaryToCollection(dataType, binary);
     Session session = sessionManager.getSessionByKcp(ukcp);
 
     if (Objects.isNull(session)) {
@@ -104,7 +104,7 @@ public class KcpHandler implements KcpListener {
 
   @Override
   public void handleException(Throwable cause, Ukcp ukcp) {
-    var session = sessionManager.getSessionByKcp(ukcp);
+    Session session = sessionManager.getSessionByKcp(ukcp);
     if (Objects.nonNull(session)) {
       if (logger.isErrorEnabled()) {
         logger.error(cause, "Session: ", session.toString());
@@ -122,7 +122,7 @@ public class KcpHandler implements KcpListener {
     if (logger.isDebugEnabled()) {
       logger.debug("KCP CHANNEL CLOSED", ukcp);
     }
-    var session = sessionManager.getSessionByKcp(ukcp);
+    Session session = sessionManager.getSessionByKcp(ukcp);
     if (Objects.nonNull(session) && session.containsKcp()) {
       session.setKcpChannel(null);
     }
@@ -166,7 +166,7 @@ public class KcpHandler implements KcpListener {
               optionalPlayer,
               AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
         } else {
-          var sessionInstance = ((Player) optionalPlayer.get()).getSession().get();
+          Session sessionInstance = ((Player) optionalPlayer.get()).getSession().get();
           sessionManager.addKcpForSession(ukcp, sessionInstance);
 
           eventManager.emit(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT,

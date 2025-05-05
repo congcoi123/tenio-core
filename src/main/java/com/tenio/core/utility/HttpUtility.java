@@ -31,6 +31,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.Objects;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
@@ -61,7 +62,7 @@ public enum HttpUtility {
    * {@code false} otherwise
    */
   public boolean hasHeaderKey(HttpServletRequest request, String key) {
-    var headerNames = request.getHeaderNames();
+    Enumeration<String> headerNames = request.getHeaderNames();
     if (Objects.nonNull(headerNames)) {
       while (headerNames.hasMoreElements()) {
         if (headerNames.nextElement().equals(key)) {
@@ -79,10 +80,10 @@ public enum HttpUtility {
    * @return a {@link JSONObject} taken from the request
    */
   public JSONObject getBodyJson(HttpServletRequest request) {
-    var body = "{}";
+    String body = "{}";
     if (request.getMethod().equals("POST") || request.getMethod().equals("PUT")
         || request.getMethod().equals("DELETE")) {
-      var builder = new StringBuilder();
+      StringBuilder builder = new StringBuilder();
       BufferedReader bufferedReader = null;
 
       try {
@@ -121,10 +122,10 @@ public enum HttpUtility {
    * @return a JSON {@link String} contains the body content
    */
   public String getBodyText(HttpServletRequest request) {
-    var body = "";
+    String body = "";
     if (request.getMethod().equals("POST") || request.getMethod().equals("PUT")
         || request.getMethod().equals("DELETE")) {
-      var builder = new StringBuilder();
+      StringBuilder builder = new StringBuilder();
       BufferedReader bufferedReader = null;
 
       try {

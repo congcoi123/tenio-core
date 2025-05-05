@@ -40,7 +40,6 @@ public final class PacketQueueFullException extends RuntimeException {
    * @see PacketQueue
    */
   public PacketQueueFullException(int currentSize) {
-    super(String.format("Reached max queue size, the packet was dropped. The current size: %d",
-        currentSize));
+    super(String.format("The packet queue is full, size: %d", currentSize));
   }
 }

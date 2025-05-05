@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.protocol.implement;
 
+import com.tenio.common.data.DataType;
 import com.tenio.core.entity.Player;
 import com.tenio.core.network.define.ResponsePriority;
 import com.tenio.core.network.entity.protocol.Response;
@@ -52,18 +53,20 @@ public final class ResponseImpl implements Response {
   private boolean isPrioritizedUdp;
   private boolean isPrioritizedKcp;
   private boolean isEncrypted;
+  private DataType contentType;
 
   private ResponseImpl() {
     players = null;
-    socketSessions = null;
-    datagramSessions = null;
-    kcpSessions = null;
-    webSocketSessions = null;
-    nonSessionPlayers = null;
+    socketSessions = new ArrayList<>();
+    datagramSessions = new ArrayList<>();
+    kcpSessions = new ArrayList<>();
+    webSocketSessions = new ArrayList<>();
+    nonSessionPlayers = new ArrayList<>();
     priority = ResponsePriority.NORMAL;
     isPrioritizedUdp = false;
     isPrioritizedKcp = false;
     isEncrypted = false;
+    contentType = DataType.MSG_PACK;
   }
 
   /**
@@ -83,7 +86,6 @@ public final class ResponseImpl implements Response {
   @Override
   public Response setContent(byte[] content) {
     this.content = content;
-
     return this;
   }
 
@@ -119,46 +121,48 @@ public final class ResponseImpl implements Response {
 
   @Override
   public Response setRecipientPlayers(Collection<Player> players) {
-    if (Objects.isNull(this.players)) {
-      this.players = players;
-    } else {
-      this.players.addAll(players);
-    }
-
+    this.players = players;
     return this;
   }
 
   @Override
   public Response setRecipientPlayer(Player player) {
-    if (Objects.isNull(players)) {
-      players = new ArrayList<>();
+    if (Objects.nonNull(player)) {
+      if (Objects.isNull(players)) {
+        players = new ArrayList<>();
+      }
+      players.add(player);
     }
-    players.add(player);
-
     return this;
   }
 
   @Override
   public Response setRecipientSessions(Collection<Session> sessions) {
-    sessions.forEach(this::checksAndAddsSession);
+    if (Objects.nonNull(sessions)) {
+      sessions.forEach(this::checksAndAddsSession);
+    }
     return this;
   }
 
   @Override
   public Response setRecipientSession(Session session) {
-    checksAndAddsSession(session);
+    if (Objects.nonNull(session)) {
+      checksAndAddsSession(session);
+    }
     return this;
   }
 
   @Override
   public Response prioritizedUdp() {
     isPrioritizedUdp = true;
+    isPrioritizedKcp = false;
     return this;
   }
 
   @Override
   public Response prioritizedKcp() {
     isPrioritizedKcp = true;
+    isPrioritizedUdp = false;
     return this;
   }
 
@@ -196,7 +200,7 @@ public final class ResponseImpl implements Response {
       TimeUnit.MILLISECONDS.sleep(delayInMilliseconds);
       write();
     } catch (InterruptedException exception) {
-      exception.printStackTrace();
+      Thread.currentThread().interrupt();
     }
   }
 
@@ -207,51 +211,36 @@ public final class ResponseImpl implements Response {
   }
 
   private void constructRecipientPlayers() {
-    if (Objects.isNull(players) || players.isEmpty()) {
+    if (Objects.isNull(players)) {
       return;
     }
 
-    // if UDP is set to the highest priority in use but the session type is WebSocket, then use the
-    // WebSocket channel instead
     players.forEach(player -> {
-      if (player.containsSession()) {
-        var session = player.getSession();
-        session.ifPresent(this::checksAndAddsSession);
-      } else {
-        if (Objects.isNull(nonSessionPlayers)) {
-          nonSessionPlayers = new ArrayList<>();
+      if (Objects.nonNull(player)) {
+        if (player.containsSession()) {
+          var session = player.getSession();
+          session.ifPresent(this::checksAndAddsSession);
+        } else {
+          nonSessionPlayers.add(player);
         }
-        nonSessionPlayers.add(player);
       }
     });
   }
 
   private void checksAndAddsSession(Session session) {
+    if (Objects.isNull(session)) {
+      return;
+    }
+
     if (session.isTcp()) {
-      // when the session contains a UDP connection and the response requires it, add its session
-      // to the list: UDP > KCP > Socket
       if (isPrioritizedUdp && session.containsUdp()) {
-        if (Objects.isNull(datagramSessions)) {
-          datagramSessions = new ArrayList<>();
-        }
         datagramSessions.add(session);
+      } else if (isPrioritizedKcp && session.containsKcp()) {
+        kcpSessions.add(session);
       } else {
-        if (isPrioritizedKcp && session.containsKcp()) {
-          if (Objects.isNull(kcpSessions)) {
-            kcpSessions = new ArrayList<>();
-          }
-          kcpSessions.add(session);
-        } else {
-          if (Objects.isNull(socketSessions)) {
-            socketSessions = new ArrayList<>();
-          }
-          socketSessions.add(session);
-        }
+        socketSessions.add(session);
       }
     } else if (session.isWebSocket()) {
-      if (Objects.isNull(webSocketSessions)) {
-        webSocketSessions = new ArrayList<>();
-      }
       webSocketSessions.add(session);
     }
   }
@@ -268,6 +257,7 @@ public final class ResponseImpl implements Response {
         ", webSocketSessions=" + webSocketSessions +
         ", priority=" + priority +
         ", isPrioritizedUdp=" + isPrioritizedUdp +
+        ", isPrioritizedKcp=" + isPrioritizedKcp +
         ", isEncrypted=" + isEncrypted +
         '}';
   }

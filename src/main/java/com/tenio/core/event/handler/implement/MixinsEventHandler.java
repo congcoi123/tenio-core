@@ -68,42 +68,42 @@ public final class MixinsEventHandler {
    */
   public void initialize(EventManager eventManager) {
 
-    final var eventServerInitializationOp =
+    final Optional<EventServerInitialization> eventServerInitializationOp =
         Optional.ofNullable(eventServerInitialization);
-    final var eventServerExceptionOp =
+    final Optional<EventServerException> eventServerExceptionOp =
         Optional.ofNullable(eventServerException);
-    final var eventServerTeardownOp =
+    final Optional<EventServerTeardown> eventServerTeardownOp =
         Optional.ofNullable(eventServerTeardown);
 
-    final var eventFetchedBandwidthInfoOp =
+    final Optional<EventFetchedBandwidthInfo> eventFetchedBandwidthInfoOp =
         Optional.ofNullable(eventFetchedBandwidthInfo);
-    final var eventFetchedCcuInfoOp =
+    final Optional<EventFetchedCcuInfo> eventFetchedCcuInfoOp =
         Optional.ofNullable(eventFetchedCcuInfo);
-    final var eventSystemMonitoringOp =
+    final Optional<EventSystemMonitoring> eventSystemMonitoringOp =
         Optional.ofNullable(eventSystemMonitoring);
 
     eventServerInitializationOp.ifPresent(
         event -> eventManager.on(ServerEvent.SERVER_INITIALIZATION, params -> {
-          var serverName = (String) params[0];
-          var configuration = (Configuration) params[1];
+          String serverName = (String) params[0];
+          Configuration configuration = (Configuration) params[1];
 
           event.handle(serverName, configuration);
 
           return null;
         }));
 
-    eventServerExceptionOp.ifPresent(event -> eventManager.on(ServerEvent.SERVER_EXCEPTION,
-        params -> {
-          var throwable = (Throwable) params[0];
+    eventServerExceptionOp.ifPresent(
+        event -> eventManager.on(ServerEvent.SERVER_EXCEPTION, params -> {
+          Throwable throwable = (Throwable) params[0];
 
           event.handle(throwable);
 
           return null;
         }));
 
-    eventServerTeardownOp.ifPresent(event -> eventManager.on(ServerEvent.SERVER_TEARDOWN,
-        params -> {
-          var serverName = (String) params[0];
+    eventServerTeardownOp.ifPresent(
+        event -> eventManager.on(ServerEvent.SERVER_TEARDOWN, params -> {
+          String serverName = (String) params[0];
 
           event.handle(serverName);
 
