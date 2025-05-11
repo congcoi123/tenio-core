@@ -82,7 +82,13 @@ public interface WriterHandler {
    *
    * @return an instance of {@link ByteBuffer}
    */
-  ByteBuffer acquireBuffer(int bufferSize);
+  ByteBuffer getBuffer();
 
-  void releaseBuffer(ByteBuffer byteBuffer);
+  /**
+   * Allocates a byte buffer capacity.
+   *
+   * @param capacity the capacity of a byte buffer ({@code integer} value)
+   * @see ByteBuffer
+   */
+  void allocateBuffer(int capacity);
 }

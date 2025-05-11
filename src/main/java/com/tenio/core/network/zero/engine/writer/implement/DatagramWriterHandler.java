@@ -27,9 +27,7 @@ package com.tenio.core.network.zero.engine.writer.implement;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.support.ByteBufferPool;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
@@ -38,7 +36,6 @@ import java.util.Objects;
 public final class DatagramWriterHandler extends AbstractWriterHandler {
 
   private DatagramWriterHandler() {
-    super(new ByteBufferPool());
   }
 
   /**
@@ -78,30 +75,35 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
       return;
     }
 
+    // clear the buffer first
+    getBuffer().clear();
+
     // send data to the client
     try {
-      // fetch ByteBuffer from pool
-      ByteBuffer byteBuffer = acquireBuffer(sendingData.length);
+      // buffer size is not enough, need to be allocated more bytes
+      if (getBuffer().capacity() < sendingData.length) {
+        if (isDebugEnabled()) {
+          debug("DATAGRAM CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(),
+              " to ", sendingData.length, " bytes");
+        }
+        allocateBuffer(sendingData.length);
+      }
 
       // put data to buffer
-      byteBuffer.put(sendingData);
+      getBuffer().put(sendingData);
 
       // ready to send
-      byteBuffer.flip();
+      getBuffer().flip();
 
-      // send
-      int writtenBytes = datagramChannel.send(byteBuffer, remoteSocketAddress);
+      int writtenBytes = datagramChannel.send(getBuffer(), remoteSocketAddress);
 
-      // release the buffer
-      releaseBuffer(byteBuffer);
-
-      /*
-      if (writtenBytes == 0) {
-        if (isErrorEnabled()) {
-          error("{DATAGRAM CHANNEL SEND} ", "Channel writes 0 byte in session: ", session);
+        /*
+        if (writtenBytes == 0) {
+          if (isErrorEnabled()) {
+            error("{DATAGRAM CHANNEL SEND} ", "Channel writes 0 byte in session: ", session);
+          }
         }
-      }
-      */
+        */
 
       // update statistic data
       getNetworkWriterStatistic().updateWrittenBytes(writtenBytes);

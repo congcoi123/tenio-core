@@ -34,7 +34,6 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
-import com.tenio.core.network.support.ByteBufferPool;
 import com.tenio.core.network.zero.engine.ZeroReader;
 import com.tenio.core.network.zero.engine.listener.ZeroAcceptorListener;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
@@ -61,7 +60,6 @@ import javassist.NotFoundException;
 public final class ZeroReaderImpl extends AbstractZeroEngine
     implements ZeroReader, ZeroReaderListener {
 
-  private final ByteBufferPool byteBufferPool;
   private DataType dataType;
   private ZeroAcceptorListener zeroAcceptorListener;
   private ZeroWriterListener zeroWriterListener;
@@ -71,7 +69,6 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   private ZeroReaderImpl(EventManager eventManager) {
     super(eventManager);
     setName("reader");
-    byteBufferPool = new ByteBufferPool();
   }
 
   /**
@@ -92,12 +89,12 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     }
   }
 
-  private void readableLoop() {
+  private void readableLoop(ByteBuffer readerBuffer) {
     zeroAcceptorListener.handleAcceptableChannels();
-    readIncomingSocketData();
+    readIncomingSocketData(readerBuffer);
   }
 
-  private void readIncomingSocketData() {
+  private void readIncomingSocketData(ByteBuffer readerBuffer) {
     try {
       // blocks until at least one channel is ready for the events you registered for
       int countReadyKeys = readableSelector.select(1);
@@ -123,9 +120,9 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
             // we already registered 2 types of channels for this selector and need to
             // separate the processes
             if (channel instanceof SocketChannel socketChannel) {
-              readTcpData(socketChannel, selectionKey);
+              readTcpData(socketChannel, selectionKey, readerBuffer);
             } else if (channel instanceof DatagramChannel datagramChannel) {
-              readUpdData(datagramChannel, selectionKey);
+              readUpdData(datagramChannel, selectionKey, readerBuffer);
             }
           }
         }
@@ -149,7 +146,8 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     }
   }
 
-  private void readTcpData(SocketChannel socketChannel, SelectionKey selectionKey) {
+  private void readTcpData(SocketChannel socketChannel, SelectionKey selectionKey,
+                           ByteBuffer readerBuffer) {
     // retrieves session by its socket channel
     var session = getSessionManager().getSessionBySocket(socketChannel);
 
@@ -178,15 +176,15 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     }
 
     if (selectionKey.isValid() && selectionKey.isReadable()) {
-      // fetch ByteBuffer from pool
-      ByteBuffer byteBuffer = byteBufferPool.acquire();
+      // prepares the buffer first
+      readerBuffer.clear();
       // reads data from socket and write them to buffer
       int byteCount = -1;
       try {
         // this isConnected() method can only work if the server side decides to close the socket
         // there is no way to know if the connection is closed on the client side
         if (socketChannel.isConnected()) {
-          byteCount = socketChannel.read(byteBuffer);
+          byteCount = socketChannel.read(readerBuffer);
         }
       } catch (IOException exception) {
         // so I guess we can ignore this kind of exception or wait until we have proper solutions
@@ -206,13 +204,10 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         session.addReadBytes(byteCount);
         networkReaderStatistic.updateReadBytes(byteCount);
         // ready to read data from buffer
-        byteBuffer.flip();
+        readerBuffer.flip();
         // reads data from buffer and transfers them to the next process
-        byte[] binary = new byte[byteBuffer.limit()];
-        byteBuffer.get(binary);
-
-        // release the buffer
-        byteBufferPool.release(byteBuffer);
+        byte[] binary = new byte[readerBuffer.limit()];
+        readerBuffer.get(binary);
 
         getSocketIoHandler().sessionRead(session, binary);
       }
@@ -235,16 +230,17 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     }
   }
 
-  private void readUpdData(DatagramChannel datagramChannel, SelectionKey selectionKey) {
+  private void readUpdData(DatagramChannel datagramChannel, SelectionKey selectionKey,
+                           ByteBuffer readerBuffer) {
     Session session = null;
 
     if (selectionKey.isValid() && selectionKey.isReadable()) {
-      // fetch ByteBuffer from pool
-      ByteBuffer byteBuffer = byteBufferPool.acquire();
+      // prepares the buffer first
+      readerBuffer.clear();
       // reads data from socket and write them to buffer
       SocketAddress remoteAddress;
       try {
-        remoteAddress = datagramChannel.receive(byteBuffer);
+        remoteAddress = datagramChannel.receive(readerBuffer);
       } catch (IOException exception) {
         if (isErrorEnabled()) {
           error(exception, "An exception was occurred on channel: ", datagramChannel.toString());
@@ -264,18 +260,15 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         return;
       }
 
-      int byteCount = byteBuffer.position();
+      int byteCount = readerBuffer.position();
 
       // update statistic data
       networkReaderStatistic.updateReadBytes(byteCount);
       // ready to read data from buffer
-      byteBuffer.flip();
+      readerBuffer.flip();
       // reads data from buffer and transfers them to the next process
-      byte[] binary = new byte[byteBuffer.limit()];
-      byteBuffer.get(binary);
-
-      // release the buffer
-      byteBufferPool.release(byteBuffer);
+      byte[] binary = new byte[readerBuffer.limit()];
+      readerBuffer.get(binary);
 
       // convert binary to dataCollection object
       var dataCollection = DataUtility.binaryToCollection(dataType, binary);
@@ -381,10 +374,12 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
   @Override
   public void onRunning() {
+    ByteBuffer readerBuffer = ByteBuffer.allocateDirect(getMaxBufferSize());
+
     while (true) {
       if (isActivated()) {
         try {
-          readableLoop();
+          readableLoop(readerBuffer);
         } catch (Throwable cause) {
           if (isErrorEnabled()) {
             error(cause);
