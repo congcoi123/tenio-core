@@ -54,12 +54,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.concurrent.ThreadSafe;
 import org.reflections.Reflections;
@@ -110,10 +110,10 @@ public final class Injector extends SystemLogger {
       throw new ExceptionInInitializerError("Could not re-create the class instance");
     }
 
-    classesMap = new ConcurrentHashMap<>();
-    manualClassesSet = ConcurrentHashMap.newKeySet();
-    classBeansMap = new ConcurrentHashMap<>();
-    servletBeansMap = new ConcurrentHashMap<>();
+    classesMap = new HashMap<>();
+    manualClassesSet = new HashSet<>();
+    classBeansMap = new HashMap<>();
+    servletBeansMap = new HashMap<>();
     systemCommandManager = new SystemCommandManager();
     clientCommandManager = new ClientCommandManager();
   }
