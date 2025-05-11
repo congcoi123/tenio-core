@@ -51,7 +51,6 @@ import com.tenio.core.network.zero.ZeroSocketServiceImpl;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import jakarta.servlet.http.HttpServlet;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -194,12 +193,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void setConnectionFilterClass(Class<? extends ConnectionFilter> clazz,
-                                       int maxConnectionsPerIp)
-      throws InstantiationException, IllegalAccessException, IllegalArgumentException,
-      InvocationTargetException,
-      NoSuchMethodException, SecurityException {
-    var connectionFilter = clazz.getDeclaredConstructor().newInstance();
+  public void setConnectionFilterClass(ConnectionFilter connectionFilter, int maxConnectionsPerIp) {
     connectionFilter.configureMaxConnectionsPerIp(maxConnectionsPerIp);
 
     webSocketService.setConnectionFilter(connectionFilter);
@@ -294,11 +288,8 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void setPacketQueuePolicy(Class<? extends PacketQueuePolicy> clazz)
-      throws InstantiationException, IllegalAccessException, IllegalArgumentException,
-      InvocationTargetException,
-      NoSuchMethodException, SecurityException {
-    sessionManager.configurePacketQueuePolicy(clazz);
+  public void setPacketQueuePolicy(PacketQueuePolicy packetQueuePolicy) {
+    sessionManager.configurePacketQueuePolicy(packetQueuePolicy);
   }
 
   @Override

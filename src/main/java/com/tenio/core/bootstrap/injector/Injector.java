@@ -75,7 +75,7 @@ public final class Injector extends SystemLogger {
   private static final Injector instance = new Injector();
 
   /**
-   * A map contains keys are interfaces and values hold keys' implemented classes.
+   * A map contains values are interfaces and keys are implemented classes.
    *
    * <p>This map is protected by the class instance to ensure thread-safe.
    */
@@ -413,6 +413,24 @@ public final class Injector extends SystemLogger {
     return optional.map(
             classClassEntry -> (T) classBeansMap.get(new BeanClass(classClassEntry.getKey(), "")))
         .orElse(null);
+  }
+
+  /**
+   * Retrieves a map contains values are interfaces and keys are implemented classes.
+   *
+   * @return a {@link Map} of classes
+   */
+  public Map<Class<?>, Class<?>> getClassesMap() {
+    return classesMap;
+  }
+
+  /**
+   * Retrieves all beans.
+   *
+   * @return a {@link Map} of generated beans
+   */
+  public Map<BeanClass, Object> getClassBeansMap() {
+    return classBeansMap;
   }
 
   /**
