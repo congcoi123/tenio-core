@@ -27,7 +27,9 @@ package com.tenio.core.network.zero.engine.writer.implement;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.network.support.DirectByteBufferPool;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
@@ -36,6 +38,7 @@ import java.util.Objects;
 public final class DatagramWriterHandler extends AbstractWriterHandler {
 
   private DatagramWriterHandler() {
+    super(new DirectByteBufferPool());
   }
 
   /**
@@ -75,35 +78,30 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
       return;
     }
 
-    // clear the buffer first
-    getBuffer().clear();
-
     // send data to the client
     try {
-      // buffer size is not enough, need to be allocated more bytes
-      if (getBuffer().capacity() < sendingData.length) {
-        if (isDebugEnabled()) {
-          debug("DATAGRAM CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(),
-              " to ", sendingData.length, " bytes");
-        }
-        allocateBuffer(sendingData.length);
-      }
+      // fetch ByteBuffer from pool
+      ByteBuffer byteBuffer = acquireBuffer(sendingData.length);
 
       // put data to buffer
-      getBuffer().put(sendingData);
+      byteBuffer.put(sendingData);
 
       // ready to send
-      getBuffer().flip();
+      byteBuffer.flip();
 
-      int writtenBytes = datagramChannel.send(getBuffer(), remoteSocketAddress);
+      // send
+      int writtenBytes = datagramChannel.send(byteBuffer, remoteSocketAddress);
 
-        /*
-        if (writtenBytes == 0) {
-          if (isErrorEnabled()) {
-            error("{DATAGRAM CHANNEL SEND} ", "Channel writes 0 byte in session: ", session);
-          }
+      // release the buffer
+      releaseBuffer(byteBuffer);
+
+      /*
+      if (writtenBytes == 0) {
+        if (isErrorEnabled()) {
+          error("{DATAGRAM CHANNEL SEND} ", "Channel writes 0 byte in session: ", session);
         }
-        */
+      }
+      */
 
       // update statistic data
       getNetworkWriterStatistic().updateWrittenBytes(writtenBytes);

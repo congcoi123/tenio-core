@@ -29,7 +29,9 @@ import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.network.support.DirectByteBufferPool;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.util.Objects;
 
@@ -39,6 +41,7 @@ import java.util.Objects;
 public final class SocketWriterHandler extends AbstractWriterHandler {
 
   private SocketWriterHandler() {
+    super(new DirectByteBufferPool());
   }
 
   /**
@@ -64,33 +67,24 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
       return;
     }
 
-    // clear the buffer first
-    getBuffer().clear();
-
     // set priority for packet left unsent data (fragment)
     byte[] sendingData = packet.isFragmented() ? packet.getFragmentBuffer() : packet.getData();
 
-    // buffer size is not enough, need to be allocated more bytes
-    if (getBuffer().capacity() < sendingData.length) {
-      if (isDebugEnabled()) {
-        debug("SOCKET CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(), " to ",
-            sendingData.length, " bytes");
-      }
-      allocateBuffer(sendingData.length);
-    }
+    // fetch ByteBuffer from pool
+    ByteBuffer byteBuffer = acquireBuffer(sendingData.length);
 
     // start to read data to buffer
-    getBuffer().put(sendingData);
+    byteBuffer.put(sendingData);
 
     // ready to write on socket
-    getBuffer().flip();
+    byteBuffer.flip();
 
     // expect to write all data in buffer
-    int expectedWritingBytes = getBuffer().remaining();
+    int expectedWritingBytes = byteBuffer.remaining();
 
     // but it's up to the channel, so it's possible to get left unsent bytes
     try {
-      int realWrittenBytes = channel.write(getBuffer());
+      int realWrittenBytes = channel.write(byteBuffer);
 
       /*
       if (realWrittenBytes == 0) {
@@ -109,14 +103,20 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
       // the left unwritten bytes should be remained to the queue for next process
       if (realWrittenBytes < expectedWritingBytes) {
         // create new bytes array to hold the left unsent bytes
-        byte[] leftUnwrittenBytes = new byte[getBuffer().remaining()];
+        byte[] leftUnwrittenBytes = new byte[byteBuffer.remaining()];
 
         // get bytes array value from buffer
-        getBuffer().get(leftUnwrittenBytes);
+        byteBuffer.get(leftUnwrittenBytes);
+
+        // release the buffer
+        releaseBuffer(byteBuffer);
 
         // save those bytes to the packet for next manipulation
         packet.setFragmentBuffer(leftUnwrittenBytes);
       } else {
+        // it's safe to release the buffer
+        releaseBuffer(byteBuffer);
+
         // update the statistic data
         getNetworkWriterStatistic().updateWrittenPackets(1);
 
