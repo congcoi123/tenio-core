@@ -29,7 +29,7 @@ import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.support.DirectByteBufferPool;
+import com.tenio.core.network.support.ByteBufferPool;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -41,7 +41,7 @@ import java.util.Objects;
 public final class SocketWriterHandler extends AbstractWriterHandler {
 
   private SocketWriterHandler() {
-    super(new DirectByteBufferPool());
+    super(new ByteBufferPool());
   }
 
   /**
