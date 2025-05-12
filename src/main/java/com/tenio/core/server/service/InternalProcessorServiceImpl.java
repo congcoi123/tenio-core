@@ -134,8 +134,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     });
 
     eventManager.on(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME, params -> {
-      var request =
-          DatagramRequestImpl.newInstance()
+      var request = DatagramRequestImpl.newInstance()
               .setEvent(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME);
       request.setSender(params[0]);
       request.setRemoteSocketAddress((SocketAddress) params[1]);
@@ -326,21 +325,21 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
     if (optionalPlayer.isEmpty()) {
       eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-          optionalPlayer,
+          null,
           Session.EMPTY_DATAGRAM_CONVEY_ID,
           AccessDatagramChannelResult.PLAYER_NOT_FOUND);
     } else {
       Player player = (Player) optionalPlayer.get();
       if (!player.containsSession() || player.getSession().isEmpty()) {
         eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-            optionalPlayer,
+            player,
             Session.EMPTY_DATAGRAM_CONVEY_ID,
             AccessDatagramChannelResult.SESSION_NOT_FOUND);
       } else {
         Session session = player.getSession().get();
         if (!session.isTcp()) {
           eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-              optionalPlayer,
+              player,
               Session.EMPTY_DATAGRAM_CONVEY_ID,
               AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
         } else {
@@ -352,7 +351,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
           sessionManager.addDatagramForSession(datagramChannel, udpConvey, sessionInstance);
 
           eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-              optionalPlayer,
+              player,
               udpConvey,
               AccessDatagramChannelResult.SUCCESS);
         }
