@@ -112,7 +112,7 @@ class ServerApiTest {
     Mockito.when(playerManager.createPlayer(loginName)).thenReturn(loginPlayer);
     serverApi.login(loginName);
     Mockito.verify(eventManager, Mockito.times(1))
-        .emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, loginPlayer,
+        .emit(ServerEvent.PLAYER_LOGIN_RESULT, loginPlayer,
             PlayerLoggedInResult.SUCCESS);
   }
 
@@ -128,7 +128,7 @@ class ServerApiTest {
         .when(playerManager).createPlayer(loginName);
     serverApi.login(loginName);
     Mockito.verify(eventManager, Mockito.times(1))
-        .emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, loginPlayer,
+        .emit(ServerEvent.PLAYER_LOGIN_RESULT, loginPlayer,
             PlayerLoggedInResult.DUPLICATED_PLAYER);
   }
 
@@ -145,7 +145,7 @@ class ServerApiTest {
         .thenReturn(loginPlayer);
     serverApi.login(loginName, loginSession);
     Mockito.verify(eventManager, Mockito.times(1))
-        .emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, loginPlayer,
+        .emit(ServerEvent.PLAYER_LOGIN_RESULT, loginPlayer,
             PlayerLoggedInResult.SUCCESS);
   }
 
@@ -162,7 +162,7 @@ class ServerApiTest {
         .when(playerManager).createPlayerWithSession(loginName, loginSession);
     serverApi.login(loginName, loginSession);
     Mockito.verify(eventManager, Mockito.times(1))
-        .emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, null,
+        .emit(ServerEvent.PLAYER_LOGIN_RESULT, null,
             PlayerLoggedInResult.EXCEPTION);
   }
 
@@ -179,7 +179,7 @@ class ServerApiTest {
         .when(playerManager).createPlayerWithSession(loginName, loginSession);
     serverApi.login(loginName, loginSession);
     Mockito.verify(eventManager, Mockito.times(1))
-        .emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, loginPlayer,
+        .emit(ServerEvent.PLAYER_LOGIN_RESULT, loginPlayer,
             PlayerLoggedInResult.DUPLICATED_PLAYER);
   }
 

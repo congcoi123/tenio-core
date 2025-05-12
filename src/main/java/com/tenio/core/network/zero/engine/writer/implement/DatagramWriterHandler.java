@@ -97,14 +97,6 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
 
       int writtenBytes = datagramChannel.send(getBuffer(), remoteSocketAddress);
 
-        /*
-        if (writtenBytes == 0) {
-          if (isErrorEnabled()) {
-            error("{DATAGRAM CHANNEL SEND} ", "Channel writes 0 byte in session: ", session);
-          }
-        }
-        */
-
       // update statistic data
       getNetworkWriterStatistic().updateWrittenBytes(writtenBytes);
       getNetworkWriterStatistic().updateWrittenPackets(1);

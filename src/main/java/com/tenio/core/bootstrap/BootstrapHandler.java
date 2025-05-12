@@ -47,14 +47,10 @@ public final class BootstrapHandler {
   private EventHandler eventHandler;
 
   @Autowired
-  private SystemCommandManager systemCommandManager;
-
-  @Autowired
-  private ClientCommandManager clientCommandManager;
-
-  @Autowired
   private ConfigurationHandler configurationHandler;
 
+  private SystemCommandManager systemCommandManager;
+  private ClientCommandManager clientCommandManager;
   private Map<Class<?>, Class<?>> reversedClassesMap;
   private Map<BeanClass, Object> classBeansMap;
   private Map<String, HttpServlet> servletMap;
@@ -79,6 +75,15 @@ public final class BootstrapHandler {
   }
 
   /**
+   * Sets the system command manager.
+   *
+   * @param systemCommandManager an instance of {@link SystemCommandManager}
+   */
+  public void setSystemCommandManager(SystemCommandManager systemCommandManager) {
+    this.systemCommandManager = systemCommandManager;
+  }
+
+  /**
    * Retrieves a client commands' manager.
    *
    * @return the {@link ClientCommandManager} instance
@@ -86,6 +91,15 @@ public final class BootstrapHandler {
    */
   public ClientCommandManager getClientCommandManager() {
     return clientCommandManager;
+  }
+
+  /**
+   * Sets the client command manager.
+   *
+   * @param clientCommandManager an instance of {@link ClientCommandManager}
+   */
+  public void setClientCommandManager(ClientCommandManager clientCommandManager) {
+    this.clientCommandManager = clientCommandManager;
   }
 
   /**
@@ -98,12 +112,12 @@ public final class BootstrapHandler {
   }
 
   /**
-   * Sets all mapping classes in {@link Injector} which should have reversed keys and values.
+   * Creates mapping classes from {@link Injector} which should have reversed keys and values.
    * NOTE: This will override duplicated implemented classes and only keep one.
    *
    * @param classesMap a map of classes
    */
-  public void setReversedClassesMap(Map<Class<?>, Class<?>> classesMap) {
+  public void createReversedClassesMap(Map<Class<?>, Class<?>> classesMap) {
     reversedClassesMap = new HashMap<>();
     classesMap.forEach((key, value) -> reversedClassesMap.put(value, key));
   }
@@ -126,19 +140,13 @@ public final class BootstrapHandler {
    * @param <T> cast type
    */
   public <T> T getBeanByClazz(Class<T> clazz, String name) {
-    var beanClass = new BeanClass(clazz, name);
-    // First we look at the class itself, if there is no instance of it exists, we check its
-    // interface by looking at the reversed mapping classes
-    var object = classBeansMap.get(beanClass);
-    if (Objects.isNull(object)) {
-      var implementedClazz = reversedClassesMap.get(clazz);
-      if (Objects.isNull(implementedClazz)) {
-        return null;
-      }
-      object = classBeansMap.get(new BeanClass(implementedClazz, name));
-      return Objects.isNull(object) ? null : (T) object;
+    // We check its interface by looking at the reversed mapping classes
+    var implementedClazz = reversedClassesMap.get(clazz);
+    if (Objects.isNull(implementedClazz)) {
+      return null;
     }
-    return (T) object;
+    var object = classBeansMap.get(new BeanClass(implementedClazz, name));
+    return Objects.isNull(object) ? null : clazz.isInstance(object) ? clazz.cast(object) : null;
   }
 
   /**
@@ -168,23 +176,5 @@ public final class BootstrapHandler {
    */
   public void setServletMap(Map<String, HttpServlet> servletMap) {
     this.servletMap = servletMap;
-  }
-
-  /**
-   * Sets the system command manager.
-   *
-   * @param systemCommandManager an instance of {@link SystemCommandManager}
-   */
-  public void setSystemCommandManager(SystemCommandManager systemCommandManager) {
-    this.systemCommandManager = systemCommandManager;
-  }
-
-  /**
-   * Sets the client command manager.
-   *
-   * @param clientCommandManager an instance of {@link ClientCommandManager}
-   */
-  public void setClientCommandManager(ClientCommandManager clientCommandManager) {
-    this.clientCommandManager = clientCommandManager;
   }
 }

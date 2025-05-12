@@ -376,7 +376,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   public void onRunning() {
     ByteBuffer readerBuffer = ByteBuffer.allocateDirect(getMaxBufferSize());
 
-    while (true) {
+    while (!Thread.currentThread().isInterrupted()) {
       if (isActivated()) {
         try {
           readableLoop(readerBuffer);

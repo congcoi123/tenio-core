@@ -156,7 +156,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
       // one session needs one packet in its queue, need to clone the packet
       while (sessionIterator.hasNext()) {
         Session session = sessionIterator.next();
-        enqueuePacket(session, packet.clone());
+        enqueuePacket(session, packet.deepCopy());
       }
     }
 
@@ -231,7 +231,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
     var socketWriterHandler = createSocketWriterHandler();
     var datagramWriterHandler = createDatagramWriterHandler();
 
-    while (true) {
+    while (!Thread.currentThread().isInterrupted()) {
       if (isActivated()) {
         writableLoop(socketWriterHandler, datagramWriterHandler);
       }

@@ -92,14 +92,6 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
     try {
       int realWrittenBytes = channel.write(getBuffer());
 
-      /*
-      if (realWrittenBytes == 0) {
-        if (isErrorEnabled()) {
-          error("{SOCKET CHANNEL SEND} ", "Socket writes 0 byte in session: ", session);
-        }
-      }
-      */
-
       // update statistic data
       getNetworkWriterStatistic().updateWrittenBytes(realWrittenBytes);
 

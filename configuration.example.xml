@@ -90,13 +90,17 @@
 	</Configuration>
 
 	<!-- Customizable behaviors -->
-	<!-- Just create your own classes, implement desired interfaces and annotate it with @Component
-		packet-encryptor: BinaryPacketEncryptor
-		packet-compressor: BinaryPacketCompressor
-		packet-encoder: BinaryPacketEncoder
-		packet-decoder: BinaryPacketDecoder
-		connection-filter: ConnectionFilter
-		packet-queue-policy: PacketQueuePolicy
+	<!-- Just create your own classes, implement desired interfaces and annotate them with @Component.
+		 In case you do not declare any change, their default implementation will be applied
+		 (DefaultBinaryPacketEncryptor, DefaultBinaryPacketCompressor, DefaultBinaryPacketEncoder,
+		 DefaultBinaryPacketDecoder, DefaultConnectionFilter, DefaultPacketQueuePolicy).
+
+			packet-encryptor: BinaryPacketEncryptor
+			packet-compressor: BinaryPacketCompressor
+			packet-encoder: BinaryPacketEncoder
+			packet-decoder: BinaryPacketDecoder
+			connection-filter: ConnectionFilter
+			packet-queue-policy: PacketQueuePolicy
 	-->
 
 	<!-- Your customizable configurations -->

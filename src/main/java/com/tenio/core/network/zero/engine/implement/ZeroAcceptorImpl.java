@@ -271,9 +271,6 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
     }
   }
 
-  private void cleanup() {
-  }
-
   @Override
   public void handleAcceptableChannels() {
 
@@ -383,7 +380,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
 
   @Override
   public void onRunning() {
-    while (true) {
+    while (!Thread.currentThread().isInterrupted()) {
       if (isActivated()) {
         try {
           acceptableLoop();
@@ -405,6 +402,6 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
 
   @Override
   public void onDestroyed() {
-    cleanup();
+    // do nothing
   }
 }

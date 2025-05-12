@@ -26,7 +26,6 @@ package com.tenio.core.command.client;
 
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.logger.SystemLogger;
-import com.tenio.core.bootstrap.annotation.ClientCommand;
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.entity.Player;
 import com.tenio.core.exception.AddedDuplicatedClientCommandException;
@@ -44,7 +43,7 @@ import java.util.TreeMap;
 @Component
 public final class ClientCommandManager extends SystemLogger {
 
-  private final Map<Short, AbstractClientCommandHandler> commands = new TreeMap<>();
+  private final Map<Short, AbstractClientCommandHandler<Player>> commands = new TreeMap<>();
 
   /**
    * Registers a command handler.
@@ -52,7 +51,8 @@ public final class ClientCommandManager extends SystemLogger {
    * @param code    The command code
    * @param command The command handler
    */
-  public synchronized void registerCommand(Short code, AbstractClientCommandHandler command) {
+  public synchronized void registerCommand(Short code,
+                                           AbstractClientCommandHandler<Player> command) {
     if (isDebugEnabled()) {
       debug("CLIENT_COMMAND", "Registered command > ", code);
     }
@@ -83,7 +83,7 @@ public final class ClientCommandManager extends SystemLogger {
    *
    * @return all command handlers as a list
    */
-  public synchronized List<AbstractClientCommandHandler> getHandlersAsList() {
+  public synchronized List<AbstractClientCommandHandler<Player>> getHandlersAsList() {
     return new LinkedList<>(commands.values());
   }
 
@@ -92,7 +92,7 @@ public final class ClientCommandManager extends SystemLogger {
    *
    * @return a {@link Map} of all registered commands
    */
-  public synchronized Map<Short, AbstractClientCommandHandler> getHandlers() {
+  public synchronized Map<Short, AbstractClientCommandHandler<Player>> getHandlers() {
     return commands;
   }
 
@@ -102,7 +102,7 @@ public final class ClientCommandManager extends SystemLogger {
    * @param code The command code
    * @return the command handler
    */
-  public synchronized AbstractClientCommandHandler getHandler(Short code) {
+  public synchronized AbstractClientCommandHandler<Player> getHandler(Short code) {
     return commands.get(code);
   }
 

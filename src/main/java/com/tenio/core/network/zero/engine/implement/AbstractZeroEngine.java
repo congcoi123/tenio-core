@@ -82,6 +82,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
       try {
         Thread.sleep(100L);
       } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
         if (isErrorEnabled()) {
           error(exception);
         }

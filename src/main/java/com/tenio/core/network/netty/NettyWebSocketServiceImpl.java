@@ -168,14 +168,6 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
       info("STOPPED SERVICE",
           buildgen(getName(), " (", producerWorkerSize + consumerWorkerSize, ")"));
     }
-    cleanup();
-    if (isInfoEnabled()) {
-      info("DESTROYED SERVICE",
-          buildgen(getName(), " (", producerWorkerSize + consumerWorkerSize, ")"));
-    }
-  }
-
-  private void cleanup() {
   }
 
   /**

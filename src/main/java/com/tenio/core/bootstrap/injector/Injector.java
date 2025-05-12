@@ -43,6 +43,7 @@ import com.tenio.core.command.client.AbstractClientCommandHandler;
 import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.system.AbstractSystemCommandHandler;
 import com.tenio.core.command.system.SystemCommandManager;
+import com.tenio.core.entity.Player;
 import com.tenio.core.exception.DuplicatedBeanCreationException;
 import com.tenio.core.exception.IllegalDefinedAccessControlException;
 import com.tenio.core.exception.IllegalReturnTypeException;
@@ -50,6 +51,7 @@ import com.tenio.core.exception.InvalidRestMappingClassException;
 import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
 import com.tenio.core.exception.NoImplementedClassFoundException;
 import jakarta.servlet.http.HttpServlet;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -148,6 +150,7 @@ public final class Injector extends SystemLogger {
    * @throws SecurityException               it is related to the security exception
    * @throws DuplicatedBeanCreationException when a same bean was created more than one time
    */
+  @SuppressWarnings("unchecked")
   public void scanPackages(Class<?> entryClass, String... packages)
       throws InstantiationException, IllegalAccessException, ClassNotFoundException,
       IllegalArgumentException, InvocationTargetException, NoSuchMethodException,
@@ -347,7 +350,7 @@ public final class Injector extends SystemLogger {
         try {
           var clientCommandAnnotation = clazz.getAnnotation(ClientCommand.class);
           var clientCommandInstance = clazz.getDeclaredConstructor().newInstance();
-          if (clientCommandInstance instanceof AbstractClientCommandHandler handler) {
+          if (clientCommandInstance instanceof AbstractClientCommandHandler<?> handler) {
             // manages by the class bean system
             var beanClass =
                 new BeanClass(clazz, String.valueOf(clientCommandAnnotation.value()));
@@ -357,7 +360,8 @@ public final class Injector extends SystemLogger {
             classBeansMap.put(beanClass, clientCommandInstance);
             // add to its own management system
             handler.setCommandManager(clientCommandManager);
-            clientCommandManager.registerCommand(clientCommandAnnotation.value(), handler);
+            clientCommandManager.registerCommand(clientCommandAnnotation.value(),
+                (AbstractClientCommandHandler<Player>) handler);
           } else {
             if (isErrorEnabled()) {
               error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
@@ -502,7 +506,7 @@ public final class Injector extends SystemLogger {
       return classBeansMap.get(beanClass);
     }
 
-    if (Objects.nonNull(implementedClass) && !manualClassesSet.contains(beanClass)) {
+    if (Objects.nonNull(implementedClass) && !manualClassesSet.contains(beanClass.getClass())) {
       if (classBeansMap.containsKey(beanClass)) {
         throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
       }
@@ -514,8 +518,8 @@ public final class Injector extends SystemLogger {
     return null;
   }
 
-  private boolean isClassAnnotated(Class<?> clazz, Class<?>[] annotations) {
-    for (Class annotation : annotations) {
+  private boolean isClassAnnotated(Class<?> clazz, Class<? extends Annotation>[] annotations) {
+    for (Class<? extends Annotation> annotation : annotations) {
       if (clazz.isAnnotationPresent(annotation)) {
         return true;
       }

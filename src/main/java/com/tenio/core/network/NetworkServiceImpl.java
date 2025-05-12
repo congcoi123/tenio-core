@@ -161,11 +161,6 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
     webSocketService.shutdown();
     socketService.shutdown();
     kcpChannelService.shutdown();
-
-    destroy();
-  }
-
-  private void destroy() {
   }
 
   @Override

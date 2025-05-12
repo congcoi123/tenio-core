@@ -84,6 +84,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
       try {
         Thread.sleep(100L);
       } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
         if (isErrorEnabled()) {
           error(exception);
         }
@@ -134,7 +135,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
   }
 
   private void processing() {
-    while (true) {
+    while (!Thread.currentThread().isInterrupted()) {
       if (activated) {
         try {
           var request = requestQueue.take();

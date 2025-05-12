@@ -83,13 +83,13 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     try {
       final var player = getPlayerManager().createPlayer(playerName);
 
-      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,
+      getEventManager().emit(ServerEvent.PLAYER_LOGIN_RESULT, player,
           PlayerLoggedInResult.SUCCESS);
     } catch (AddedDuplicatedPlayerException exception) {
       if (isErrorEnabled()) {
         error(exception, "Logged in with same player name: ", playerName);
       }
-      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, exception.getPlayer(),
+      getEventManager().emit(ServerEvent.PLAYER_LOGIN_RESULT, exception.getPlayer(),
           PlayerLoggedInResult.DUPLICATED_PLAYER);
     }
   }
@@ -99,21 +99,21 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     try {
       Player player = getPlayerManager().createPlayerWithSession(playerName, session);
 
-      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,
+      getEventManager().emit(ServerEvent.PLAYER_LOGIN_RESULT, player,
           PlayerLoggedInResult.SUCCESS);
     } catch (Exception exception) {
       if (exception instanceof AddedDuplicatedPlayerException duplicatedPlayerException) {
         if (isErrorEnabled()) {
           error(exception, "Logged in with same player name: ", playerName);
         }
-        getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT,
+        getEventManager().emit(ServerEvent.PLAYER_LOGIN_RESULT,
             duplicatedPlayerException.getPlayer(), PlayerLoggedInResult.DUPLICATED_PLAYER);
         return;
       }
       if (isErrorEnabled()) {
         error(exception, "On the player: ", playerName);
       }
-      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT,
+      getEventManager().emit(ServerEvent.PLAYER_LOGIN_RESULT,
           getPlayerByIdentity(playerName).orElse(null), PlayerLoggedInResult.EXCEPTION);
     }
   }
@@ -124,13 +124,13 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       getPlayerManager().configureInitialPlayer(player);
       getPlayerManager().addPlayer(player);
 
-      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, player,
+      getEventManager().emit(ServerEvent.PLAYER_LOGIN_RESULT, player,
           PlayerLoggedInResult.SUCCESS);
     } catch (AddedDuplicatedPlayerException exception) {
       if (isErrorEnabled()) {
         error(exception, "Logged in with same player name: ", player.getIdentity());
       }
-      getEventManager().emit(ServerEvent.PLAYER_LOGGEDIN_RESULT, exception.getPlayer(),
+      getEventManager().emit(ServerEvent.PLAYER_LOGIN_RESULT, exception.getPlayer(),
           PlayerLoggedInResult.DUPLICATED_PLAYER);
     }
   }
