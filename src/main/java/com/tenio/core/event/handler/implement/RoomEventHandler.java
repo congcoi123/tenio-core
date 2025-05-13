@@ -81,17 +81,12 @@ public final class RoomEventHandler {
    */
   public void initialize(EventManager eventManager) {
 
-    final var eventPlayerAfterLeftRoomOp =
-        Optional.ofNullable(eventPlayerAfterLeftRoom);
-    final var eventPlayerBeforeLeaveRoomOp =
-        Optional.ofNullable(eventPlayerBeforeLeaveRoom);
-    final var eventPlayerJoinedRoomResultOp =
-        Optional.ofNullable(eventPlayerJoinedRoomResult);
+    final var eventPlayerAfterLeftRoomOp = Optional.ofNullable(eventPlayerAfterLeftRoom);
+    final var eventPlayerBeforeLeaveRoomOp = Optional.ofNullable(eventPlayerBeforeLeaveRoom);
+    final var eventPlayerJoinedRoomResultOp = Optional.ofNullable(eventPlayerJoinedRoomResult);
 
-    final var eventRoomCreatedResultOp =
-        Optional.ofNullable(eventRoomCreatedResult);
-    final var eventRoomWillBeRemovedOp =
-        Optional.ofNullable(eventRoomWillBeRemoved);
+    final var eventRoomCreatedResultOp = Optional.ofNullable(eventRoomCreatedResult);
+    final var eventRoomWillBeRemovedOp = Optional.ofNullable(eventRoomWillBeRemoved);
 
     final var eventSwitchParticipantToSpectatorResultOp =
         Optional.ofNullable(eventSwitchParticipantToSpectatorResult);
