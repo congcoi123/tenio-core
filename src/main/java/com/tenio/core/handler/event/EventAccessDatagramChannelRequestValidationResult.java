@@ -28,7 +28,6 @@ import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.result.AccessDatagramChannelResult;
 import com.tenio.core.network.entity.session.Session;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -48,7 +47,6 @@ public interface EventAccessDatagramChannelRequestValidationResult<P extends Pla
    *                player is empty, otherwise it is present
    * @see ServerEvent#ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT
    * @see EventAccessDatagramChannelRequestValidation
-   * @see Optional
    */
   void handle(@Nullable P player, int udpConv, AccessDatagramChannelResult result);
 }

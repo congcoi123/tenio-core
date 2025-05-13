@@ -53,9 +53,7 @@ public final class ClientCommandManager extends SystemLogger {
    */
   public synchronized void registerCommand(Short code,
                                            AbstractClientCommandHandler<Player> command) {
-    if (isDebugEnabled()) {
-      debug("CLIENT_COMMAND", "Registered command > ", code);
-    }
+    debug("CLIENT_COMMAND", "Registered command > ", code);
 
     // checks availability
     if (commands.containsKey(code)) {
@@ -72,9 +70,8 @@ public final class ClientCommandManager extends SystemLogger {
    * @param code The command code
    */
   public synchronized void unregisterCommand(Short code) {
-    if (isDebugEnabled()) {
-      debug("CLIENT_COMMAND", "Unregistered command > ", code);
-    }
+    debug("CLIENT_COMMAND", "Unregistered command > ", code);
+
     commands.remove(code);
   }
 

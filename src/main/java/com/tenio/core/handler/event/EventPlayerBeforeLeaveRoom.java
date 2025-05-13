@@ -27,7 +27,6 @@ package com.tenio.core.handler.event;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -45,7 +44,6 @@ public interface EventPlayerBeforeLeaveRoom<P extends Player, R extends Room> {
    * @param mode   the leaving {@link PlayerLeaveRoomMode} applied for the player when it leaves
    *               the room
    * @see EventPlayerAfterLeftRoom
-   * @see Optional
    */
   void handle(P player, @Nullable R room, PlayerLeaveRoomMode mode);
 }

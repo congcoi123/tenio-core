@@ -27,7 +27,6 @@ package com.tenio.core.handler.event;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.result.AccessDatagramChannelResult;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -45,7 +44,6 @@ public interface EventAccessKcpChannelRequestValidationResult<P extends Player> 
    *               player is empty, otherwise it is present
    * @see ServerEvent#ACCESS_KCP_CHANNEL_REQUEST_VALIDATION_RESULT
    * @see EventAccessKcpChannelRequestValidation
-   * @see Optional
    */
   void handle(@Nullable P player, AccessDatagramChannelResult result);
 }

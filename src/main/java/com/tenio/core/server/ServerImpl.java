@@ -137,9 +137,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     configuration.load(file);
 
     // Put the current configurations to the logger
-    if (isInfoEnabled()) {
-      info("CONFIGURATION", configuration.toString());
-    }
+    info("CONFIGURATION", configuration.toString());
 
     this.configuration = configuration;
 
@@ -147,9 +145,7 @@ public final class ServerImpl extends SystemLogger implements Server {
         DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION));
     serverName = configuration.getString(CoreConfigurationType.SERVER_NAME);
 
-    if (isInfoEnabled()) {
-      info("SERVER", serverName, "Starting ...");
-    }
+    info("SERVER", serverName, "Starting ...");
 
     // subscribing for processes and handlers
     internalProcessorService.subscribe();
@@ -174,9 +170,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     // it should wait for a while to let everything settles down
     Thread.sleep(1000);
 
-    if (isInfoEnabled()) {
-      info("SERVER", serverName, "Started");
-    }
+    info("SERVER", serverName, "Started");
 
     // emit "server started" event
     eventManager.emit(ServerEvent.SERVER_INITIALIZATION, serverName, configuration);
@@ -411,15 +405,11 @@ public final class ServerImpl extends SystemLogger implements Server {
 
   @Override
   public void shutdown() {
-    if (isInfoEnabled()) {
-      info("SERVER", serverName, "Stopping ...");
-    }
+    info("SERVER", serverName, "Stopping ...");
     // emit "server shutdown" event
     eventManager.emit(ServerEvent.SERVER_TEARDOWN, serverName);
     shutdownServices();
-    if (isInfoEnabled()) {
-      info("SERVER", serverName, "Stopped");
-    }
+    info("SERVER", serverName, "Stopped");
     // real stop
     Runtime.getRuntime().halt(0);
   }

@@ -83,9 +83,7 @@ public final class Bootstrapper extends SystemLogger {
         injector.scanPackages(entryClass, packages);
       }
     } catch (Exception exception) {
-      if (isErrorEnabled()) {
-        error(exception);
-      }
+      error(exception);
     }
   }
 

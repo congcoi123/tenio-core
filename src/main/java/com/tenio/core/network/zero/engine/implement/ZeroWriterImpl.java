@@ -92,9 +92,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
       var session = sessionTicketsQueue.take();
       processSessionQueue(session, socketWriterHandler, datagramWriterHandler);
     } catch (Throwable cause) {
-      if (isErrorEnabled()) {
-        error(cause, "Interruption occurred when process a session and its packet");
-      }
+      error(cause, "Interruption occurred when process a session and its packet");
     }
   }
 

@@ -27,7 +27,6 @@ package com.tenio.core.handler.event;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.result.RoomCreatedResult;
 import com.tenio.core.entity.setting.InitialRoomSetting;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -45,7 +44,6 @@ public interface EventRoomCreatedResult<R extends Room> {
    *                new room is considered as it is created and is added to the management list
    *                when the result equals to success
    * @see RoomCreatedResult#SUCCESS
-   * @see Optional
    */
   void handle(@Nullable R room, InitialRoomSetting setting, RoomCreatedResult result);
 }
