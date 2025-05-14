@@ -88,7 +88,7 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
         sessionManager,
         dataType,
         networkReaderStatistic
-    ), KcpConfiguration.inTurboMode(), Integer.parseInt(socketConfiguration.port()));
+    ), KcpConfiguration.inTurboMode(), socketConfiguration.port());
 
     info("KCP CHANNEL", buildgen("Started at port: ", socketConfiguration.port()));
   }

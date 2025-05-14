@@ -102,7 +102,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     roomManager = RoomManagerImpl.newInstance(eventManager);
     playerManager = PlayerManagerImpl.newInstance(eventManager);
     datagramChannelManager = DatagramChannelManager.newInstance();
-    networkService = NetworkServiceImpl.newInstance(eventManager);
+    networkService = NetworkServiceImpl.newInstance(eventManager, datagramChannelManager);
     serverApi = ServerApiImpl.newInstance(this);
     internalProcessorService = InternalProcessorServiceImpl.newInstance(eventManager, serverApi, datagramChannelManager);
     scheduleService = ScheduleServiceImpl.newInstance(eventManager);
@@ -244,7 +244,7 @@ public final class ServerImpl extends SystemLogger implements Server {
         Objects.nonNull(httpConfiguration) ?
             configuration.getInt(CoreConfigurationType.WORKER_HTTP_WORKER) : 0,
         Objects.nonNull(httpConfiguration) ?
-            Integer.parseInt(((SocketConfiguration) httpConfiguration).port()) : 0,
+            ((SocketConfiguration) httpConfiguration).port() : 0,
         Objects.nonNull(httpConfiguration) ? servletMap : null);
 
     networkService.setSocketAcceptorServerAddress(
@@ -255,17 +255,24 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.setSocketAcceptorWorkers(
         configuration.getInt(CoreConfigurationType.WORKER_SOCKET_ACCEPTOR));
 
+    var udpSocketConfiguration = Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_UDP)) ?
+        (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_UDP) : null;
+    var kcpSocketConfiguration = Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_KCP)) ?
+        (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_KCP) : null;
     networkService.setSocketConfiguration(
         (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_TCP)) ?
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_TCP) : null),
-        (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_UDP)) ?
-            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_UDP) : null),
+        udpSocketConfiguration,
         (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET)) ?
-            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) :
-            null),
-        (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_KCP)) ?
-            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_KCP) :
-            null));
+            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) : null),
+        kcpSocketConfiguration);
+
+    if (Objects.nonNull(udpSocketConfiguration)) {
+      datagramChannelManager.configureUdpPort(udpSocketConfiguration.port());
+    }
+    if (Objects.nonNull(kcpSocketConfiguration)) {
+      datagramChannelManager.configureKcpPort(kcpSocketConfiguration.port());
+    }
 
     networkService.setSocketReaderBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_READER_BUFFER_SIZE));

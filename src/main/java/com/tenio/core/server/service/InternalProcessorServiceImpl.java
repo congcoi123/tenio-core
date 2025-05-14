@@ -331,7 +331,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
               AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
         } else {
           var udpConvey = datagramChannelManager.getCurrentUdpConveyId();
-          var datagramChannel = (DatagramChannel) request.getSender();
+          var datagramChannel = datagramChannelManager.getChannel();
 
           session.setDatagramRemoteSocketAddress(request.getRemoteSocketAddress());
           sessionManager.addDatagramForSession(datagramChannel, udpConvey, session);

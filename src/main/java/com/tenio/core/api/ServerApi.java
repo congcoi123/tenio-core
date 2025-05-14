@@ -378,18 +378,20 @@ public interface ServerApi {
   /**
    * Retrieves the current available UDP port.
    *
-   * @return an {@code integer} value of UDP port
+   * @return an {@code integer} value of UDP port if available, otherwise returns
+   * {@link CoreConstant#NULL_PORT_VALUE}
    * @since 0.3.0
    */
-  int getCurrentAvailableUdpPort();
+  int getUdpPort();
 
   /**
    * Retrieves the current available KCP port.
    *
-   * @return an {@code integer} value of KCP port if available, otherwise returns {@link CoreConstant#NULL_PORT_VALUE}
+   * @return an {@code integer} value of KCP port if available, otherwise returns
+   * {@link CoreConstant#NULL_PORT_VALUE}
    * @since 0.6.0
    */
-  int getCurrentAvailableKcpPort();
+  int getKcpPort();
 
   /**
    * Retrieves the current available KCP Convey Id.

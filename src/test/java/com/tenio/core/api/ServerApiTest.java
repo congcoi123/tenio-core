@@ -366,9 +366,9 @@ class ServerApiTest {
     Mockito.when(roomManager.getReadonlyRoomsList()).thenReturn(roomList);
     Assertions.assertEquals(roomList, serverApi.getReadonlyRoomsList());
 
-    // getCurrentAvailableUdpPort()
-    Mockito.when(datagramChannelManager.getCurrentAvailableUdpPort()).thenReturn(8048);
-    Assertions.assertEquals(8048, serverApi.getCurrentAvailableUdpPort());
+    // getUdpPort()
+    Mockito.when(datagramChannelManager.getUdpPort()).thenReturn(8048);
+    Assertions.assertEquals(8048, serverApi.getUdpPort());
 
     // getStartedTime
     Mockito.when(server.getStartedTime()).thenReturn(100000L);
