@@ -28,13 +28,13 @@ import com.tenio.core.configuration.define.CoreConfigurationType;
 import java.io.Serial;
 
 /**
- * When an available Udp channel port is requested, but the list is empty. It might be caused by
- * the size of {@link CoreConfigurationType#NETWORK_UDP} equals to {@code 0}, or there was some
- * exception occurred while establishing Udp channels.
+ * When an available datagram channel port is requested, but the list is empty. It might be
+ * caused by the size of {@link CoreConfigurationType#NETWORK_UDP} equals to {@code 0}, or there
+ * was some exception occurred while establishing datagram channels.
  *
  * @since 0.3.0
  */
-public final class EmptyUdpChannelsException extends RuntimeException {
+public final class EmptyDatagramChannelsException extends RuntimeException {
 
   @Serial
   private static final long serialVersionUID = 6979513728417343122L;
@@ -42,8 +42,8 @@ public final class EmptyUdpChannelsException extends RuntimeException {
   /**
    * Initialization.
    */
-  public EmptyUdpChannelsException() {
-    super("The list is empty, please check in configuration.xml file if value of udp-channel is " +
-        "greater than 0, or make sure there is no exception while establishing udp channels");
+  public EmptyDatagramChannelsException() {
+    super("The list is empty, please check in configuration.xml file if value of datagram channel" +
+        " is greater than 0, or make sure there is no exception while establishing datagram channels");
   }
 }

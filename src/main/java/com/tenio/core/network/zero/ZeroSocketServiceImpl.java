@@ -71,7 +71,7 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
 
     acceptorEngine = ZeroAcceptorImpl.newInstance(eventManager, datagramChannelManager);
     readerEngine = ZeroReaderImpl.newInstance(eventManager);
-    writerEngine = ZeroWriterImpl.newInstance(eventManager);
+    writerEngine = ZeroWriterImpl.newInstance(eventManager, datagramChannelManager);
 
     datagramIoHandler = DatagramIoHandlerImpl.newInstance(eventManager);
     socketIoHandler = SocketIoHandlerImpl.newInstance(eventManager);

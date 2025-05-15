@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.network.zero.engine.manager;
 
 import com.tenio.core.configuration.constant.CoreConstant;
-import com.tenio.core.exception.EmptyUdpChannelsException;
+import com.tenio.core.exception.EmptyDatagramChannelsException;
 import com.tenio.core.manager.Manager;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
@@ -101,7 +101,7 @@ public class DatagramChannelManager implements Manager {
   public synchronized DatagramChannel getChannel() {
     int size = channels.size();
     if (size == 0) {
-      throw new EmptyUdpChannelsException();
+      throw new EmptyDatagramChannelsException();
     }
     currentChannelIndex++;
     if (currentChannelIndex >= size) {

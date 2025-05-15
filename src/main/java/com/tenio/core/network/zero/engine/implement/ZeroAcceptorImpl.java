@@ -148,11 +148,11 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine
           // acceptable selector. Just leave it to the reader selector later
           zeroReaderListener.acceptDatagramChannel(datagramChannel);
           datagramChannelManager.addChannel(datagramChannel);
-          info("UDP CHANNEL", buildgen("Started at address: ", serverAddress, ", port: ",
-              port, ", index: ", index));
           boundSockets.add(datagramChannel);
         }
       }
+      info("UDP CHANNEL", buildgen("Started at address: ", serverAddress, ", port: ",
+          port, ", cache: ", cacheSize));
     } catch (IOException exception) {
       throw new ServiceRuntimeException(exception.getMessage());
     }
