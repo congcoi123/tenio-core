@@ -67,6 +67,7 @@ public abstract class AbstractWriterHandler extends SystemLogger implements Writ
 
   @Override
   public void allocateBuffer(int capacity) {
-    byteBuffer = ByteBuffer.allocateDirect(capacity);
+    // Default write buffer is HEAP
+    byteBuffer = ByteBuffer.allocate(capacity);
   }
 }
