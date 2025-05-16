@@ -24,20 +24,21 @@ THE SOFTWARE.
 
 package com.tenio.core.handler.event;
 
-import com.tenio.common.data.DataCollection;
-import com.tenio.core.entity.Player;
+import com.tenio.core.entity.Channel;
 
 /**
- * When the server sends a message to a player.
+ * When a channel is going to be removed.
+ *
+ * @since 0.6.3
  */
 @FunctionalInterface
-public interface EventSendMessageToPlayer<P extends Player> {
+public interface EventChannelWillBeRemoved {
 
   /**
-   * When the server sends a message to a player.
+   * When the server sends a message to a player via its channel.
    *
-   * @param player  the {@link Player} which is receiving a message from the server
-   * @param message the sending {@link DataCollection}
+   * @param channel the channel which is going to be removed
+   * @since 0.6.3
    */
-  void handle(P player, DataCollection message);
+  void handle(Channel channel);
 }

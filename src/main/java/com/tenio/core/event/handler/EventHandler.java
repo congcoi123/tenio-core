@@ -26,6 +26,7 @@ package com.tenio.core.event.handler;
 
 import com.tenio.core.bootstrap.annotation.Autowired;
 import com.tenio.core.bootstrap.annotation.Component;
+import com.tenio.core.event.handler.implement.ChannelEventHandler;
 import com.tenio.core.event.handler.implement.ConnectionEventHandler;
 import com.tenio.core.event.handler.implement.MixinsEventHandler;
 import com.tenio.core.event.handler.implement.PlayerEventHandler;
@@ -48,6 +49,9 @@ public final class EventHandler {
   private RoomEventHandler roomEventHandler;
 
   @Autowired
+  private ChannelEventHandler channelEventHandler;
+
+  @Autowired
   private MixinsEventHandler mixinsEventHandler;
 
   /**
@@ -59,6 +63,7 @@ public final class EventHandler {
     connectionEventHandler.initialize(eventManager);
     playerEventHandler.initialize(eventManager);
     roomEventHandler.initialize(eventManager);
+    channelEventHandler.initialize(eventManager);
     mixinsEventHandler.initialize(eventManager);
   }
 }

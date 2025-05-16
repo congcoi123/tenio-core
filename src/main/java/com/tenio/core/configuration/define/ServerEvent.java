@@ -29,6 +29,8 @@ import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidation;
 import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidationResult;
 import com.tenio.core.handler.event.EventAccessKcpChannelRequestValidation;
 import com.tenio.core.handler.event.EventAccessKcpChannelRequestValidationResult;
+import com.tenio.core.handler.event.EventChannelCreated;
+import com.tenio.core.handler.event.EventChannelWillBeRemoved;
 import com.tenio.core.handler.event.EventConnectionEstablishedResult;
 import com.tenio.core.handler.event.EventDisconnectPlayer;
 import com.tenio.core.handler.event.EventFetchedBandwidthInfo;
@@ -39,9 +41,12 @@ import com.tenio.core.handler.event.EventPlayerJoinedRoomResult;
 import com.tenio.core.handler.event.EventPlayerLoginResult;
 import com.tenio.core.handler.event.EventPlayerReconnectRequestHandle;
 import com.tenio.core.handler.event.EventPlayerReconnectedResult;
+import com.tenio.core.handler.event.EventPlayerSubscribedChannel;
+import com.tenio.core.handler.event.EventPlayerUnsubscribedChannel;
 import com.tenio.core.handler.event.EventReceivedMessageFromPlayer;
 import com.tenio.core.handler.event.EventRoomCreatedResult;
 import com.tenio.core.handler.event.EventRoomWillBeRemoved;
+import com.tenio.core.handler.event.EventNotifyPlayerViaChannel;
 import com.tenio.core.handler.event.EventSendMessageToPlayer;
 import com.tenio.core.handler.event.EventServerException;
 import com.tenio.core.handler.event.EventServerInitialization;
@@ -199,6 +204,41 @@ public enum ServerEvent {
    * @see EventDisconnectPlayer
    */
   DISCONNECT_PLAYER,
+  /**
+   * When a new channel successfully created.
+   *
+   * @since 0.6.3
+   * @see EventChannelCreated
+   */
+  CHANNEL_CREATED,
+  /**
+   * When a channel is going to be removed from the management list.
+   *
+   * @since 0.6.3
+   * @see EventChannelWillBeRemoved
+   */
+  CHANNEL_WILL_BE_REMOVED,
+  /**
+   * When a player subscribed to a channel.
+   *
+   * @since 0.6.3
+   * @see EventPlayerSubscribedChannel
+   */
+  PLAYER_SUBSCRIBED_CHANNEL,
+  /**
+   * When a player unsubscribed from a channel.
+   *
+   * @since 0.6.3
+   * @see EventPlayerUnsubscribedChannel
+   */
+  PLAYER_UNSUBSCRIBED_CHANNEL,
+  /**
+   * When the server sends a message to a player via its channel.
+   *
+   * @since 0.6.3
+   * @see EventNotifyPlayerViaChannel
+   */
+  NOTIFY_PLAYER_VIA_CHANNEL,
   /**
    * When the server validates a UDP channel accessing request from a player.
    *

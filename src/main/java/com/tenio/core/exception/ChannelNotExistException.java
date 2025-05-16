@@ -22,22 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.handler.event;
+package com.tenio.core.exception;
 
-import com.tenio.common.data.DataCollection;
-import com.tenio.core.entity.Player;
+import java.io.Serial;
 
 /**
- * When the server sends a message to a player.
+ * When a channel which is referenced to does not exist.
  */
-@FunctionalInterface
-public interface EventSendMessageToPlayer<P extends Player> {
+public final class ChannelNotExistException extends RuntimeException {
 
-  /**
-   * When the server sends a message to a player.
-   *
-   * @param player  the {@link Player} which is receiving a message from the server
-   * @param message the sending {@link DataCollection}
-   */
-  void handle(P player, DataCollection message);
+  @Serial
+  private static final long serialVersionUID = -434498401186142787L;
 }

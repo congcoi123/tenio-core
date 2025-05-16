@@ -30,6 +30,7 @@ import com.tenio.core.api.ServerApi;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.bootstrap.Bootstrapper;
 import com.tenio.core.command.client.ClientCommandManager;
+import com.tenio.core.entity.manager.ChannelManager;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;
@@ -95,6 +96,14 @@ public interface Server {
    * @return an instance of {@link RoomManager}
    */
   RoomManager getRoomManager();
+
+  /**
+   * Retrieves a channel manager object which manages channels to notify players.
+   *
+   * @since 0.6.3
+   * @return an instance of {@link ChannelManager}
+   */
+  ChannelManager getChannelManager();
 
   /**
    * Retrieves a data channel manager object which allows managing Udp, Kcp related information.

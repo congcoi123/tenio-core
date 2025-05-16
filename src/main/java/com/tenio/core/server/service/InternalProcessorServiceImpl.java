@@ -254,6 +254,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
       var player = playerManager.getPlayerByIdentity(session.getName());
       // the player maybe existed
       if (Objects.nonNull(player)) {
+        // unsubscribe it from all channels
+        serverApi.unsubscribeFromAllChannels(player);
         // player should leave room (if applicable) first
         if (player.isInRoom()) {
           serverApi.leaveRoom(player, PlayerLeaveRoomMode.DEFAULT);

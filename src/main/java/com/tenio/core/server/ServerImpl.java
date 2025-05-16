@@ -37,8 +37,10 @@ import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.configuration.setting.Setting;
+import com.tenio.core.entity.manager.ChannelManager;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
+import com.tenio.core.entity.manager.implement.ChannelManagerImpl;
 import com.tenio.core.entity.manager.implement.PlayerManagerImpl;
 import com.tenio.core.entity.manager.implement.RoomManagerImpl;
 import com.tenio.core.event.implement.EventManager;
@@ -86,6 +88,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final EventManager eventManager;
   private final RoomManager roomManager;
   private final PlayerManager playerManager;
+  private final ChannelManager channelManager;
   private final DatagramChannelManager datagramChannelManager;
   private final InternalProcessorService internalProcessorService;
   private final ScheduleService scheduleService;
@@ -101,6 +104,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     eventManager = EventManager.newInstance();
     roomManager = RoomManagerImpl.newInstance(eventManager);
     playerManager = PlayerManagerImpl.newInstance(eventManager);
+    channelManager = ChannelManagerImpl.newInstance(eventManager);
     datagramChannelManager = DatagramChannelManager.newInstance();
     networkService = NetworkServiceImpl.newInstance(eventManager, datagramChannelManager);
     serverApi = ServerApiImpl.newInstance(this);
@@ -450,6 +454,11 @@ public final class ServerImpl extends SystemLogger implements Server {
   @Override
   public RoomManager getRoomManager() {
     return roomManager;
+  }
+
+  @Override
+  public ChannelManager getChannelManager() {
+    return channelManager;
   }
 
   @Override

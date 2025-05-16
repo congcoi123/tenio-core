@@ -39,6 +39,7 @@ import com.tenio.core.entity.define.result.PlayerLeftRoomResult;
 import com.tenio.core.entity.define.result.PlayerLoggedInResult;
 import com.tenio.core.entity.define.result.RoomCreatedResult;
 import com.tenio.core.entity.implement.DefaultPlayer;
+import com.tenio.core.entity.manager.ChannelManager;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.setting.InitialRoomSetting;
@@ -75,6 +76,9 @@ class ServerApiTest {
 
   @Mock
   RoomManager roomManager;
+
+  @Mock
+  ChannelManager channelManager;
 
   @Mock
   DatagramChannelManager datagramChannelManager;
@@ -188,6 +192,7 @@ class ServerApiTest {
   @DisplayName("When it tries to logout a player in a room, the player should leave the room first")
   void itLogoutPlayerInRoomShouldLeaveRoomFirst() {
     Mockito.when(server.getPlayerManager()).thenReturn(playerManager);
+    Mockito.when(server.getChannelManager()).thenReturn(channelManager);
     Mockito.when(server.getEventManager()).thenReturn(eventManager);
 
     var player = Mockito.mock(Player.class);
@@ -203,6 +208,7 @@ class ServerApiTest {
       "exception RemovedNonExistentPlayer should be thrown")
   void itLogoutPlayerNotInRoomShouldHaveRemovedNonExistentPlayerException() {
     Mockito.when(server.getPlayerManager()).thenReturn(playerManager);
+    Mockito.when(server.getChannelManager()).thenReturn(channelManager);
     Mockito.when(server.getEventManager()).thenReturn(eventManager);
 
     var player = Mockito.mock(Player.class);
@@ -216,6 +222,8 @@ class ServerApiTest {
   @Test
   @DisplayName("When it tries to logout a player which has session, the session should be closed")
   void itLogoutPlayerHasSessionShouldCloseSession() {
+    Mockito.when(server.getChannelManager()).thenReturn(channelManager);
+
     var player = Mockito.mock(Player.class);
     var session = Mockito.mock(Session.class);
     Mockito.when(player.getSession()).thenReturn(Optional.of(session));
@@ -227,6 +235,8 @@ class ServerApiTest {
   @DisplayName("When it tries to logout a player which has session, and the closed session has IO" +
       " exception")
   void itLogoutPlayerHasSessionShouldHaveClosedSessionIoException() {
+    Mockito.when(server.getChannelManager()).thenReturn(channelManager);
+
     var player = Mockito.mock(Player.class);
     var session = Mockito.mock(Session.class);
     Mockito.when(player.getSession()).thenReturn(Optional.of(session));

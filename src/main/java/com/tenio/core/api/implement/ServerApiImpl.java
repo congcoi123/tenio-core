@@ -24,9 +24,11 @@ THE SOFTWARE.
 
 package com.tenio.core.api.implement;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.Channel;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
@@ -37,6 +39,7 @@ import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 import com.tenio.core.entity.define.result.PlayerLeftRoomResult;
 import com.tenio.core.entity.define.result.PlayerLoggedInResult;
 import com.tenio.core.entity.define.result.RoomCreatedResult;
+import com.tenio.core.entity.manager.ChannelManager;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.setting.InitialRoomSetting;
@@ -50,6 +53,7 @@ import com.tenio.core.server.Server;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -132,12 +136,19 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     }
 
     try {
+      // unsubscribe it from all channels
+      unsubscribeFromAllChannels(player);
       if (player.containsSession() && player.getSession().isPresent()) {
+        // check process on method InternalProcessorServiceImpl#processSessionWillBeClosed
         player.getSession().get().close(connectionDisconnectMode, playerDisconnectMode);
       } else {
+        // player should leave room (if applicable) first
+        if (player.isInRoom()) {
+          leaveRoom(player, PlayerLeaveRoomMode.LOG_OUT);
+        }
         getEventManager().emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
         String removedPlayer = player.getIdentity();
-        getPlayerManager().removePlayerByIdentity(player.getIdentity());
+        getPlayerManager().removePlayerByIdentity(removedPlayer);
         debug("DISCONNECTED PLAYER", "Player ", removedPlayer, " was removed");
         player.clean();
       }
@@ -314,6 +325,41 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
+  public void createChannel(String id, String description) {
+    getChannelManager().createChannel(id, description);
+  }
+
+  @Override
+  public void removeChannel(String id) {
+    getChannelManager().removeChannel(id);
+  }
+
+  @Override
+  public void subscribeToChannel(Channel channel, Player player) {
+    getChannelManager().subscribe(channel, player);
+  }
+
+  @Override
+  public void unsubscribeFromChannel(Channel channel, Player player) {
+    getChannelManager().unsubscribe(channel, player);
+  }
+
+  @Override
+  public void unsubscribeFromAllChannels(Player player) {
+    getChannelManager().unsubscribe(player);
+  }
+
+  @Override
+  public void notifyChannel(Channel channel, DataCollection message) {
+    getChannelManager().notify(channel, message);
+  }
+
+  @Override
+  public Map<String, Channel> getSubscribedChannelsForPlayer(Player player) {
+    return getChannelManager().getSubscribedChannelsForPlayer(player);
+  }
+
+  @Override
   public int getUdpPort() {
     return server.getDatagramChannelManager().getUdpPort();
   }
@@ -348,5 +394,9 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
   private RoomManager getRoomManager() {
     return server.getRoomManager();
+  }
+
+  private ChannelManager getChannelManager() {
+    return server.getChannelManager();
   }
 }

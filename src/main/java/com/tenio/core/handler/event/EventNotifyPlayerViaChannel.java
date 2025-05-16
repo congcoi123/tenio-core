@@ -25,19 +25,24 @@ THE SOFTWARE.
 package com.tenio.core.handler.event;
 
 import com.tenio.common.data.DataCollection;
+import com.tenio.core.entity.Channel;
 import com.tenio.core.entity.Player;
 
 /**
- * When the server sends a message to a player.
+ * When the server sends a message to a player via its channel.
+ *
+ * @since 0.6.3
  */
 @FunctionalInterface
-public interface EventSendMessageToPlayer<P extends Player> {
+public interface EventNotifyPlayerViaChannel<P extends Player> {
 
   /**
-   * When the server sends a message to a player.
+   * When the server sends a message to a player via its channel.
    *
-   * @param player  the {@link Player} which is receiving a message from the server
+   * @param channel the {@link Channel} which sends the notification
+   * @param player  the {@link Player} which is receiving a message from the server via its channel
    * @param message the sending {@link DataCollection}
+   * @since 0.6.3
    */
-  void handle(P player, DataCollection message);
+  void handle(Channel channel, P player, DataCollection message);
 }
