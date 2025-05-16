@@ -22,12 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.configuration;
+package com.tenio.core.exception;
 
-import com.tenio.core.network.define.TransportType;
+import com.tenio.core.configuration.define.CoreConfigurationType;
+import java.io.Serial;
 
 /**
- * A configuration for a socket.
+ * When an available datagram channel port is requested, but the list is empty. It might be
+ * caused by the size of {@link CoreConfigurationType#NETWORK_UDP} equals to {@code 0}, or there
+ * was some exception occurred while establishing datagram channels.
+ *
+ * @since 0.3.0
  */
-public record SocketConfiguration(String name, TransportType type, int port, int cacheSize) {
+public final class EmptyDatagramChannelsException extends RuntimeException {
+
+  @Serial
+  private static final long serialVersionUID = 6979513728417343122L;
+
+  /**
+   * Initialization.
+   */
+  public EmptyDatagramChannelsException() {
+    super("The list is empty, please check in configuration.xml file if value of datagram channel" +
+        " is greater than 0, or make sure there is no exception while establishing datagram channels");
+  }
 }

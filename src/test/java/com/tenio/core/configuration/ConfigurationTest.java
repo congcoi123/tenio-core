@@ -58,8 +58,8 @@ class ConfigurationTest {
     var tcp = (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_TCP);
     var webSocket = (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET);
     assertAll("getSocketPortsConfiguration",
-        () -> assertEquals("8032", tcp.port()),
-        () -> assertEquals("8033", webSocket.port()),
+        () -> assertEquals(8032, tcp.port()),
+        () -> assertEquals(8033, webSocket.port()),
         () -> assertEquals(TransportType.TCP, tcp.type()),
         () -> assertEquals(TransportType.WEB_SOCKET, webSocket.type())
     );

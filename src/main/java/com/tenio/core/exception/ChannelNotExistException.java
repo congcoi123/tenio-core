@@ -22,12 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.configuration;
+package com.tenio.core.exception;
 
-import com.tenio.core.network.define.TransportType;
+import java.io.Serial;
 
 /**
- * A configuration for a socket.
+ * When a channel which is referenced to does not exist.
  */
-public record SocketConfiguration(String name, TransportType type, int port, int cacheSize) {
+public final class ChannelNotExistException extends RuntimeException {
+
+  @Serial
+  private static final long serialVersionUID = -434498401186142787L;
 }

@@ -22,12 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.configuration;
+package com.tenio.core.exception;
 
-import com.tenio.core.network.define.TransportType;
+import java.io.Serial;
 
 /**
- * A configuration for a socket.
+ * When a channel which has its id to be already registered is added onto server.
  */
-public record SocketConfiguration(String name, TransportType type, int port, int cacheSize) {
+public final class CreatedDuplicatedChannelException extends RuntimeException {
+
+  @Serial
+  private static final long serialVersionUID = 8092158806681330621L;
+
+  /**
+   * Initialization.
+   */
+  public CreatedDuplicatedChannelException(String channelId) {
+    super(String.format("Unable to create channel with id: %s, it already exists", channelId));
+  }
 }

@@ -107,7 +107,7 @@ public interface ZeroSocketService extends Service {
   void setConnectionFilter(ConnectionFilter connectionFilter);
 
   /**
-   * Set a session manager.
+   * Sets a session manager.
    *
    * @param sessionManager the {@link SessionManager}
    */

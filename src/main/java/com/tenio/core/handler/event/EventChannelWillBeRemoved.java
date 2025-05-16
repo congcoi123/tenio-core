@@ -22,12 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.configuration;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.network.define.TransportType;
+import com.tenio.core.entity.Channel;
 
 /**
- * A configuration for a socket.
+ * When a channel is going to be removed.
+ *
+ * @since 0.6.3
  */
-public record SocketConfiguration(String name, TransportType type, int port, int cacheSize) {
+@FunctionalInterface
+public interface EventChannelWillBeRemoved {
+
+  /**
+   * When the server sends a message to a player via its channel.
+   *
+   * @param channel the channel which is going to be removed
+   * @since 0.6.3
+   */
+  void handle(Channel channel);
 }

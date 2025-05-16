@@ -36,7 +36,7 @@ public interface EventSendMessageToPlayer<P extends Player> {
   /**
    * When the server sends a message to a player.
    *
-   * @param player  the {@link Player} which is receiving a message to the server
+   * @param player  the {@link Player} which is receiving a message from the server
    * @param message the sending {@link DataCollection}
    */
   void handle(P player, DataCollection message);

@@ -22,12 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.configuration;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.network.define.TransportType;
+import com.tenio.core.entity.Channel;
 
 /**
- * A configuration for a socket.
+ * When a new channel was created on the server.
+ *
+ * @since 0.6.3
  */
-public record SocketConfiguration(String name, TransportType type, int port, int cacheSize) {
+@FunctionalInterface
+public interface EventChannelCreated {
+
+  /**
+   * When a new channel was created on the server.
+   *
+   * @param channel a new instance of {@link Channel}
+   * @since 0.6.3
+   */
+  void handle(Channel channel);
 }

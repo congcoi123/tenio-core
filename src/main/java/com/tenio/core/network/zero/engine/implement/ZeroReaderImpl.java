@@ -352,6 +352,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
   @Override
   public void onRunning() {
+    // Default read buffer is DIRECT
     ByteBuffer readerBuffer = ByteBuffer.allocateDirect(getMaxBufferSize());
 
     while (!Thread.currentThread().isInterrupted()) {

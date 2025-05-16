@@ -22,12 +22,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.configuration;
+package com.tenio.core.handler.event;
 
-import com.tenio.core.network.define.TransportType;
+import com.tenio.core.entity.Channel;
+import com.tenio.core.entity.Player;
 
 /**
- * A configuration for a socket.
+ * When a player subscribed to a channel.
+ *
+ * @since 0.6.3
  */
-public record SocketConfiguration(String name, TransportType type, int port, int cacheSize) {
+@FunctionalInterface
+public interface EventPlayerSubscribedChannel<P extends Player> {
+
+  /**
+   * When a player subscribed to a channel.
+   *
+   * @param channel an instance of {@link Channel}
+   * @param player  the {@link Player} which subscribed to the channel
+   * @since 0.6.3
+   */
+  void handle(Channel channel, P player);
 }
