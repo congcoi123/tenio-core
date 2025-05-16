@@ -136,12 +136,12 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     }
 
     try {
-      // unsubscribe it from all channels
-      unsubscribeFromAllChannels(player);
       if (player.containsSession() && player.getSession().isPresent()) {
         // check process on method InternalProcessorServiceImpl#processSessionWillBeClosed
         player.getSession().get().close(connectionDisconnectMode, playerDisconnectMode);
       } else {
+        // unsubscribe it from all channels
+        unsubscribeFromAllChannels(player);
         // player should leave room (if applicable) first
         if (player.isInRoom()) {
           leaveRoom(player, PlayerLeaveRoomMode.LOG_OUT);
