@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,51 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * The APIs designed for writing binaries data to sockets.
+ * Interface for handling network packet writing operations.
+ * This interface defines the core functionality for managing packet transmission,
+ * session management, and network statistics tracking.
+ *
+ * <p>Key features:
+ * <ul>
+ *   <li>Packet transmission management</li>
+ *   <li>Session queue handling</li>
+ *   <li>Network statistics tracking</li>
+ *   <li>Buffer management</li>
+ * </ul>
+ *
+ * <p>Usage example:
+ * <pre>
+ * public class CustomWriterHandler implements WriterHandler {
+ *     private BlockingQueue<Session> sessionQueue;
+ *     private NetworkWriterStatistic networkWriterStatistic;
+ *     private ByteBuffer buffer;
+ *     
+ *     @Override
+ *     public void send(PacketQueue packetQueue, Session session, Packet packet) {
+ *         // Implement packet sending logic
+ *     }
+ *     
+ *     @Override
+ *     public BlockingQueue<Session> getSessionTicketsQueue() {
+ *         return sessionQueue;
+ *     }
+ *     
+ *     @Override
+ *     public void setSessionTicketsQueue(BlockingQueue<Session> queue) {
+ *         this.sessionQueue = queue;
+ *     }
+ * }
+ * </pre>
+ *
+ * <p>Note: This interface is typically implemented by specific writer handlers
+ * for different network protocols (TCP, WebSocket, UDP, etc.).
+ *
+ * @see PacketQueue
+ * @see Session
+ * @see Packet
+ * @see NetworkWriterStatistic
+ * @see ByteBuffer
+ * @since 0.3.0
  */
 public interface WriterHandler {
 

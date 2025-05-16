@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,11 +29,35 @@ import com.tenio.core.bootstrap.annotation.Bean;
 import java.io.Serial;
 
 /**
- * When it is adding a duplicated bean, which share the same class type and name.
+ * Exception thrown when attempting to create a duplicate bean in the dependency injection container.
+ * This exception occurs when multiple bean definitions are found for the same type or name,
+ * violating the singleton pattern or unique bean requirement.
  *
- * @see Bean
- * @see AutowiredQualifier
- * @since 0.5.0
+ * <p>Common causes:
+ * <ul>
+ *   <li>Multiple classes implementing the same interface</li>
+ *   <li>Duplicate bean names in configuration</li>
+ *   <li>Multiple component scan paths including the same class</li>
+ *   <li>Incorrect bean scope configuration</li>
+ * </ul>
+ *
+ * <p>Usage example:
+ * <pre>
+ * try {
+ *     BeanFactory beanFactory = new BeanFactory();
+ *     beanFactory.registerBean(MyService.class);
+ * } catch (DuplicatedBeanCreationException e) {
+ *     logger.error("Duplicate bean found: " + e.getMessage());
+ *     // Handle duplicate bean
+ * }
+ * </pre>
+ *
+ * <p>Note: This exception provides information about the duplicate bean type or name,
+ * helping to identify which bean definitions need to be resolved.
+ *
+ * @see BeanFactory
+ * @see Component
+ * @since 0.3.0
  */
 public final class DuplicatedBeanCreationException extends Exception {
 

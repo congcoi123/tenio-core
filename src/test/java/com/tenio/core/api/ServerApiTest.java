@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -222,8 +222,6 @@ class ServerApiTest {
   @Test
   @DisplayName("When it tries to logout a player which has session, the session should be closed")
   void itLogoutPlayerHasSessionShouldCloseSession() {
-    Mockito.when(server.getChannelManager()).thenReturn(channelManager);
-
     var player = Mockito.mock(Player.class);
     var session = Mockito.mock(Session.class);
     Mockito.when(player.getSession()).thenReturn(Optional.of(session));
@@ -235,8 +233,6 @@ class ServerApiTest {
   @DisplayName("When it tries to logout a player which has session, and the closed session has IO" +
       " exception")
   void itLogoutPlayerHasSessionShouldHaveClosedSessionIoException() {
-    Mockito.when(server.getChannelManager()).thenReturn(channelManager);
-
     var player = Mockito.mock(Player.class);
     var session = Mockito.mock(Session.class);
     Mockito.when(player.getSession()).thenReturn(Optional.of(session));
