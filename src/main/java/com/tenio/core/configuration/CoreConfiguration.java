@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -38,10 +38,40 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 /**
- * This server needs some basic configuration to start running. The
- * configuration file can be defined as an XML file. See an example in
- * <b>configuration.example.xml</b>. You can also extend this file to create your own
- * configuration values.
+ * Manages core configuration settings for the game server.
+ * This class handles loading and parsing of configuration from XML files,
+ * providing access to various server settings and parameters.
+ *
+ * <p>Key features:
+ * <ul>
+ *   <li>XML-based configuration loading</li>
+ *   <li>Support for custom configuration values</li>
+ *   <li>Integration with common configuration</li>
+ *   <li>Socket configuration management</li>
+ *   <li>Transport type configuration</li>
+ * </ul>
+ *
+ * <p>Usage example:
+ * <pre>
+ * CoreConfiguration config = new CoreConfiguration();
+ * config.load("configuration.xml");
+ * SocketConfiguration socketConfig = config.getSocketConfiguration();
+ * TransportType transportType = config.getTransportType();
+ * </pre>
+ *
+ * <p>Configuration file format:
+ * <pre>
+ * &lt;configuration&gt;
+ *   &lt;setting name="transport.type" value="TCP"/&gt;
+ *   &lt;setting name="socket.port" value="8080"/&gt;
+ *   &lt;!-- Additional settings --&gt;
+ * &lt;/configuration&gt;
+ * </pre>
+ *
+ * @see CommonConfiguration
+ * @see SocketConfiguration
+ * @see TransportType
+ * @see CoreConfigurationType
  */
 public abstract class CoreConfiguration extends CommonConfiguration {
 

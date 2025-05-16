@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,41 @@ import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 import org.apache.logging.log4j.util.Strings;
 
 /**
- * The application will start from here.
+ * The main entry point for launching the game server application.
+ * This class handles the initialization and startup of the server, including
+ * configuration loading, system monitoring setup, and server instance creation.
+ *
+ * <p>Key features:
+ * <ul>
+ *   <li>Command-line argument parsing</li>
+ *   <li>Configuration file loading</li>
+ *   <li>System monitoring initialization</li>
+ *   <li>Server instance creation and startup</li>
+ *   <li>Logging system configuration</li>
+ * </ul>
+ *
+ * <p>Usage example:
+ * <pre>
+ * public static void main(String[] args) {
+ *     ApplicationLauncher launcher = new ApplicationLauncher();
+ *     launcher.launch(args);
+ * }
+ * </pre>
+ *
+ * <p>Command-line options:
+ * <ul>
+ *   <li>--config: Path to the configuration file (default: configuration.xml)</li>
+ *   <li>--help: Display help information</li>
+ *   <li>--version: Display version information</li>
+ * </ul>
+ *
+ * <p>Note: This class is designed to be the single entry point for the application
+ * and should not be instantiated multiple times.
+ *
+ * @see Bootstrapper
+ * @see ServerImpl
+ * @see SystemInfo
+ * @since 0.3.0
  */
 public final class ApplicationLauncher extends SystemLogger {
 

@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,35 @@ package com.tenio.core.exception;
 import java.io.Serial;
 
 /**
- * When a declared event is in missing on defining its subscriber.
+ * Exception thrown when attempting to emit an event that has no registered subscribers.
+ * This exception indicates that an event was emitted but no handlers were registered
+ * to process it, which may indicate a configuration or initialization issue.
+ *
+ * <p>Common causes:
+ * <ul>
+ *   <li>Event subscribers not properly registered during initialization</li>
+ *   <li>Missing event handler configuration</li>
+ *   <li>Event type mismatch between emitter and subscribers</li>
+ *   <li>Premature event emission before subscriber registration</li>
+ * </ul>
+ *
+ * <p>Usage example:
+ * <pre>
+ * try {
+ *     eventManager.emit(ServerEvent.PLAYER_CONNECTED, player);
+ * } catch (NotDefinedSubscribersException e) {
+ *     logger.warn("No subscribers found for event: " + e.getEvent());
+ *     // Handle missing subscribers
+ * }
+ * </pre>
+ *
+ * <p>Note: This exception provides information about the event that was attempted
+ * to be emitted, helping to identify which event handlers need to be registered.
+ *
+ * @see EventManager
+ * @see EventSubscriber
+ * @see ServerEvent
+ * @since 0.3.0
  */
 public final class NotDefinedSubscribersException extends RuntimeException {
 

@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,42 @@ import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * This class supports creating an instance for holding the network written data to clients side.
+ * Tracks and manages network writing statistics for the server.
+ * This class provides thread-safe counters for monitoring bytes written,
+ * packets sent, and dropped packets due to policy violations or queue overflow.
+ *
+ * <p>Key features:
+ * <ul>
+ *   <li>Thread-safe atomic counters</li>
+ *   <li>Bytes written tracking</li>
+ *   <li>Packet count monitoring</li>
+ *   <li>Dropped packet statistics (policy and queue overflow)</li>
+ *   <li>Singleton instance management</li>
+ * </ul>
+ *
+ * <p>Usage example:
+ * <pre>
+ * NetworkWriterStatistic stats = NetworkWriterStatistic.newInstance();
+ * stats.updateWrittenBytes(1024);
+ * stats.updateWrittenPackets(1);
+ * stats.updateWrittenDroppedPacketsByPolicy(1);
+ * stats.updateWrittenDroppedPacketsByFull(1);
+ * 
+ * long totalBytes = stats.getWrittenBytes();
+ * long totalPackets = stats.getWrittenPackets();
+ * long totalDropped = stats.getWrittenDroppedPackets();
+ * </pre>
+ *
+ * <p>Note: This class uses atomic counters to ensure thread safety
+ * when multiple network writers are updating statistics concurrently.
+ * It distinguishes between packets dropped due to policy violations
+ * and those dropped due to queue overflow.
+ *
+ * @see NetworkReaderStatistic
+ * @see PacketQueue
+ * @see PacketQueuePolicy
+ * @see AtomicLong
+ * @since 0.3.0
  */
 public final class NetworkWriterStatistic {
 

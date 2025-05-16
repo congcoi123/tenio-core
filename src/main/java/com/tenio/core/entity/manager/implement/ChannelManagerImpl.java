@@ -45,8 +45,8 @@ public final class ChannelManagerImpl implements ChannelManager {
       eventManager.emit(ServerEvent.CHANNEL_WILL_BE_REMOVED, channel);
       // Unsubscribe all players from this channel
       channel.removePlayers();
+      channels.remove(id);
     }
-    channels.remove(id);
   }
 
   @Override

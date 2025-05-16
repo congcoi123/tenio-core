@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,37 @@ package com.tenio.core.network.statistic;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * This class supports creating an instance for holding the network reading data from clients side.
+ * Tracks and manages network reading statistics for the server.
+ * This class provides thread-safe counters for monitoring bytes read,
+ * packets received, and dropped packets due to policy violations.
+ *
+ * <p>Key features:
+ * <ul>
+ *   <li>Thread-safe atomic counters</li>
+ *   <li>Bytes read tracking</li>
+ *   <li>Packet count monitoring</li>
+ *   <li>Dropped packet statistics</li>
+ *   <li>Singleton instance management</li>
+ * </ul>
+ *
+ * <p>Usage example:
+ * <pre>
+ * NetworkReaderStatistic stats = NetworkReaderStatistic.newInstance();
+ * stats.updateReadBytes(1024);
+ * stats.updateReadPackets(1);
+ * stats.updateReadDroppedPackets(1);
+ * 
+ * long totalBytes = stats.getReadBytes();
+ * long totalPackets = stats.getReadPackets();
+ * long droppedPackets = stats.getReadDroppedPackets();
+ * </pre>
+ *
+ * <p>Note: This class uses atomic counters to ensure thread safety
+ * when multiple network readers are updating statistics concurrently.
+ *
+ * @see NetworkWriterStatistic
+ * @see AtomicLong
+ * @since 0.3.0
  */
 public final class NetworkReaderStatistic {
 

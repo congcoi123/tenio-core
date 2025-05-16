@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,8 +31,51 @@ import com.tenio.core.exception.CreatedDuplicatedChannelException;
 import java.util.Map;
 
 /**
- * All supported APIs for the channel management.
+ * Manages the lifecycle and operations of communication channels in the game server.
+ * This interface provides comprehensive channel management capabilities including
+ * creation, deletion, and player management within channels.
  *
+ * <p>Key features:
+ * <ul>
+ *   <li>Channel lifecycle management (creation, deletion, cleanup)</li>
+ *   <li>Player membership management within channels</li>
+ *   <li>Message broadcasting across channels</li>
+ *   <li>Channel state tracking and validation</li>
+ *   <li>Thread-safe channel operations</li>
+ *   <li>Channel event handling</li>
+ * </ul>
+ *
+ * <p>Usage example:
+ * <pre>
+ * ChannelManager manager = new DefaultChannelManager();
+ * 
+ * // Create a new channel
+ * Channel channel = manager.createChannel("game-channel");
+ * channel.setMaxPlayers(50);
+ * 
+ * // Add players to channel
+ * manager.addPlayerToChannel("game-channel", player1);
+ * manager.addPlayerToChannel("game-channel", player2);
+ * 
+ * // Broadcast message to all players in channel
+ * manager.broadcastToChannel("game-channel", "Welcome to the game!");
+ * 
+ * // Get channel statistics
+ * int playerCount = manager.getPlayerCountInChannel("game-channel");
+ * List<Player> players = manager.getPlayersInChannel("game-channel");
+ * </pre>
+ *
+ * <p>Thread safety: Implementations of this interface should be thread-safe
+ * as they handle concurrent channel operations. The interface provides atomic
+ * operations for channel management and player membership changes.
+ *
+ * <p>Note: This interface is designed to work in conjunction with the
+ * {@link Channel} interface for managing communication channels and their
+ * associated players.
+ *
+ * @see Channel
+ * @see Player
+ * @see CreatedDuplicatedChannelException
  * @since 0.6.3
  */
 public interface ChannelManager {
