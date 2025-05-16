@@ -67,11 +67,11 @@ public final class ChannelEventHandler {
    */
   public void initialize(EventManager eventManager) {
 
-    final var eventChannelCreatedOp = Optional.of(eventChannelCreated);
-    final var eventChannelWillBeRemovedOp = Optional.of(eventChannelWillBeRemoved);
+    final var eventChannelCreatedOp = Optional.ofNullable(eventChannelCreated);
+    final var eventChannelWillBeRemovedOp = Optional.ofNullable(eventChannelWillBeRemoved);
 
-    final var eventPlayerSubscribedChannelOp = Optional.of(eventPlayerSubscribedChannel);
-    final var eventPlayerUnsubscribedChannelOp = Optional.of(eventPlayerUnsubscribedChannel);
+    final var eventPlayerSubscribedChannelOp = Optional.ofNullable(eventPlayerSubscribedChannel);
+    final var eventPlayerUnsubscribedChannelOp = Optional.ofNullable(eventPlayerUnsubscribedChannel);
 
     final var eventNotifyPlayerViaChannelOp = Optional.ofNullable(eventNotifyPlayerViaChannel);
 
