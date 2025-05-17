@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,12 +24,28 @@ THE SOFTWARE.
 
 package com.tenio.core.entity;
 
+import com.tenio.core.entity.manager.ChannelManager;
 import java.util.List;
 import java.util.Map;
 
 /**
- * An abstract channel entity used to notify players.
+ * Represents an abstract channel entity used for player communication and notifications.
+ * This class provides a foundation for implementing different types of communication channels
+ * in the game server.
  *
+ * <p>Key features:
+ * <ul>
+ *   <li>Player notification management</li>
+ *   <li>Channel membership tracking</li>
+ *   <li>Message broadcasting capabilities</li>
+ *   <li>Channel state management</li>
+ * </ul>
+ *
+ * <p>Thread safety: Implementations of this class should be thread-safe
+ * as they may be accessed from multiple threads concurrently.
+ *
+ * @see Player
+ * @see ChannelManager
  * @since 0.6.3
  */
 public interface Channel {

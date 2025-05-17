@@ -45,8 +45,8 @@ public final class ChannelManagerImpl implements ChannelManager {
       eventManager.emit(ServerEvent.CHANNEL_WILL_BE_REMOVED, channel);
       // Unsubscribe all players from this channel
       channel.removePlayers();
+      channels.remove(id);
     }
-    channels.remove(id);
   }
 
   @Override
@@ -77,7 +77,7 @@ public final class ChannelManagerImpl implements ChannelManager {
   }
 
   @Override
-  public void notify(Channel channel, DataCollection message) {
+  public void broadcast(Channel channel, DataCollection message) {
     if (Objects.isNull(channel)) {
       throw new ChannelNotExistException();
     }

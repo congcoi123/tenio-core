@@ -1,7 +1,7 @@
 /*
 The MIT License
 
-Copyright (c) 2016-2023 kong <congcoi123@gmail.com>
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -412,13 +412,13 @@ public interface ServerApi {
   void unsubscribeFromAllChannels(Player player);
 
   /**
-   * Sends a notification to a channel.
+   * Broadcasts a message to a channel.
    *
    * @param channel an instance of {@link Channel}
    * @param message an instance of {@link DataCollection}
    * @since 0.6.3
    */
-  void notifyChannel(Channel channel, DataCollection message);
+  void broadcastToChannel(Channel channel, DataCollection message);
 
   /**
    * Retrieves all channels that a player is subscribing to.
