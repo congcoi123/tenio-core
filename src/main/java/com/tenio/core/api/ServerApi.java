@@ -412,7 +412,7 @@ public interface ServerApi {
   void unsubscribeFromAllChannels(Player player);
 
   /**
-   * Sends a notification to a channel.
+   * Broadcasts a message to a channel.
    *
    * @param channel an instance of {@link Channel}
    * @param message an instance of {@link DataCollection}
