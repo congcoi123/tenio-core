@@ -46,19 +46,6 @@ import javax.annotation.concurrent.NotThreadSafe;
  *   <li>Event result collection</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * EventManager eventManager = EventManager.newInstance();
- * 
- * // Subscribe to an event
- * eventManager.on(ServerEvent.PLAYER_LOGIN_RESULT, (player, result) -> {
- *     // Handle player login result
- * });
- * 
- * // Emit an event
- * eventManager.emit(ServerEvent.PLAYER_LOGIN_RESULT, player, result);
- * </pre>
- *
  * <p>Note: This class is not thread-safe and should be used in a single-threaded context
  * or with proper synchronization.
  *

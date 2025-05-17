@@ -48,7 +48,7 @@ import java.lang.annotation.Target;
  *
  * <p>Usage example:
  * <pre>
- * &#64;ClientCommand("login")
+ * &#64;ClientCommand(Constants.LOGIN)
  * public class LoginCommandHandler extends AbstractClientCommandHandler {
  *     &#64;Override
  *     public void execute(Player player, String[] args) {
@@ -64,13 +64,13 @@ import java.lang.annotation.Target;
  * <ul>
  *   <li>Must extend {@link AbstractClientCommandHandler}</li>
  *   <li>Will be automatically registered with the client command manager</li>
- *   <li>Should provide a unique command label</li>
+ *   <li>Should provide a unique command value</li>
  *   <li>Must implement the command execution logic</li>
  *   <li>Should handle player-specific operations</li>
  * </ul>
  *
  * @see AbstractClientCommandHandler
- * @since 0.4.0
+ * @since 0.5.0
  */
 @Retention(RUNTIME)
 @Target(TYPE)

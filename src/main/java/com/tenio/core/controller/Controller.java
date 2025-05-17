@@ -45,34 +45,6 @@ import com.tenio.core.service.ServiceListener;
  *   <li>Performance monitoring capabilities</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * Controller controller = new DefaultController();
- * 
- * // Configure controller
- * controller.setMaxRequestQueueSize(1000);
- * controller.setThreadPoolSize(4);
- * 
- * // Start the controller
- * controller.start();
- * 
- * // Enqueue requests
- * try {
- *     controller.enqueueRequest(new Request());
- * } catch (RequestQueueFullException e) {
- *     // Handle queue full situation
- * }
- * 
- * // Monitor controller state
- * if (controller.isRunning()) {
- *     int queueSize = controller.getRequestQueueSize();
- *     int activeThreads = controller.getActiveThreadCount();
- * }
- * 
- * // Stop the controller
- * controller.stop();
- * </pre>
- *
  * <p>Thread safety: Implementations of this interface should be thread-safe
  * as they handle concurrent request processing. The interface provides atomic
  * operations for request queue management and thread pool control.

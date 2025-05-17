@@ -51,23 +51,6 @@ import org.w3c.dom.Node;
  *   <li>Transport type configuration</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * CoreConfiguration config = new CoreConfiguration();
- * config.load("configuration.xml");
- * SocketConfiguration socketConfig = config.getSocketConfiguration();
- * TransportType transportType = config.getTransportType();
- * </pre>
- *
- * <p>Configuration file format:
- * <pre>
- * &lt;configuration&gt;
- *   &lt;setting name="transport.type" value="TCP"/&gt;
- *   &lt;setting name="socket.port" value="8080"/&gt;
- *   &lt;!-- Additional settings --&gt;
- * &lt;/configuration&gt;
- * </pre>
- *
  * @see CommonConfiguration
  * @see SocketConfiguration
  * @see TransportType

@@ -43,20 +43,6 @@ import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
  *   <li>FIFO packet processing</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * PacketQueue queue = new DefaultPacketQueue();
- * queue.configureMaxSize(1000);
- * queue.configurePacketQueuePolicy(new DefaultPacketQueuePolicy());
- * 
- * try {
- *     queue.put(packet);
- *     Packet nextPacket = queue.take();
- * } catch (PacketQueueFullException | PacketQueuePolicyViolationException e) {
- *     // Handle queue operation failure
- * }
- * </pre>
- *
  * <p>Thread safety: This interface is designed to be thread-safe and can be
  * safely accessed from multiple threads. Implementations should ensure atomic
  * operations for queue modifications.

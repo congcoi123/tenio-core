@@ -24,11 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.configuration.constant;
 
-import com.tenio.common.data.zero.ZeroArray;
-import com.tenio.common.data.zero.ZeroMap;
-import com.tenio.core.bootstrap.Bootstrapper;
-import com.tenio.core.network.zero.engine.implement.ZeroReaderImpl;
-
 /**
  * Defines core constants used throughout the server application.
  * This class provides centralized access to commonly used constant values,
@@ -43,18 +38,6 @@ import com.tenio.core.network.zero.engine.implement.ZeroReaderImpl;
  *   <li>Configuration defaults</li>
  *   <li>Network protocol constants</li>
  * </ul>
- *
- * <p>Usage example:
- * <pre>
- * // Using character encoding
- * String encoded = new String(bytes, CoreConstant.UTF_8);
- * 
- * // Setting content type
- * response.setContentType(CoreConstant.CONTENT_TYPE_JSON);
- * 
- * // Accessing default package
- * String bootstrapPackage = CoreConstant.DEFAULT_BOOTSTRAP_PACKAGE;
- * </pre>
  *
  * <p>Note: This class contains only static final fields and should not be instantiated.
  * All constants are immutable and thread-safe.

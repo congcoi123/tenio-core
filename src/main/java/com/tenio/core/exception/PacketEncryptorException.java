@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.exception;
 
+import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
 import java.io.Serial;
 
@@ -40,21 +41,11 @@ import java.io.Serial;
  *   <li>Incompatible encryption formats</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * try {
- *     byte[] encryptedData = packetEncryptor.encrypt(packetData);
- * } catch (PacketEncryptorException e) {
- *     logger.error("Failed to encrypt packet: " + e.getMessage());
- *     // Handle encryption failure
- * }
- * </pre>
- *
  * <p>Note: This exception preserves the original cause of the encryption error
  * through the cause chain, making it easier to diagnose the root cause of
  * encryption failures.
  *
- * @see PacketEncryptor
+ * @see BinaryPacketEncryptor
  * @see Packet
  * @since 0.3.0
  */

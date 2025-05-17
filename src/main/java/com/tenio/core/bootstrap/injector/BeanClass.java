@@ -24,6 +24,9 @@ THE SOFTWARE.
 
 package com.tenio.core.bootstrap.injector;
 
+import com.tenio.core.bootstrap.annotation.Bean;
+import com.tenio.core.bootstrap.annotation.BeanFactory;
+
 /**
  * A record that represents a bean class with its associated name qualifier.
  * This class is used internally by the dependency injection system to uniquely
@@ -37,19 +40,6 @@ package com.tenio.core.bootstrap.injector;
  *   <li>Thread-safe by design</li>
  *   <li>Hash code and equality support</li>
  * </ul>
- *
- * <p>Usage example:
- * <pre>
- * // Create a bean class with default name
- * BeanClass defaultBean = new BeanClass(UserService.class, "");
- * 
- * // Create a bean class with custom name
- * BeanClass namedBean = new BeanClass(UserService.class, "adminService");
- * 
- * // Use in bean registry
- * Map<BeanClass, Object> registry = new HashMap<>();
- * registry.put(defaultBean, new UserServiceImpl());
- * </pre>
  *
  * <p>Note: This record is primarily used internally by the {@link Injector}
  * for bean management and should not be used directly in application code.

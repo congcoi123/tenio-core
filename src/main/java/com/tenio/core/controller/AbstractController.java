@@ -38,7 +38,6 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * An abstract base class for implementing request controllers in the application.
@@ -55,27 +54,6 @@ import java.util.concurrent.ThreadPoolExecutor;
  *   <li>Request validation and error handling</li>
  *   <li>Performance monitoring capabilities</li>
  * </ul>
- *
- * <p>Usage example:
- * <pre>
- * public class MyController extends AbstractController {
- *     public MyController() {
- *         setMaxRequestQueueSize(1000);
- *         setThreadPoolSize(4);
- *     }
- *     
- *     &#64;Override
- *     protected void processRequest(Request request) {
- *         // Process the request
- *         try {
- *             validateRequest(request);
- *             handleRequest(request);
- *         } catch (Exception e) {
- *             handleError(request, e);
- *         }
- *     }
- * }
- * </pre>
  *
  * <p>Thread safety: This class is thread-safe and handles concurrent
  * request processing through its thread pool and queue mechanisms.
@@ -281,7 +259,6 @@ public abstract class AbstractController extends AbstractManager implements Cont
       throw new IllegalArgumentException("Thread pool size must be greater than 0");
     }
     executorSize = maxSize;
-    ((ThreadPoolExecutor) executorService).setCorePoolSize(maxSize);
   }
 
   @Override

@@ -41,20 +41,6 @@ import com.tenio.common.configuration.Configuration;
  *   <li>Component-based architecture</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * @Component
- * public class MyService {
- *     @Autowired
- *     private ConfigurationHandler configurationHandler;
- *     
- *     public void someMethod() {
- *         Configuration config = configurationHandler.getConfiguration();
- *         // Use configuration settings
- *     }
- * }
- * </pre>
- *
  * <p>Note: This class is annotated with {@link Component} to enable automatic
  * component scanning and dependency injection. The configuration instance is
  * injected using the {@link Autowired} annotation.

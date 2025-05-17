@@ -40,20 +40,6 @@ import javax.annotation.concurrent.NotThreadSafe;
  *   <li>Event result collection</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * EventProducer producer = new EventProducer();
- * 
- * // Get the event handler
- * EventHandler<Object> handler = producer.getEventHandler();
- * 
- * // Emit an event
- * Object result = producer.emit(ServerEvent.PLAYER_LOGIN, player);
- * 
- * // Clear all events
- * producer.clear();
- * </pre>
- *
  * <p>Note: This class is not thread-safe and should be used in a single-threaded context
  * or with proper synchronization. It is designed to be the single point of event handler
  * creation and should not be instantiated multiple times.

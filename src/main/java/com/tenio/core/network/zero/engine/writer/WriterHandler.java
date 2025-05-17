@@ -44,30 +44,6 @@ import java.util.concurrent.BlockingQueue;
  *   <li>Buffer management</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * public class CustomWriterHandler implements WriterHandler {
- *     private BlockingQueue<Session> sessionQueue;
- *     private NetworkWriterStatistic networkWriterStatistic;
- *     private ByteBuffer buffer;
- *     
- *     @Override
- *     public void send(PacketQueue packetQueue, Session session, Packet packet) {
- *         // Implement packet sending logic
- *     }
- *     
- *     @Override
- *     public BlockingQueue<Session> getSessionTicketsQueue() {
- *         return sessionQueue;
- *     }
- *     
- *     @Override
- *     public void setSessionTicketsQueue(BlockingQueue<Session> queue) {
- *         this.sessionQueue = queue;
- *     }
- * }
- * </pre>
- *
  * <p>Note: This interface is typically implemented by specific writer handlers
  * for different network protocols (TCP, WebSocket, UDP, etc.).
  *

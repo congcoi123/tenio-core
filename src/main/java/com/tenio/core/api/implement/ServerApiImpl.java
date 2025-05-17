@@ -350,8 +350,8 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
-  public void notifyChannel(Channel channel, DataCollection message) {
-    getChannelManager().notify(channel, message);
+  public void broadcastToChannel(Channel channel, DataCollection message) {
+    getChannelManager().broadcast(channel, message);
   }
 
   @Override

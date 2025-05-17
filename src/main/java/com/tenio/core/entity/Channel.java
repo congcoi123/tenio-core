@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.entity;
 
+import com.tenio.core.entity.manager.ChannelManager;
 import java.util.List;
 import java.util.Map;
 
@@ -39,13 +40,6 @@ import java.util.Map;
  *   <li>Message broadcasting capabilities</li>
  *   <li>Channel state management</li>
  * </ul>
- *
- * <p>Usage example:
- * <pre>
- * Channel channel = new GameChannel("game-channel");
- * channel.addPlayer(player);
- * channel.broadcast(message);
- * </pre>
  *
  * <p>Thread safety: Implementations of this class should be thread-safe
  * as they may be accessed from multiple threads concurrently.

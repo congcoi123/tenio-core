@@ -58,22 +58,6 @@ import kcp.Ukcp;
  *   <li>Idle state monitoring</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * Session session = new TcpSession();
- * session.setName("player1");
- * session.activate();
- * 
- * // Track data transfer
- * session.addReadBytes(1024);
- * session.addWrittenBytes(512);
- * 
- * // Check session state
- * if (session.isIdle()) {
- *     session.close();
- * }
- * </pre>
- *
  * <p>Thread safety: Implementations of this interface should be thread-safe
  * as they may be accessed from multiple threads concurrently. The interface
  * provides atomic operations for state transitions and data transfer tracking.

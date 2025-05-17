@@ -44,18 +44,6 @@ import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
  *   <li>Extensible encoding pipeline</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * BinaryPacketEncoder encoder = new DefaultBinaryPacketEncoder();
- * encoder.setCompressor(new BinaryPacketCompressor());
- * encoder.setEncryptor(new BinaryPacketEncryptor());
- * encoder.setCompressionThresholdBytes(1024);
- * 
- * Packet packet = new Packet();
- * packet.setData(data);
- * Packet encodedPacket = encoder.encode(packet);
- * </pre>
- *
  * <p>Thread safety: Implementations of this interface should be thread-safe
  * as they may be accessed from multiple threads concurrently. The encoding
  * process should be atomic and not interfere with other encoding operations.

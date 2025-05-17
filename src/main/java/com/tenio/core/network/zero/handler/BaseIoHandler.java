@@ -41,29 +41,6 @@ import com.tenio.core.network.statistic.NetworkReaderStatistic;
  *   <li>Event-based communication</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * public class CustomIoHandler implements BaseIoHandler {
- *     private SessionManager sessionManager;
- *     private NetworkReaderStatistic networkReaderStatistic;
- *     
- *     @Override
- *     public void sessionException(Session session, Exception exception) {
- *         // Handle session exceptions
- *     }
- *     
- *     @Override
- *     public void setSessionManager(SessionManager sessionManager) {
- *         this.sessionManager = sessionManager;
- *     }
- *     
- *     @Override
- *     public void setNetworkReaderStatistic(NetworkReaderStatistic statistic) {
- *         this.networkReaderStatistic = statistic;
- *     }
- * }
- * </pre>
- *
  * <p>Note: This interface is typically implemented by specific I/O handlers
  * for different network protocols (TCP, WebSocket, UDP, etc.).
  *

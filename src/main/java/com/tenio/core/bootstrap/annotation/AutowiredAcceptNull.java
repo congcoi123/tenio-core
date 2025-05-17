@@ -27,15 +27,16 @@ package com.tenio.core.bootstrap.annotation;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.tenio.core.bootstrap.injector.Injector;
 import com.tenio.core.exception.NoImplementedClassFoundException;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to mark fields that can be autowired with null values.
+ * Annotation used to mark fields that can be autowired with {@code null} values.
  * This annotation is similar to {@link Autowired} but allows the dependency
- * injection system to inject null values when no suitable bean is found.
+ * injection system to inject {@code null} values when no suitable bean is found.
  *
  * <p>Key features:
  * <ul>
@@ -64,7 +65,6 @@ import java.lang.annotation.Target;
  * <p>Note: This annotation is useful when:
  * <ul>
  *   <li>A dependency is optional</li>
- *   <li>Multiple implementations may exist</li>
  *   <li>Fallback behavior is needed when no bean is found</li>
  *   <li>Gradual feature enablement is desired</li>
  * </ul>

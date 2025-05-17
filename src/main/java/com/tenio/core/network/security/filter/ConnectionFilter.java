@@ -40,21 +40,6 @@ import com.tenio.core.exception.RefusedConnectionAddressException;
  *   <li>Configurable connection limits</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * ConnectionFilter filter = new DefaultConnectionFilter();
- * filter.configureMaxConnectionsPerIp(10);
- * 
- * try {
- *     filter.validateAndAddAddress("192.168.1.1");
- * } catch (RefusedConnectionAddressException e) {
- *     // Handle connection refusal
- * }
- * 
- * filter.addBannedAddress("192.168.1.2");
- * String[] bannedAddresses = filter.getBannedAddresses();
- * </pre>
- *
  * <p>Note: This interface is crucial for implementing security measures
  * and preventing abuse of the server's resources. It should be properly
  * configured to balance security with accessibility.

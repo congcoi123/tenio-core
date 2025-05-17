@@ -44,17 +44,6 @@ import org.apache.logging.log4j.core.tools.picocli.CommandLine;
  *   <li>Singleton instance management</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * &#64;Bootstrap
- * public class MyApplication {
- *     public static void main(String[] args) {
- *         Bootstrapper bootstrapper = Bootstrapper.newInstance();
- *         bootstrapper.run(MyApplication.class, "com.example.package");
- *     }
- * }
- * </pre>
- *
  * <p>Initialization process:
  * <ol>
  *   <li>Scan specified packages for annotated components</li>

@@ -40,17 +40,6 @@ import java.io.Serial;
  *   <li>Class loading errors</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * try {
- *     Class<?> implementationClass = Class.forName(className);
- *     Object instance = implementationClass.getDeclaredConstructor().newInstance();
- * } catch (NoImplementedClassFoundException e) {
- *     logger.error("Failed to load implementation: " + e.getMessage());
- *     // Handle missing implementation
- * }
- * </pre>
- *
  * <p>Note: This exception provides information about the class that was attempted
  * to be loaded, helping to identify which implementation needs to be provided.
  *

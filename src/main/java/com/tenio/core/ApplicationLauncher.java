@@ -29,6 +29,7 @@ import com.tenio.core.bootstrap.Bootstrapper;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.constant.Trademark;
 import com.tenio.core.monitoring.system.SystemInfo;
+import com.tenio.core.server.Server;
 import com.tenio.core.server.ServerImpl;
 import java.util.Arrays;
 import java.util.Objects;
@@ -49,26 +50,16 @@ import org.apache.logging.log4j.util.Strings;
  *   <li>Logging system configuration</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * public static void main(String[] args) {
- *     ApplicationLauncher launcher = new ApplicationLauncher();
- *     launcher.launch(args);
- * }
- * </pre>
- *
  * <p>Command-line options:
  * <ul>
- *   <li>--config: Path to the configuration file (default: configuration.xml)</li>
- *   <li>--help: Display help information</li>
- *   <li>--version: Display version information</li>
+ *   <li>The first parameter: Path to the configuration file (default: configuration.xml)</li>
  * </ul>
  *
  * <p>Note: This class is designed to be the single entry point for the application
  * and should not be instantiated multiple times.
  *
  * @see Bootstrapper
- * @see ServerImpl
+ * @see Server
  * @see SystemInfo
  * @since 0.3.0
  */

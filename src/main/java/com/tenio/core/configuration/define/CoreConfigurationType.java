@@ -26,6 +26,7 @@ package com.tenio.core.configuration.define;
 
 import com.tenio.common.configuration.ConfigurationType;
 import com.tenio.common.data.DataType;
+import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.exception.PacketQueueFullException;
@@ -48,14 +49,6 @@ import java.util.Map;
  *   <li>Player and room management parameters</li>
  *   <li>System monitoring and maintenance settings</li>
  * </ul>
- *
- * <p>Usage example:
- * <pre>
- * CoreConfiguration config = new CoreConfiguration();
- * config.push(CoreConfigurationType.SERVER_NAME, "MyGameServer");
- * config.push(CoreConfigurationType.WORKER_SOCKET_ACCEPTOR, "4");
- * config.push(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS, "1000");
- * </pre>
  *
  * <p>Configuration categories:
  * <ul>

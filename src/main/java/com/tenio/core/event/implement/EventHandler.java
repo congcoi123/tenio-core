@@ -43,20 +43,6 @@ import java.util.Map;
  *   <li>Event result collection</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * EventHandler<Player> playerEventHandler = new EventHandler<>();
- * 
- * // Subscribe to an event
- * playerEventHandler.subscribe(ServerEvent.PLAYER_LOGIN, (player) -> {
- *     // Handle player login
- *     return loginResult;
- * });
- * 
- * // Emit an event
- * Object result = playerEventHandler.emit(ServerEvent.PLAYER_LOGIN, player);
- * </pre>
- *
  * <p>Note: This class maintains a mapping between events and their corresponding emitters,
  * allowing for efficient event handling and result collection.
  *

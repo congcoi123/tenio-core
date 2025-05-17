@@ -27,6 +27,7 @@ package com.tenio.core.bootstrap.annotation;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.tenio.core.bootstrap.injector.Injector;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -44,21 +45,6 @@ import java.lang.annotation.Target;
  *   <li>Runtime retention for reflection-based processing</li>
  *   <li>Type-level annotation</li>
  * </ul>
- *
- * <p>Usage example:
- * <pre>
- * &#64;Bootstrap
- * public class MyApplication {
- *     public static void main(String[] args) {
- *         Injector injector = Injector.newInstance();
- *         injector.scanPackages(MyApplication.class, "com.example.package");
- *         
- *         // Start application services
- *         MyService service = injector.getBean(MyService.class);
- *         service.start();
- *     }
- * }
- * </pre>
  *
  * <p>Note: The class annotated with this annotation:
  * <ul>

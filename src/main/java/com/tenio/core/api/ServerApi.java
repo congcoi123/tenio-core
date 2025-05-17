@@ -418,7 +418,7 @@ public interface ServerApi {
    * @param message an instance of {@link DataCollection}
    * @since 0.6.3
    */
-  void notifyChannel(Channel channel, DataCollection message);
+  void broadcastToChannel(Channel channel, DataCollection message);
 
   /**
    * Retrieves all channels that a player is subscribing to.

@@ -26,6 +26,8 @@ package com.tenio.core.exception;
 
 import com.tenio.core.bootstrap.annotation.AutowiredQualifier;
 import com.tenio.core.bootstrap.annotation.Bean;
+import com.tenio.core.bootstrap.annotation.BeanFactory;
+import com.tenio.core.bootstrap.annotation.Component;
 import java.io.Serial;
 
 /**
@@ -40,17 +42,6 @@ import java.io.Serial;
  *   <li>Multiple component scan paths including the same class</li>
  *   <li>Incorrect bean scope configuration</li>
  * </ul>
- *
- * <p>Usage example:
- * <pre>
- * try {
- *     BeanFactory beanFactory = new BeanFactory();
- *     beanFactory.registerBean(MyService.class);
- * } catch (DuplicatedBeanCreationException e) {
- *     logger.error("Duplicate bean found: " + e.getMessage());
- *     // Handle duplicate bean
- * }
- * </pre>
  *
  * <p>Note: This exception provides information about the duplicate bean type or name,
  * helping to identify which bean definitions need to be resolved.

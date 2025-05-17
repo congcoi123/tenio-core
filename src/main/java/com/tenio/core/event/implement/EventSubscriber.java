@@ -41,21 +41,6 @@ import javax.annotation.concurrent.ThreadSafe;
  *   <li>Event and subscriber retrieval</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * // Create a new event subscriber
- * EventSubscriber subscriber = EventSubscriber.newInstance(
- *     ServerEvent.PLAYER_LOGIN,
- *     (player) -> {
- *         // Handle player login
- *     }
- * );
- * 
- * // Retrieve event and subscriber
- * ServerEvent event = subscriber.getEvent();
- * Subscriber handler = subscriber.getSubscriber();
- * </pre>
- *
  * <p>Note: This class is thread-safe and can be safely shared between multiple threads.
  * Instances should be created using the factory method {@link #newInstance(ServerEvent, Subscriber)}.
  *

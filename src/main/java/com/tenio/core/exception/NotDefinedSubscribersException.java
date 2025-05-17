@@ -24,6 +24,9 @@ THE SOFTWARE.
 
 package com.tenio.core.exception;
 
+import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.event.implement.EventSubscriber;
 import java.io.Serial;
 
 /**
@@ -38,16 +41,6 @@ import java.io.Serial;
  *   <li>Event type mismatch between emitter and subscribers</li>
  *   <li>Premature event emission before subscriber registration</li>
  * </ul>
- *
- * <p>Usage example:
- * <pre>
- * try {
- *     eventManager.emit(ServerEvent.PLAYER_CONNECTED, player);
- * } catch (NotDefinedSubscribersException e) {
- *     logger.warn("No subscribers found for event: " + e.getEvent());
- *     // Handle missing subscribers
- * }
- * </pre>
  *
  * <p>Note: This exception provides information about the event that was attempted
  * to be emitted, helping to identify which event handlers need to be registered.

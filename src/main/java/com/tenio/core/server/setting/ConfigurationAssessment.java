@@ -55,19 +55,6 @@ import java.util.Objects;
  *   <li>Exception handling for misconfigurations</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * EventManager eventManager = EventManager.newInstance();
- * Configuration config = new CoreConfiguration();
- * 
- * ConfigurationAssessment assessment = ConfigurationAssessment.newInstance(eventManager, config);
- * try {
- *     assessment.assess();
- * } catch (NotDefinedSubscribersException | ConfigurationException e) {
- *     // Handle configuration issues
- * }
- * </pre>
- *
  * <p>Note: This class performs critical validation of server configuration
  * and should be used during server initialization to ensure proper setup.
  *

@@ -58,15 +58,6 @@ import java.util.Map;
  *   <li>Packet queue management</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * NetworkService networkService = NetworkServiceImpl.newInstance(eventManager, datagramChannelManager);
- * networkService.setHttpConfiguration(4, 8080, servletMap);
- * networkService.setWebSocketConfiguration(webSocketConfig);
- * networkService.setSocketConfiguration(tcpConfig, udpConfig, webSocketConfig, kcpConfig);
- * networkService.setConnectionFilterClass(new DefaultConnectionFilter(), 10);
- * </pre>
- *
  * <p>Configuration categories:
  * <ul>
  *   <li>HTTP Service: Web server configuration and servlet mapping</li>

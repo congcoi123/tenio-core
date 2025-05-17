@@ -43,15 +43,6 @@ import org.apache.logging.log4j.core.tools.picocli.CommandLine.InitializationExc
  *   <li>Consistent ordering for equal priorities</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * PriorityBlockingQueue<Request> queue = new PriorityBlockingQueue<>(
- *     1000, new RequestComparator());
- * queue.add(highPriorityRequest);
- * queue.add(lowPriorityRequest);
- * // highPriorityRequest will be processed first
- * </pre>
- *
  * <p>Thread safety: This class is thread-safe as it is stateless and
  * implements a pure comparison function.
  *

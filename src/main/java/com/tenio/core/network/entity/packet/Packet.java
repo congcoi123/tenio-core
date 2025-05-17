@@ -45,15 +45,6 @@ import java.util.concurrent.atomic.AtomicLong;
  *   <li>Last packet marking for connection closure</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * Packet packet = new Packet();
- * packet.setTransportType(TransportType.TCP);
- * packet.setPriority(ResponsePriority.HIGH);
- * packet.setSession(session);
- * packetQueue.add(packet);
- * </pre>
- *
  * <p>Thread safety: This class is not thread-safe and should be used
  * within a thread-safe context like {@link PacketQueue}.
  *

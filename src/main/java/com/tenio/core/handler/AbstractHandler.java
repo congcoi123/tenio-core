@@ -55,33 +55,6 @@ import com.tenio.core.server.ServerImpl;
  *   <li>Event management integration</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * public class GameHandler extends AbstractHandler {
- *     public void handleGameLogic() {
- *         // Access server configuration
- *         Configuration config = configuration();
- *         
- *         // Create response
- *         Response response = response();
- *         response.put("status", "success");
- *         
- *         // Create data structures based on server's data type
- *         if (server.getDataType() == DataType.ZERO) {
- *             ZeroArray array = array();
- *             ZeroMap map = map();
- *         }
- *         
- *         // Handle errors
- *         try {
- *             // Game logic implementation
- *         } catch (Exception e) {
- *             error("Game logic error: " + e.getMessage());
- *         }
- *     }
- * }
- * </pre>
- *
  * <p>Thread safety: This class is not thread-safe by default. Implementations
  * should ensure thread safety if the handler is accessed from multiple threads.
  * The server configuration and API access methods are thread-safe.

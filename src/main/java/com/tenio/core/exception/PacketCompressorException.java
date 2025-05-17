@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.exception;
 
+import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
 import java.io.Serial;
 
@@ -40,16 +41,6 @@ import java.io.Serial;
  *   <li>Detailed error messages</li>
  *   <li>Thread-safe exception handling</li>
  * </ul>
- *
- * <p>Usage example:
- * <pre>
- * try {
- *     byte[] compressed = compressor.compress(packetData);
- * } catch (PacketCompressorException e) {
- *     logger.error("Failed to compress packet: {}", e.getMessage());
- *     // Handle compression failure
- * }
- * </pre>
  *
  * <p>Common causes:
  * <ul>

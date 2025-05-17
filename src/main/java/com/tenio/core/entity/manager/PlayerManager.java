@@ -48,27 +48,6 @@ import java.util.List;
  *   <li>Player event handling</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * PlayerManager manager = new DefaultPlayerManager();
- * 
- * // Configure idle time
- * manager.configureMaxIdleTimeInSeconds(300); // 5 minutes
- * 
- * // Add a new player
- * Player player = manager.createPlayer("player1");
- * player.setProperty("score", 0);
- * 
- * // Monitor player activity
- * if (player.isIdle()) {
- *     manager.removePlayerByIdentity("player1");
- * }
- * 
- * // Get player statistics
- * int playerCount = manager.getPlayerCount();
- * Iterator<Player> players = manager.getPlayerIterator();
- * </pre>
- *
  * <p>Thread safety: Implementations of this interface should be thread-safe
  * as they handle concurrent player operations. The interface provides atomic
  * operations for player management and state changes.

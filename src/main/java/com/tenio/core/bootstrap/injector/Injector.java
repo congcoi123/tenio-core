@@ -81,27 +81,6 @@ import org.reflections.Reflections;
  *   <li>Circular dependency detection</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * Injector injector = new Injector();
- * 
- * // Scan packages for components
- * injector.scan("com.example.package");
- * 
- * // Get bean instances
- * MyService service = injector.getBean(MyService.class);
- * 
- * // Use autowired components
- * &#64;Component
- * public class UserService {
- *     &#64;Autowired
- *     private UserRepository repository;
- *     
- *     &#64;AutowiredQualifier("default")
- *     private EmailService emailService;
- * }
- * </pre>
- *
  * <p>Thread safety: This class is thread-safe and can be safely accessed
  * from multiple threads. All operations on the bean registry and component
  * scanning are synchronized.

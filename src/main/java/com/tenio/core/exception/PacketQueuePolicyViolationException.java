@@ -42,15 +42,6 @@ import java.io.Serial;
  *   <li>Queue policy configuration conflicts</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * try {
- *     packetQueue.add(packet);
- * } catch (PacketQueuePolicyViolationException e) {
- *     logger.warn("Packet dropped due to policy violation: " + e.getMessage());
- * }
- * </pre>
- *
  * <p>Note: This exception provides information about the dropped packet and the
  * current queue usage percentage to help diagnose policy violation issues.
  *

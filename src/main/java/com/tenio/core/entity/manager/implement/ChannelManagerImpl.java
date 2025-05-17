@@ -77,7 +77,7 @@ public final class ChannelManagerImpl implements ChannelManager {
   }
 
   @Override
-  public void notify(Channel channel, DataCollection message) {
+  public void broadcast(Channel channel, DataCollection message) {
     if (Objects.isNull(channel)) {
       throw new ChannelNotExistException();
     }

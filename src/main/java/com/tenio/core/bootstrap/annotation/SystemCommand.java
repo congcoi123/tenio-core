@@ -84,7 +84,7 @@ public @interface SystemCommand {
    *
    * @return the command label
    */
-  String label();
+  String label() default "";
 
   /**
    * Retrieves a list of usage for the command.

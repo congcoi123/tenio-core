@@ -45,26 +45,6 @@ import java.util.Map;
  *   <li>Channel event handling</li>
  * </ul>
  *
- * <p>Usage example:
- * <pre>
- * ChannelManager manager = new DefaultChannelManager();
- * 
- * // Create a new channel
- * Channel channel = manager.createChannel("game-channel");
- * channel.setMaxPlayers(50);
- * 
- * // Add players to channel
- * manager.addPlayerToChannel("game-channel", player1);
- * manager.addPlayerToChannel("game-channel", player2);
- * 
- * // Broadcast message to all players in channel
- * manager.broadcastToChannel("game-channel", "Welcome to the game!");
- * 
- * // Get channel statistics
- * int playerCount = manager.getPlayerCountInChannel("game-channel");
- * List<Player> players = manager.getPlayersInChannel("game-channel");
- * </pre>
- *
  * <p>Thread safety: Implementations of this interface should be thread-safe
  * as they handle concurrent channel operations. The interface provides atomic
  * operations for channel management and player membership changes.
@@ -132,12 +112,12 @@ public interface ChannelManager {
   void unsubscribe(Player player);
 
   /**
-   * Sends a notification to a channel.
+   * Broadcasts a message to a channel.
    *
    * @param channel an instance of {@link Channel}
    * @param message an instance of {@link DataCollection}
    */
-  void notify(Channel channel, DataCollection message);
+  void broadcast(Channel channel, DataCollection message);
 
   /**
    * Retrieves all channels that a player is subscribing to.

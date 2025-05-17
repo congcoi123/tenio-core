@@ -27,6 +27,8 @@ package com.tenio.core.bootstrap.annotation;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.tenio.core.bootstrap.injector.Injector;
+import com.tenio.core.exception.IllegalDefinedAccessControlException;
 import com.tenio.core.exception.IllegalReturnTypeException;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -36,7 +38,8 @@ import java.lang.annotation.Target;
  * Annotation used to mark methods that create and configure beans in the application.
  * This annotation is used in conjunction with {@link BeanFactory} to define
  * bean creation methods that will be automatically processed by the dependency
- * injection system.
+ * injection system. When the name of bean is defined, it must work with
+ * {@link AutowiredQualifier} to fetch the generated object.
  *
  * <p>Key features:
  * <ul>
@@ -84,7 +87,7 @@ public @interface Bean {
 
   /**
    * The name of the bean. If not specified, the bean will be registered
-   * with its default name (derived from the method name).
+   * with its default name ("").
    *
    * @return the bean name
    */

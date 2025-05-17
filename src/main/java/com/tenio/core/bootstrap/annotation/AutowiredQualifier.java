@@ -34,7 +34,8 @@ import java.lang.annotation.Target;
 /**
  * Annotation used to specify which implementation should be injected when multiple
  * implementations of an interface are available. This annotation works in conjunction
- * with {@link Autowired} to provide fine-grained control over dependency injection.
+ * with {@link Autowired} and {@link Bean} to provide fine-grained control over dependency
+ * injection.
  *
  * <p>Key features:
  * <ul>
