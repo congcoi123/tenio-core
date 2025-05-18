@@ -76,5 +76,5 @@
 ## 0.6.3 2025-06-01 Feature release
 - Fixed several bugs
 - Stopped supporting multiple UDP ports, instead it is using datagram channel cache to enhance performance
-- New feature and events added: Channel which allows notifying subscribed players
+- New feature and events added: Channel which allows broadcasting to subscribed players
 

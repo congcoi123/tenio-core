@@ -45,6 +45,7 @@ EventAccessDatagramChannelRequestValidation
 EventAccessDatagramChannelRequestValidationResult
 EventAccessKcpChannelRequestValidation
 EventAccessKcpChannelRequestValidationResult
+EventBroadcastToChannel
 EventChannelCreated
 EventChannelWillBeRemoved
 EventConnectionEstablishedResult
@@ -52,7 +53,6 @@ EventDisconnectConnection
 EventDisconnectPlayer
 EventFetchedBandwidthInfo
 EventFetchedCcuInfo
-EventNotifyPlayerViaChannel
 EventPlayerAfterLeftRoom
 EventPlayerBeforeLeaveRoom
 EventPlayerJoinedRoomResult

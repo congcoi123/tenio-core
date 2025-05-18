@@ -46,7 +46,7 @@ import com.tenio.core.handler.event.EventPlayerUnsubscribedChannel;
 import com.tenio.core.handler.event.EventReceivedMessageFromPlayer;
 import com.tenio.core.handler.event.EventRoomCreatedResult;
 import com.tenio.core.handler.event.EventRoomWillBeRemoved;
-import com.tenio.core.handler.event.EventNotifyPlayerViaChannel;
+import com.tenio.core.handler.event.EventBroadcastToChannel;
 import com.tenio.core.handler.event.EventSendMessageToPlayer;
 import com.tenio.core.handler.event.EventServerException;
 import com.tenio.core.handler.event.EventServerInitialization;
@@ -233,12 +233,12 @@ public enum ServerEvent {
    */
   PLAYER_UNSUBSCRIBED_CHANNEL,
   /**
-   * When the server sends a message to a player via its channel.
+   * When the server broadcasts a message to a player via its channel.
    *
    * @since 0.6.3
-   * @see EventNotifyPlayerViaChannel
+   * @see EventBroadcastToChannel
    */
-  NOTIFY_PLAYER_VIA_CHANNEL,
+  BROADCAST_TO_CHANNEL,
   /**
    * When the server validates a UDP channel accessing request from a player.
    *

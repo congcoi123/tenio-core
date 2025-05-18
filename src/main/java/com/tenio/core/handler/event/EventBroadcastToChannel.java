@@ -29,17 +29,17 @@ import com.tenio.core.entity.Channel;
 import com.tenio.core.entity.Player;
 
 /**
- * When the server sends a message to a player via its channel.
+ * When the server broadcasts a message to a player via its channel.
  *
  * @since 0.6.3
  */
 @FunctionalInterface
-public interface EventNotifyPlayerViaChannel<P extends Player> {
+public interface EventBroadcastToChannel<P extends Player> {
 
   /**
-   * When the server sends a message to a player via its channel.
+   * When the server broadcasts a message to a player via its channel.
    *
-   * @param channel the {@link Channel} which sends the notification
+   * @param channel the {@link Channel} which broadcasts the message
    * @param player  the {@link Player} which is receiving a message from the server via its channel
    * @param message the sending {@link DataCollection}
    * @since 0.6.3

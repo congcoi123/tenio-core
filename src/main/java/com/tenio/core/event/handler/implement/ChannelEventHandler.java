@@ -34,7 +34,7 @@ import com.tenio.core.entity.Player;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.handler.event.EventChannelCreated;
 import com.tenio.core.handler.event.EventChannelWillBeRemoved;
-import com.tenio.core.handler.event.EventNotifyPlayerViaChannel;
+import com.tenio.core.handler.event.EventBroadcastToChannel;
 import com.tenio.core.handler.event.EventPlayerSubscribedChannel;
 import com.tenio.core.handler.event.EventPlayerUnsubscribedChannel;
 import java.util.Optional;
@@ -58,7 +58,7 @@ public final class ChannelEventHandler {
   private EventPlayerUnsubscribedChannel<Player> eventPlayerUnsubscribedChannel;
 
   @AutowiredAcceptNull
-  private EventNotifyPlayerViaChannel<Player> eventNotifyPlayerViaChannel;
+  private EventBroadcastToChannel<Player> eventBroadcastToChannel;
 
   /**
    * Initialization.
@@ -73,7 +73,7 @@ public final class ChannelEventHandler {
     final var eventPlayerSubscribedChannelOp = Optional.ofNullable(eventPlayerSubscribedChannel);
     final var eventPlayerUnsubscribedChannelOp = Optional.ofNullable(eventPlayerUnsubscribedChannel);
 
-    final var eventNotifyPlayerViaChannelOp = Optional.ofNullable(eventNotifyPlayerViaChannel);
+    final var eventBroadcastToChannelOp = Optional.ofNullable(eventBroadcastToChannel);
 
     eventChannelCreatedOp.ifPresent(
         event -> eventManager.on(ServerEvent.CHANNEL_CREATED, params -> {
@@ -113,8 +113,8 @@ public final class ChannelEventHandler {
           return null;
         }));
 
-    eventNotifyPlayerViaChannelOp.ifPresent(
-        event -> eventManager.on(ServerEvent.NOTIFY_PLAYER_VIA_CHANNEL, params -> {
+    eventBroadcastToChannelOp.ifPresent(
+        event -> eventManager.on(ServerEvent.BROADCAST_TO_CHANNEL, params -> {
           var channel = (Channel) params[0];
           var player = (Player) params[1];
           var message = (DataCollection) params[2];

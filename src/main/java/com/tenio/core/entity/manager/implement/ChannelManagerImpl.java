@@ -82,7 +82,7 @@ public final class ChannelManagerImpl implements ChannelManager {
       throw new ChannelNotExistException();
     }
     channel.getReadonlyPlayers()
-        .forEach(player -> eventManager.emit(ServerEvent.NOTIFY_PLAYER_VIA_CHANNEL, channel,
+        .forEach(player -> eventManager.emit(ServerEvent.BROADCAST_TO_CHANNEL, channel,
             player, message));
   }
 

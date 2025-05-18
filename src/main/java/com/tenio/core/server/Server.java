@@ -98,7 +98,7 @@ public interface Server {
   RoomManager getRoomManager();
 
   /**
-   * Retrieves a channel manager object which manages channels to notify players.
+   * Retrieves a channel manager object which manages channels.
    *
    * @since 0.6.3
    * @return an instance of {@link ChannelManager}
