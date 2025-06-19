@@ -184,7 +184,7 @@ public enum CoreConfigurationType implements ConfigurationType {
    * @see PacketQueuePolicy
    * @see PacketQueueFullException
    */
-  PROP_MAX_RESPONSE_QUEUE_SIZE("max-response-queue-size"),
+  PROP_MAX_RESPONSE_QUEUE_SIZE_PER_SESSION("max-response-queue-size-per-session"),
   /**
    * Determines whether a disconnected connection could be held for a while or be removed
    * immediately.
