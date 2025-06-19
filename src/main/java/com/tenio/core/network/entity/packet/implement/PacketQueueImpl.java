@@ -114,10 +114,6 @@ public final class PacketQueueImpl implements PacketQueue {
 
   @Override
   public void put(Packet packet) {
-    if (isFull()) {
-      throw new PacketQueueFullException(queue.size());
-    }
-
     packetQueuePolicy.applyPolicy(this, packet);
     synchronized (queue) {
       queue.offer(packet);

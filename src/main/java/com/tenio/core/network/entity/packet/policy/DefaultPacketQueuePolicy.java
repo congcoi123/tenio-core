@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.packet.policy;
 
+import com.tenio.core.exception.PacketQueueFullException;
 import com.tenio.core.exception.PacketQueuePolicyViolationException;
 import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.entity.packet.Packet;
@@ -41,6 +42,10 @@ public class DefaultPacketQueuePolicy implements PacketQueuePolicy {
 
   @Override
   public void applyPolicy(PacketQueue packetQueue, Packet packet) {
+    if (packetQueue.isFull()) {
+      throw new PacketQueueFullException(packetQueue.getSize());
+    }
+
     float percentageUsed = packetQueue.getPercentageUsed();
 
     if (percentageUsed >= THREE_QUARTERS_FULL && percentageUsed < NINETY_PERCENT_FULL) {
