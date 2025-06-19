@@ -312,7 +312,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     }
     networkService.setPacketQueuePolicy(packetQueuePolicy);
     networkService.setPacketQueueSize(
-        configuration.getInt(CoreConfigurationType.PROP_MAX_PACKET_QUEUE_SIZE));
+        configuration.getInt(CoreConfigurationType.PROP_MAX_RESPONSE_QUEUE_SIZE));
 
     networkService.setSessionMaxIdleTimeInSeconds(
         configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
