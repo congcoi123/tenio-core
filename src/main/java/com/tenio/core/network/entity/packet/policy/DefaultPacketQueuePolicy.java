@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.network.entity.packet.policy;
 
 import com.tenio.core.exception.PacketQueuePolicyViolationException;
-import com.tenio.core.network.define.ResponsePriority;
+import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 
@@ -44,11 +44,11 @@ public class DefaultPacketQueuePolicy implements PacketQueuePolicy {
     float percentageUsed = packetQueue.getPercentageUsed();
 
     if (percentageUsed >= THREE_QUARTERS_FULL && percentageUsed < NINETY_PERCENT_FULL) {
-      if (packet.getPriority().getValue() < ResponsePriority.NORMAL.getValue()) {
+      if (packet.getGuarantee().getValue() < ResponseGuarantee.NORMAL.getValue()) {
         throw new PacketQueuePolicyViolationException(packet, percentageUsed);
       }
     } else if (percentageUsed >= NINETY_PERCENT_FULL) {
-      if (packet.getPriority().getValue() < ResponsePriority.GUARANTEED.getValue()) {
+      if (packet.getGuarantee().getValue() < ResponseGuarantee.GUARANTEED.getValue()) {
         throw new PacketQueuePolicyViolationException(packet, percentageUsed);
       }
     }
