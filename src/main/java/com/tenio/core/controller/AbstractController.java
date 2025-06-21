@@ -114,8 +114,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   private void initializeWorkers() {
     if (REQUEST_PRIORITY_ENABLED) {
-      var requestComparator = RequestComparator.newInstance();
-      requestQueue = new PriorityBlockingQueue<>(maxQueueSize, requestComparator);
+      requestQueue = new PriorityBlockingQueue<>(maxQueueSize, RequestComparator.newInstance());
     } else {
       requestQueue = new LinkedBlockingQueue<>(maxQueueSize);
     }
