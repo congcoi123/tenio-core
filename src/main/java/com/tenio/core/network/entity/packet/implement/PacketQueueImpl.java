@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.packet.implement;
 
-import com.tenio.core.exception.PacketQueueFullException;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
