@@ -74,6 +74,7 @@ import org.apache.commons.lang3.tuple.Pair;
  *
  * @see SelectorAcceptorHandler
  * @see SocketIoHandler
+ * @since 0.6.5
  */
 
 public final class SelectorReaderHandler extends SystemLogger {
@@ -107,25 +108,47 @@ public final class SelectorReaderHandler extends SystemLogger {
     pendingChannels = new ConcurrentLinkedQueue<>();
   }
 
+  /**
+   * Wakeup the reader selector.
+   */
   public void wakeup() {
     readableSelector.wakeup();
   }
 
+  /**
+   * Registers a client socket to the reader selector.
+   *
+   * @param channel         {@link SocketChannel} a client channel
+   * @param onKeyRegistered when its {@link SelectionKey} is ready
+   */
   public void registerSocketChannel(SocketChannel channel, Consumer<SelectionKey> onKeyRegistered) {
     pendingChannels.add(Pair.of(channel, onKeyRegistered));
     wakeup();
   }
 
+  /**
+   * Registers a client socket to the reader selector.
+   *
+   * @param channel {@link DatagramChannel} a client channel
+   */
   public void registerDatagramChannel(DatagramChannel channel) {
     pendingChannels.add(Pair.of(channel, null));
     wakeup();
   }
 
+  /**
+   * Shutdown processing.
+   *
+   * @throws IOException whenever IO exceptions thrown
+   */
   public void shutdown() throws IOException {
     wakeup();
     readableSelector.close();
   }
 
+  /**
+   * Processing. This should be run in a loop.
+   */
   public void running() {
     try {
       // register channels to selector

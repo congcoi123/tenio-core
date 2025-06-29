@@ -68,6 +68,7 @@ import java.util.Objects;
  *
  * @see ZeroReaderListener
  * @see ConnectionFilter
+ * @since 0.6.5
  */
 public final class SelectorAcceptorHandler extends SystemLogger {
 
@@ -273,6 +274,11 @@ public final class SelectorAcceptorHandler extends SystemLogger {
     }
   }
 
+  /**
+   * Processing. This should be run in a loop.
+   *
+   * @throws IOException whenever an IO exception thrown
+   */
   public void running() throws IOException {
     // blocks until at least one channel is ready for the events you registered for
     int countReadyKeys = acceptableSelector.select();
@@ -316,6 +322,9 @@ public final class SelectorAcceptorHandler extends SystemLogger {
     zeroReaderListener.wakeup();
   }
 
+  /**
+   * Shutdown processing.
+   */
   public void shutdown() {
     shutdownServerChannels();
     shutdownClientChannels();
