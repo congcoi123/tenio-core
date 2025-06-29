@@ -47,6 +47,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Handles incoming TCP/UDP connections using Java NIO's {@link Selector}.
+ *
+ * <p>This class manages a dedicated selector for accept operations, registers
+ * server socket channels and optionally datagram channels, and delegates accepted
+ * connections to a {@link ZeroReaderListener} for further processing.
+ *
+ * <p>Supports multiple concurrent acceptor threads, though on macOS and Windows,
+ * only one thread may effectively accept due to OS limitations with {@code SO_REUSEPORT}.
+ *
+ * <p>Responsibilities:
+ * <ul>
+ *   <li>Bind and register TCP server sockets (OP_ACCEPT)</li>
+ *   <li>Bind UDP channels (delegated to reader selector)</li>
+ *   <li>Accept new client sockets and hand off to readers</li>
+ *   <li>Filter client IPs with {@link ConnectionFilter}</li>
+ *   <li>Clean shutdown of all resources (client/server channels, selector)</li>
+ * </ul>
+ *
+ * @see ZeroReaderListener
+ * @see ConnectionFilter
+ */
 public final class SelectorAcceptorHandler extends SystemLogger {
 
   private final String serverAddress;

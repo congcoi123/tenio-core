@@ -34,6 +34,7 @@ import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.zero.engine.acceptor.SelectorAcceptorHandler;
 import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
@@ -53,6 +54,27 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import javassist.NotFoundException;
 import org.apache.commons.lang3.tuple.Pair;
+
+/**
+ * Handles read/write events on client and datagram channels using a {@link Selector}.
+ *
+ * <p>This class is part of the NIO event-driven loop that processes IO on
+ * accepted TCP connections and bound UDP datagram channels.
+ *
+ * <p>Responsibilities:
+ * <ul>
+ *   <li>Register socket and datagram channels for read/write events</li>
+ *   <li>Dispatch readable/writable keys to appropriate handlers</li>
+ *   <li>Manage selection loop and wakeup mechanisms</li>
+ *   <li>Notify {@link SocketIoHandler} for channel lifecycle events</li>
+ * </ul>
+ *
+ * <p>Each reader thread runs in a loop, polling its selector and reacting
+ * to channel readiness, ensuring non-blocking high-performance IO handling.
+ *
+ * @see SelectorAcceptorHandler
+ * @see SocketIoHandler
+ */
 
 public final class SelectorReaderHandler extends SystemLogger {
 
