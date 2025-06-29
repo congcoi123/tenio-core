@@ -121,15 +121,6 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
     var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
     executorService = Executors.newFixedThreadPool(executorSize, threadFactory);
-    for (int i = 0; i < executorSize; i++) {
-      try {
-        Thread.sleep(100L);
-      } catch (InterruptedException exception) {
-        Thread.currentThread().interrupt();
-        error(exception);
-      }
-      executorService.execute(this);
-    }
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
@@ -208,6 +199,15 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   @Override
   public void start() {
+    for (int i = 0; i < executorSize; i++) {
+      try {
+        Thread.sleep(100L);
+      } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+        error(exception);
+      }
+      executorService.execute(this);
+    }
     activated = true;
     info("START SERVICE", buildgen("controller-", getName(), " (", executorSize, ")"));
   }
