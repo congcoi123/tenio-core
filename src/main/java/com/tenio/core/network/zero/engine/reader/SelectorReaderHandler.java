@@ -52,7 +52,6 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
-import javassist.NotFoundException;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -303,7 +302,7 @@ public final class SelectorReaderHandler extends SystemLogger {
 
       if (Objects.isNull(remoteAddress)) {
         var addressNotFoundException =
-            new NotFoundException("Remove address for the datagram channel");
+            new RuntimeException("Remove address for the datagram channel");
         error(addressNotFoundException, "An exception was occurred on channel: ",
             datagramChannel.toString());
         datagramIoHandler.channelException(datagramChannel, addressNotFoundException);
