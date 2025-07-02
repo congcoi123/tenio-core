@@ -205,14 +205,8 @@ public final class Injector extends SystemLogger {
     };
     var implementedComponentClasses = new HashSet<Class<?>>();
     Arrays.stream(listAnnotations).forEach(
-        annotation -> {
-          try {
-            implementedComponentClasses.addAll(
-                ClassLoaderUtility.getTypesAnnotatedWith(allClasses, annotation));
-          } catch (ClassNotFoundException exception) {
-            error(exception);
-          }
-        });
+        annotation -> implementedComponentClasses.addAll(
+            ClassLoaderUtility.getTypesAnnotatedWith(allClasses, annotation)));
     // scans all interfaces with their implemented classes
     for (var implementedClass : implementedComponentClasses) {
       var classInterfaces = implementedClass.getInterfaces();
