@@ -88,6 +88,18 @@ public final class SelectorReaderHandler extends SystemLogger {
   private final SocketIoHandler socketIoHandler;
   private final DatagramIoHandler datagramIoHandler;
 
+  /**
+   * Constructor.
+   *
+   * @param dataType               the {@link DataType}
+   * @param readerBuffer           instance of {@link ByteBuffer}
+   * @param zeroWriterListener     instance of {@link ZeroWriterListener}
+   * @param sessionManager         instance of {@link SessionManager}
+   * @param networkReaderStatistic instance of {@link NetworkReaderStatistic}
+   * @param socketIoHandler        instance of {@link SocketIoHandler}
+   * @param datagramIoHandler      instance of {@link DatagramIoHandler}
+   * @throws IOException whenever any IO exception thrown
+   */
   public SelectorReaderHandler(DataType dataType,
                                ByteBuffer readerBuffer,
                                ZeroWriterListener zeroWriterListener,

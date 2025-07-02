@@ -81,6 +81,17 @@ public final class SelectorAcceptorHandler extends SystemLogger {
   private final ZeroReaderListener zeroReaderListener;
   private final SocketIoHandler socketIoHandler;
 
+  /**
+   * Constructor.
+   *
+   * @param serverAddress          the server IP address
+   * @param datagramChannelManager instance of {@link DatagramChannelManager}
+   * @param connectionFilter       instance of {@link ConnectionFilter}
+   * @param zeroReaderListener     instance of {@link ZeroReaderListener}
+   * @param tcpSocketConfiguration instance of {@link SocketConfiguration} for TCP
+   * @param udpSocketConfiguration instance of {@link SocketConfiguration} for UDP
+   * @param socketIoHandler        instance of {@link SocketIoHandler}
+   */
   public SelectorAcceptorHandler(String serverAddress,
                                  DatagramChannelManager datagramChannelManager,
                                  ConnectionFilter connectionFilter,
