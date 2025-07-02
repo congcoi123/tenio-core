@@ -639,4 +639,3 @@ public final class Injector extends SystemLogger {
     clientCommandManager.clear();
   }
 }
-
