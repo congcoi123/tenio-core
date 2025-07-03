@@ -140,7 +140,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
     activated = false;
 
-    info("STOPPING SERVICE", buildgen("controller-", getName(), " (", executorSize, ")"));
+    info("STOPPING SERVICE", buildgen(getName(), " (", executorSize, ")"));
 
     executorService.shutdown();
 
@@ -181,14 +181,14 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   private void setThreadName() {
     Thread currentThread = Thread.currentThread();
-    currentThread.setName(StringUtility.strgen("controller-", getName(), "-", id.incrementAndGet()));
+    currentThread.setName(StringUtility.strgen(getName(), "-", id.incrementAndGet()));
     currentThread.setUncaughtExceptionHandler((thread, cause) -> error(cause, thread.getName()));
   }
 
   private void destroyController() {
-    info("STOPPING SERVICE", buildgen("controller-", getName(), " (", executorSize, ")"));
+    info("STOPPING SERVICE", buildgen(getName(), " (", executorSize, ")"));
     destroy();
-    info("DESTROYED SERVICE", buildgen("controller-", getName(), " (", executorSize, ")"));
+    info("DESTROYED SERVICE", buildgen(getName(), " (", executorSize, ")"));
   }
 
   @Override
@@ -209,7 +209,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
       executorService.execute(this);
     }
     activated = true;
-    info("START SERVICE", buildgen("controller-", getName(), " (", executorSize, ")"));
+    info("START SERVICE", buildgen(getName(), " (", executorSize, ")"));
   }
 
   @Override

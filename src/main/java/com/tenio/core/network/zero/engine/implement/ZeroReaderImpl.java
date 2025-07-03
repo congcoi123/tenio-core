@@ -30,7 +30,7 @@ import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.zero.engine.ZeroReader;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
 import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
-import com.tenio.core.network.zero.engine.reader.SelectorReaderHandler;
+import com.tenio.core.network.zero.engine.reader.ReaderHandler;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -51,7 +51,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
   private static final AtomicInteger INDEXER = new AtomicInteger(0);
 
-  private volatile List<SelectorReaderHandler> readerHandlers;
+  private volatile List<ReaderHandler> readerHandlers;
   private DataType dataType;
   private ZeroWriterListener zeroWriterListener;
   private NetworkReaderStatistic networkReaderStatistic;
@@ -71,7 +71,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     return new ZeroReaderImpl(eventManager);
   }
 
-  private SelectorReaderHandler getReaderHandler() {
+  private ReaderHandler getReaderHandler() {
     int index = Math.floorMod(INDEXER.getAndIncrement(), getThreadPoolSize());
     return readerHandlers.get(index);
   }
@@ -132,7 +132,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     ByteBuffer readerBuffer = ByteBuffer.allocateDirect(getMaxBufferSize());
 
     try {
-      var readerHandler = new SelectorReaderHandler(dataType, readerBuffer, zeroWriterListener,
+      var readerHandler = new ReaderHandler(dataType, readerBuffer, zeroWriterListener,
           getSessionManager(), getNetworkReaderStatistic(), getSocketIoHandler(),
           getDatagramIoHandler());
       readerHandlers.add(readerHandler);

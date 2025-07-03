@@ -34,7 +34,7 @@ import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
-import com.tenio.core.network.zero.engine.acceptor.SelectorAcceptorHandler;
+import com.tenio.core.network.zero.engine.acceptor.AcceptorHandler;
 import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
@@ -71,12 +71,12 @@ import org.apache.commons.lang3.tuple.Pair;
  * <p>Each reader thread runs in a loop, polling its selector and reacting
  * to channel readiness, ensuring non-blocking high-performance IO handling.
  *
- * @see SelectorAcceptorHandler
+ * @see AcceptorHandler
  * @see SocketIoHandler
  * @since 0.6.5
  */
 
-public final class SelectorReaderHandler extends SystemLogger {
+public final class ReaderHandler extends SystemLogger {
 
   private final DataType dataType;
   private final Selector readableSelector;
@@ -100,13 +100,13 @@ public final class SelectorReaderHandler extends SystemLogger {
    * @param datagramIoHandler      instance of {@link DatagramIoHandler}
    * @throws IOException whenever any IO exception thrown
    */
-  public SelectorReaderHandler(DataType dataType,
-                               ByteBuffer readerBuffer,
-                               ZeroWriterListener zeroWriterListener,
-                               SessionManager sessionManager,
-                               NetworkReaderStatistic networkReaderStatistic,
-                               SocketIoHandler socketIoHandler,
-                               DatagramIoHandler datagramIoHandler) throws IOException {
+  public ReaderHandler(DataType dataType,
+                       ByteBuffer readerBuffer,
+                       ZeroWriterListener zeroWriterListener,
+                       SessionManager sessionManager,
+                       NetworkReaderStatistic networkReaderStatistic,
+                       SocketIoHandler socketIoHandler,
+                       DatagramIoHandler datagramIoHandler) throws IOException {
     this.dataType = dataType;
     this.readerBuffer = readerBuffer;
     this.zeroWriterListener = zeroWriterListener;

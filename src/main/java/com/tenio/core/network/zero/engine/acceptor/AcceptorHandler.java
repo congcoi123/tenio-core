@@ -70,7 +70,7 @@ import java.util.Objects;
  * @see ConnectionFilter
  * @since 0.6.5
  */
-public final class SelectorAcceptorHandler extends SystemLogger {
+public final class AcceptorHandler extends SystemLogger {
 
   private final String serverAddress;
   private final Selector acceptableSelector;
@@ -92,13 +92,13 @@ public final class SelectorAcceptorHandler extends SystemLogger {
    * @param udpSocketConfiguration instance of {@link SocketConfiguration} for UDP
    * @param socketIoHandler        instance of {@link SocketIoHandler}
    */
-  public SelectorAcceptorHandler(String serverAddress,
-                                 DatagramChannelManager datagramChannelManager,
-                                 ConnectionFilter connectionFilter,
-                                 ZeroReaderListener zeroReaderListener,
-                                 SocketConfiguration tcpSocketConfiguration,
-                                 SocketConfiguration udpSocketConfiguration,
-                                 SocketIoHandler socketIoHandler) {
+  public AcceptorHandler(String serverAddress,
+                         DatagramChannelManager datagramChannelManager,
+                         ConnectionFilter connectionFilter,
+                         ZeroReaderListener zeroReaderListener,
+                         SocketConfiguration tcpSocketConfiguration,
+                         SocketConfiguration udpSocketConfiguration,
+                         SocketIoHandler socketIoHandler) {
     this.serverAddress = serverAddress;
     this.datagramChannelManager = datagramChannelManager;
     this.connectionFilter = connectionFilter;

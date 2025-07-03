@@ -28,7 +28,7 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.engine.ZeroAcceptor;
-import com.tenio.core.network.zero.engine.acceptor.SelectorAcceptorHandler;
+import com.tenio.core.network.zero.engine.acceptor.AcceptorHandler;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ import java.util.List;
 public final class ZeroAcceptorImpl extends AbstractZeroEngine implements ZeroAcceptor {
 
   private final DatagramChannelManager datagramChannelManager;
-  private volatile List<SelectorAcceptorHandler> acceptorHandlers;
+  private volatile List<AcceptorHandler> acceptorHandlers;
   private ConnectionFilter connectionFilter;
   private ZeroReaderListener zeroReaderListener;
   private String serverAddress;
@@ -102,7 +102,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine implements ZeroAc
 
   @Override
   public void onRunning() {
-    var acceptorHandler = new SelectorAcceptorHandler(serverAddress, datagramChannelManager,
+    var acceptorHandler = new AcceptorHandler(serverAddress, datagramChannelManager,
         connectionFilter, zeroReaderListener, tcpSocketConfiguration, udpSocketConfiguration,
         getSocketIoHandler());
     acceptorHandlers.add(acceptorHandler);
