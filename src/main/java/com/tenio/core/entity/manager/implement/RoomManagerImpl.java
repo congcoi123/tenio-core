@@ -41,6 +41,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -158,8 +159,10 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   }
 
   @Override
-  public synchronized Iterator<Room> getRoomIterator() {
-    return rooms.values().iterator();
+  public void computeRooms(Consumer<Iterator<Room>> onComputed) {
+    synchronized (this) {
+      onComputed.accept(rooms.values().iterator());
+    }
   }
 
   @Override

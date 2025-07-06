@@ -44,6 +44,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 /**
  * An implemented class is for a room using in the server.
@@ -223,8 +224,8 @@ public class DefaultRoom implements Room {
   }
 
   @Override
-  public Iterator<Player> getPlayerIterator() {
-    return playerManager.getPlayerIterator();
+  public void computePlayers(Consumer<Iterator<Player>> onComputed) {
+    playerManager.computePlayers(onComputed);
   }
 
   @Override

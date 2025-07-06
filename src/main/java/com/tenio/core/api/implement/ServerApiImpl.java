@@ -56,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * An implementation for Server APIs.
@@ -207,8 +208,8 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
-  public Iterator<Player> getPlayerIterator() {
-    return getPlayerManager().getPlayerIterator();
+  public void computePlayers(Consumer<Iterator<Player>> onComputed) {
+    getPlayerManager().computePlayers(onComputed);
   }
 
   @Override
@@ -222,8 +223,8 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
-  public Iterator<Room> getRoomIterator() {
-    return getRoomManager().getRoomIterator();
+  public void computeRooms(Consumer<Iterator<Room>> onComputed) {
+    getRoomManager().computeRooms(onComputed);
   }
 
   @Override
@@ -313,11 +314,12 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
     getEventManager().emit(ServerEvent.ROOM_WILL_BE_REMOVED, room, removeRoomMode);
 
-    var playerIterator = room.getPlayerIterator();
-    while (playerIterator.hasNext()) {
-      var player = playerIterator.next();
-      leaveRoom(player, PlayerLeaveRoomMode.ROOM_REMOVED);
-    }
+    room.computePlayers(iterator -> {
+      while (iterator.hasNext()) {
+        var player = iterator.next();
+        leaveRoom(player, PlayerLeaveRoomMode.ROOM_REMOVED);
+      }
+    });
 
     long roomId = room.getId();
     getRoomManager().removeRoomById(roomId);

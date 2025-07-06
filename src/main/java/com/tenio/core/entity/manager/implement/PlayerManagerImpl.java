@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * An implemented class is for player management.
@@ -118,8 +119,10 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public synchronized Iterator<Player> getPlayerIterator() {
-    return players.values().iterator();
+  public void computePlayers(Consumer<Iterator<Player>> onComputed) {
+    synchronized (this) {
+      onComputed.accept(players.values().iterator());
+    }
   }
 
   @Override

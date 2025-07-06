@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import kcp.Ukcp;
 
 import javax.annotation.concurrent.GuardedBy;
@@ -92,9 +93,9 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   }
 
   @Override
-  public Iterator<Session> getSessionIterator() {
+  public void computeSessions(Consumer<Iterator<Session>> onComputed) {
     synchronized (this) {
-      return sessionByIds.values().iterator();
+      onComputed.accept(sessionByIds.values().iterator());
     }
   }
 
