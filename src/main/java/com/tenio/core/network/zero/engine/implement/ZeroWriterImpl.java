@@ -37,7 +37,6 @@ import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import com.tenio.core.network.zero.engine.writer.WriterHandler;
 import com.tenio.core.network.zero.engine.writer.implement.DatagramWriterHandler;
 import com.tenio.core.network.zero.engine.writer.implement.SocketWriterHandler;
-import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -104,14 +103,14 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
   private void processSessionQueue(Session session, WriterHandler socketWriterHandler,
                                    WriterHandler datagramWriterHandler) {
     // ignore a null or inactivated session
-    if (Objects.isNull(session)) {
+    if (session == null) {
       return;
     }
 
     // now we can iterate packets from queue to proceed
     var packetQueue = session.fetchPacketQueue();
     // ignore the empty queue
-    if (Objects.isNull(packetQueue) || packetQueue.isEmpty()) {
+    if (packetQueue == null || packetQueue.isEmpty()) {
       return;
     }
 
@@ -123,7 +122,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
 
     var packet = packetQueue.peek();
     // ignore the null packet and remove it from queue
-    if (Objects.isNull(packet)) {
+    if (packet == null) {
       if (!packetQueue.isEmpty()) {
         packetQueue.take();
       }
@@ -142,7 +141,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
   public void enqueuePacket(Packet packet) {
     // retrieve all recipient sessions from the packet
     var recipients = packet.getRecipients();
-    if (Objects.isNull(recipients)) {
+    if (recipients == null) {
       return;
     }
 
@@ -173,7 +172,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
 
     // loops through the packet queue and handles its packets
     var packetQueue = session.fetchPacketQueue();
-    if (Objects.nonNull(packetQueue)) {
+    if (packetQueue != null) {
       try {
         // put new item into the queue
         packetQueue.put(packet);
@@ -198,7 +197,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
 
   @Override
   public void continueWriteInterestOp(Session session) {
-    if (Objects.nonNull(session)) {
+    if (session != null) {
       sessionTicketsQueue.add(session);
     }
   }

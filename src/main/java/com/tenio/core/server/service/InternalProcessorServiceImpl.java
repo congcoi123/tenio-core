@@ -51,7 +51,6 @@ import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -187,7 +186,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     }
 
     // check reconnected case
-    if (Objects.nonNull(reconnectedObject)) {
+    if (reconnectedObject != null) {
       Optional<?> playerOptional = (Optional<?>) reconnectedObject;
       if (playerOptional.isPresent()) {
         Player player = (Player) playerOptional.get();
@@ -256,7 +255,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByIdentity(session.getName());
       // the player maybe existed
-      if (Objects.nonNull(player)) {
+      if (player != null) {
         // unsubscribe it from all channels
         serverApi.unsubscribeFromAllChannels(player);
         // player should leave room (if applicable) first
@@ -287,7 +286,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByIdentity(session.getName());
-      if (Objects.isNull(player)) {
+      if (player == null) {
         var illegalValueException = new IllegalArgumentException(
             String.format("Unable to find player for the session: %s", session));
         error(illegalValueException);

@@ -36,7 +36,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.annotation.concurrent.GuardedBy;
@@ -166,7 +165,7 @@ public final class SystemCommandManager extends SystemLogger {
     var handler = getHandler(label);
 
     // checks if the handler is null
-    if (Objects.isNull(handler)) {
+    if (handler == null) {
       return;
     }
 

@@ -36,7 +36,6 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import io.netty.buffer.ByteBuf;
-import java.util.Objects;
 import java.util.Optional;
 import kcp.KcpListener;
 import kcp.Ukcp;
@@ -84,7 +83,7 @@ public class KcpHandler implements KcpListener {
     var message = DataUtility.binaryToCollection(dataType, binary);
     Session session = sessionManager.getSessionByKcp(ukcp);
 
-    if (Objects.isNull(session)) {
+    if (session == null) {
       processDatagramChannelReadMessageForTheFirstTime(ukcp, message);
     } else {
       if (session.isActivated()) {
@@ -101,7 +100,7 @@ public class KcpHandler implements KcpListener {
   @Override
   public void handleException(Throwable cause, Ukcp ukcp) {
     var session = sessionManager.getSessionByKcp(ukcp);
-    if (Objects.nonNull(session)) {
+    if (session != null) {
       logger.error(cause, "Session: ", session.toString());
       eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, cause);
     } else {
@@ -113,7 +112,7 @@ public class KcpHandler implements KcpListener {
   public void handleClose(Ukcp ukcp) {
     logger.debug("KCP CHANNEL CLOSED", ukcp);
     var session = sessionManager.getSessionByKcp(ukcp);
-    if (Objects.nonNull(session) && session.containsKcp()) {
+    if (session != null && session.containsKcp()) {
       session.setKcpChannel(null);
     }
   }

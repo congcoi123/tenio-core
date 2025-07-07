@@ -54,7 +54,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -131,7 +130,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   @Override
   public void logout(Player player, ConnectionDisconnectMode connectionDisconnectMode,
                      PlayerDisconnectMode playerDisconnectMode) {
-    if (Objects.isNull(player)) {
+    if (player == null) {
       // maybe we needn't do anything
       return;
     }
@@ -162,7 +161,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   public Room createRoom(InitialRoomSetting roomSetting, Player roomOwner) {
     Room room = null;
     try {
-      if (Objects.isNull(roomOwner)) {
+      if (roomOwner == null) {
         room = getRoomManager().createRoom(roomSetting);
       } else {
         room = getRoomManager().createRoomWithOwner(roomSetting, roomOwner);
@@ -240,7 +239,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   @Override
   public void joinRoom(Player player, Room room, String roomPassword, int slotInRoom,
                        boolean asSpectator) {
-    if (Objects.isNull(player) || Objects.isNull(room)) {
+    if (player == null || room == null) {
       getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
           PlayerJoinedRoomResult.PLAYER_OR_ROOM_UNAVAILABLE);
       return;
@@ -269,7 +268,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   @Override
   public void changeRoom(Player player, Room room, String roomPassword, int slotInRoom,
                          boolean asSpectator) {
-    if (Objects.isNull(player) || Objects.isNull(room)) {
+    if (player == null || room == null) {
       getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
           PlayerJoinedRoomResult.PLAYER_OR_ROOM_UNAVAILABLE);
       return;
@@ -294,7 +293,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     getEventManager().emit(ServerEvent.PLAYER_BEFORE_LEAVE_ROOM, player, room,
         leaveRoomMode);
     try {
-      if (Objects.nonNull(room)) {
+      if (room != null) {
         room.removePlayer(player);
       }
       getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,
@@ -307,7 +306,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
   @Override
   public void removeRoom(Room room, RoomRemoveMode removeRoomMode) {
-    if (Objects.isNull(room)) {
+    if (room == null) {
       // nothing needs to do
       return;
     }

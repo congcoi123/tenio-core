@@ -40,7 +40,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -102,7 +101,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     room.setActivated(roomSetting.isActivated());
     room.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
     room.setOwner(player);
-    if (Objects.nonNull(roomSetting.getProperties())) {
+    if (roomSetting.getProperties() != null) {
       roomSetting.getProperties().forEach(room::setProperty);
     }
 
@@ -128,7 +127,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     room.setActivated(roomSetting.isActivated());
     room.setCapacity(roomSetting.getMaxParticipants(), roomSetting.getMaxSpectators());
     room.setOwner(player);
-    if (Objects.nonNull(roomSetting.getProperties())) {
+    if (roomSetting.getProperties() != null) {
       roomSetting.getProperties().forEach(room::setProperty);
     }
 

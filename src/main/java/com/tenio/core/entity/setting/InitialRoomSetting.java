@@ -33,7 +33,6 @@ import com.tenio.core.entity.setting.strategy.implement.DefaultRoomPlayerSlotGen
 import com.tenio.core.schedule.task.internal.AutoRemoveRoomTask;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * The initialized information is for creating a new room.
@@ -305,11 +304,11 @@ public final class InitialRoomSetting {
      * @return a new building instance
      */
     public InitialRoomSetting build() {
-      if (Objects.isNull(credentialValidatedStrategy)) {
+      if (credentialValidatedStrategy == null) {
         credentialValidatedStrategy = (RoomCredentialValidatedStrategy) createNewInstance(
             DefaultRoomCredentialValidatedStrategy.class);
       }
-      if (Objects.isNull(playerSlotGeneratedStrategy)) {
+      if (playerSlotGeneratedStrategy == null) {
         playerSlotGeneratedStrategy = (RoomPlayerSlotGeneratedStrategy) createNewInstance(
             DefaultRoomPlayerSlotGeneratedStrategy.class);
       }

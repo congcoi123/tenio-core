@@ -40,7 +40,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import java.io.IOException;
-import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
@@ -88,7 +87,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelInactive(ChannelHandlerContext ctx) {
     var session = sessionManager.getSessionByWebSocket(ctx.channel());
-    if (Objects.isNull(session)) {
+    if (session == null) {
       return;
     }
 
@@ -112,7 +111,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
 
       var session = sessionManager.getSessionByWebSocket(ctx.channel());
 
-      if (Objects.isNull(session)) {
+      if (session == null) {
         try {
           var address = ctx.channel().remoteAddress().toString();
           connectionFilter.validateAndAddAddress(address);
@@ -154,7 +153,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
     var session = sessionManager.getSessionByWebSocket(ctx.channel());
-    if (Objects.nonNull(session)) {
+    if (session != null) {
       logger.error(cause, "Session: ", session.toString());
       eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, cause);
     } else {

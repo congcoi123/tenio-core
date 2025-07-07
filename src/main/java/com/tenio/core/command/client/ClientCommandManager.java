@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * The commands' management class.
@@ -115,7 +114,7 @@ public final class ClientCommandManager extends SystemLogger {
     var handler = getHandler(code);
 
     // checks if the handler is null
-    if (Objects.isNull(handler)) {
+    if (handler == null) {
       return;
     }
 

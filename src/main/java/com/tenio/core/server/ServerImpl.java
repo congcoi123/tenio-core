@@ -68,7 +68,6 @@ import com.tenio.core.server.service.InternalProcessorServiceImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
 import com.tenio.core.utility.CommandUtility;
 import java.io.IOError;
-import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReaderBuilder;
@@ -119,7 +118,7 @@ public final class ServerImpl extends SystemLogger implements Server {
    * @return a new instance
    */
   public static Server getInstance() {
-    if (Objects.isNull(instance)) {
+    if (instance == null) {
       instance = new ServerImpl();
     }
     return instance;
@@ -132,7 +131,7 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     // get the file path
     var file = params.length == 0 ? null : params[0];
-    if (Objects.isNull(file)) {
+    if (file == null) {
       file = CoreConstant.DEFAULT_CONFIGURATION_FILE;
     }
 
@@ -235,7 +234,7 @@ public final class ServerImpl extends SystemLogger implements Server {
       throws IllegalArgumentException, SecurityException {
 
     ConnectionFilter connectionFilter = bootstrapHandler.getBeanByClazz(ConnectionFilter.class);
-    if (Objects.isNull(connectionFilter)) {
+    if (connectionFilter == null) {
       connectionFilter = new DefaultConnectionFilter();
     }
     networkService.setConnectionFilterClass(
@@ -245,11 +244,11 @@ public final class ServerImpl extends SystemLogger implements Server {
     var servletMap = bootstrapHandler.getServletMap();
     var httpConfiguration = configuration.get(CoreConfigurationType.NETWORK_HTTP);
     networkService.setHttpConfiguration(
-        Objects.nonNull(httpConfiguration) ?
+        httpConfiguration != null ?
             configuration.getInt(CoreConfigurationType.WORKER_HTTP_WORKER) : 0,
-        Objects.nonNull(httpConfiguration) ?
+        httpConfiguration != null ?
             ((SocketConfiguration) httpConfiguration).port() : 0,
-        Objects.nonNull(httpConfiguration) ? servletMap : null);
+        httpConfiguration != null ? servletMap : null);
 
     networkService.setSocketAcceptorServerAddress(
         configuration.getString(CoreConfigurationType.SERVER_ADDRESS));
@@ -259,22 +258,22 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.setSocketAcceptorWorkers(
         configuration.getInt(CoreConfigurationType.WORKER_SOCKET_ACCEPTOR));
 
-    var udpSocketConfiguration = Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_UDP)) ?
+    var udpSocketConfiguration = configuration.get(CoreConfigurationType.NETWORK_UDP) != null ?
         (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_UDP) : null;
-    var kcpSocketConfiguration = Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_KCP)) ?
+    var kcpSocketConfiguration = configuration.get(CoreConfigurationType.NETWORK_KCP) != null ?
         (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_KCP) : null;
     networkService.setSocketConfiguration(
-        (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_TCP)) ?
+        (configuration.get(CoreConfigurationType.NETWORK_TCP) != null ?
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_TCP) : null),
         udpSocketConfiguration,
-        (Objects.nonNull(configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET)) ?
+        (configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) != null ?
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) : null),
         kcpSocketConfiguration);
 
-    if (Objects.nonNull(udpSocketConfiguration)) {
+    if (udpSocketConfiguration != null) {
       datagramChannelManager.configureUdpPort(udpSocketConfiguration.port());
     }
-    if (Objects.nonNull(kcpSocketConfiguration)) {
+    if (kcpSocketConfiguration != null) {
       datagramChannelManager.configureKcpPort(kcpSocketConfiguration.port());
     }
 
@@ -307,7 +306,7 @@ public final class ServerImpl extends SystemLogger implements Server {
             configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_USING_SSL));
 
     PacketQueuePolicy packetQueuePolicy = bootstrapHandler.getBeanByClazz(PacketQueuePolicy.class);
-    if (Objects.isNull(packetQueuePolicy)) {
+    if (packetQueuePolicy == null) {
       packetQueuePolicy = new DefaultPacketQueuePolicy();
     }
     networkService.setPacketQueuePolicy(packetQueuePolicy);
@@ -319,22 +318,22 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     BinaryPacketCompressor binaryPacketCompressor =
         bootstrapHandler.getBeanByClazz(BinaryPacketCompressor.class);
-    if (Objects.isNull(binaryPacketCompressor)) {
+    if (binaryPacketCompressor == null) {
       binaryPacketCompressor = new DefaultBinaryPacketCompressor();
     }
     BinaryPacketEncryptor binaryPacketEncryptor =
         bootstrapHandler.getBeanByClazz(BinaryPacketEncryptor.class);
-    if (Objects.isNull(binaryPacketEncryptor)) {
+    if (binaryPacketEncryptor == null) {
       binaryPacketEncryptor = new DefaultBinaryPacketEncryptor();
     }
     BinaryPacketEncoder binaryPacketEncoder =
         bootstrapHandler.getBeanByClazz(BinaryPacketEncoder.class);
-    if (Objects.isNull(binaryPacketEncoder)) {
+    if (binaryPacketEncoder == null) {
       binaryPacketEncoder = new DefaultBinaryPacketEncoder();
     }
     BinaryPacketDecoder binaryPacketDecoder =
         bootstrapHandler.getBeanByClazz(BinaryPacketDecoder.class);
-    if (Objects.isNull(binaryPacketDecoder)) {
+    if (binaryPacketDecoder == null) {
       binaryPacketDecoder = new DefaultBinaryPacketDecoder();
     }
 

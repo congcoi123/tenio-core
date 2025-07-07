@@ -44,7 +44,6 @@ import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import kcp.Ukcp;
 
@@ -214,11 +213,12 @@ public final class SessionImpl implements Session {
               getTransportType().toString()));
     }
 
-    if (Objects.isNull(socketChannel)) {
+    if (socketChannel == null) {
       throw new IllegalArgumentException("Null value is unacceptable");
     }
 
-    if (Objects.nonNull(socketChannel.socket()) && !socketChannel.socket().isClosed()) {
+    // Do we need to check connection status?
+    if (socketChannel.socket() != null && !socketChannel.socket().isClosed()) {
       transportType = TransportType.TCP;
       createPacketSocketHandler();
       this.socketChannel = socketChannel;
@@ -269,7 +269,7 @@ public final class SessionImpl implements Session {
   @Override
   public void configureDatagramChannel(DatagramChannel datagramChannel, int udpConvey) {
     this.datagramChannel = datagramChannel;
-    if (Objects.isNull(this.datagramChannel)) {
+    if (this.datagramChannel == null) {
       datagramRemoteSocketAddress = null;
       this.udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
       hasUdp = false;
@@ -291,12 +291,12 @@ public final class SessionImpl implements Session {
 
   @Override
   public void setKcpChannel(Ukcp kcpChannel) {
-    if (Objects.nonNull(this.kcpChannel) && this.kcpChannel.isActive()) {
+    if (this.kcpChannel != null && this.kcpChannel.isActive()) {
       this.kcpChannel.close();
     }
 
     this.kcpChannel = kcpChannel;
-    hasKcp = Objects.nonNull(kcpChannel);
+    hasKcp = kcpChannel != null;
   }
 
   @Override
@@ -322,7 +322,7 @@ public final class SessionImpl implements Session {
               transportType.toString()));
     }
 
-    if (Objects.isNull(webSocketChannel)) {
+    if (webSocketChannel == null) {
       throw new IllegalArgumentException("Null value is unacceptable");
     }
 
@@ -482,15 +482,16 @@ public final class SessionImpl implements Session {
 
     connectionFilter.removeAddress(clientAddress);
 
-    if (Objects.nonNull(packetQueue)) {
+    if (packetQueue != null) {
       packetQueue.clear();
     }
 
     switch (transportType) {
       case TCP:
-        if (Objects.nonNull(socketChannel)) {
+        if (socketChannel != null) {
           var socket = socketChannel.socket();
-          if (Objects.nonNull(socket) && !socket.isClosed()) {
+          // Do we need to check connection status?
+          if (socket != null && !socket.isClosed()) {
             socket.shutdownInput();
             socket.shutdownOutput();
             socket.close();
@@ -500,7 +501,7 @@ public final class SessionImpl implements Session {
         break;
 
       case WEB_SOCKET:
-        if (Objects.nonNull(webSocketChannel)) {
+        if (webSocketChannel != null) {
           webSocketChannel.close();
         }
         break;

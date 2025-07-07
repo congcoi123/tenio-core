@@ -30,7 +30,6 @@ import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.service.Service;
 import jakarta.servlet.http.HttpServlet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
@@ -123,7 +122,7 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     executorService.execute(this);
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
+      if (executorService != null && !executorService.isShutdown()) {
         try {
           shutdown();
         } catch (Exception exception) {

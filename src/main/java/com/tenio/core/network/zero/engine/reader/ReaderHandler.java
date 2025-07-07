@@ -48,7 +48,6 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
@@ -224,7 +223,7 @@ public final class ReaderHandler extends SystemLogger {
     // retrieves session by its socket channel
     var session = sessionManager.getSessionBySocket(socketChannel);
 
-    if (Objects.isNull(session)) {
+    if (session == null) {
       debug("READ_TCP_CHANNEL", "Reader handle a null session with the socket channel: ",
           socketChannel.toString());
       return;
@@ -312,7 +311,7 @@ public final class ReaderHandler extends SystemLogger {
         return;
       }
 
-      if (Objects.isNull(remoteAddress)) {
+      if (remoteAddress == null) {
         var addressNotFoundException =
             new RuntimeException("Remove address for the datagram channel");
         error(addressNotFoundException, "An exception was occurred on channel: ",
@@ -357,7 +356,7 @@ public final class ReaderHandler extends SystemLogger {
 
       session = sessionManager.getSessionByDatagram(udpConvey);
 
-      if (Objects.isNull(session)) {
+      if (session == null) {
         datagramIoHandler.channelRead(datagramChannel, remoteAddress, message);
       } else {
         if (session.isActivated()) {
@@ -370,7 +369,7 @@ public final class ReaderHandler extends SystemLogger {
       }
     }
 
-    if (selectionKey.isValid() && selectionKey.isWritable() && Objects.nonNull(session)) {
+    if (selectionKey.isValid() && selectionKey.isWritable() && session != null) {
       // should continue put this session for sending all left packets first
       zeroWriterListener.continueWriteInterestOp(session);
       // now we should set it back to interest in OP_READ

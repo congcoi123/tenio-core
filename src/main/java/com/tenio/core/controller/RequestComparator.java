@@ -27,7 +27,6 @@ package com.tenio.core.controller;
 import com.tenio.core.network.define.RequestPriority;
 import com.tenio.core.network.entity.protocol.Request;
 import java.util.Comparator;
-import java.util.Objects;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine.InitializationException;
 
 /**
@@ -56,7 +55,7 @@ public final class RequestComparator implements Comparator<Request> {
   private static final RequestComparator instance = new RequestComparator();
 
   private RequestComparator() {
-    if (Objects.nonNull(instance)) {
+    if (instance != null) {
       throw new InitializationException("Could not recreate this class' instance");
     }
   }

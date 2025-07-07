@@ -33,7 +33,6 @@ import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.zero.engine.ZeroEngine;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -80,7 +79,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
     executorService = Executors.newFixedThreadPool(executorSize, threadFactory);
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
+      if (executorService != null && !executorService.isShutdown()) {
         try {
           halting();
         } catch (Exception exception) {

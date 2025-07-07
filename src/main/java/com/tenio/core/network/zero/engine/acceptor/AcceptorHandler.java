@@ -45,7 +45,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Handles incoming TCP/UDP connections using Java NIO's {@link Selector}.
@@ -125,7 +124,7 @@ public final class AcceptorHandler extends SystemLogger {
     if (tcpSocketConfiguration.type() == TransportType.TCP) {
       bindTcpServerSocket(tcpSocketConfiguration.port());
     }
-    if (Objects.nonNull(udpSocketConfiguration) &&
+    if (udpSocketConfiguration != null &&
         udpSocketConfiguration.type() == TransportType.UDP) {
       bindUdpServerChannel(udpSocketConfiguration.port(), udpSocketConfiguration.cacheSize());
     }
@@ -182,16 +181,16 @@ public final class AcceptorHandler extends SystemLogger {
   }
 
   private void registerClientChannel(SocketChannel socketChannel) {
-    if (Objects.isNull(socketChannel)) {
+    if (socketChannel == null) {
       debug("ACCEPTABLE CHANNEL", "Acceptor handles a null socket channel");
     } else {
       var socket = socketChannel.socket();
 
-      if (Objects.isNull(socket)) {
+      if (socket == null) {
         debug("ACCEPTABLE CHANNEL", "Acceptor handles a null socket");
       } else {
         var inetAddress = socket.getInetAddress();
-        if (Objects.nonNull(inetAddress)) {
+        if (inetAddress != null) {
           try {
             connectionFilter.validateAndAddAddress(inetAddress.getHostAddress());
             socketChannel.configureBlocking(false);
@@ -223,7 +222,7 @@ public final class AcceptorHandler extends SystemLogger {
             }
           } catch (IOException exception3) {
             var logger = buildgen("Failed accepting connection: ");
-            if (Objects.nonNull(socketChannel.socket())) {
+            if (socketChannel.socket() != null) {
               logger.append(socketChannel.socket().getInetAddress().getHostAddress());
             }
             error(exception3, logger);
@@ -319,7 +318,7 @@ public final class AcceptorHandler extends SystemLogger {
           var clientChannel = serverChannel.accept();
 
           // make sure that the socket is available
-          if (Objects.nonNull(clientChannel)) {
+          if (clientChannel != null) {
             registerClientChannel(clientChannel);
           }
 

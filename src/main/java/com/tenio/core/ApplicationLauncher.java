@@ -32,7 +32,6 @@ import com.tenio.core.monitoring.system.SystemInfo;
 import com.tenio.core.server.Server;
 import com.tenio.core.server.ServerImpl;
 import java.util.Arrays;
-import java.util.Objects;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 import org.apache.logging.log4j.util.Strings;
 
@@ -68,7 +67,7 @@ public final class ApplicationLauncher extends SystemLogger {
   private static final ApplicationLauncher instance = new ApplicationLauncher();
 
   private ApplicationLauncher() {
-    if (Objects.nonNull(instance)) {
+    if (instance != null) {
       throw new CommandLine.InitializationException("Could not recreate this class instance");
     }
   }
@@ -107,7 +106,7 @@ public final class ApplicationLauncher extends SystemLogger {
     systemInfo.logDiskInfo();
 
     Bootstrapper bootstrap = null;
-    if (Objects.nonNull(entryClass)) {
+    if (entryClass != null) {
       bootstrap = Bootstrapper.newInstance();
       try {
         bootstrap.run(entryClass, CoreConstant.DEFAULT_BOOTSTRAP_PACKAGE,

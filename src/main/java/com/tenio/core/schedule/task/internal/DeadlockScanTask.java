@@ -31,7 +31,6 @@ import com.tenio.core.schedule.task.AbstractSystemTask;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -75,7 +74,7 @@ public final class DeadlockScanTask extends AbstractSystemTask {
 
     long[] threadIds = findDeadlockedThreads();
 
-    if (Objects.nonNull(threadIds) && threadIds.length > 0) {
+    if (threadIds != null && threadIds.length > 0) {
       var threads = new Thread[threadIds.length];
 
       var logger = buildgen("\n");

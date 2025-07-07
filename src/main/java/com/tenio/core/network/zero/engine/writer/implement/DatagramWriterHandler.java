@@ -29,7 +29,6 @@ import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import java.io.IOException;
-import java.util.Objects;
 
 /**
  * The Datagram writing handler.
@@ -66,11 +65,11 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
 
     // the datagram need to be declared first, something went wrong here, need to
     // log the exception content
-    if (Objects.isNull(datagramChannel)) {
+    if (datagramChannel == null) {
       error("{DATAGRAM CHANNEL SEND} ", "UDP Packet cannot be sent to ", session.toString(),
           ", no DatagramChannel was set");
       return;
-    } else if (Objects.isNull(remoteSocketAddress)) {
+    } else if (remoteSocketAddress == null) {
       error("{DATAGRAM CHANNEL SEND} ", "UDP Packet cannot be sent to ", session.toString(),
           ", no InetSocketAddress was set");
       return;

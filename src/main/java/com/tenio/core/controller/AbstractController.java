@@ -30,7 +30,6 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RequestQueueFullException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.entity.protocol.Request;
-import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -123,7 +122,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
     executorService = Executors.newFixedThreadPool(executorSize, threadFactory);
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
+      if (executorService != null && !executorService.isShutdown()) {
         try {
           attemptToShutdown();
         } catch (Exception exception) {

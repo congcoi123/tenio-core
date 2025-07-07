@@ -50,7 +50,6 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * The implementation for the Netty's websockets services.
@@ -151,10 +150,10 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
     }
     serverWebSockets.clear();
 
-    if (Objects.nonNull(webSocketAcceptors)) {
+    if (webSocketAcceptors != null) {
       webSocketAcceptors.shutdownGracefully();
     }
-    if (Objects.nonNull(webSocketWorkers)) {
+    if (webSocketWorkers != null) {
       webSocketWorkers.shutdownGracefully();
     }
 
@@ -168,7 +167,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
    * @param channel the closed channel
    */
   private void close(Channel channel) {
-    if (Objects.isNull(channel)) {
+    if (channel == null) {
       return;
     }
 
