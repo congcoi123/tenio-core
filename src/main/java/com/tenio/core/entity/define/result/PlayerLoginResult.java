@@ -24,13 +24,26 @@ THE SOFTWARE.
 
 package com.tenio.core.entity.define.result;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+/**
+ * The results when a player tried to log in the server.
+ */
+public enum PlayerLoginResult {
 
-import org.junit.jupiter.api.Test;
+  /**
+   * Success.
+   */
+  SUCCESS,
+  /**
+   * The player fails to log in the server because of any exception.
+   */
+  EXCEPTION,
+  /**
+   * The player fails to log in the server because it is already in. It should throw an exception.
+   */
+  DUPLICATED_PLAYER;
 
-class PlayerLoggedInResultTest {
-  @Test
-  void testValueOf() {
-    assertEquals("SUCCESS", PlayerLoggedInResult.valueOf("SUCCESS").toString());
+  @Override
+  public String toString() {
+    return this.name();
   }
 }

@@ -36,7 +36,7 @@ import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 import com.tenio.core.entity.define.result.PlayerLeftRoomResult;
-import com.tenio.core.entity.define.result.PlayerLoggedInResult;
+import com.tenio.core.entity.define.result.PlayerLoginResult;
 import com.tenio.core.entity.define.result.RoomCreatedResult;
 import com.tenio.core.entity.implement.DefaultPlayer;
 import com.tenio.core.entity.manager.ChannelManager;
@@ -112,7 +112,7 @@ class ServerApiTest {
     serverApi.login(loginName);
     Mockito.verify(eventManager, Mockito.times(1))
         .emit(ServerEvent.PLAYER_LOGIN_RESULT, loginPlayer,
-            PlayerLoggedInResult.SUCCESS);
+            PlayerLoginResult.SUCCESS);
   }
 
   @Test
@@ -128,7 +128,7 @@ class ServerApiTest {
     serverApi.login(loginName);
     Mockito.verify(eventManager, Mockito.times(1))
         .emit(ServerEvent.PLAYER_LOGIN_RESULT, loginPlayer,
-            PlayerLoggedInResult.DUPLICATED_PLAYER);
+            PlayerLoginResult.DUPLICATED_PLAYER);
   }
 
   @Test
@@ -145,7 +145,7 @@ class ServerApiTest {
     serverApi.login(loginName, loginSession);
     Mockito.verify(eventManager, Mockito.times(1))
         .emit(ServerEvent.PLAYER_LOGIN_RESULT, loginPlayer,
-            PlayerLoggedInResult.SUCCESS);
+            PlayerLoginResult.SUCCESS);
   }
 
   @Test
@@ -162,7 +162,7 @@ class ServerApiTest {
     serverApi.login(loginName, loginSession);
     Mockito.verify(eventManager, Mockito.times(1))
         .emit(ServerEvent.PLAYER_LOGIN_RESULT, null,
-            PlayerLoggedInResult.EXCEPTION);
+            PlayerLoginResult.EXCEPTION);
   }
 
   @Test
@@ -179,7 +179,7 @@ class ServerApiTest {
     serverApi.login(loginName, loginSession);
     Mockito.verify(eventManager, Mockito.times(1))
         .emit(ServerEvent.PLAYER_LOGIN_RESULT, loginPlayer,
-            PlayerLoggedInResult.DUPLICATED_PLAYER);
+            PlayerLoginResult.DUPLICATED_PLAYER);
   }
 
   @Test
