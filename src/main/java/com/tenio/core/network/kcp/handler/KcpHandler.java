@@ -72,7 +72,9 @@ public class KcpHandler implements KcpListener {
 
   @Override
   public void onConnected(Ukcp ukcp) {
-    logger.debug("KCP CHANNEL CONNECTED", ukcp);
+    if (logger.isDebugEnabled()) {
+      logger.debug("KCP CHANNEL CONNECTED", ukcp);
+    }
   }
 
   @Override
@@ -92,7 +94,9 @@ public class KcpHandler implements KcpListener {
         networkReaderStatistic.updateReadPackets(1);
         eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
       } else {
-        logger.debug("READ KCP CHANNEL", "Session is inactivated: ", session.toString());
+        if (logger.isDebugEnabled()) {
+          logger.debug("READ KCP CHANNEL", "Session is inactivated: ", session.toString());
+        }
       }
     }
   }
@@ -101,16 +105,22 @@ public class KcpHandler implements KcpListener {
   public void handleException(Throwable cause, Ukcp ukcp) {
     var session = sessionManager.getSessionByKcp(ukcp);
     if (session != null) {
-      logger.error(cause, "Session: ", session.toString());
+      if (logger.isErrorEnabled()) {
+        logger.error(cause, "Session: ", session.toString());
+      }
       eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, cause);
     } else {
-      logger.error(cause, "Exception was occurred on channel: ", ukcp.toString());
+      if (logger.isErrorEnabled()) {
+        logger.error(cause, "Exception was occurred on channel: ", ukcp.toString());
+      }
     }
   }
 
   @Override
   public void handleClose(Ukcp ukcp) {
-    logger.debug("KCP CHANNEL CLOSED", ukcp);
+    if (logger.isDebugEnabled()) {
+      logger.debug("KCP CHANNEL CLOSED", ukcp);
+    }
     var session = sessionManager.getSessionByKcp(ukcp);
     if (session != null && session.containsKcp()) {
       session.setKcpChannel(null);
@@ -125,7 +135,9 @@ public class KcpHandler implements KcpListener {
           eventManager.emit(ServerEvent.ACCESS_KCP_CHANNEL_REQUEST_VALIDATION, message);
     } catch (Exception exception) {
       ukcp.close();
-      logger.error(exception, message);
+      if (logger.isErrorEnabled()) {
+        logger.error(exception, message);
+      }
     }
 
     if (!(checkingPlayer instanceof Optional<?> optionalPlayer)) {

@@ -112,7 +112,9 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine implements ZeroAc
         try {
           acceptorHandler.running();
         } catch (Throwable cause) {
-          error(cause);
+          if (isErrorEnabled()) {
+            error(cause);
+          }
         }
       }
     }

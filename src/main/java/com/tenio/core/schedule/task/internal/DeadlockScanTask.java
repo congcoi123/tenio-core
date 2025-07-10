@@ -95,11 +95,15 @@ public final class DeadlockScanTask extends AbstractSystemTask {
         try {
           threads[i] = findMatchingThread(threadInfo);
         } catch (IllegalStateException exception) {
-          error(exception);
+          if (isErrorEnabled()) {
+            error(exception);
+          }
         }
       }
 
-      info("DEADLOCKED THREAD DETECTOR", logger);
+      if (isInfoEnabled()) {
+        info("DEADLOCKED THREAD DETECTOR", logger);
+      }
     }
   }
 

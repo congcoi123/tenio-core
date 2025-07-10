@@ -140,8 +140,10 @@ public final class AcceptorHandler extends SystemLogger {
         serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
       }
       serverSocketChannel.bind(new InetSocketAddress(serverAddress, port));
-      info("TCP SOCKET", buildgen("Started at address: ", serverAddress, ", port: ",
-          serverSocketChannel.socket().getLocalPort()));
+      if (isInfoEnabled()) {
+        info("TCP SOCKET", buildgen("Started at address: ", serverAddress, ", port: ",
+            serverSocketChannel.socket().getLocalPort()));
+      }
       // only server socket should interest in this key OP_ACCEPT
       serverSocketChannel.register(acceptableSelector, SelectionKey.OP_ACCEPT);
       synchronized (serverChannels) {
@@ -173,8 +175,10 @@ public final class AcceptorHandler extends SystemLogger {
           serverChannels.add(datagramChannel);
         }
       }
-      info("UDP CHANNEL", buildgen("Started at address: ", serverAddress, ", port: ",
-          port, ", cache: ", cacheSize));
+      if (isInfoEnabled()) {
+        info("UDP CHANNEL", buildgen("Started at address: ", serverAddress, ", port: ",
+            port, ", cache: ", cacheSize));
+      }
     } catch (IOException exception) {
       throw new ServiceRuntimeException(exception.getMessage());
     }
@@ -182,12 +186,16 @@ public final class AcceptorHandler extends SystemLogger {
 
   private void registerClientChannel(SocketChannel socketChannel) {
     if (socketChannel == null) {
-      debug("ACCEPTABLE CHANNEL", "Acceptor handles a null socket channel");
+      if (isDebugEnabled()) {
+        debug("ACCEPTABLE CHANNEL", "Acceptor handles a null socket channel");
+      }
     } else {
       var socket = socketChannel.socket();
 
       if (socket == null) {
-        debug("ACCEPTABLE CHANNEL", "Acceptor handles a null socket");
+        if (isDebugEnabled()) {
+          debug("ACCEPTABLE CHANNEL", "Acceptor handles a null socket");
+        }
       } else {
         var inetAddress = socket.getInetAddress();
         if (inetAddress != null) {
@@ -195,7 +203,9 @@ public final class AcceptorHandler extends SystemLogger {
             connectionFilter.validateAndAddAddress(inetAddress.getHostAddress());
             socketChannel.configureBlocking(false);
             socketChannel.socket().setTcpNoDelay(true);
-            debug("ACCEPTABLE CHANNEL", buildgen(socketChannel.getRemoteAddress()));
+            if (isDebugEnabled()) {
+              debug("ACCEPTABLE CHANNEL", buildgen(socketChannel.getRemoteAddress()));
+            }
             zeroReaderListener.acceptSocketChannel(socketChannel,
                 selectionKey -> {
                   socketIoHandler.channelActive(socketChannel, selectionKey);
@@ -205,7 +215,9 @@ public final class AcceptorHandler extends SystemLogger {
                 }
             );
           } catch (RefusedConnectionAddressException exception1) {
-            error(exception1, "Refused connection with address: ", exception1.getMessage());
+            if (isErrorEnabled()) {
+              error(exception1, "Refused connection with address: ", exception1.getMessage());
+            }
             socketIoHandler.channelException(socketChannel, exception1);
 
             try {
@@ -214,18 +226,22 @@ public final class AcceptorHandler extends SystemLogger {
               socketChannel.socket().shutdownOutput();
               socketChannel.close();
             } catch (IOException exception2) {
-              error(exception2,
-                  "Additional problem with refused connection. "
-                  , "Was not able to shut down the channel: ",
-                  exception2.getMessage());
+              if (isErrorEnabled()) {
+                error(exception2,
+                    "Additional problem with refused connection. "
+                    , "Was not able to shut down the channel: ",
+                    exception2.getMessage());
+              }
               socketIoHandler.channelException(socketChannel, exception2);
             }
           } catch (IOException exception3) {
-            var logger = buildgen("Failed accepting connection: ");
-            if (socketChannel.socket() != null) {
-              logger.append(socketChannel.socket().getInetAddress().getHostAddress());
+            if (isErrorEnabled()) {
+              var logger = buildgen("Failed accepting connection: ");
+              if (socketChannel.socket() != null) {
+                logger.append(socketChannel.socket().getInetAddress().getHostAddress());
+              }
+              error(exception3, logger);
             }
-            error(exception3, logger);
             socketIoHandler.channelException(socketChannel, exception3);
           }
         }
@@ -250,7 +266,9 @@ public final class AcceptorHandler extends SystemLogger {
             socketChannel.close();
           }
         } catch (IOException exception) {
-          error(exception);
+          if (isErrorEnabled()) {
+            error(exception);
+          }
           socketIoHandler.channelException(socketChannel, exception);
         }
       }
@@ -269,7 +287,9 @@ public final class AcceptorHandler extends SystemLogger {
         try {
           socketChannel.close();
         } catch (IOException exception) {
-          error(exception);
+          if (isErrorEnabled()) {
+            error(exception);
+          }
         }
       }
     }
@@ -280,7 +300,9 @@ public final class AcceptorHandler extends SystemLogger {
       Thread.sleep(500L);
       acceptableSelector.close();
     } catch (IOException | InterruptedException exception) {
-      error(exception);
+      if (isErrorEnabled()) {
+        error(exception);
+      }
     }
   }
 
@@ -321,9 +343,10 @@ public final class AcceptorHandler extends SystemLogger {
           if (clientChannel != null) {
             registerClientChannel(clientChannel);
           }
-
         } catch (IOException exception) {
-          error(exception);
+          if (isErrorEnabled()) {
+            error(exception);
+          }
         }
       }
     }

@@ -56,8 +56,10 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
     // this channel can be deactivated by some reasons, no need to throw an
     // exception here
     if (channel == null || !channel.isOpen() || !channel.isConnected()) {
-      debug("SOCKET CHANNEL SEND", "Skipping this packet, found null/closed socket for session ",
-          session);
+      if (isDebugEnabled()) {
+        debug("SOCKET CHANNEL SEND", "Skipping this packet, found null/closed socket for session ",
+            session);
+      }
       return;
     }
 
@@ -69,8 +71,10 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
 
     // buffer size is not enough, need to be allocated more bytes
     if (getBuffer().capacity() < sendingData.length) {
-      debug("SOCKET CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(), " to ",
-          sendingData.length, " bytes");
+      if (isDebugEnabled()) {
+        debug("SOCKET CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(), " to ",
+            sendingData.length, " bytes");
+      }
       allocateBuffer(sendingData.length);
     }
 
@@ -130,11 +134,14 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
       if (selectionKey != null && selectionKey.isValid()) {
         selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
       } else {
-        error("{SOCKET CHANNEL SEND} ", "Something went wrong with OP_WRITE key for session: ",
-            session);
+        if (isErrorEnabled()) {
+          error("{SOCKET CHANNEL SEND} ", "Something went wrong with OP_WRITE key for session: ", session);
+        }
       }
     } catch (IOException exception) {
-      error(exception, "Error occurred in writing on session: ", session.toString());
+      if (isErrorEnabled()) {
+        error(exception, "Error occurred in writing on session: ", session.toString());
+      }
     }
   }
 }

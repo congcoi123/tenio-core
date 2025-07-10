@@ -208,13 +208,21 @@ public final class ReaderHandler extends SystemLogger {
         }
       }
     } catch (ClosedSelectorException exception1) {
-      error(exception1, "Selector is closed: ", exception1.getMessage());
+      if (isErrorEnabled()) {
+        error(exception1, "Selector is closed: ", exception1.getMessage());
+      }
     } catch (CancelledKeyException exception2) {
-      error(exception2, "Cancelled key: ", exception2.getMessage());
+      if (isErrorEnabled()) {
+        error(exception2, "Cancelled key: ", exception2.getMessage());
+      }
     } catch (IOException exception3) {
-      error(exception3, "I/O reading/selection error: ", exception3.getMessage());
+      if (isErrorEnabled()) {
+        error(exception3, "I/O reading/selection error: ", exception3.getMessage());
+      }
     } catch (Exception exception4) {
-      error(exception4, "Generic reading/selection error: ", exception4.getMessage());
+      if (isErrorEnabled()) {
+        error(exception4, "Generic reading/selection error: ", exception4.getMessage());
+      }
     }
   }
 
@@ -224,13 +232,17 @@ public final class ReaderHandler extends SystemLogger {
     var session = sessionManager.getSessionBySocket(socketChannel);
 
     if (session == null) {
-      debug("READ_TCP_CHANNEL", "Reader handle a null session with the socket channel: ",
-          socketChannel.toString());
+      if (isDebugEnabled()) {
+        debug("READ TCP CHANNEL", "Reader handle a null session with the socket channel: ",
+            socketChannel.toString());
+      }
       return;
     }
 
     if (!session.isActivated()) {
-      debug("READ_TCP_CHANNEL", "Session is inactivated: ", session.toString());
+      if (isDebugEnabled()) {
+        debug("READ TCP CHANNEL", "Session is inactivated: ", session.toString());
+      }
       return;
     }
 
@@ -258,7 +270,9 @@ public final class ReaderHandler extends SystemLogger {
         // so I guess we can ignore this kind of exception or wait until we have proper solutions
         // this checking may not work with other languages (e.g: japanese)
         if (!exception.getMessage().contains("Connection reset")) {
-          error(exception, "An exception was occurred on channel: ", socketChannel.toString());
+          if (isErrorEnabled()) {
+            error(exception, "An exception was occurred on channel: ", socketChannel.toString());
+          }
           socketIoHandler.sessionException(session, exception);
         }
       }
@@ -289,7 +303,9 @@ public final class ReaderHandler extends SystemLogger {
         socketChannel.socket().shutdownOutput();
         socketChannel.close();
       } catch (IOException exception) {
-        error(exception, "Error on closing socket channel: ", socketChannel.toString());
+        if (isErrorEnabled()) {
+          error(exception, "Error on closing socket channel: ", socketChannel.toString());
+        }
       }
     }
   }
@@ -306,7 +322,9 @@ public final class ReaderHandler extends SystemLogger {
       try {
         remoteAddress = datagramChannel.receive(readerBuffer);
       } catch (IOException exception) {
-        error(exception, "An exception was occurred on channel: ", datagramChannel.toString());
+        if (isErrorEnabled()) {
+          error(exception, "An exception was occurred on channel: ", datagramChannel.toString());
+        }
         datagramIoHandler.channelException(datagramChannel, exception);
         return;
       }
@@ -314,8 +332,10 @@ public final class ReaderHandler extends SystemLogger {
       if (remoteAddress == null) {
         var addressNotFoundException =
             new RuntimeException("Remove address for the datagram channel");
-        error(addressNotFoundException, "An exception was occurred on channel: ",
-            datagramChannel.toString());
+        if (isErrorEnabled()) {
+          error(addressNotFoundException, "An exception was occurred on channel: ",
+              datagramChannel.toString());
+        }
         datagramIoHandler.channelException(datagramChannel, addressNotFoundException);
         return;
       }
@@ -364,7 +384,9 @@ public final class ReaderHandler extends SystemLogger {
           session.addReadBytes(byteCount);
           datagramIoHandler.sessionRead(session, message);
         } else {
-          debug("READ_UDP_CHANNEL", "Session is inactivated: ", session.toString());
+          if (isDebugEnabled()) {
+            debug("READ UDP CHANNEL", "Session is inactivated: ", session.toString());
+          }
         }
       }
     }

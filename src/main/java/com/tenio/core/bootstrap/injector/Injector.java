@@ -349,11 +349,14 @@ public final class Injector extends SystemLogger {
             handler.setCommandManager(systemCommandManager);
             systemCommandManager.registerCommand(systemCommandAnnotation.label(), handler);
           } else {
-            error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
-                "AbstractSystemCommandHandler"));
+            if (isErrorEnabled()) {
+              error(new IllegalArgumentException("Class " + clazz.getName() + " is not a AbstractSystemCommandHandler"));
+            }
           }
         } catch (Exception exception) {
-          error(exception, "Failed to register command handler for ", clazz.getSimpleName());
+          if (isErrorEnabled()) {
+            error(exception, "Failed to register command handler for ", clazz.getSimpleName());
+          }
         }
       } else if (clazz.isAnnotationPresent(ClientCommand.class)) {
         try {
@@ -372,11 +375,14 @@ public final class Injector extends SystemLogger {
             clientCommandManager.registerCommand(clientCommandAnnotation.value(),
                 (AbstractClientCommandHandler<Player>) handler);
           } else {
-            error(new IllegalArgumentException("Class " + clazz.getName() + " is not a " +
-                "AbstractClientCommandHandler"));
+            if (isErrorEnabled()) {
+              error(new IllegalArgumentException("Class " + clazz.getName() + " is not a AbstractClientCommandHandler"));
+            }
           }
         } catch (Exception exception) {
-          error(exception, "Failed to register command handler for ", clazz.getSimpleName());
+          if (isErrorEnabled()) {
+            error(exception, "Failed to register command handler for ", clazz.getSimpleName());
+          }
         }
       }
     }
@@ -387,20 +393,12 @@ public final class Injector extends SystemLogger {
       try {
         autowire(clazz, bean);
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException | DuplicatedBeanCreationException exception) {
-        error("Initialize class: ", clazz.clazz().getName(), "\n", getStackTrace(exception));
+        if (isErrorEnabled()) {
+          error("Initialize class: ", clazz.clazz().getName(), "\n",
+              StringUtility.getStackTrace(exception));
+        }
       }
     });
-  }
-
-  private String getStackTrace(Exception exception) {
-    StringBuilder stringBuilder = new StringBuilder();
-    StackTraceElement[] stackTraceElements = exception.getStackTrace();
-    stringBuilder.append(exception.getClass().getName()).append(": ").append(exception.getMessage())
-        .append("\n");
-    for (StackTraceElement stackTraceElement : stackTraceElements) {
-      stringBuilder.append("\t at ").append(stackTraceElement.toString()).append("\n");
-    }
-    return stringBuilder.toString();
   }
 
   /**

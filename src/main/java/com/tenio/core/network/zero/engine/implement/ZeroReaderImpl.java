@@ -142,12 +142,16 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
           try {
             readerHandler.running();
           } catch (Throwable cause) {
-            error(cause);
+            if (isErrorEnabled()) {
+              error(cause);
+            }
           }
         }
       }
     } catch (IOException exception) {
-      error(exception);
+      if (isErrorEnabled()) {
+        error(exception);
+      }
     }
   }
 
@@ -159,7 +163,9 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         readerHandler.shutdown();
       }
     } catch (IOException | InterruptedException exception) {
-      error(exception, "Exception while closing the selector");
+      if (isErrorEnabled()) {
+        error(exception, "Exception while closing the selector");
+      }
     }
   }
 

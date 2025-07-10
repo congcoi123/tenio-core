@@ -83,7 +83,9 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
         try {
           halting();
         } catch (Exception exception) {
-          error(exception);
+          if (isErrorEnabled()) {
+            error(exception);
+          }
         }
       }
     }));
@@ -112,9 +114,13 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   }
 
   private void destroyEngine() {
-    info("STOPPED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    if (isInfoEnabled()) {
+      info("STOPPED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    }
     onDestroyed();
-    info("DESTROYED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    if (isInfoEnabled()) {
+      info("DESTROYED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    }
   }
 
   @Override
@@ -126,7 +132,11 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   private void setThreadName() {
     Thread currentThread = Thread.currentThread();
     currentThread.setName(StringUtility.strgen("zero-", getName(), "-", id.incrementAndGet()));
-    currentThread.setUncaughtExceptionHandler((thread, cause) -> error(cause, thread.getName()));
+    currentThread.setUncaughtExceptionHandler((thread, cause) -> {
+      if (isErrorEnabled()) {
+        error(cause, thread.getName());
+      }
+    });
   }
 
   @Override
@@ -192,13 +202,17 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
         Thread.sleep(100L);
       } catch (InterruptedException exception) {
         Thread.currentThread().interrupt();
-        error(exception);
+        if (isErrorEnabled()) {
+          error(exception);
+        }
       }
       executorService.execute(this);
     }
     onStarted();
     activated = true;
-    info("START SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    if (isInfoEnabled()) {
+      info("START SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    }
   }
 
   @Override

@@ -95,9 +95,11 @@ public final class ApplicationLauncher extends SystemLogger {
    */
   public void start(Class<?> entryClass, String[] params) {
     // print out the framework's preface
-    var trademark =
-        String.format("\n\n%s\n", Strings.join(Arrays.asList(Trademark.CONTENT), '\n'));
-    info("HAPPY CODING", trademark);
+    if (isInfoEnabled()) {
+      var trademark =
+          String.format("\n\n%s\n", Strings.join(Arrays.asList(Trademark.CONTENT), '\n'));
+      info("HAPPY CODING", trademark);
+    }
 
     // show system information
     var systemInfo = new SystemInfo();
@@ -113,7 +115,9 @@ public final class ApplicationLauncher extends SystemLogger {
             CoreConstant.DEFAULT_EVENT_PACKAGE, CoreConstant.DEFAULT_COMMAND_PACKAGE,
             CoreConstant.DEFAULT_REST_CONTROLLER_PACKAGE);
       } catch (Exception exception) {
-        error(exception, "The application started with exceptions occurred: ", exception.getMessage());
+        if (isErrorEnabled()) {
+          error(exception, "The application started with exceptions occurred: ", exception.getMessage());
+        }
         System.exit(1);
       }
     }
@@ -123,8 +127,9 @@ public final class ApplicationLauncher extends SystemLogger {
       assert bootstrap != null;
       server.start(bootstrap.getBootstrapHandler(), params);
     } catch (Exception exception) {
-      error(exception, "The application started with exceptions occurred: ",
-          exception.getMessage());
+      if (isErrorEnabled()) {
+        error(exception, "The application started with exceptions occurred: ", exception.getMessage());
+      }
       server.shutdown();
       // exit with errors
       System.exit(1);
@@ -134,10 +139,16 @@ public final class ApplicationLauncher extends SystemLogger {
     try {
       var currentThread = Thread.currentThread();
       currentThread.setName("tenio-main-thread");
-      currentThread.setUncaughtExceptionHandler((thread, cause) -> error(cause, thread.getName()));
+      currentThread.setUncaughtExceptionHandler((thread, cause) -> {
+        if (isErrorEnabled()) {
+          error(cause, thread.getName());
+        }
+      });
       currentThread.join();
     } catch (InterruptedException exception) {
-      error(exception);
+      if (isErrorEnabled()) {
+        error(exception);
+      }
     }
 
     // Suddenly shutdown

@@ -94,7 +94,9 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
     try {
       session.close(ConnectionDisconnectMode.LOST, PlayerDisconnectMode.CONNECTION_LOST);
     } catch (IOException exception) {
-      logger.error(exception, "Session: ", session.toString());
+      if (logger.isErrorEnabled()) {
+        logger.error(exception, "Session: ", session.toString());
+      }
       eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
     }
   }
@@ -116,7 +118,9 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
           var address = ctx.channel().remoteAddress().toString();
           connectionFilter.validateAndAddAddress(address);
         } catch (RefusedConnectionAddressException exception) {
-          logger.error(exception, "Refused connection with address: ", exception.getMessage());
+          if (logger.isErrorEnabled()) {
+            logger.error(exception, "Refused connection with address: ", exception.getMessage());
+          }
           // handle refused connection, it should send to the client the reason before closing connection
           eventManager.emit(ServerEvent.WEBSOCKET_CONNECTION_REFUSED, ctx.channel(), exception);
           ctx.channel().close();
@@ -127,12 +131,17 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       }
 
       if (!session.isActivated()) {
-        logger.debug("READ WEBSOCKET CHANNEL", "Session is inactivated: ", session.toString());
+        if (logger.isDebugEnabled()) {
+          logger.debug("READ WEBSOCKET CHANNEL", "Session is inactivated: ", session.toString());
+        }
         return;
       }
 
       if (session.isAssociatedToPlayer(Session.AssociatedState.DOING)) {
-        logger.debug("READ WEBSOCKET CHANNEL", "Session is associating to a player, rejects message: ", session.toString());
+        if (logger.isDebugEnabled()) {
+          logger.debug("READ WEBSOCKET CHANNEL",
+              "Session is associating to a player, rejects message: ", session.toString());
+        }
         return;
       }
 
@@ -154,10 +163,14 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
     var session = sessionManager.getSessionByWebSocket(ctx.channel());
     if (session != null) {
-      logger.error(cause, "Session: ", session.toString());
+      if (logger.isErrorEnabled()) {
+        logger.error(cause, "Session: ", session.toString());
+      }
       eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, cause);
     } else {
-      logger.error(cause, "Exception was occurred on channel: ", ctx.channel().toString());
+      if (logger.isErrorEnabled()) {
+        logger.error(cause, "Exception was occurred on channel: ", ctx.channel().toString());
+      }
     }
   }
 }
