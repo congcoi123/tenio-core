@@ -82,45 +82,49 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
     // clear the buffer first
     getBuffer().clear();
 
+    // buffer size is not enough, need to be allocated more bytes
+    if (getBuffer().capacity() < sendingData.length) {
+      if (isDebugEnabled()) {
+        debug("DATAGRAM CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(),
+            " to ", sendingData.length, " bytes");
+      }
+      allocateBuffer(sendingData.length);
+    }
+
+    // put data to buffer
+    getBuffer().put(sendingData);
+
+    // ready to send
+    getBuffer().flip();
+
+    // get channel from cache to write data
+    var datagramChannelCache = datagramChannelManager.getChannel();
+    int writtenBytes;
+
     // send data to the client
     try {
-      // buffer size is not enough, need to be allocated more bytes
-      if (getBuffer().capacity() < sendingData.length) {
-        if (isDebugEnabled()) {
-          debug("DATAGRAM CHANNEL SEND", "Allocate new buffer from ", getBuffer().capacity(),
-              " to ", sendingData.length, " bytes");
-        }
-        allocateBuffer(sendingData.length);
-      }
-
-      // put data to buffer
-      getBuffer().put(sendingData);
-
-      // ready to send
-      getBuffer().flip();
-
-      var datagramChannelCache = datagramChannelManager.getChannel();
-      int writtenBytes = datagramChannelCache.send(getBuffer(), remoteSocketAddress);
-
-      // update statistic data
-      getNetworkWriterStatistic().updateWrittenBytes(writtenBytes);
-      getNetworkWriterStatistic().updateWrittenPackets(1);
-
-      // update statistic data for session
-      session.addWrittenBytes(writtenBytes);
+      writtenBytes = datagramChannelCache.send(getBuffer(), remoteSocketAddress);
     } catch (IOException exception) {
       if (isErrorEnabled()) {
         error(exception, "Error occurred in writing on session: ", session.toString());
       }
+      return;
     }
+
+    // update statistic data
+    getNetworkWriterStatistic().updateWrittenBytes(writtenBytes);
+    getNetworkWriterStatistic().updateWrittenPackets(1);
+
+    // update statistic data for session
+    session.addWrittenBytes(writtenBytes);
 
     // it is always safe to remove the packet from queue hence it should be sent
     packetQueue.take();
 
-    // if the packet queue still contains more packets, then put the session back to
-    // the tickets queue
-    if (!packetQueue.isEmpty()) {
-      getSessionTicketsQueue().add(session);
+    // if the packet queue still contains more packets, session is activated, then put the
+    // session back to the tickets queue
+    if (session.isActivated() && !packetQueue.isEmpty()) {
+      getSessionTicketsQueue(session.getId()).add(session);
     }
   }
 }

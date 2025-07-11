@@ -68,6 +68,7 @@ import com.tenio.core.server.service.InternalProcessorServiceImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
 import com.tenio.core.utility.CommandUtility;
 import java.io.IOError;
+import java.io.IOException;
 import javax.annotation.concurrent.ThreadSafe;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReaderBuilder;
@@ -237,7 +238,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   private void setupNetworkService(Configuration configuration, BootstrapHandler bootstrapHandler)
-      throws IllegalArgumentException, SecurityException {
+      throws IllegalArgumentException, SecurityException, IOException {
 
     ConnectionFilter connectionFilter = bootstrapHandler.getBeanByClazz(ConnectionFilter.class);
     if (connectionFilter == null) {
@@ -256,8 +257,9 @@ public final class ServerImpl extends SystemLogger implements Server {
             ((SocketConfiguration) httpConfiguration).port() : 0,
         httpConfiguration != null ? servletMap : null);
 
-    networkService.setSocketAcceptorServerAddress(
-        configuration.getString(CoreConfigurationType.SERVER_ADDRESS));
+    var serverAddress = configuration.getString(CoreConfigurationType.SERVER_ADDRESS);
+
+    networkService.setSocketAcceptorServerAddress(serverAddress);
 
     networkService.setSocketAcceptorBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE));
@@ -277,7 +279,8 @@ public final class ServerImpl extends SystemLogger implements Server {
         kcpSocketConfiguration);
 
     if (udpSocketConfiguration != null) {
-      datagramChannelManager.configureUdpPort(udpSocketConfiguration.port());
+      datagramChannelManager.configureUdpChannelCache(serverAddress, udpSocketConfiguration.port(),
+          udpSocketConfiguration.cacheSize());
     }
     if (kcpSocketConfiguration != null) {
       datagramChannelManager.configureKcpPort(kcpSocketConfiguration.port());

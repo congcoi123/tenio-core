@@ -34,11 +34,12 @@ import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.engine.ZeroWriter;
 import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
+import com.tenio.core.network.zero.engine.manager.SessionTicketsQueueManager;
 import com.tenio.core.network.zero.engine.writer.WriterHandler;
 import com.tenio.core.network.zero.engine.writer.implement.DatagramWriterHandler;
 import com.tenio.core.network.zero.engine.writer.implement.SocketWriterHandler;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The implementation for writer engine.
@@ -48,15 +49,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 public final class ZeroWriterImpl extends AbstractZeroEngine
     implements ZeroWriter, ZeroWriterListener {
 
-  private final BlockingQueue<Session> sessionTicketsQueue;
   private final DatagramChannelManager datagramChannelManager;
+  private final AtomicInteger id;
+  private SessionTicketsQueueManager sessionTicketsQueueManager;
   private NetworkWriterStatistic networkWriterStatistic;
   private BinaryPacketEncoder binaryPacketEncoder;
 
   private ZeroWriterImpl(EventManager eventManager, DatagramChannelManager datagramChannelManager) {
     super(eventManager);
     this.datagramChannelManager = datagramChannelManager;
-    sessionTicketsQueue = new LinkedBlockingQueue<>();
+    id = new AtomicInteger(0);
     setName("writer");
   }
 
@@ -75,7 +77,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
   private WriterHandler createSocketWriterHandler() {
     var socketWriterHandler = SocketWriterHandler.newInstance();
     socketWriterHandler.setNetworkWriterStatistic(networkWriterStatistic);
-    socketWriterHandler.setSessionTicketsQueue(sessionTicketsQueue);
+    socketWriterHandler.setSessionTicketsQueueManager(sessionTicketsQueueManager);
     socketWriterHandler.allocateBuffer(getMaxBufferSize());
 
     return socketWriterHandler;
@@ -84,13 +86,14 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
   private WriterHandler createDatagramWriterHandler() {
     var datagramWriterHandler = DatagramWriterHandler.newInstance(datagramChannelManager);
     datagramWriterHandler.setNetworkWriterStatistic(networkWriterStatistic);
-    datagramWriterHandler.setSessionTicketsQueue(sessionTicketsQueue);
+    datagramWriterHandler.setSessionTicketsQueueManager(sessionTicketsQueueManager);
     datagramWriterHandler.allocateBuffer(getMaxBufferSize());
 
     return datagramWriterHandler;
   }
 
-  private void writableLoop(WriterHandler socketWriterHandler,
+  private void writableLoop(BlockingQueue<Session> sessionTicketsQueue,
+                            WriterHandler socketWriterHandler,
                             WriterHandler datagramWriterHandler) {
     try {
       var session = sessionTicketsQueue.take();
@@ -179,12 +182,8 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
         // put new item into the queue
         packetQueue.put(packet);
 
-        // only need when the session was not in the tickets queue
-        synchronized (sessionTicketsQueue) {
-          if (!sessionTicketsQueue.contains(session)) {
-            sessionTicketsQueue.add(session);
-          }
-        }
+        // accept duplicated entries to prevent locking queue
+        sessionTicketsQueueManager.getQueueByElementId(session.getId()).add(session);
 
         packet.setRecipients(null);
       } catch (PacketQueuePolicyViolationException exception) {
@@ -200,7 +199,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
   @Override
   public void continueWriteInterestOp(Session session) {
     if (session != null) {
-      sessionTicketsQueue.add(session);
+      sessionTicketsQueueManager.getQueueByElementId(session.getId()).add(session);
     }
   }
 
@@ -221,7 +220,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
 
   @Override
   public void onInitialized() {
-    // do nothing
+    sessionTicketsQueueManager = new SessionTicketsQueueManager(getThreadPoolSize());
   }
 
   @Override
@@ -233,17 +232,18 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
   public void onRunning() {
     var socketWriterHandler = createSocketWriterHandler();
     var datagramWriterHandler = createDatagramWriterHandler();
+    var sessionTicketsQueue = sessionTicketsQueueManager.getQueueByIndex(id.getAndIncrement());
 
     while (!Thread.currentThread().isInterrupted()) {
       if (isActivated()) {
-        writableLoop(socketWriterHandler, datagramWriterHandler);
+        writableLoop(sessionTicketsQueue, socketWriterHandler, datagramWriterHandler);
       }
     }
   }
 
   @Override
   public void onShutdown() {
-    sessionTicketsQueue.clear();
+    sessionTicketsQueueManager.clear();
   }
 
   @Override

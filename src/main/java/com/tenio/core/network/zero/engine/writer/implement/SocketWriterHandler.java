@@ -86,69 +86,78 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
 
     // expect to write all data in buffer
     int expectedWritingBytes = getBuffer().remaining();
+    int realWrittenBytes;
 
     // but it's up to the channel, so it's possible to get left unsent bytes
     try {
-      int realWrittenBytes = channel.write(getBuffer());
-
-      // update statistic data
-      getNetworkWriterStatistic().updateWrittenBytes(realWrittenBytes);
-
-      // update statistic data for the session too
-      session.addWrittenBytes(realWrittenBytes);
-
-      // the left unwritten bytes should be remained to the queue for next process
-      if (realWrittenBytes < expectedWritingBytes) {
-        // create new bytes array to hold the left unsent bytes
-        byte[] leftUnwrittenBytes = new byte[getBuffer().remaining()];
-
-        // get bytes array value from buffer
-        getBuffer().get(leftUnwrittenBytes);
-
-        // save those bytes to the packet for next manipulation
-        packet.setFragmentBuffer(leftUnwrittenBytes);
-      } else {
-        // update the statistic data
-        getNetworkWriterStatistic().updateWrittenPackets(1);
-
-        // now the packet can be safely removed
-        packetQueue.take();
-
-        // in case this packet is the last one, it closes the session
-        if (packet.isMarkedAsLast()) {
-          packetQueue.clear();
-          session.close(ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
-          return;
-        }
-
-        // if the packet queue still contains more packets, and its channel is alive, then put
-        // the session back to the tickets queue
-        if (!packetQueue.isEmpty() && channel.isOpen() && channel.isConnected()) {
-          getSessionTicketsQueue().add(session);
-        }
-      }
-
-      // want to know when the socket is alive and can write, which should be noticed on
-      // isWritable() method when that event occurs, try to re-add the session to the tickets queue
-      var selectionKey = session.fetchSelectionKey();
-      try {
-        if (selectionKey != null && selectionKey.channel().isOpen() && selectionKey.isValid()) {
-          selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-        }
-      } catch (Exception exception) {
-        error(exception, "Something went wrong with OP_WRITE key for session: ", session);
-      }
+      realWrittenBytes = channel.write(getBuffer());
     } catch (IOException exception) {
       if (isErrorEnabled()) {
         error(exception, "Error occurred in writing on session: ", session.toString());
       }
+      // in this case, just disconnect the session, it's no longer help writing data
       try {
         session.close(ConnectionDisconnectMode.LOST, PlayerDisconnectMode.CONNECTION_LOST);
       } catch (IOException exception1) {
         if (isErrorEnabled()) {
           error(exception1, "Error occurred in writing on session: ", session.toString());
         }
+        return;
       }
+      return;
+    }
+
+    // update statistic data
+    getNetworkWriterStatistic().updateWrittenBytes(realWrittenBytes);
+
+    // update statistic data for the session too
+    session.addWrittenBytes(realWrittenBytes);
+
+    // the left unwritten bytes should be remained to the queue for next process
+    if (realWrittenBytes < expectedWritingBytes) {
+      // create new bytes array to hold the left unsent bytes
+      byte[] leftUnwrittenBytes = new byte[getBuffer().remaining()];
+
+      // get bytes array value from buffer
+      getBuffer().get(leftUnwrittenBytes);
+
+      // save those bytes to the packet for next manipulation
+      packet.setFragmentBuffer(leftUnwrittenBytes);
+    } else {
+      // update the statistic data
+      getNetworkWriterStatistic().updateWrittenPackets(1);
+
+      // now the packet can be safely removed
+      packetQueue.take();
+
+      // in case this packet is the last one, it closes the session
+      if (packet.isMarkedAsLast()) {
+        packetQueue.clear();
+        try {
+          session.close(ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
+        } catch (IOException exception) {
+          error(exception, "Error occurred in writing on session: ", session.toString());
+        }
+        return;
+      }
+
+      // if the packet queue still contains more packets, session is activated, and its channel
+      // is alive, then put the session back to the tickets queue
+      if (session.isActivated() && channel.isOpen() && channel.isConnected() &&
+          !packetQueue.isEmpty()) {
+        getSessionTicketsQueue(session.getId()).add(session);
+      }
+    }
+
+    // want to know when the socket is alive and can write, which should be noticed on
+    // isWritable() method when that event occurs, try to re-add the session to the tickets queue
+    var selectionKey = session.fetchSelectionKey();
+    try {
+      if (selectionKey != null && selectionKey.channel().isOpen() && selectionKey.isValid()) {
+        selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+      }
+    } catch (Exception exception) {
+      error(exception, "Something went wrong with OP_WRITE key for session: ", session);
     }
   }
 }

@@ -32,7 +32,6 @@ import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
-import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -75,7 +74,6 @@ public final class AcceptorHandler extends SystemLogger {
   private final Selector acceptableSelector;
   private final List<SelectableChannel> serverChannels;
   private final List<SocketChannel> clientChannels;
-  private final DatagramChannelManager datagramChannelManager;
   private final ConnectionFilter connectionFilter;
   private final ZeroReaderListener zeroReaderListener;
   private final SocketIoHandler socketIoHandler;
@@ -84,7 +82,6 @@ public final class AcceptorHandler extends SystemLogger {
    * Constructor.
    *
    * @param serverAddress          the server IP address
-   * @param datagramChannelManager instance of {@link DatagramChannelManager}
    * @param connectionFilter       instance of {@link ConnectionFilter}
    * @param zeroReaderListener     instance of {@link ZeroReaderListener}
    * @param tcpSocketConfiguration instance of {@link SocketConfiguration} for TCP
@@ -92,14 +89,12 @@ public final class AcceptorHandler extends SystemLogger {
    * @param socketIoHandler        instance of {@link SocketIoHandler}
    */
   public AcceptorHandler(String serverAddress,
-                         DatagramChannelManager datagramChannelManager,
                          ConnectionFilter connectionFilter,
                          ZeroReaderListener zeroReaderListener,
                          SocketConfiguration tcpSocketConfiguration,
                          SocketConfiguration udpSocketConfiguration,
                          SocketIoHandler socketIoHandler) {
     this.serverAddress = serverAddress;
-    this.datagramChannelManager = datagramChannelManager;
     this.connectionFilter = connectionFilter;
     this.zeroReaderListener = zeroReaderListener;
     this.socketIoHandler = socketIoHandler;
@@ -126,7 +121,7 @@ public final class AcceptorHandler extends SystemLogger {
     }
     if (udpSocketConfiguration != null &&
         udpSocketConfiguration.type() == TransportType.UDP) {
-      bindUdpServerChannel(udpSocketConfiguration.port(), udpSocketConfiguration.cacheSize());
+      bindUdpServerChannel(udpSocketConfiguration.port());
     }
   }
 
@@ -154,30 +149,27 @@ public final class AcceptorHandler extends SystemLogger {
     }
   }
 
-  private void bindUdpServerChannel(int port, int cacheSize) throws ServiceRuntimeException {
+  private void bindUdpServerChannel(int port) throws ServiceRuntimeException {
     try {
       synchronized (serverChannels) {
-        for (int index = 0; index < cacheSize; index++) {
-          var datagramChannel = DatagramChannel.open();
-          datagramChannel.configureBlocking(false);
-          if (OsUtility.getOperatingSystemType() == OsUtility.OsType.WINDOWS) {
-            datagramChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-          } else {
-            datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
-          }
-          datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
-          datagramChannel.bind(new InetSocketAddress(serverAddress, port));
-          // udp datagram is a connectionless protocol, we don't need to create
-          // bi-direction connection, that why it's not necessary to register it to
-          // acceptable selector. Just leave it to the reader selector later
-          zeroReaderListener.acceptDatagramChannel(datagramChannel);
-          datagramChannelManager.addChannel(datagramChannel);
-          serverChannels.add(datagramChannel);
+        var datagramChannel = DatagramChannel.open();
+        datagramChannel.configureBlocking(false);
+        if (OsUtility.getOperatingSystemType() == OsUtility.OsType.WINDOWS) {
+          datagramChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+        } else {
+          datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
         }
+        datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
+        datagramChannel.bind(new InetSocketAddress(serverAddress, port));
+        // udp datagram is a connectionless protocol, we don't need to create
+        // bi-direction connection, that why it's not necessary to register it to
+        // acceptable selector. Just leave it to the reader selector later
+        zeroReaderListener.acceptDatagramChannel(datagramChannel);
+        serverChannels.add(datagramChannel);
       }
       if (isInfoEnabled()) {
         info("UDP CHANNEL", buildgen("Started at address: ", serverAddress, ", port: ",
-            port, ", cache: ", cacheSize));
+            port));
       }
     } catch (IOException exception) {
       throw new ServiceRuntimeException(exception.getMessage());

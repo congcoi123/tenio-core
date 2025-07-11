@@ -118,6 +118,7 @@ public final class ApplicationLauncher extends SystemLogger {
         if (isErrorEnabled()) {
           error(exception, "The application started with exceptions occurred: ", exception.getMessage());
         }
+        // exit with errors
         System.exit(1);
       }
     }
@@ -152,9 +153,6 @@ public final class ApplicationLauncher extends SystemLogger {
     }
 
     // Suddenly shutdown
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      server.shutdown();
-      System.exit(0);
-    }));
+    Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
   }
 }
