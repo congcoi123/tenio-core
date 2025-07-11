@@ -121,26 +121,33 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
           return;
         }
 
-        // if the packet queue still contains more packets, then put the session back to
-        // the tickets queue
-        if (!packetQueue.isEmpty()) {
+        // if the packet queue still contains more packets, and its channel is alive, then put
+        // the session back to the tickets queue
+        if (!packetQueue.isEmpty() && channel.isOpen() && channel.isConnected()) {
           getSessionTicketsQueue().add(session);
         }
       }
 
-      // want to know when the socket can write, which should be noticed on isWritable() method
-      // when that event occurs, try to re-add the session to the tickets queue
+      // want to know when the socket is alive and can write, which should be noticed on
+      // isWritable() method when that event occurs, try to re-add the session to the tickets queue
       var selectionKey = session.fetchSelectionKey();
-      if (selectionKey != null && selectionKey.isValid()) {
-        selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-      } else {
-        if (isErrorEnabled()) {
-          error("{SOCKET CHANNEL SEND} ", "Something went wrong with OP_WRITE key for session: ", session);
+      try {
+        if (selectionKey != null && selectionKey.channel().isOpen() && selectionKey.isValid()) {
+          selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
         }
+      } catch (Exception exception) {
+        error(exception, "Something went wrong with OP_WRITE key for session: ", session);
       }
     } catch (IOException exception) {
       if (isErrorEnabled()) {
         error(exception, "Error occurred in writing on session: ", session.toString());
+      }
+      try {
+        session.close(ConnectionDisconnectMode.LOST, PlayerDisconnectMode.CONNECTION_LOST);
+      } catch (IOException exception1) {
+        if (isErrorEnabled()) {
+          error(exception1, "Error occurred in writing on session: ", session.toString());
+        }
       }
     }
   }
