@@ -64,11 +64,11 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
   @Override
   public ScheduledFuture<?> run() {
     var threadFactoryTask =
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-disconnect-player-task-%d")
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-disconnect-player-task")
             .build();
     var threadFactoryWorker =
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-disconnect-player-worker" +
-            "-%d").build();
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-disconnect-player-worker")
+            .build();
     var executors = Executors.newCachedThreadPool(threadFactoryWorker);
     return Executors.newSingleThreadScheduledExecutor(threadFactoryTask).scheduleAtFixedRate(
         () -> {

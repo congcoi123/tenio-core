@@ -62,7 +62,7 @@ public final class DeadlockScanTask extends AbstractSystemTask {
   @Override
   public ScheduledFuture<?> run() {
     var threadFactoryTask =
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("deadlock-scan-task-%d").build();
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("deadlock-scan-task").build();
     return Executors.newSingleThreadScheduledExecutor(threadFactoryTask).scheduleAtFixedRate(
         this::checkForDeadlockedThreads, initialDelay, interval, TimeUnit.SECONDS);
   }

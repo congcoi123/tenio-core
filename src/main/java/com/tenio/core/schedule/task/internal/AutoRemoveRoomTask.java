@@ -62,10 +62,9 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
   @Override
   public ScheduledFuture<?> run() {
     var threadFactoryTask =
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-remove-room-task-%d")
-            .build();
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-remove-room-task").build();
     var threadFactoryWorker =
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-remove-room-worker-%d").build();
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("auto-remove-room-worker").build();
     var executors = Executors.newCachedThreadPool(threadFactoryWorker);
     return Executors.newSingleThreadScheduledExecutor(threadFactoryTask).scheduleAtFixedRate(
         () -> {
