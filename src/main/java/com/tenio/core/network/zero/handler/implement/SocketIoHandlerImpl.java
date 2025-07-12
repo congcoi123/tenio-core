@@ -37,7 +37,6 @@ import com.tenio.core.network.zero.handler.SocketIoHandler;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.util.Objects;
 
 /**
  * The implementation for socket IO handler.
@@ -66,8 +65,10 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
     var message = DataUtility.binaryToCollection(dataType, binary);
 
     if (session.isAssociatedToPlayer(Session.AssociatedState.DOING)) {
-      debug("READ TCP CHANNEL", "Session is associating to a player: ", session.toString(),
-          " Rejected message: ", message);
+      if (isDebugEnabled()) {
+        debug("READ TCP CHANNEL", "Session is associating to a player: ", session.toString(),
+            " Rejected message: ", message);
+      }
       return;
     }
 
@@ -102,14 +103,16 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
   @Override
   public void channelInactive(SocketChannel socketChannel) {
     var session = sessionManager.getSessionBySocket(socketChannel);
-    if (Objects.isNull(session)) {
+    if (session == null) {
       return;
     }
 
     try {
       session.close(ConnectionDisconnectMode.LOST, PlayerDisconnectMode.CONNECTION_LOST);
     } catch (IOException exception) {
-      error(exception, "Session closed with error: ", session.toString());
+      if (isErrorEnabled()) {
+        error(exception, "Session closed with error: ", session.toString());
+      }
       eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
     }
   }

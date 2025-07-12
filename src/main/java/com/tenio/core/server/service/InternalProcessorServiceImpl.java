@@ -51,7 +51,6 @@ import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -180,14 +179,15 @@ public final class InternalProcessorServiceImpl extends AbstractController
     // case, the player is remained on the server side, so we should always check this event
     Object reconnectedObject = null;
     try {
-      reconnectedObject = eventManager.emit(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLE,
-          session, message);
+      reconnectedObject = eventManager.emit(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLE, session, message);
     } catch (Exception exception) {
-      error(exception, request);
+      if (isErrorEnabled()) {
+        error(exception, request);
+      }
     }
 
     // check reconnected case
-    if (Objects.nonNull(reconnectedObject)) {
+    if (reconnectedObject != null) {
       Optional<?> playerOptional = (Optional<?>) reconnectedObject;
       if (playerOptional.isPresent()) {
         Player player = (Player) playerOptional.get();
@@ -201,10 +201,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
               // Detach the current session from its player
               currentSession.setName("STALE-" + currentSession.getName());
               currentSession.setAssociatedToPlayer(Session.AssociatedState.NONE);
-              currentSession.close(ConnectionDisconnectMode.RECONNECTION,
-                  PlayerDisconnectMode.RECONNECTION);
+              currentSession.close(ConnectionDisconnectMode.RECONNECTION, PlayerDisconnectMode.RECONNECTION);
             } catch (IOException exception) {
-              error(exception, "Error while closing old session: ", currentSession);
+              if (isErrorEnabled()) {
+                error(exception, "Error while closing old session: ", currentSession);
+              }
             }
           }
         }
@@ -240,10 +241,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
       eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
           ConnectionEstablishedResult.REACHED_MAX_CONNECTION);
       try {
-        session.close(ConnectionDisconnectMode.REACHED_MAX_CONNECTION,
-            PlayerDisconnectMode.CONNECTION_LOST);
+        session.close(ConnectionDisconnectMode.REACHED_MAX_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
       } catch (IOException exception) {
-        error(exception, "Session closed with error: ", session.toString());
+        if (isErrorEnabled()) {
+          error(exception, "Session closed with error: ", session.toString());
+        }
       }
     } else {
       eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
@@ -256,7 +258,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByIdentity(session.getName());
       // the player maybe existed
-      if (Objects.nonNull(player)) {
+      if (player != null) {
         // unsubscribe it from all channels
         serverApi.unsubscribeFromAllChannels(player);
         // player should leave room (if applicable) first
@@ -272,7 +274,10 @@ public final class InternalProcessorServiceImpl extends AbstractController
           player.clean();
         }
       } else {
-        debug("SESSION WILL BE REMOVED", "The player ", session.getName(), " should be presented, but it was not");
+        if (isDebugEnabled()) {
+          debug("SESSION WILL BE REMOVED", "The player ", session.getName(),
+              " should be presented, but it was not");
+        }
       }
     }
     session.setName(null);
@@ -287,10 +292,12 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByIdentity(session.getName());
-      if (Objects.isNull(player)) {
+      if (player == null) {
         var illegalValueException = new IllegalArgumentException(
             String.format("Unable to find player for the session: %s", session));
-        error(illegalValueException);
+        if (isErrorEnabled()) {
+          error(illegalValueException);
+        }
         eventManager.emit(ServerEvent.SERVER_EXCEPTION, illegalValueException);
         return;
       }
@@ -305,10 +312,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
     // verify the datagram channel accessing request
     Object checkingPlayer = null;
     try {
-      checkingPlayer = eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION,
-          message);
+      checkingPlayer = eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION, message);
     } catch (Exception exception) {
-      error(exception, request);
+      if (isErrorEnabled()) {
+        error(exception, request);
+      }
     }
 
     if (!(checkingPlayer instanceof Optional<?> optionalPlayer)) {

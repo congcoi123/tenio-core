@@ -27,7 +27,6 @@ package com.tenio.core.network.zero.engine.listener;
 import com.tenio.core.network.zero.engine.ZeroAcceptor;
 import com.tenio.core.network.zero.engine.ZeroReader;
 import java.nio.channels.ClosedChannelException;
-import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.function.Consumer;
@@ -41,17 +40,6 @@ import java.util.function.Consumer;
 public interface ZeroReaderListener {
 
   /**
-   * The UDP datagram is a connectionless protocol, we don't need to create bi-direction
-   * connection, that why it's not necessary to register it to acceptable selector. Just leave it
-   * to the reader selector later.
-   *
-   * @param datagramChannel the {@link DatagramChannel} created on the server
-   * @throws ClosedChannelException when a channel is closed unexpectedly
-   * @see ZeroAcceptor
-   */
-  void acceptDatagramChannel(DatagramChannel datagramChannel) throws ClosedChannelException;
-
-  /**
    * When a new coming socket connected to the server, and it is accepted by the acceptor. This
    * socket then is added to the reader engine to manage communication.
    *
@@ -60,14 +48,6 @@ public interface ZeroReaderListener {
    * @throws ClosedChannelException when a channel is closed unexpectedly
    * @see ZeroAcceptor
    */
-  void acceptSocketChannel(SocketChannel socketChannel, Consumer<SelectionKey> onKeyRegistered)
+  void acceptClientSocketChannel(SocketChannel socketChannel, Consumer<SelectionKey> onKeyRegistered)
       throws ClosedChannelException;
-
-  /**
-   * Wakes up the reader selector in the reader engine for channels handling
-   *
-   * @see ZeroAcceptor
-   * @see ZeroReader
-   */
-  void wakeup();
 }

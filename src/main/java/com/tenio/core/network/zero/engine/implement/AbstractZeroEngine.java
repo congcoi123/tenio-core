@@ -33,7 +33,6 @@ import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.zero.engine.ZeroEngine;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -80,11 +79,13 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
     executorService = Executors.newFixedThreadPool(executorSize, threadFactory);
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      if (Objects.nonNull(executorService) && !executorService.isShutdown()) {
+      if (executorService != null && !executorService.isShutdown()) {
         try {
           halting();
         } catch (Exception exception) {
-          error(exception);
+          if (isErrorEnabled()) {
+            error(exception);
+          }
         }
       }
     }));
@@ -113,9 +114,13 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   }
 
   private void destroyEngine() {
-    info("STOPPED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    if (isInfoEnabled()) {
+      info("STOPPED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    }
     onDestroyed();
-    info("DESTROYED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    if (isInfoEnabled()) {
+      info("DESTROYED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    }
   }
 
   @Override
@@ -127,7 +132,11 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   private void setThreadName() {
     Thread currentThread = Thread.currentThread();
     currentThread.setName(StringUtility.strgen("zero-", getName(), "-", id.incrementAndGet()));
-    currentThread.setUncaughtExceptionHandler((thread, cause) -> error(cause, thread.getName()));
+    currentThread.setUncaughtExceptionHandler((thread, cause) -> {
+      if (isErrorEnabled()) {
+        error(cause, thread.getName());
+      }
+    });
   }
 
   @Override
@@ -193,13 +202,17 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
         Thread.sleep(100L);
       } catch (InterruptedException exception) {
         Thread.currentThread().interrupt();
-        error(exception);
+        if (isErrorEnabled()) {
+          error(exception);
+        }
       }
       executorService.execute(this);
     }
     onStarted();
     activated = true;
-    info("START SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    if (isInfoEnabled()) {
+      info("START SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+    }
   }
 
   @Override
