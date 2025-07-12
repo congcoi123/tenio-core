@@ -262,7 +262,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
                                       SocketConfiguration kcpSocketConfiguration) {
     if (tcpSocketConfiguration != null) {
       socketServiceInitialized = true;
-      socketService.setSocketConfiguration(tcpSocketConfiguration, udpChannelConfiguration);
+      socketService.setSocketConfigurations(tcpSocketConfiguration, udpChannelConfiguration);
     }
 
     if (webSocketConfiguration != null) {

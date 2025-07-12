@@ -219,8 +219,8 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   }
 
   @Override
-  public void setSocketConfiguration(SocketConfiguration tcpSocketConfiguration,
-                                     SocketConfiguration udpChannelConfiguration) {
+  public void setSocketConfigurations(SocketConfiguration tcpSocketConfiguration,
+                                      SocketConfiguration udpChannelConfiguration) {
     acceptorEngine.setSocketConfiguration(tcpSocketConfiguration);
     readerEngine.setUdpChannelConfiguration(udpChannelConfiguration);
   }
