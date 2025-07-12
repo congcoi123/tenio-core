@@ -121,7 +121,7 @@ public final class ReaderHandler extends SystemLogger {
   /**
    * Wakeup the reader selector.
    */
-  public void wakeup() {
+  private void wakeup() {
     readableSelector.wakeup();
   }
 
@@ -131,7 +131,7 @@ public final class ReaderHandler extends SystemLogger {
    * @param channel         {@link SocketChannel} a client channel
    * @param onKeyRegistered when its {@link SelectionKey} is ready
    */
-  public void registerSocketChannel(SocketChannel channel, Consumer<SelectionKey> onKeyRegistered) {
+  public void registerClientSocketChannel(SocketChannel channel, Consumer<SelectionKey> onKeyRegistered) {
     pendingChannels.add(Pair.of(channel, onKeyRegistered));
     wakeup();
   }

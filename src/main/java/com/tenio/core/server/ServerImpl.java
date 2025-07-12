@@ -106,7 +106,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     playerManager = PlayerManagerImpl.newInstance(eventManager);
     channelManager = ChannelManagerImpl.newInstance(eventManager);
     datagramChannelManager = DatagramChannelManager.newInstance();
-    networkService = NetworkServiceImpl.newInstance(eventManager, datagramChannelManager);
+    networkService = NetworkServiceImpl.newInstance(eventManager);
     serverApi = ServerApiImpl.newInstance(this);
     internalProcessorService = InternalProcessorServiceImpl.newInstance(eventManager, serverApi, datagramChannelManager);
     scheduleService = ScheduleServiceImpl.newInstance(eventManager);
@@ -266,21 +266,20 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.setSocketAcceptorWorkers(
         configuration.getInt(CoreConfigurationType.WORKER_SOCKET_ACCEPTOR));
 
-    var udpSocketConfiguration = configuration.get(CoreConfigurationType.NETWORK_UDP) != null ?
+    var udpChannelConfiguration = configuration.get(CoreConfigurationType.NETWORK_UDP) != null ?
         (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_UDP) : null;
     var kcpSocketConfiguration = configuration.get(CoreConfigurationType.NETWORK_KCP) != null ?
         (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_KCP) : null;
-    networkService.setSocketConfiguration(
+    networkService.setSocketConfigurations(
         (configuration.get(CoreConfigurationType.NETWORK_TCP) != null ?
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_TCP) : null),
-        udpSocketConfiguration,
+        udpChannelConfiguration,
         (configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) != null ?
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) : null),
         kcpSocketConfiguration);
 
-    if (udpSocketConfiguration != null) {
-      datagramChannelManager.configureUdpChannelCache(serverAddress, udpSocketConfiguration.port(),
-          udpSocketConfiguration.cacheSize());
+    if (udpChannelConfiguration != null) {
+      datagramChannelManager.configureUdpPort(udpChannelConfiguration.port());
     }
     if (kcpSocketConfiguration != null) {
       datagramChannelManager.configureKcpPort(kcpSocketConfiguration.port());

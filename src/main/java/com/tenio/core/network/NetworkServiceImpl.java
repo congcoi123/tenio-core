@@ -50,7 +50,6 @@ import com.tenio.core.network.zero.ZeroSocketService;
 import com.tenio.core.network.zero.ZeroSocketServiceImpl;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
-import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import jakarta.servlet.http.HttpServlet;
 import java.util.Collection;
 import java.util.Map;
@@ -77,7 +76,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   private boolean socketServiceInitialized;
   private boolean kcpChannelServiceInitialized;
 
-  private NetworkServiceImpl(EventManager eventManager, DatagramChannelManager datagramChannelManager) {
+  private NetworkServiceImpl(EventManager eventManager) {
     super(eventManager);
 
     initialized = false;
@@ -93,7 +92,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
 
     httpService = JettyHttpService.newInstance(eventManager);
     webSocketService = NettyWebSocketServiceImpl.newInstance(eventManager);
-    socketService = ZeroSocketServiceImpl.newInstance(eventManager, datagramChannelManager);
+    socketService = ZeroSocketServiceImpl.newInstance(eventManager);
     kcpChannelService = KcpServiceImpl.newInstance(eventManager);
   }
 
@@ -101,11 +100,10 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
    * Creates a new instance of the network service.
    *
    * @param eventManager the instance of {@link EventManager}
-   * @param datagramChannelManager the instance of {@link DatagramChannelManager}
    * @return a new instance of {@link NetworkService}
    */
-  public static NetworkService newInstance(EventManager eventManager, DatagramChannelManager datagramChannelManager) {
-    return new NetworkServiceImpl(eventManager, datagramChannelManager);
+  public static NetworkService newInstance(EventManager eventManager) {
+    return new NetworkServiceImpl(eventManager);
   }
 
   @Override
@@ -258,13 +256,13 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void setSocketConfiguration(SocketConfiguration tcpSocketConfiguration,
-                                     SocketConfiguration udpSocketConfiguration,
-                                     SocketConfiguration webSocketConfiguration,
-                                     SocketConfiguration kcpSocketConfiguration) {
+  public void setSocketConfigurations(SocketConfiguration tcpSocketConfiguration,
+                                      SocketConfiguration udpChannelConfiguration,
+                                      SocketConfiguration webSocketConfiguration,
+                                      SocketConfiguration kcpSocketConfiguration) {
     if (tcpSocketConfiguration != null) {
       socketServiceInitialized = true;
-      socketService.setSocketConfiguration(tcpSocketConfiguration, udpSocketConfiguration);
+      socketService.setSocketConfiguration(tcpSocketConfiguration, udpChannelConfiguration);
     }
 
     if (webSocketConfiguration != null) {

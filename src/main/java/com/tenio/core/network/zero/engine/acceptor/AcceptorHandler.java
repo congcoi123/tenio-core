@@ -29,14 +29,12 @@ import com.tenio.common.utility.OsUtility;
 import com.tenio.core.exception.RefusedConnectionAddressException;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.network.configuration.SocketConfiguration;
-import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
-import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -85,14 +83,12 @@ public final class AcceptorHandler extends SystemLogger {
    * @param connectionFilter       instance of {@link ConnectionFilter}
    * @param zeroReaderListener     instance of {@link ZeroReaderListener}
    * @param tcpSocketConfiguration instance of {@link SocketConfiguration} for TCP
-   * @param udpSocketConfiguration instance of {@link SocketConfiguration} for UDP
    * @param socketIoHandler        instance of {@link SocketIoHandler}
    */
   public AcceptorHandler(String serverAddress,
                          ConnectionFilter connectionFilter,
                          ZeroReaderListener zeroReaderListener,
                          SocketConfiguration tcpSocketConfiguration,
-                         SocketConfiguration udpSocketConfiguration,
                          SocketIoHandler socketIoHandler) {
     this.serverAddress = serverAddress;
     this.connectionFilter = connectionFilter;
@@ -102,30 +98,19 @@ public final class AcceptorHandler extends SystemLogger {
     clientChannels = new ArrayList<>();
     serverChannels = new ArrayList<>();
 
-    // opens a selector to handle server socket, udp datagram and accept all incoming client socket
+    // opens a selector to handle server socket and accept all incoming client sockets
     try {
       acceptableSelector = Selector.open();
     } catch (IOException exception) {
       throw new ServiceRuntimeException(exception.getMessage());
     }
 
-    // each socket configuration constructs a server socket or an udp datagram
-    bindServerSocketChannels(tcpSocketConfiguration, udpSocketConfiguration);
+    // each socket configuration constructs a server socket
+    bindServerSocketChannel(tcpSocketConfiguration.port());
   }
 
-  private void bindServerSocketChannels(SocketConfiguration tcpSocketConfiguration,
-                                        SocketConfiguration udpSocketConfiguration)
+  private void bindServerSocketChannel(int port)
       throws ServiceRuntimeException {
-    if (tcpSocketConfiguration.type() == TransportType.TCP) {
-      bindTcpServerSocket(tcpSocketConfiguration.port());
-    }
-    if (udpSocketConfiguration != null &&
-        udpSocketConfiguration.type() == TransportType.UDP) {
-      bindUdpServerChannel(udpSocketConfiguration.port());
-    }
-  }
-
-  private void bindTcpServerSocket(int port) throws ServiceRuntimeException {
     try {
       var serverSocketChannel = ServerSocketChannel.open();
       serverSocketChannel.configureBlocking(false);
@@ -146,33 +131,6 @@ public final class AcceptorHandler extends SystemLogger {
       }
     } catch (IOException e) {
       throw new ServiceRuntimeException(e.getMessage());
-    }
-  }
-
-  private void bindUdpServerChannel(int port) throws ServiceRuntimeException {
-    try {
-      synchronized (serverChannels) {
-        var datagramChannel = DatagramChannel.open();
-        datagramChannel.configureBlocking(false);
-        if (OsUtility.getOperatingSystemType() == OsUtility.OsType.WINDOWS) {
-          datagramChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-        } else {
-          datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
-        }
-        datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
-        datagramChannel.bind(new InetSocketAddress(serverAddress, port));
-        // udp datagram is a connectionless protocol, we don't need to create
-        // bi-direction connection, that why it's not necessary to register it to
-        // acceptable selector. Just leave it to the reader selector later
-        zeroReaderListener.acceptDatagramChannel(datagramChannel);
-        serverChannels.add(datagramChannel);
-      }
-      if (isInfoEnabled()) {
-        info("UDP CHANNEL", buildgen("Started at address: ", serverAddress, ", port: ",
-            port));
-      }
-    } catch (IOException exception) {
-      throw new ServiceRuntimeException(exception.getMessage());
     }
   }
 
@@ -198,7 +156,7 @@ public final class AcceptorHandler extends SystemLogger {
             if (isDebugEnabled()) {
               debug("ACCEPTABLE CHANNEL", buildgen(socketChannel.getRemoteAddress()));
             }
-            zeroReaderListener.acceptSocketChannel(socketChannel,
+            zeroReaderListener.acceptClientSocketChannel(socketChannel,
                 selectionKey -> {
                   socketIoHandler.channelActive(socketChannel, selectionKey);
                   synchronized (clientChannels) {
@@ -342,9 +300,6 @@ public final class AcceptorHandler extends SystemLogger {
         }
       }
     }
-
-    // wakes up the reader selector for bellow channels handling
-    zeroReaderListener.wakeup();
   }
 
   /**

@@ -45,7 +45,6 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine implements ZeroAc
   private ZeroReaderListener zeroReaderListener;
   private String serverAddress;
   private SocketConfiguration tcpSocketConfiguration;
-  private SocketConfiguration udpSocketConfiguration;
 
   private ZeroAcceptorImpl(EventManager eventManager) {
     super(eventManager);
@@ -73,10 +72,8 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine implements ZeroAc
   }
 
   @Override
-  public void setSocketConfiguration(SocketConfiguration tcpSocketConfiguration,
-                                     SocketConfiguration udpSocketConfiguration) {
+  public void setSocketConfiguration(SocketConfiguration tcpSocketConfiguration) {
     this.tcpSocketConfiguration = tcpSocketConfiguration;
-    this.udpSocketConfiguration = udpSocketConfiguration;
   }
 
   @Override
@@ -97,7 +94,7 @@ public final class ZeroAcceptorImpl extends AbstractZeroEngine implements ZeroAc
   @Override
   public void onRunning() {
     var acceptorHandler = new AcceptorHandler(serverAddress, connectionFilter, zeroReaderListener,
-        tcpSocketConfiguration, udpSocketConfiguration, getSocketIoHandler());
+        tcpSocketConfiguration, getSocketIoHandler());
     acceptorHandlers.add(acceptorHandler);
 
     while (!Thread.currentThread().isInterrupted()) {

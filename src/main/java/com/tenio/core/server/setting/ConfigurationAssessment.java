@@ -141,7 +141,7 @@ public final class ConfigurationAssessment {
    */
   private void checkSubscriberRequestAccessingDatagramChannelHandler()
       throws NotDefinedSubscribersException {
-    if (containsTcpSocketConfiguration() && containsUdpSocketConfiguration()) {
+    if (containsTcpSocketConfiguration() && containsUdpChannelConfiguration()) {
       if (!eventManager.hasSubscriber(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION)
           || !eventManager.hasSubscriber(
           ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT)) {
@@ -174,7 +174,7 @@ public final class ConfigurationAssessment {
    * @throws ConfigurationException if no valid socket connection is configured
    */
   private void checkDefinedMainSocketConnection() throws ConfigurationException {
-    if (!containsTcpSocketConfiguration() && containsUdpSocketConfiguration()) {
+    if (!containsTcpSocketConfiguration() && containsUdpChannelConfiguration()) {
       throw new ConfigurationException("TCP connection was not defined");
     }
   }
@@ -193,7 +193,7 @@ public final class ConfigurationAssessment {
    *
    * @return {@code true} if UDP socket configuration exists
    */
-  private boolean containsUdpSocketConfiguration() {
+  private boolean containsUdpChannelConfiguration() {
     return configuration.get(CoreConfigurationType.NETWORK_UDP) != null;
   }
 

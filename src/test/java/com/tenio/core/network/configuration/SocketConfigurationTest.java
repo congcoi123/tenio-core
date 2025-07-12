@@ -33,13 +33,12 @@ class SocketConfigurationTest {
   @Test
   void testConstructor() {
     SocketConfiguration
-        actualSocketConfiguration = new SocketConfiguration("Name", TransportType.UNKNOWN, 8080
-        , 0);
+        actualSocketConfiguration = new SocketConfiguration("Name", TransportType.UNKNOWN, 8080);
 
     assertEquals("Name", actualSocketConfiguration.name());
     assertEquals(8080, actualSocketConfiguration.port());
     assertEquals(TransportType.UNKNOWN, actualSocketConfiguration.type());
-    assertEquals("SocketConfiguration[name=Name, type=UNKNOWN, port=8080, cacheSize=0]",
+    assertEquals("SocketConfiguration[name=Name, type=UNKNOWN, port=8080]",
         actualSocketConfiguration.toString());
   }
 }

@@ -24,16 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.manager;
 
-import com.tenio.common.utility.OsUtility;
 import com.tenio.core.configuration.constant.CoreConstant;
-import com.tenio.core.exception.EmptyDatagramChannelsException;
 import com.tenio.core.manager.Manager;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.StandardSocketOptions;
-import java.nio.channels.DatagramChannel;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -43,9 +35,6 @@ public class DatagramChannelManager implements Manager {
 
   private final AtomicInteger udpConveyIdGenerator;
   private final AtomicInteger kcpConveyIdGenerator;
-  private final List<DatagramChannel> channels;
-  private final AtomicInteger channelIndexer;
-  private volatile int channelCacheSize;
   private volatile int udpPort;
   private volatile int kcpPort;
 
@@ -54,8 +43,6 @@ public class DatagramChannelManager implements Manager {
     kcpPort = CoreConstant.NULL_PORT_VALUE;
     udpConveyIdGenerator = new AtomicInteger(0);
     kcpConveyIdGenerator = new AtomicInteger(0);
-    channels = new ArrayList<>();
-    channelIndexer = new AtomicInteger(0);
   }
 
   /**
@@ -68,30 +55,12 @@ public class DatagramChannelManager implements Manager {
   }
 
   /**
-   * Configures UDP channels in cache.
+   * Configures UDP port.
    *
-   * @param serverAddress the server IP address
-   * @param udpPort       the UDP port
-   * @param cacheSize     the number of elements in cache
-   * @throws IOException whenever there is any issue while opening a new UDP channel
+   * @param udpPort the UDP port
    */
-  public void configureUdpChannelCache(String serverAddress, int udpPort, int cacheSize)
-      throws IOException {
+  public void configureUdpPort(int udpPort) {
     this.udpPort = udpPort;
-    channelCacheSize = cacheSize;
-
-    for (int index = 0; index < channelCacheSize; index++) {
-      var datagramChannel = DatagramChannel.open();
-      datagramChannel.configureBlocking(false);
-      if (OsUtility.getOperatingSystemType() == OsUtility.OsType.WINDOWS) {
-        datagramChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-      } else {
-        datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
-      }
-      datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
-      datagramChannel.bind(new InetSocketAddress(serverAddress, udpPort));
-      channels.add(datagramChannel);
-    }
   }
 
   /**
@@ -101,20 +70,6 @@ public class DatagramChannelManager implements Manager {
    */
   public void configureKcpPort(int kcpPort) {
     this.kcpPort = kcpPort;
-  }
-
-  /**
-   * Retrieves the current available datagram channel from cache, applies the "round-robin"
-   * algorithm.
-   *
-   * @return an {@link DatagramChannel} instance
-   */
-  public DatagramChannel getChannel() {
-    if (channelCacheSize == 0) {
-      throw new EmptyDatagramChannelsException();
-    }
-    int index = Math.floorMod(channelIndexer.getAndIncrement(), channelCacheSize);
-    return channels.get(index);
   }
 
   /**

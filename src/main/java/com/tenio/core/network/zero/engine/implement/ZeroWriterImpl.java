@@ -33,7 +33,6 @@ import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.engine.ZeroWriter;
 import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
-import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import com.tenio.core.network.zero.engine.manager.SessionTicketsQueueManager;
 import com.tenio.core.network.zero.engine.writer.WriterHandler;
 import com.tenio.core.network.zero.engine.writer.implement.DatagramWriterHandler;
@@ -49,15 +48,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class ZeroWriterImpl extends AbstractZeroEngine
     implements ZeroWriter, ZeroWriterListener {
 
-  private final DatagramChannelManager datagramChannelManager;
   private final AtomicInteger id;
   private SessionTicketsQueueManager sessionTicketsQueueManager;
   private NetworkWriterStatistic networkWriterStatistic;
   private BinaryPacketEncoder binaryPacketEncoder;
 
-  private ZeroWriterImpl(EventManager eventManager, DatagramChannelManager datagramChannelManager) {
+  private ZeroWriterImpl(EventManager eventManager) {
     super(eventManager);
-    this.datagramChannelManager = datagramChannelManager;
     id = new AtomicInteger(0);
     setName("writer");
   }
@@ -65,13 +62,11 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
   /**
    * Creates a new instance of the socket writer.
    *
-   * @param eventManager           the instance of {@link EventManager}
-   * @param datagramChannelManager an instance of {@link DatagramChannelManager}
+   * @param eventManager the instance of {@link EventManager}
    * @return a new instance of {@link ZeroWriter}
    */
-  public static ZeroWriter newInstance(EventManager eventManager,
-                                       DatagramChannelManager datagramChannelManager) {
-    return new ZeroWriterImpl(eventManager, datagramChannelManager);
+  public static ZeroWriter newInstance(EventManager eventManager) {
+    return new ZeroWriterImpl(eventManager);
   }
 
   private WriterHandler createSocketWriterHandler() {
@@ -84,7 +79,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
   }
 
   private WriterHandler createDatagramWriterHandler() {
-    var datagramWriterHandler = DatagramWriterHandler.newInstance(datagramChannelManager);
+    var datagramWriterHandler = DatagramWriterHandler.newInstance();
     datagramWriterHandler.setNetworkWriterStatistic(networkWriterStatistic);
     datagramWriterHandler.setSessionTicketsQueueManager(sessionTicketsQueueManager);
     datagramWriterHandler.allocateBuffer(getMaxBufferSize());

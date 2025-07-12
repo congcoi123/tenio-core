@@ -43,7 +43,6 @@ import com.tenio.core.network.zero.engine.implement.ZeroReaderImpl;
 import com.tenio.core.network.zero.engine.implement.ZeroWriterImpl;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
 import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
-import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
 import com.tenio.core.network.zero.handler.implement.DatagramIoHandlerImpl;
@@ -65,12 +64,12 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
 
   private boolean initialized;
 
-  private ZeroSocketServiceImpl(EventManager eventManager, DatagramChannelManager datagramChannelManager) {
+  private ZeroSocketServiceImpl(EventManager eventManager) {
     super(eventManager);
 
     acceptorEngine = ZeroAcceptorImpl.newInstance(eventManager);
     readerEngine = ZeroReaderImpl.newInstance(eventManager);
-    writerEngine = ZeroWriterImpl.newInstance(eventManager, datagramChannelManager);
+    writerEngine = ZeroWriterImpl.newInstance(eventManager);
 
     datagramIoHandler = DatagramIoHandlerImpl.newInstance(eventManager);
     socketIoHandler = SocketIoHandlerImpl.newInstance(eventManager);
@@ -82,12 +81,10 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
    * Creates a new instance of the socket service.
    *
    * @param eventManager the instance of {@link EventManager}
-   * @param datagramChannelManager the instance of {@link DatagramChannelManager}
    * @return a new instance of {@link ZeroSocketService}
    */
-  public static ZeroSocketService newInstance(EventManager eventManager,
-                                              DatagramChannelManager datagramChannelManager) {
-    return new ZeroSocketServiceImpl(eventManager, datagramChannelManager);
+  public static ZeroSocketService newInstance(EventManager eventManager) {
+    return new ZeroSocketServiceImpl(eventManager);
   }
 
   private void setupAcceptor() {
@@ -160,6 +157,7 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   @Override
   public void setAcceptorServerAddress(String serverAddress) {
     acceptorEngine.setServerAddress(serverAddress);
+    readerEngine.setServerAddress(serverAddress);
   }
 
   @Override
@@ -222,8 +220,9 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
 
   @Override
   public void setSocketConfiguration(SocketConfiguration tcpSocketConfiguration,
-                                     SocketConfiguration udpSocketConfiguration) {
-    acceptorEngine.setSocketConfiguration(tcpSocketConfiguration, udpSocketConfiguration);
+                                     SocketConfiguration udpChannelConfiguration) {
+    acceptorEngine.setSocketConfiguration(tcpSocketConfiguration);
+    readerEngine.setUdpChannelConfiguration(udpChannelConfiguration);
   }
 
   @Override

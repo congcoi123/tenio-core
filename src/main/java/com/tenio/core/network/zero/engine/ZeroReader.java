@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.network.zero.engine;
 
 import com.tenio.common.data.DataType;
+import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
 
@@ -39,6 +40,20 @@ public interface ZeroReader extends ZeroEngine {
    * @param dataType the {@link DataType} value
    */
   void setDataType(DataType dataType);
+
+  /**
+   * Declares the server IP address.
+   *
+   * @param serverAddress the {@link String} value of server IP address
+   */
+  void setServerAddress(String serverAddress);
+
+  /**
+   * Declares UDP configuration for the network.
+   *
+   * @param udpChannelConfiguration an instance of {@link SocketConfiguration} for UDP
+   */
+  void setUdpChannelConfiguration(SocketConfiguration udpChannelConfiguration);
 
   /**
    * Sets a listener for the writer engine which is using for communication between two engines.
