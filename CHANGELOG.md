@@ -91,3 +91,5 @@
 - Upgraded dependencies
 - Provided several thread-safe methods to work with lists (compute methods)
 - Removed unnecessary wrapper methods
+- Reworked on writer, reader and acceptor handlers
+- No longer supporting UDP pool cache
