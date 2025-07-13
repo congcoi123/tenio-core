@@ -263,7 +263,7 @@ public final class ReaderHandler extends SystemLogger {
       try {
         // this isConnected() method can only work if the server side decides to close the socket
         // there is no way to know if the connection is closed on the client side
-        if (socketChannel.isConnected()) {
+        if (socketChannel.isOpen() && socketChannel.isConnected()) {
           byteCount = socketChannel.read(readerBuffer);
         }
       } catch (IOException exception) {
@@ -278,6 +278,7 @@ public final class ReaderHandler extends SystemLogger {
       }
       // no left data is available, should close the connection
       if (byteCount == -1) {
+        debug("CLOSE TCP CHANNEL", "Channel is going to be closed due to issue while reading data");
         closeTcpConnection(socketChannel);
       } else if (byteCount > 0) {
         // update statistic data

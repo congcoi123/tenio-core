@@ -38,6 +38,12 @@ public enum ConnectionDisconnectMode {
    */
   LOST,
   /**
+   * When the connection is lost while writing and its caused by the client side.
+   *
+   * @since 0.6.6
+   */
+  LOST_IN_WRITTEN,
+  /**
    * When the number of connection reaches limitation and the server decides to refuse a
    * new one.
    */

@@ -31,6 +31,7 @@
 			<Property name="socket-acceptor-buffer-size">1024</Property>
 			<Property name="socket-reader-buffer-size">1024</Property>
 			<Property name="socket-writer-buffer-size">1024</Property>
+			<!-- This will never compress packets if the threshold is less than or equals to 0 -->
 			<Property name="packet-compression-threshold-bytes">10240</Property>
 			<Property name="allow-change-session">false</Property>
 			<Property name="max-connections-per-ip">10</Property>

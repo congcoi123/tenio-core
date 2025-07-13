@@ -29,8 +29,8 @@ import com.tenio.common.utility.StringUtility;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RequestQueueFullException;
 import com.tenio.core.manager.AbstractManager;
+import com.tenio.core.manager.BlockingQueueManager;
 import com.tenio.core.network.entity.protocol.Request;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -83,7 +83,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
   private String name;
   private ExecutorService executorService;
   private int executorSize;
-  private BlockingQueue<Request> requestQueue;
+  private BlockingQueueManager<Request> requestManager;
   private int maxQueueSize;
   private volatile boolean initialized;
   private volatile boolean activated;
@@ -103,9 +103,11 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   private void initializeWorkers() {
     if (isEnabledPriority()) {
-      requestQueue = new PriorityBlockingQueue<>(maxQueueSize, RequestComparator.newInstance());
+      requestManager = new BlockingQueueManager<>(getThreadPoolSize(),
+          () -> new PriorityBlockingQueue<>(maxQueueSize, RequestComparator.newInstance()));
     } else {
-      requestQueue = new LinkedBlockingQueue<>(maxQueueSize);
+      requestManager = new BlockingQueueManager<>(getThreadPoolSize(),
+          () -> new LinkedBlockingQueue<>(maxQueueSize));
     }
 
     var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
@@ -150,16 +152,16 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   @Override
   public void run() {
-    int currentId = id.getAndIncrement();
-    setThreadName(currentId);
-    processing();
+    int currentIndex = id.getAndIncrement();
+    setThreadName(currentIndex);
+    processing(currentIndex);
   }
 
-  private void processing() {
+  private void processing(int index) {
     while (!Thread.currentThread().isInterrupted()) {
       if (activated) {
         try {
-          var request = requestQueue.take();
+          var request = requestManager.getQueueByIndex(index).take();
           processRequest(request);
         } catch (Throwable cause) {
           if (isErrorEnabled()) {
@@ -171,7 +173,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
   }
 
   private void destroy() {
-    requestQueue.clear();
+    requestManager.clear();
     onDestroyed();
   }
 
@@ -245,15 +247,15 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   @Override
   public void enqueueRequest(Request request) {
-    var queueSize = requestQueue.size();
-    if (queueSize >= maxQueueSize) {
-      var exception = new RequestQueueFullException(queueSize);
+    var requestQueue = requestManager.getQueueByElementId(request.getId());
+    if (requestQueue.size() >= maxQueueSize) {
+      var exception = new RequestQueueFullException(requestQueue.size());
       if (isErrorEnabled()) {
         error(exception, exception.getMessage());
       }
       throw exception;
     }
-    requestQueue.add(request);
+    requestManager.getQueueByElementId(request.getId()).add(request);
   }
 
   @Override

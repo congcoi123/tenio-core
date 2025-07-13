@@ -97,7 +97,7 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
       }
       // in this case, just disconnect the session, it's no longer help writing data
       try {
-        session.close(ConnectionDisconnectMode.LOST, PlayerDisconnectMode.CONNECTION_LOST);
+        session.close(ConnectionDisconnectMode.LOST_IN_WRITTEN, PlayerDisconnectMode.CONNECTION_LOST);
       } catch (IOException exception1) {
         if (isErrorEnabled()) {
           error(exception1, "Error occurred in writing on session: ", session.toString());

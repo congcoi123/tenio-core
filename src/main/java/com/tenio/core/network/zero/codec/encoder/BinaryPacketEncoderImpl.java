@@ -73,7 +73,7 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
 
     // check if the data needs to be compressed
     boolean isCompressed = false;
-    if (binary.length > compressionThresholdBytes) {
+    if (compressionThresholdBytes > 0 && binary.length >= compressionThresholdBytes) {
       if (compressor != null) {
         try {
           binary = compressor.compress(binary);
@@ -88,7 +88,7 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
       }
     }
 
-    // if the original size of data exceeded threshold, it needs to be resize the
+    // if the original size of data exceeded threshold, it needs to be resized the
     // header bytes value
     int headerSize = Short.BYTES;
     if (binary.length > MAX_BYTES_FOR_NORMAL_SIZE) {
