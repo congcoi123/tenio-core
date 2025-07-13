@@ -181,7 +181,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
     var session = (Session) request.getSender();
 
     // We only consider the fresh session
-    if (!session.transitionAssociatedState(Session.AssociatedState.NONE, Session.AssociatedState.DOING)) {
+    if (!session.isActivated() || !session.transitionAssociatedState(Session.AssociatedState.NONE,
+        Session.AssociatedState.DOING)) {
       return;
     }
 
