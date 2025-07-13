@@ -67,7 +67,6 @@ import com.tenio.core.server.service.InternalProcessorServiceImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
 import com.tenio.core.utility.CommandUtility;
 import java.io.IOError;
-import java.io.IOException;
 import javax.annotation.concurrent.ThreadSafe;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReaderBuilder;
@@ -237,7 +236,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   private void setupNetworkService(Configuration configuration, BootstrapHandler bootstrapHandler)
-      throws IllegalArgumentException, SecurityException, IOException {
+      throws IllegalArgumentException, SecurityException {
 
     ConnectionFilter connectionFilter = bootstrapHandler.getBeanByClazz(ConnectionFilter.class);
     if (connectionFilter == null) {
