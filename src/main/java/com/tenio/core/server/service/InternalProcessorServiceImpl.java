@@ -39,10 +39,10 @@ import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.entity.define.result.PlayerReconnectedResult;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.network.define.RequestPriority;
 import com.tenio.core.network.entity.protocol.Request;
-import com.tenio.core.network.entity.protocol.implement.DatagramRequestImpl;
-import com.tenio.core.network.entity.protocol.implement.SessionRequestImpl;
+import com.tenio.core.network.entity.protocol.implement.DatagramRequest;
+import com.tenio.core.network.entity.protocol.implement.SessionRequest;
+import com.tenio.core.network.entity.protocol.policy.RequestPolicy;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
@@ -65,6 +65,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
   private final DatagramChannelManager datagramChannelManager;
   private SessionManager sessionManager;
   private PlayerManager playerManager;
+  private RequestPolicy requestPolicy;
   private int maxNumberPlayers;
   private boolean keepPlayerOnDisconnection;
 
@@ -96,13 +97,14 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
   @Override
   public void subscribe() {
-
     eventManager.on(ServerEvent.SESSION_REQUEST_CONNECTION, params -> {
       var request =
-          SessionRequestImpl.newInstance().setEvent(ServerEvent.SESSION_REQUEST_CONNECTION);
+          SessionRequest.newInstance().setEvent(ServerEvent.SESSION_REQUEST_CONNECTION);
       request.setSender(params[0]);
       request.setMessage((DataCollection) params[1]);
-      request.setPriority(RequestPriority.HIGHEST);
+      if (requestPolicy != null) {
+        requestPolicy.applyPolicy(request);
+      }
       enqueueRequest(request);
 
       return null;
@@ -124,23 +126,28 @@ public final class InternalProcessorServiceImpl extends AbstractController
     eventManager.on(ServerEvent.SESSION_READ_MESSAGE, params -> {
       var session = (Session) params[0];
       var request =
-          SessionRequestImpl.newInstance().setEvent(ServerEvent.SESSION_READ_MESSAGE);
+          SessionRequest.newInstance().setEvent(ServerEvent.SESSION_READ_MESSAGE);
       request.setSender(session);
       request.setMessage((DataCollection) params[1]);
       session.setLastReadTime(TimeUtility.currentTimeMillis());
       session.increaseReadMessages();
+      if (requestPolicy != null) {
+        requestPolicy.applyPolicy(request);
+      }
       enqueueRequest(request);
 
       return null;
     });
 
     eventManager.on(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME, params -> {
-      var request = DatagramRequestImpl.newInstance()
+      var request = DatagramRequest.newInstance()
               .setEvent(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME);
       request.setSender(params[0]);
       request.setRemoteSocketAddress((SocketAddress) params[1]);
       request.setMessage((DataCollection) params[2]);
-      request.setPriority(RequestPriority.HIGHEST);
+      if (requestPolicy != null) {
+        requestPolicy.applyPolicy(request);
+      }
       enqueueRequest(request);
 
       return null;
@@ -149,6 +156,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
   @Override
   public void setDataType(DataType dataType) {
+  }
+
+  @Override
+  public void setRequestPolicy(RequestPolicy requestPolicy) {
+    this.requestPolicy = requestPolicy;
   }
 
   @Override
@@ -365,6 +377,11 @@ public final class InternalProcessorServiceImpl extends AbstractController
   @Override
   public String getName() {
     return "internal-processor";
+  }
+
+  @Override
+  protected boolean isEnabledPriority() {
+    return requestPolicy != null;
   }
 
   @Override

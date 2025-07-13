@@ -75,26 +75,16 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class AbstractController extends AbstractManager implements Controller, Runnable {
 
-  /**
-   * This value must be configured in the configuration file later. It is set here for quicker
-   * experiment.
-   */
-  private static final boolean REQUEST_PRIORITY_ENABLED = false;
-
   private static final int DEFAULT_MAX_QUEUE_SIZE = 50;
   private static final int DEFAULT_NUMBER_WORKERS = 5;
 
   private final AtomicInteger id;
+  private final AtomicBoolean stopping;
   private String name;
-
   private ExecutorService executorService;
   private int executorSize;
-
   private BlockingQueue<Request> requestQueue;
-
   private int maxQueueSize;
-
-  private final AtomicBoolean stopping;
   private volatile boolean initialized;
   private volatile boolean activated;
 
@@ -112,7 +102,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
   }
 
   private void initializeWorkers() {
-    if (REQUEST_PRIORITY_ENABLED) {
+    if (isEnabledPriority()) {
       requestQueue = new PriorityBlockingQueue<>(maxQueueSize, RequestComparator.newInstance());
     } else {
       requestQueue = new LinkedBlockingQueue<>();
@@ -291,6 +281,14 @@ public abstract class AbstractController extends AbstractManager implements Cont
     }
     executorSize = maxSize;
   }
+
+  /**
+   * Determines whether the request priority should be applied.
+   *
+   * @return {@code true} if the request priority is considered, otherwise {@code false}
+   */
+  protected abstract boolean isEnabledPriority();
+
   /**
    * Subscribe all events for handling.
    */

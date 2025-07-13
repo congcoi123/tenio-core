@@ -27,28 +27,27 @@ package com.tenio.core.network.entity.protocol.implement;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.configuration.define.ServerEvent;
-import com.tenio.core.network.define.RequestPriority;
 import com.tenio.core.network.entity.protocol.Request;
-import com.tenio.core.network.entity.session.Session;
 import java.net.SocketAddress;
+import java.nio.channels.DatagramChannel;
 
 /**
- * Request implementation for Sessions.
+ * Request implementation for Datagram channels.
  *
  * @since 0.5.0
  */
-public class SessionRequestImpl implements Request {
+public class DatagramRequest implements Request {
 
   private final long id;
   private final long timestamp;
   private ServerEvent event;
-  private Session session;
+  private DatagramChannel datagramChannel;
+  private SocketAddress datagramRemoteSocketAddress;
   private DataCollection message;
-  private RequestPriority priority;
+  private int priority;
 
-  private SessionRequestImpl() {
+  private DatagramRequest() {
     id = ID_COUNTER.getAndIncrement();
-    priority = RequestPriority.NORMAL;
     timestamp = TimeUtility.currentTimeMillis();
   }
 
@@ -58,7 +57,7 @@ public class SessionRequestImpl implements Request {
    * @return a new instance of {@link Request}
    */
   public static Request newInstance() {
-    return new SessionRequestImpl();
+    return new DatagramRequest();
   }
 
   @Override
@@ -67,24 +66,25 @@ public class SessionRequestImpl implements Request {
   }
 
   @Override
-  public Session getSender() {
-    return session;
+  public DatagramChannel getSender() {
+    return datagramChannel;
   }
 
   @Override
   public Request setSender(Object sender) {
-    session = (Session) sender;
+    datagramChannel = (DatagramChannel) sender;
     return this;
   }
 
   @Override
   public SocketAddress getRemoteSocketAddress() {
-    throw new UnsupportedOperationException();
+    return datagramRemoteSocketAddress;
   }
 
   @Override
   public Request setRemoteSocketAddress(SocketAddress remoteSocketAddress) {
-    throw new UnsupportedOperationException();
+    this.datagramRemoteSocketAddress = remoteSocketAddress;
+    return this;
   }
 
   @Override
@@ -99,12 +99,12 @@ public class SessionRequestImpl implements Request {
   }
 
   @Override
-  public RequestPriority getPriority() {
+  public int getPriority() {
     return priority;
   }
 
   @Override
-  public Request setPriority(RequestPriority priority) {
+  public Request setPriority(int priority) {
     this.priority = priority;
     return this;
   }
@@ -148,11 +148,12 @@ public class SessionRequestImpl implements Request {
 
   @Override
   public String toString() {
-    return "SessionRequest{" +
+    return "DatagramRequest{" +
         "id=" + id +
         ", timestamp=" + timestamp +
         ", event=" + event +
-        ", sender=" + session +
+        ", sender=" + datagramChannel +
+        ", remoteSocketAddress=" + datagramRemoteSocketAddress +
         ", message=" + message +
         ", priority=" + priority +
         '}';

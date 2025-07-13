@@ -75,6 +75,19 @@ EventWebSocketConnectionRefused
 EventWriteMessageToConnection
 ```
 
+## Customizable behaviors
+```txt
+Just create your own classes, implement desired interfaces and annotate them with @Component.
+In case you do not declare any change, their default implementations will be applied
+(DefaultConnectionFilter, DefaultPacketQueuePolicy).
+
+packet-encryptor: BinaryPacketEncryptor
+packet-compressor: BinaryPacketCompressor
+connection-filter: ConnectionFilter
+packet-queue-policy: PacketQueuePolicy
+request-policy: RequestPolicy
+```
+
 ## Requirements
 - Java 17
 

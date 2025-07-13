@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.codec.decoder;
 
+import com.tenio.common.logger.SystemLogger;
 import com.tenio.common.utility.ByteUtility;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.codec.CodecUtility;
@@ -36,7 +37,7 @@ import java.nio.ByteBuffer;
 /**
  * The default implementation for the binary packet decoding.
  */
-public class DefaultBinaryPacketDecoder implements BinaryPacketDecoder {
+public final class BinaryPacketDecoderImpl extends SystemLogger implements BinaryPacketDecoder {
 
   private BinaryPacketCompressor compressor;
   private BinaryPacketEncryptor encryptor;
@@ -44,7 +45,6 @@ public class DefaultBinaryPacketDecoder implements BinaryPacketDecoder {
 
   @Override
   public void decode(Session session, byte[] data) {
-
     var readState = session.getPacketReadState();
 
     try {
@@ -75,7 +75,7 @@ public class DefaultBinaryPacketDecoder implements BinaryPacketDecoder {
         }
       }
     } catch (Exception exception) {
-      exception.printStackTrace();
+      error(exception);
       readState = PacketReadState.WAIT_NEW_PACKET;
     }
 
@@ -231,16 +231,27 @@ public class DefaultBinaryPacketDecoder implements BinaryPacketDecoder {
       // decompression or decryption
       // check if data needs to be uncompressed
       if (pendingPacket.getPacketHeader().isCompressed()) {
-        byte[] compressedData = dataBuffer.array();
-        byte[] decompressedData = compressor.uncompress(compressedData);
-        dataBuffer = ByteBuffer.wrap(decompressedData);
+        if (compressor != null) {
+          byte[] compressedData = dataBuffer.array();
+          byte[] decompressedData = compressor.uncompress(compressedData);
+          dataBuffer = ByteBuffer.wrap(decompressedData);
+        } else {
+          throw new IllegalStateException("Expected the interface BinaryPacketCompressor was " +
+              "implemented due to the packet-compression-threshold-bytes configuration, but it is" +
+              " null");
+        }
       }
 
       // check if data needs to be unencrypted
       if (pendingPacket.getPacketHeader().isEncrypted()) {
-        byte[] encryptedData = dataBuffer.array();
-        byte[] decryptedData = encryptor.decrypt(encryptedData);
-        dataBuffer = ByteBuffer.wrap(decryptedData);
+        if (encryptor != null) {
+          byte[] encryptedData = dataBuffer.array();
+          byte[] decryptedData = encryptor.decrypt(encryptedData);
+          dataBuffer = ByteBuffer.wrap(decryptedData);
+        } else {
+          throw new IllegalStateException("Expected the interface BinaryPacketEncryptor was " +
+              "implemented, but it is null");
+        }
       }
 
       byte[] result = dataBuffer.array();

@@ -44,8 +44,8 @@ import com.tenio.core.entity.define.result.PlayerReconnectedResult;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.protocol.Request;
-import com.tenio.core.network.entity.protocol.implement.DatagramRequestImpl;
-import com.tenio.core.network.entity.protocol.implement.SessionRequestImpl;
+import com.tenio.core.network.entity.protocol.implement.DatagramRequest;
+import com.tenio.core.network.entity.protocol.implement.SessionRequest;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
@@ -135,7 +135,7 @@ public class InternalProcessorServiceImplTest {
         Session.AssociatedState.DOING))
         .thenReturn(true);
 
-    Request request = SessionRequestImpl.newInstance()
+    Request request = SessionRequest.newInstance()
         .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
         .setSender(session)
         .setMessage(message);
@@ -153,7 +153,7 @@ public class InternalProcessorServiceImplTest {
         Session.AssociatedState.DOING))
         .thenReturn(true);
 
-    Request request = SessionRequestImpl.newInstance()
+    Request request = SessionRequest.newInstance()
         .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
         .setSender(session)
         .setMessage(message);
@@ -178,7 +178,7 @@ public class InternalProcessorServiceImplTest {
     when(session.isActivated()).thenReturn(true);
     when(player.isInRoom()).thenReturn(false);
 
-    Request request = SessionRequestImpl.newInstance()
+    Request request = SessionRequest.newInstance()
         .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
         .setSender(session)
         .setMessage(message);
@@ -216,7 +216,7 @@ public class InternalProcessorServiceImplTest {
     when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
     when(session.getName()).thenReturn(PLAYER_IDENTITY);
     when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(player);
-    Request request = SessionRequestImpl.newInstance()
+    Request request = SessionRequest.newInstance()
         .setEvent(ServerEvent.SESSION_READ_MESSAGE)
         .setSender(session)
         .setMessage(message);
@@ -236,7 +236,7 @@ public class InternalProcessorServiceImplTest {
     when(session.isTcp()).thenReturn(true);
     when(datagramChannelManager.getCurrentUdpConveyId()).thenReturn(1);
 
-    Request request = DatagramRequestImpl.newInstance()
+    Request request = DatagramRequest.newInstance()
         .setEvent(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME)
         .setSender(datagramChannel)
         .setRemoteSocketAddress(REMOTE_ADDRESS)
@@ -255,7 +255,7 @@ public class InternalProcessorServiceImplTest {
     when(eventManager.emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION), eq(message)))
         .thenReturn(Optional.empty());
 
-    Request request = DatagramRequestImpl.newInstance()
+    Request request = DatagramRequest.newInstance()
         .setEvent(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME)
         .setSender(datagramChannel)
         .setRemoteSocketAddress(REMOTE_ADDRESS)
@@ -278,7 +278,7 @@ public class InternalProcessorServiceImplTest {
         Session.AssociatedState.DOING))
         .thenReturn(true);
 
-    Request request = SessionRequestImpl.newInstance()
+    Request request = SessionRequest.newInstance()
         .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
         .setSender(session)
         .setMessage(message);

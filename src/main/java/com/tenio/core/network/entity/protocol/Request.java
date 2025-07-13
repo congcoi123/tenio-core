@@ -27,7 +27,6 @@ package com.tenio.core.network.entity.protocol;
 import com.tenio.common.data.DataCollection;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.controller.RequestComparator;
-import com.tenio.core.network.define.RequestPriority;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -113,19 +112,19 @@ public interface Request {
   /**
    * Retrieves the priority of request.
    *
-   * @return {@link RequestPriority} priority of request
+   * @return {@code integer number} priority of request
    * @see RequestComparator
    */
-  RequestPriority getPriority();
+  int getPriority();
 
   /**
    * Sets priority for the request.
    *
-   * @param priority {@link RequestPriority} priority of request
+   * @param priority {@code integer number} priority of request
    * @return the pointer of request
    * @see RequestComparator
    */
-  Request setPriority(RequestPriority priority);
+  Request setPriority(int priority);
 
   /**
    * Retrieves the creation timestamp in milliseconds.

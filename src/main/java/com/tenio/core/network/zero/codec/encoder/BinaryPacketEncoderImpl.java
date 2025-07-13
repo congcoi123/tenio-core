@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.codec.encoder;
 
+import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.zero.codec.CodecUtility;
 import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
@@ -36,10 +37,7 @@ import java.nio.ByteBuffer;
  *
  * @see BinaryPacketEncoder
  */
-public class DefaultBinaryPacketEncoder implements BinaryPacketEncoder {
-
-  private static final int DEFAULT_COMPRESSION_THRESHOLD_BYTES = 3000;
-  private static final int MAX_BYTES_FOR_NORMAL_SIZE = Short.MAX_VALUE * 2 + 1;
+public final class BinaryPacketEncoderImpl extends SystemLogger implements BinaryPacketEncoder {
 
   private BinaryPacketCompressor compressor;
   private BinaryPacketEncryptor encryptor;
@@ -48,7 +46,7 @@ public class DefaultBinaryPacketEncoder implements BinaryPacketEncoder {
   /**
    * Initialization.
    */
-  public DefaultBinaryPacketEncoder() {
+  public BinaryPacketEncoderImpl() {
     compressionThresholdBytes = DEFAULT_COMPRESSION_THRESHOLD_BYTES;
   }
 
@@ -60,21 +58,29 @@ public class DefaultBinaryPacketEncoder implements BinaryPacketEncoder {
     // check if the data needs to be encrypted
     boolean isEncrypted = packet.isEncrypted();
     if (isEncrypted) {
-      try {
-        binary = encryptor.encrypt(binary);
-      } catch (Exception e) {
-        isEncrypted = false;
+      if (encryptor != null) {
+        try {
+          binary = encryptor.encrypt(binary);
+        } catch (Exception exception) {
+          error(exception);
+          isEncrypted = false;
+        }
+      } else {
+        throw new IllegalStateException("Expected the interface BinaryPacketEncryptor was " +
+            "implemented, but it is null");
       }
     }
 
     // check if the data needs to be compressed
     boolean isCompressed = false;
-    if (binary.length > compressionThresholdBytes) {
-      try {
-        binary = compressor.compress(binary);
-        isCompressed = true;
-      } catch (Exception e) {
-        // do nothing
+    if (compressor != null) {
+      if (binary.length > compressionThresholdBytes) {
+        try {
+          binary = compressor.compress(binary);
+          isCompressed = true;
+        } catch (Exception exception) {
+          error(exception);
+        }
       }
     }
 

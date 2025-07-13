@@ -65,6 +65,9 @@ import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
  */
 public interface BinaryPacketEncoder {
 
+  int DEFAULT_COMPRESSION_THRESHOLD_BYTES = 3000;
+  int MAX_BYTES_FOR_NORMAL_SIZE = Short.MAX_VALUE * 2 + 1;
+
   /**
    * Encodes a packet for transmission to clients.
    * This method performs the complete encoding process including

@@ -22,22 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.compression;
+package com.tenio.core.network.entity.protocol.policy;
+
+import com.tenio.core.network.entity.protocol.Request;
+import com.tenio.core.network.entity.protocol.implement.DatagramRequest;
+import com.tenio.core.network.entity.protocol.implement.SessionRequest;
 
 /**
- * The default implementation of the binary packet compressor.
+ * The request policy.
  *
- * @see BinaryPacketCompressor
+ * @see Request
+ * @see DatagramRequest
+ * @see SessionRequest
+ * @since 0.6.6
  */
-public class DefaultBinaryPacketCompressor implements BinaryPacketCompressor {
+public interface RequestPolicy {
 
-  @Override
-  public byte[] compress(byte[] binary) {
-    return binary;
-  }
-
-  @Override
-  public byte[] uncompress(byte[] binary) {
-    return binary;
-  }
+  /**
+   * Preprocesses the request before it gets into the processor. It is highly recommended to add
+   * the request priory if you are really aware of its usage.
+   *
+   * @param request an instance of {@link Request}
+   */
+  void applyPolicy(Request request);
 }

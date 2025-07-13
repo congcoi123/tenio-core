@@ -50,16 +50,15 @@ import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.policy.DefaultPacketQueuePolicy;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
 import com.tenio.core.network.entity.protocol.Response;
+import com.tenio.core.network.entity.protocol.policy.RequestPolicy;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.filter.DefaultConnectionFilter;
 import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.compression.DefaultBinaryPacketCompressor;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
-import com.tenio.core.network.zero.codec.decoder.DefaultBinaryPacketDecoder;
+import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoderImpl;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
-import com.tenio.core.network.zero.codec.encoder.DefaultBinaryPacketEncoder;
+import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoderImpl;
 import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
-import com.tenio.core.network.zero.codec.encryption.DefaultBinaryPacketEncryptor;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import com.tenio.core.schedule.ScheduleService;
 import com.tenio.core.schedule.ScheduleServiceImpl;
@@ -169,7 +168,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     setupClientCommands(bootstrapHandler.getClientCommandManager());
     setupEntitiesManagementService(configuration);
     setupNetworkService(configuration, bootstrapHandler);
-    setupInternalProcessorService(configuration);
+    setupInternalProcessorService(configuration, bootstrapHandler);
     setupScheduleService(configuration);
 
     initializeServices();
@@ -326,28 +325,13 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     BinaryPacketCompressor binaryPacketCompressor =
         bootstrapHandler.getBeanByClazz(BinaryPacketCompressor.class);
-    if (binaryPacketCompressor == null) {
-      binaryPacketCompressor = new DefaultBinaryPacketCompressor();
-    }
     BinaryPacketEncryptor binaryPacketEncryptor =
         bootstrapHandler.getBeanByClazz(BinaryPacketEncryptor.class);
-    if (binaryPacketEncryptor == null) {
-      binaryPacketEncryptor = new DefaultBinaryPacketEncryptor();
-    }
-    BinaryPacketEncoder binaryPacketEncoder =
-        bootstrapHandler.getBeanByClazz(BinaryPacketEncoder.class);
-    if (binaryPacketEncoder == null) {
-      binaryPacketEncoder = new DefaultBinaryPacketEncoder();
-    }
-    BinaryPacketDecoder binaryPacketDecoder =
-        bootstrapHandler.getBeanByClazz(BinaryPacketDecoder.class);
-    if (binaryPacketDecoder == null) {
-      binaryPacketDecoder = new DefaultBinaryPacketDecoder();
-    }
+    BinaryPacketEncoder binaryPacketEncoder = new BinaryPacketEncoderImpl();
+    BinaryPacketDecoder binaryPacketDecoder = new BinaryPacketDecoderImpl();
 
     binaryPacketEncoder.setCompressionThresholdBytes(
-        configuration.getInt(
-            CoreConfigurationType.NETWORK_PROP_PACKET_COMPRESSION_THRESHOLD_BYTES));
+        configuration.getInt(CoreConfigurationType.NETWORK_PROP_PACKET_COMPRESSION_THRESHOLD_BYTES));
     binaryPacketEncoder.setCompressor(binaryPacketCompressor);
     binaryPacketEncoder.setEncryptor(binaryPacketEncryptor);
 
@@ -358,9 +342,11 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.setPacketEncoder(binaryPacketEncoder);
   }
 
-  private void setupInternalProcessorService(Configuration configuration) {
+  private void setupInternalProcessorService(Configuration configuration, BootstrapHandler bootstrapHandler) {
     internalProcessorService.setDataType(
         DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION)));
+    RequestPolicy requestPolicy = bootstrapHandler.getBeanByClazz(RequestPolicy.class);
+    internalProcessorService.setRequestPolicy(requestPolicy);
     internalProcessorService
         .setMaxNumberPlayers(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS));
     internalProcessorService.setSessionManager(networkService.getSessionManager());

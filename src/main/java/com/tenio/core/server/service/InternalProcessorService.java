@@ -27,6 +27,7 @@ package com.tenio.core.server.service;
 import com.tenio.common.data.DataType;
 import com.tenio.core.controller.Controller;
 import com.tenio.core.entity.manager.PlayerManager;
+import com.tenio.core.network.entity.protocol.policy.RequestPolicy;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
@@ -47,6 +48,14 @@ public interface InternalProcessorService extends Controller {
    * @param dataType the {@link DataType} value
    */
   void setDataType(DataType dataType);
+
+  /**
+   * Set the request policy.
+   *
+   * @param requestPolicy the {@link RequestPolicy}
+   * @since 0.6.6
+   */
+  void setRequestPolicy(RequestPolicy requestPolicy);
 
   /**
    * Sets the maximum number of players allowed participating on the server.

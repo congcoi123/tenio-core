@@ -93,3 +93,4 @@
 - Removed unnecessary wrapper methods
 - Reworked on writer, reader and acceptor handlers
 - No longer supporting UDP pool cache
+- Supported Request Policy interface

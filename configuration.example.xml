@@ -94,21 +94,19 @@
 		</Properties>
 	</Configuration>
 
-	<!-- Customizable behaviors -->
+	<!-- Customizable Behaviors -->
 	<!-- Just create your own classes, implement desired interfaces and annotate them with @Component.
-		 In case you do not declare any change, their default implementation will be applied
-		 (DefaultBinaryPacketEncryptor, DefaultBinaryPacketCompressor, DefaultBinaryPacketEncoder,
-		 DefaultBinaryPacketDecoder, DefaultConnectionFilter, DefaultPacketQueuePolicy).
+		 In case you do not declare any change, their default implementations will be applied
+		 (DefaultConnectionFilter, DefaultPacketQueuePolicy).
 
 			packet-encryptor: BinaryPacketEncryptor
 			packet-compressor: BinaryPacketCompressor
-			packet-encoder: BinaryPacketEncoder
-			packet-decoder: BinaryPacketDecoder
 			connection-filter: ConnectionFilter
 			packet-queue-policy: PacketQueuePolicy
+			request-policy: RequestPolicy
 	-->
 
-	<!-- Your customizable configurations -->
+	<!-- Your Customizable Configurations -->
 	<Extension>
 		<Properties>
 			<Property name="custom-value-1">String</Property>
