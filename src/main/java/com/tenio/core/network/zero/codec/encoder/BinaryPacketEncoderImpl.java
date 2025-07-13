@@ -73,14 +73,18 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
 
     // check if the data needs to be compressed
     boolean isCompressed = false;
-    if (compressor != null) {
-      if (binary.length > compressionThresholdBytes) {
+    if (binary.length > compressionThresholdBytes) {
+      if (compressor != null) {
         try {
           binary = compressor.compress(binary);
           isCompressed = true;
         } catch (Exception exception) {
           error(exception);
         }
+      } else {
+        throw new IllegalStateException("Expected the interface BinaryPacketCompressor was " +
+            "implemented due to the packet-compression-threshold-bytes configuration, but it is" +
+            " null");
       }
     }
 
