@@ -131,6 +131,7 @@ public class InternalProcessorServiceImplTest {
   @Test
   public void shouldEstablishNewConnectionWhenBelowMax() {
     when(playerManager.getPlayerCount()).thenReturn(MAX_PLAYERS - 1);
+    when(session.isActivated()).thenReturn(true);
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING))
         .thenReturn(true);
@@ -149,6 +150,7 @@ public class InternalProcessorServiceImplTest {
   @Test
   public void shouldRejectConnectionWhenReachedMax() throws IOException {
     when(playerManager.getPlayerCount()).thenReturn(MAX_PLAYERS);
+    when(session.isActivated()).thenReturn(true);
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING))
         .thenReturn(true);
@@ -274,6 +276,7 @@ public class InternalProcessorServiceImplTest {
     int newMaxPlayers = 200;
     processor.setMaxNumberPlayers(newMaxPlayers);
     when(playerManager.getPlayerCount()).thenReturn(newMaxPlayers);
+    when(session.isActivated()).thenReturn(true);
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING))
         .thenReturn(true);
