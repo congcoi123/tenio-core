@@ -22,9 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.controller.utility;
+package com.tenio.core.manager;
 
-import com.tenio.core.manager.Manager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;

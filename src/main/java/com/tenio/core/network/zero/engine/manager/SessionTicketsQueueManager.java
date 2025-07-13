@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.manager;
 
-import com.tenio.core.controller.utility.BlockingQueueManager;
+import com.tenio.core.manager.BlockingQueueManager;
 import com.tenio.core.network.entity.session.Session;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
