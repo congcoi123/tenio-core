@@ -105,7 +105,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
     if (isEnabledPriority()) {
       requestQueue = new PriorityBlockingQueue<>(maxQueueSize, RequestComparator.newInstance());
     } else {
-      requestQueue = new LinkedBlockingQueue<>();
+      requestQueue = new LinkedBlockingQueue<>(maxQueueSize);
     }
 
     var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
