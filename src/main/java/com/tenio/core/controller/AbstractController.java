@@ -29,11 +29,11 @@ import com.tenio.common.utility.StringUtility;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RequestQueueFullException;
 import com.tenio.core.manager.AbstractManager;
-import com.tenio.core.manager.ConcurrentQueueManager;
+import com.tenio.core.manager.BlockingQueueManager;
 import com.tenio.core.network.entity.protocol.Request;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -80,7 +80,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
   private String name;
   private ExecutorService executorService;
   private int executorSize;
-  private ConcurrentQueueManager<Request> requestManager;
+  private BlockingQueueManager<Request> requestManager;
   private int maxQueueSize;
   private volatile boolean initialized;
   private volatile boolean activated;
@@ -99,12 +99,12 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   private void initializeWorkers() {
     if (isEnabledPriority()) {
-      requestManager = new ConcurrentQueueManager<>(getThreadPoolSize(),
+      requestManager = new BlockingQueueManager<>(getThreadPoolSize(),
           () -> new PriorityBlockingQueue<>(DEFAULT_INITIAL_QUEUE_SIZE,
               RequestComparator.newInstance()));
     } else {
       requestManager =
-          new ConcurrentQueueManager<>(getThreadPoolSize(), ConcurrentLinkedQueue::new);
+          new BlockingQueueManager<>(getThreadPoolSize(), LinkedBlockingQueue::new);
     }
 
     var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
@@ -158,10 +158,8 @@ public abstract class AbstractController extends AbstractManager implements Cont
     while (!Thread.currentThread().isInterrupted()) {
       if (activated) {
         try {
-          Request request;
-          while ((request = requestManager.getQueueByIndex(index).poll()) != null) {
-            processRequest(request);
-          }
+          Request request = requestManager.getQueueByIndex(index).take();
+          processRequest(request);
         } catch (Throwable cause) {
           if (isErrorEnabled()) {
             error(cause);
@@ -254,7 +252,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
       }
       throw exception;
     }
-    requestManager.getQueueByElementId(request.getId()).offer(request);
+    requestManager.getQueueByElementId(request.getId()).add(request);
   }
 
   @Override
