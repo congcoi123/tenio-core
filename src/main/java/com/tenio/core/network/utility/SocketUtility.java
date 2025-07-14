@@ -26,6 +26,7 @@ package com.tenio.core.network.utility;
 
 import io.netty.channel.Channel;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
@@ -73,5 +74,28 @@ public final class SocketUtility {
     if (channel != null) {
       channel.close();
     }
+  }
+
+  /**
+   * Creates a byte buffer object to hold data reading from sockets. This should be DIRECT type
+   * (created from OS) to prevent any conversion.
+   *
+   * @param size the buffer size
+   * @return an instance of {@link ByteBuffer}
+   */
+  public static ByteBuffer createReaderBuffer(int size) {
+    // Default read buffer is DIRECT
+    return ByteBuffer.allocateDirect(size);
+  }
+
+  /**
+   * Creates a byte buffer object to hold data writing to sockets.
+   *
+   * @param size the buffer size
+   * @return an instance of {@link ByteBuffer}
+   */
+  public static ByteBuffer createWriterBuffer(int size) {
+    // Default write buffer is HEAP
+    return ByteBuffer.allocate(size);
   }
 }

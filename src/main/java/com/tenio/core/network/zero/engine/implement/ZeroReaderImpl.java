@@ -25,20 +25,16 @@ THE SOFTWARE.
 package com.tenio.core.network.zero.engine.implement;
 
 import com.tenio.common.data.DataType;
-import com.tenio.common.utility.OsUtility;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.utility.SocketUtility;
 import com.tenio.core.network.zero.engine.ZeroReader;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
 import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
-import com.tenio.core.network.zero.engine.reader.ReaderHandler;
+import com.tenio.core.network.zero.engine.reader.DatagramReaderHandler;
+import com.tenio.core.network.zero.engine.reader.SocketReaderHandler;
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.StandardSocketOptions;
-import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -56,7 +52,8 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
   private static final AtomicInteger INDEXER = new AtomicInteger(0);
 
-  private volatile List<ReaderHandler> readerHandlers;
+  private volatile List<SocketReaderHandler> socketReaderHandlers;
+  private DatagramReaderHandler datagramReaderHandler;
   private DataType dataType;
   private String serverAddress;
   private SocketConfiguration udpChannelConfiguration;
@@ -78,15 +75,15 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     return new ZeroReaderImpl(eventManager);
   }
 
-  private ReaderHandler getReaderHandler() {
-    int index = Math.floorMod(INDEXER.getAndIncrement(), getThreadPoolSize());
-    return readerHandlers.get(index);
+  private SocketReaderHandler getSocketReaderHandler() {
+    int index = Math.floorMod(INDEXER.getAndIncrement(), getThreadPoolSize() - getNumberOfExtraWorkers());
+    return socketReaderHandlers.get(index);
   }
 
   @Override
   public void acceptClientSocketChannel(SocketChannel socketChannel,
                                         Consumer<SelectionKey> onKeyRegistered) {
-    getReaderHandler().registerClientSocketChannel(socketChannel, onKeyRegistered);
+    getSocketReaderHandler().registerClientSocketChannel(socketChannel, onKeyRegistered);
   }
 
   @Override
@@ -121,29 +118,48 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
   @Override
   public void onInitialized() {
-    readerHandlers = new ArrayList<>(getThreadPoolSize());
+    // multiple socket reader handlers
+    socketReaderHandlers = new ArrayList<>(getThreadPoolSize() - getNumberOfExtraWorkers());
+    // but only one datagram reader handler allowed
+    if (udpChannelConfiguration != null) {
+      try {
+        datagramReaderHandler = new DatagramReaderHandler(serverAddress,
+            udpChannelConfiguration.port(), dataType,
+            SocketUtility.createReaderBuffer(getMaxBufferSize()), zeroWriterListener,
+            getSessionManager(), getNetworkReaderStatistic(), getDatagramIoHandler());
+      } catch (IOException exception) {
+        error(exception);
+      }
+    }
   }
 
   @Override
   public void onStarted() {
-    // do nothing
+    if (datagramReaderHandler != null) {
+      runningExtraWorking(() -> {
+        while (!Thread.currentThread().isInterrupted()) {
+          if (isActivated()) {
+            try {
+              datagramReaderHandler.running();
+            } catch (Throwable cause) {
+              if (isErrorEnabled()) {
+                error(cause);
+              }
+            }
+          }
+        }
+      });
+    }
   }
 
   @Override
   public void onRunning() {
-    // Default read buffer is DIRECT
-    ByteBuffer readerBuffer = ByteBuffer.allocateDirect(getMaxBufferSize());
-
     try {
-      var readerHandler = new ReaderHandler(dataType, readerBuffer, zeroWriterListener,
-          getSessionManager(), getNetworkReaderStatistic(), getSocketIoHandler(),
-          getDatagramIoHandler());
-      readerHandlers.add(readerHandler);
-
-      if (udpChannelConfiguration != null) {
-        var datagramChannel = openDatagramChannel(serverAddress, udpChannelConfiguration.port());
-        readerHandler.registerDatagramChannel(datagramChannel);
-      }
+      var readerHandler =
+          new SocketReaderHandler(SocketUtility.createReaderBuffer(getMaxBufferSize()),
+              zeroWriterListener, getSessionManager(), getNetworkReaderStatistic(),
+              getSocketIoHandler());
+      socketReaderHandlers.add(readerHandler);
 
       while (!Thread.currentThread().isInterrupted()) {
         if (isActivated()) {
@@ -164,11 +180,19 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   }
 
   @Override
+  public int getNumberOfExtraWorkers() {
+    return udpChannelConfiguration != null ? 1 : 0;
+  }
+
+  @Override
   public void onShutdown() {
     try {
       Thread.sleep(500L);
-      for (var readerHandler : readerHandlers) {
+      for (var readerHandler : socketReaderHandlers) {
         readerHandler.shutdown();
+      }
+      if (datagramReaderHandler != null) {
+        datagramReaderHandler.shutdown();
       }
     } catch (IOException | InterruptedException exception) {
       if (isErrorEnabled()) {
@@ -180,30 +204,5 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   @Override
   public void onDestroyed() {
     // do nothing
-  }
-
-  private DatagramChannel openDatagramChannel(String serverAddress, int port)
-      throws ServiceRuntimeException {
-    try {
-      var datagramChannel = DatagramChannel.open();
-      datagramChannel.configureBlocking(false);
-      if (OsUtility.getOperatingSystemType() == OsUtility.OsType.WINDOWS) {
-        datagramChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-      } else {
-        datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
-      }
-      datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
-      datagramChannel.bind(new InetSocketAddress(serverAddress, port));
-      // udp datagram is a connectionless protocol, we don't need to create
-      // bi-direction connection, that why it's not necessary to register it to
-      // acceptable selector. Just leave it to the reader selector later
-      if (isInfoEnabled()) {
-        info("UDP CHANNEL", buildgen("Opened at address: ", serverAddress, ", port: ",
-            port));
-      }
-      return datagramChannel;
-    } catch (IOException exception) {
-      throw new ServiceRuntimeException(exception.getMessage());
-    }
   }
 }

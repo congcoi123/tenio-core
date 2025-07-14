@@ -27,6 +27,7 @@ package com.tenio.core.network.zero.engine.writer.implement;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.network.utility.SocketUtility;
 import com.tenio.core.network.zero.engine.manager.SessionTicketsQueueManager;
 import com.tenio.core.network.zero.engine.writer.WriterHandler;
 import java.nio.ByteBuffer;
@@ -68,7 +69,6 @@ public abstract class AbstractWriterHandler extends SystemLogger implements Writ
 
   @Override
   public void allocateBuffer(int capacity) {
-    // Default write buffer is HEAP
-    byteBuffer = ByteBuffer.allocate(capacity);
+    byteBuffer = SocketUtility.createWriterBuffer(capacity);
   }
 }

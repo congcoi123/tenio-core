@@ -1,0 +1,292 @@
+/*
+The MIT License
+
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+package com.tenio.core.network.zero.engine.reader;
+
+import com.tenio.common.data.DataCollection;
+import com.tenio.common.data.DataType;
+import com.tenio.common.data.DataUtility;
+import com.tenio.common.data.msgpack.element.MsgPackMap;
+import com.tenio.common.data.zero.ZeroMap;
+import com.tenio.common.logger.SystemLogger;
+import com.tenio.common.utility.OsUtility;
+import com.tenio.core.configuration.constant.CoreConstant;
+import com.tenio.core.exception.ServiceRuntimeException;
+import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.network.entity.session.manager.SessionManager;
+import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
+import com.tenio.core.network.zero.handler.DatagramIoHandler;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.StandardSocketOptions;
+import java.nio.ByteBuffer;
+import java.nio.channels.CancelledKeyException;
+import java.nio.channels.ClosedSelectorException;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+
+/**
+ * Handles read/write events on datagram channels using a {@link Selector}.
+ *
+ * <p>This class is part of the NIO event-driven loop that processes IO on
+ * accepted bound UDP datagram channels.
+ *
+ * <p>Responsibilities:
+ * <ul>
+ *   <li>Register datagram channels for read/write events</li>
+ *   <li>Dispatch readable/writable keys to appropriate handlers</li>
+ *   <li>Manage selection loop and wakeup mechanisms</li>
+ *   <li>Notify {@link DatagramIoHandler} for channel lifecycle events</li>
+ * </ul>
+ *
+ * <p>Each reader thread runs in a loop, polling its selector and reacting
+ * to channel readiness, ensuring non-blocking high-performance IO handling.
+ *
+ * @see DatagramIoHandler
+ * @since 0.6.6
+ */
+
+public final class DatagramReaderHandler extends SystemLogger {
+
+  private final DataType dataType;
+  private final Selector readableSelector;
+  private final ByteBuffer readerBuffer;
+  private final ZeroWriterListener zeroWriterListener;
+  private final SessionManager sessionManager;
+  private final NetworkReaderStatistic networkReaderStatistic;
+  private final DatagramIoHandler datagramIoHandler;
+
+  /**
+   * Constructor.
+   *
+   * @param serverAddress          the server address
+   * @param port                   the datagram (UDP) port
+   * @param dataType               the {@link DataType}
+   * @param readerBuffer           instance of {@link ByteBuffer}
+   * @param zeroWriterListener     instance of {@link ZeroWriterListener}
+   * @param sessionManager         instance of {@link SessionManager}
+   * @param networkReaderStatistic instance of {@link NetworkReaderStatistic}
+   * @param datagramIoHandler      instance of {@link DatagramIoHandler}
+   * @throws IOException whenever any IO exception thrown
+   */
+  public DatagramReaderHandler(String serverAddress,
+                               int port,
+                               DataType dataType,
+                               ByteBuffer readerBuffer,
+                               ZeroWriterListener zeroWriterListener,
+                               SessionManager sessionManager,
+                               NetworkReaderStatistic networkReaderStatistic,
+                               DatagramIoHandler datagramIoHandler) throws IOException {
+    this.dataType = dataType;
+    this.readerBuffer = readerBuffer;
+    this.zeroWriterListener = zeroWriterListener;
+    this.sessionManager = sessionManager;
+    this.networkReaderStatistic = networkReaderStatistic;
+    this.datagramIoHandler = datagramIoHandler;
+
+    readableSelector = Selector.open();
+    DatagramChannel datagramChannel = openDatagramChannel(serverAddress, port);
+    datagramChannel.register(readableSelector, SelectionKey.OP_READ);
+  }
+
+  /**
+   * Shutdown processing.
+   *
+   * @throws IOException whenever IO exceptions thrown
+   */
+  public void shutdown() throws IOException {
+    wakeup();
+    readableSelector.close();
+  }
+
+  /**
+   * Processing. This should be run in a loop.
+   */
+  public void running() {
+    try {
+      // blocks until at least one channel is ready for the events you registered for
+      int countReadyKeys = readableSelector.select();
+
+      if (countReadyKeys == 0) {
+        return;
+      }
+
+      var readyKeys = readableSelector.selectedKeys();
+      var keyIterator = readyKeys.iterator();
+
+      while (keyIterator.hasNext()) {
+        SelectionKey selectionKey = keyIterator.next();
+        // once a key is proceeded, it should be removed from the process to prevent
+        // duplicating manipulation
+        keyIterator.remove();
+
+        if (selectionKey.isValid()) {
+          var selectableChannel = selectionKey.channel();
+          var datagramChannel = (DatagramChannel) selectableChannel;
+          readUpdData(datagramChannel, selectionKey, readerBuffer);
+        }
+      }
+    } catch (ClosedSelectorException exception1) {
+      if (isErrorEnabled()) {
+        error(exception1, "Selector is closed: ", exception1.getMessage());
+      }
+    } catch (CancelledKeyException exception2) {
+      if (isErrorEnabled()) {
+        error(exception2, "Cancelled key: ", exception2.getMessage());
+      }
+    } catch (IOException exception3) {
+      if (isErrorEnabled()) {
+        error(exception3, "I/O reading/selection error: ", exception3.getMessage());
+      }
+    } catch (Exception exception4) {
+      if (isErrorEnabled()) {
+        error(exception4, "Generic reading/selection error: ", exception4.getMessage());
+      }
+    }
+  }
+
+  private DatagramChannel openDatagramChannel(String serverAddress, int port)
+      throws ServiceRuntimeException {
+    try {
+      var datagramChannel = DatagramChannel.open();
+      datagramChannel.configureBlocking(false);
+      if (OsUtility.getOperatingSystemType() == OsUtility.OsType.WINDOWS) {
+        datagramChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+      } else {
+        datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
+      }
+      datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
+      datagramChannel.bind(new InetSocketAddress(serverAddress, port));
+      // udp datagram is a connectionless protocol, we don't need to create
+      // bi-direction connection, that why it's not necessary to register it to
+      // acceptable selector. Just leave it to the reader selector later
+      if (isInfoEnabled()) {
+        info("UDP CHANNEL", buildgen("Opened at address: ", serverAddress, ", port: ",
+            port));
+      }
+      return datagramChannel;
+    } catch (IOException exception) {
+      throw new ServiceRuntimeException(exception.getMessage());
+    }
+  }
+
+  private void readUpdData(DatagramChannel datagramChannel, SelectionKey selectionKey,
+                           ByteBuffer readerBuffer) {
+    Session session = null;
+
+    if (selectionKey.isValid() && selectionKey.isReadable()) {
+      // prepares the buffer first
+      readerBuffer.clear();
+      // reads data from socket and write them to buffer
+      SocketAddress remoteAddress;
+      try {
+        remoteAddress = datagramChannel.receive(readerBuffer);
+      } catch (IOException exception) {
+        if (isErrorEnabled()) {
+          error(exception, "An exception was occurred on channel: ", datagramChannel.toString());
+        }
+        datagramIoHandler.channelException(datagramChannel, exception);
+        return;
+      }
+
+      if (remoteAddress == null) {
+        var addressNotFoundException =
+            new RuntimeException("Remove address for the datagram channel");
+        if (isErrorEnabled()) {
+          error(addressNotFoundException, "An exception was occurred on channel: ",
+              datagramChannel.toString());
+        }
+        datagramIoHandler.channelException(datagramChannel, addressNotFoundException);
+        return;
+      }
+
+      int byteCount = readerBuffer.position();
+
+      // update statistic data
+      networkReaderStatistic.updateReadBytes(byteCount);
+      // ready to read data from buffer
+      readerBuffer.flip();
+      // reads data from buffer and transfers them to the next process
+      byte[] binary = new byte[readerBuffer.limit()];
+      readerBuffer.get(binary);
+
+      // convert binary to dataCollection object
+      var dataCollection = DataUtility.binaryToCollection(dataType, binary);
+
+      // retrieves session by its datagram channel, hence we are using only one
+      // datagram channel for all sessions, we use incoming request convey ID to
+      // distinguish them
+      var udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
+      DataCollection message = null;
+      if (dataCollection instanceof ZeroMap zeroMap) {
+        if (zeroMap.containsKey(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID)) {
+          udpConvey = zeroMap.getInteger(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID);
+        }
+        if (zeroMap.containsKey(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA)) {
+          message = zeroMap.getDataCollection(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA);
+        }
+      } else if (dataCollection instanceof MsgPackMap msgPackMap) {
+        if (msgPackMap.contains(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID)) {
+          udpConvey = msgPackMap.getInteger(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID);
+        }
+        if (msgPackMap.containsKey(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA)) {
+          message = msgPackMap.getMsgPackMap(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA);
+        }
+      }
+
+      session = sessionManager.getSessionByDatagram(udpConvey);
+
+      if (session == null) {
+        datagramIoHandler.channelRead(datagramChannel, remoteAddress, message);
+      } else {
+        if (session.isActivated()) {
+          session.setDatagramRemoteSocketAddress(remoteAddress);
+          session.addReadBytes(byteCount);
+          datagramIoHandler.sessionRead(session, message);
+        } else {
+          if (isDebugEnabled()) {
+            debug("READ UDP CHANNEL", "Session is inactivated: ", session.toString());
+          }
+        }
+      }
+    }
+
+    if (selectionKey.isValid() && selectionKey.isWritable() && session != null) {
+      // should continue put this session for sending all left packets first
+      zeroWriterListener.continueWriteInterestOp(session);
+      // now we should set it back to interest in OP_READ
+      selectionKey.interestOps(SelectionKey.OP_READ);
+    }
+  }
+
+  /**
+   * Wakeup the reader selector.
+   */
+  private void wakeup() {
+    readableSelector.wakeup();
+  }
+}

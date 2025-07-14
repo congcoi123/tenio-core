@@ -24,23 +24,14 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.reader;
 
-import com.tenio.common.data.DataCollection;
-import com.tenio.common.data.DataType;
-import com.tenio.common.data.DataUtility;
-import com.tenio.common.data.msgpack.element.MsgPackMap;
-import com.tenio.common.data.zero.ZeroMap;
 import com.tenio.common.logger.SystemLogger;
-import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
-import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.zero.engine.acceptor.AcceptorHandler;
 import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
-import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedSelectorException;
@@ -55,14 +46,14 @@ import java.util.function.Consumer;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
- * Handles read/write events on client and datagram channels using a {@link Selector}.
+ * Handles read/write events on socket channels using a {@link Selector}.
  *
  * <p>This class is part of the NIO event-driven loop that processes IO on
- * accepted TCP connections and bound UDP datagram channels.
+ * accepted TCP connections.
  *
  * <p>Responsibilities:
  * <ul>
- *   <li>Register socket and datagram channels for read/write events</li>
+ *   <li>Register socket channels for read/write events</li>
  *   <li>Dispatch readable/writable keys to appropriate handlers</li>
  *   <li>Manage selection loop and wakeup mechanisms</li>
  *   <li>Notify {@link SocketIoHandler} for channel lifecycle events</li>
@@ -76,54 +67,39 @@ import org.apache.commons.lang3.tuple.Pair;
  * @since 0.6.5
  */
 
-public final class ReaderHandler extends SystemLogger {
+public final class SocketReaderHandler extends SystemLogger {
 
-  private final DataType dataType;
   private final Selector readableSelector;
   private final ByteBuffer readerBuffer;
-  private final Queue<Pair<SelectableChannel, Consumer<SelectionKey>>> pendingChannels;
+  private final Queue<Pair<SelectableChannel, Consumer<SelectionKey>>> pendingClientChannels;
   private final ZeroWriterListener zeroWriterListener;
   private final SessionManager sessionManager;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final SocketIoHandler socketIoHandler;
-  private final DatagramIoHandler datagramIoHandler;
 
   /**
    * Constructor.
    *
-   * @param dataType               the {@link DataType}
    * @param readerBuffer           instance of {@link ByteBuffer}
    * @param zeroWriterListener     instance of {@link ZeroWriterListener}
    * @param sessionManager         instance of {@link SessionManager}
    * @param networkReaderStatistic instance of {@link NetworkReaderStatistic}
    * @param socketIoHandler        instance of {@link SocketIoHandler}
-   * @param datagramIoHandler      instance of {@link DatagramIoHandler}
    * @throws IOException whenever any IO exception thrown
    */
-  public ReaderHandler(DataType dataType,
-                       ByteBuffer readerBuffer,
-                       ZeroWriterListener zeroWriterListener,
-                       SessionManager sessionManager,
-                       NetworkReaderStatistic networkReaderStatistic,
-                       SocketIoHandler socketIoHandler,
-                       DatagramIoHandler datagramIoHandler) throws IOException {
-    this.dataType = dataType;
+  public SocketReaderHandler(ByteBuffer readerBuffer,
+                             ZeroWriterListener zeroWriterListener,
+                             SessionManager sessionManager,
+                             NetworkReaderStatistic networkReaderStatistic,
+                             SocketIoHandler socketIoHandler) throws IOException {
     this.readerBuffer = readerBuffer;
     this.zeroWriterListener = zeroWriterListener;
     this.sessionManager = sessionManager;
     this.networkReaderStatistic = networkReaderStatistic;
     this.socketIoHandler = socketIoHandler;
-    this.datagramIoHandler = datagramIoHandler;
 
     readableSelector = Selector.open();
-    pendingChannels = new ConcurrentLinkedQueue<>();
-  }
-
-  /**
-   * Wakeup the reader selector.
-   */
-  private void wakeup() {
-    readableSelector.wakeup();
+    pendingClientChannels = new ConcurrentLinkedQueue<>();
   }
 
   /**
@@ -132,18 +108,9 @@ public final class ReaderHandler extends SystemLogger {
    * @param channel         {@link SocketChannel} a client channel
    * @param onKeyRegistered when its {@link SelectionKey} is ready
    */
-  public void registerClientSocketChannel(SocketChannel channel, Consumer<SelectionKey> onKeyRegistered) {
-    pendingChannels.add(Pair.of(channel, onKeyRegistered));
-    wakeup();
-  }
-
-  /**
-   * Registers a client socket to the reader selector.
-   *
-   * @param channel {@link DatagramChannel} a client channel
-   */
-  public void registerDatagramChannel(DatagramChannel channel) {
-    pendingChannels.add(Pair.of(channel, null));
+  public void registerClientSocketChannel(SocketChannel channel,
+                                          Consumer<SelectionKey> onKeyRegistered) {
+    pendingClientChannels.offer(Pair.of(channel, onKeyRegistered));
     wakeup();
   }
 
@@ -163,21 +130,17 @@ public final class ReaderHandler extends SystemLogger {
   public void running() {
     try {
       // register channels to selector
-      if (!pendingChannels.isEmpty()) {
+      if (!pendingClientChannels.isEmpty()) {
         // readable selector was registered by OP_READ interested only socket channels,
         // but in some cases, we can receive "can writable" signal from those sockets
         Pair<SelectableChannel, Consumer<SelectionKey>> callbackableChannel;
-        while ((callbackableChannel = pendingChannels.poll()) != null) {
+        while ((callbackableChannel = pendingClientChannels.poll()) != null) {
           SelectableChannel channel = callbackableChannel.getKey();
           Consumer<SelectionKey> callback = callbackableChannel.getValue();
-
-          if (channel instanceof SocketChannel socketChannel) {
-            SelectionKey selectionKey = socketChannel.register(readableSelector,
-                SelectionKey.OP_READ);
-            callback.accept(selectionKey);
-          } else if (channel instanceof DatagramChannel datagramChannel) {
-            datagramChannel.register(readableSelector, SelectionKey.OP_READ);
-          }
+          var socketChannel = (SocketChannel) channel;
+          SelectionKey selectionKey =
+              socketChannel.register(readableSelector, SelectionKey.OP_READ);
+          callback.accept(selectionKey);
         }
       }
 
@@ -199,13 +162,8 @@ public final class ReaderHandler extends SystemLogger {
 
         if (selectionKey.isValid()) {
           var selectableChannel = selectionKey.channel();
-          // we already registered 2 types of channels for this selector and need to
-          // separate the processes
-          if (selectableChannel instanceof SocketChannel socketChannel) {
-            readTcpData(socketChannel, selectionKey, readerBuffer);
-          } else if (selectableChannel instanceof DatagramChannel datagramChannel) {
-            readUpdData(datagramChannel, selectionKey, readerBuffer);
-          }
+          var socketChannel = (SocketChannel) selectableChannel;
+          readTcpData(socketChannel, selectionKey, readerBuffer);
         }
       }
     } catch (ClosedSelectorException exception1) {
@@ -292,92 +250,10 @@ public final class ReaderHandler extends SystemLogger {
     }
   }
 
-  private void readUpdData(DatagramChannel datagramChannel, SelectionKey selectionKey,
-                           ByteBuffer readerBuffer) {
-    Session session = null;
-
-    if (selectionKey.isValid() && selectionKey.isReadable()) {
-      // prepares the buffer first
-      readerBuffer.clear();
-      // reads data from socket and write them to buffer
-      SocketAddress remoteAddress;
-      try {
-        remoteAddress = datagramChannel.receive(readerBuffer);
-      } catch (IOException exception) {
-        if (isErrorEnabled()) {
-          error(exception, "An exception was occurred on channel: ", datagramChannel.toString());
-        }
-        datagramIoHandler.channelException(datagramChannel, exception);
-        return;
-      }
-
-      if (remoteAddress == null) {
-        var addressNotFoundException =
-            new RuntimeException("Remove address for the datagram channel");
-        if (isErrorEnabled()) {
-          error(addressNotFoundException, "An exception was occurred on channel: ",
-              datagramChannel.toString());
-        }
-        datagramIoHandler.channelException(datagramChannel, addressNotFoundException);
-        return;
-      }
-
-      int byteCount = readerBuffer.position();
-
-      // update statistic data
-      networkReaderStatistic.updateReadBytes(byteCount);
-      // ready to read data from buffer
-      readerBuffer.flip();
-      // reads data from buffer and transfers them to the next process
-      byte[] binary = new byte[readerBuffer.limit()];
-      readerBuffer.get(binary);
-
-      // convert binary to dataCollection object
-      var dataCollection = DataUtility.binaryToCollection(dataType, binary);
-
-      // retrieves session by its datagram channel, hence we are using only one
-      // datagram channel for all sessions, we use incoming request convey ID to
-      // distinguish them
-      var udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
-      DataCollection message = null;
-      if (dataCollection instanceof ZeroMap zeroMap) {
-        if (zeroMap.containsKey(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID)) {
-          udpConvey = zeroMap.getInteger(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID);
-        }
-        if (zeroMap.containsKey(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA)) {
-          message = zeroMap.getDataCollection(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA);
-        }
-      } else if (dataCollection instanceof MsgPackMap msgPackMap) {
-        if (msgPackMap.contains(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID)) {
-          udpConvey = msgPackMap.getInteger(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID);
-        }
-        if (msgPackMap.containsKey(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA)) {
-          message = msgPackMap.getMsgPackMap(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA);
-        }
-      }
-
-      session = sessionManager.getSessionByDatagram(udpConvey);
-
-      if (session == null) {
-        datagramIoHandler.channelRead(datagramChannel, remoteAddress, message);
-      } else {
-        if (session.isActivated()) {
-          session.setDatagramRemoteSocketAddress(remoteAddress);
-          session.addReadBytes(byteCount);
-          datagramIoHandler.sessionRead(session, message);
-        } else {
-          if (isDebugEnabled()) {
-            debug("READ UDP CHANNEL", "Session is inactivated: ", session.toString());
-          }
-        }
-      }
-    }
-
-    if (selectionKey.isValid() && selectionKey.isWritable() && session != null) {
-      // should continue put this session for sending all left packets first
-      zeroWriterListener.continueWriteInterestOp(session);
-      // now we should set it back to interest in OP_READ
-      selectionKey.interestOps(SelectionKey.OP_READ);
-    }
+  /**
+   * Wakeup the reader selector.
+   */
+  private void wakeup() {
+    readableSelector.wakeup();
   }
 }
