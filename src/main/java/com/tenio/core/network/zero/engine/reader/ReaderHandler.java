@@ -31,6 +31,7 @@ import com.tenio.common.data.msgpack.element.MsgPackMap;
 import com.tenio.common.data.zero.ZeroMap;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.configuration.constant.CoreConstant;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
@@ -259,28 +260,24 @@ public final class ReaderHandler extends SystemLogger {
       // prepares the buffer first
       readerBuffer.clear();
       // reads data from socket and write them to buffer
-      int byteCount = -1;
+      int byteCount = 0;
       try {
-        // this isConnected() method can only work if the server side decides to close the socket
-        // there is no way to know if the connection is closed on the client side
-        if (socketChannel.isOpen() && socketChannel.isConnected()) {
-          byteCount = socketChannel.read(readerBuffer);
+        // this isOpen() && isConnected() method can only work if the server side decides to close
+        // the socket. There is no way to know if the connection is closed on the client side
+        byteCount = socketChannel.read(readerBuffer);
+        if (byteCount == -1) {
+          // no left data is available, should close the connection
+          socketIoHandler.channelInactive(socketChannel, selectionKey,
+              ConnectionDisconnectMode.LOST_IN_READ);
+          return;
         }
       } catch (IOException exception) {
-        // so I guess we can ignore this kind of exception or wait until we have proper solutions
-        // this checking may not work with other languages (e.g: japanese)
-        if (!exception.getMessage().contains("Connection reset")) {
-          if (isErrorEnabled()) {
-            error(exception, "An exception was occurred on channel: ", socketChannel.toString());
-          }
-          socketIoHandler.sessionException(session, exception);
+        if (isErrorEnabled()) {
+          error(exception, "An exception was occurred on channel: ", socketChannel.toString());
         }
+        socketIoHandler.sessionException(session, exception);
       }
-      // no left data is available, should close the connection
-      if (byteCount == -1) {
-        debug("CLOSE TCP CHANNEL", "Channel is going to be closed due to issue while reading data");
-        closeTcpConnection(socketChannel);
-      } else if (byteCount > 0) {
+      if (byteCount > 0) {
         // update statistic data
         session.addReadBytes(byteCount);
         networkReaderStatistic.updateReadBytes(byteCount);
@@ -291,22 +288,6 @@ public final class ReaderHandler extends SystemLogger {
         readerBuffer.get(binary);
 
         socketIoHandler.sessionRead(session, binary);
-      }
-    }
-  }
-
-  private void closeTcpConnection(SelectableChannel channel) {
-    var socketChannel = (SocketChannel) channel;
-    socketIoHandler.channelInactive(socketChannel);
-    if (!socketChannel.socket().isClosed()) {
-      try {
-        socketChannel.socket().shutdownInput();
-        socketChannel.socket().shutdownOutput();
-        socketChannel.close();
-      } catch (IOException exception) {
-        if (isErrorEnabled()) {
-          error(exception, "Error on closing socket channel: ", socketChannel.toString());
-        }
       }
     }
   }

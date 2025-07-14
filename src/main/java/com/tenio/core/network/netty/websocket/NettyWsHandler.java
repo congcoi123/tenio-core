@@ -36,6 +36,7 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.utility.SocketUtility;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
@@ -87,17 +88,19 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelInactive(ChannelHandlerContext ctx) {
     var session = sessionManager.getSessionByWebSocket(ctx.channel());
-    if (session == null) {
-      return;
-    }
-
-    try {
-      session.close(ConnectionDisconnectMode.LOST, PlayerDisconnectMode.CONNECTION_LOST);
-    } catch (IOException exception) {
-      if (logger.isErrorEnabled()) {
-        logger.error(exception, "Session: ", session.toString());
+    // if the socket is handled by its session, let the session processes
+    if (session != null && session.isActivated()) {
+      try {
+        session.close(ConnectionDisconnectMode.LOST_IN_READ, PlayerDisconnectMode.CONNECTION_LOST);
+      } catch (IOException exception) {
+        if (logger.isErrorEnabled()) {
+          logger.error(exception, "Session: ", session.toString());
+        }
+        eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
       }
-      eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
+    } else {
+      // let the socket be closed
+      SocketUtility.closeSocket(ctx.channel());
     }
   }
 

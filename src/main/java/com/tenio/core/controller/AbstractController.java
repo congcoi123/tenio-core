@@ -29,11 +29,11 @@ import com.tenio.common.utility.StringUtility;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RequestQueueFullException;
 import com.tenio.core.manager.AbstractManager;
-import com.tenio.core.manager.BlockingQueueManager;
+import com.tenio.core.manager.ConcurrentQueueManager;
 import com.tenio.core.network.entity.protocol.Request;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -75,15 +75,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class AbstractController extends AbstractManager implements Controller, Runnable {
 
-  private static final int DEFAULT_MAX_QUEUE_SIZE = 50;
-  private static final int DEFAULT_NUMBER_WORKERS = 5;
-
   private final AtomicInteger id;
   private final AtomicBoolean stopping;
   private String name;
   private ExecutorService executorService;
   private int executorSize;
-  private BlockingQueueManager<Request> requestManager;
+  private ConcurrentQueueManager<Request> requestManager;
   private int maxQueueSize;
   private volatile boolean initialized;
   private volatile boolean activated;
@@ -97,17 +94,17 @@ public abstract class AbstractController extends AbstractManager implements Cont
     super(eventManager);
     id = new AtomicInteger(0);
     stopping = new AtomicBoolean(false);
-    maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
     executorSize = DEFAULT_NUMBER_WORKERS;
   }
 
   private void initializeWorkers() {
     if (isEnabledPriority()) {
-      requestManager = new BlockingQueueManager<>(getThreadPoolSize(),
-          () -> new PriorityBlockingQueue<>(maxQueueSize, RequestComparator.newInstance()));
+      requestManager = new ConcurrentQueueManager<>(getThreadPoolSize(),
+          () -> new PriorityBlockingQueue<>(DEFAULT_INITIAL_QUEUE_SIZE,
+              RequestComparator.newInstance()));
     } else {
-      requestManager = new BlockingQueueManager<>(getThreadPoolSize(),
-          () -> new LinkedBlockingQueue<>(maxQueueSize));
+      requestManager =
+          new ConcurrentQueueManager<>(getThreadPoolSize(), ConcurrentLinkedQueue::new);
     }
 
     var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
@@ -161,8 +158,10 @@ public abstract class AbstractController extends AbstractManager implements Cont
     while (!Thread.currentThread().isInterrupted()) {
       if (activated) {
         try {
-          var request = requestManager.getQueueByIndex(index).take();
-          processRequest(request);
+          Request request;
+          while ((request = requestManager.getQueueByIndex(index).poll()) != null) {
+            processRequest(request);
+          }
         } catch (Throwable cause) {
           if (isErrorEnabled()) {
             error(cause);
@@ -248,14 +247,14 @@ public abstract class AbstractController extends AbstractManager implements Cont
   @Override
   public void enqueueRequest(Request request) {
     var requestQueue = requestManager.getQueueByElementId(request.getId());
-    if (requestQueue.size() >= maxQueueSize) {
+    if (maxQueueSize > 0 && requestQueue.size() >= maxQueueSize) {
       var exception = new RequestQueueFullException(requestQueue.size());
       if (isErrorEnabled()) {
         error(exception, exception.getMessage());
       }
       throw exception;
     }
-    requestManager.getQueueByElementId(request.getId()).add(request);
+    requestManager.getQueueByElementId(request.getId()).offer(request);
   }
 
   @Override
@@ -265,9 +264,6 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   @Override
   public void setMaxRequestQueueSize(int maxSize) {
-    if (maxSize < 1) {
-      throw new IllegalArgumentException("Max queue size must be greater than 0");
-    }
     maxQueueSize = maxSize;
   }
 

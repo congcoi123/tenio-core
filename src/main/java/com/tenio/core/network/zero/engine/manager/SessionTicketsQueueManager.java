@@ -24,15 +24,15 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.manager;
 
-import com.tenio.core.manager.BlockingQueueManager;
+import com.tenio.core.manager.ConcurrentQueueManager;
 import com.tenio.core.network.entity.session.Session;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Manages a collection of ticket queues for sessions, partitioned by session ID.
  *
- * <p>This manager creates a fixed number of {@link BlockingQueue}s (based on the provided
+ * <p>This manager creates a fixed number of {@link Queue}s (based on the provided
  * {@code cacheSize}), and maps each {@link Session} to a specific queue using a hashing
  * mechanism based on {@code session.getId()}. This is useful for distributing session
  * processing work across multiple queues to reduce contention and improve scalability.</p>
@@ -40,12 +40,12 @@ import java.util.concurrent.LinkedBlockingQueue;
  * <p>Use this when you want to decouple session processing into separate threads or workers
  * that pull sessions from specific queues.</p>
  *
- * <p>Thread-safe: The use of {@link LinkedBlockingQueue} ensures thread-safe access
+ * <p>Thread-safe: The use of {@link ConcurrentLinkedQueue} ensures thread-safe access
  * to each individual queue.</p>
  *
  * @since 0.6.6
  */
-public final class SessionTicketsQueueManager extends BlockingQueueManager<Session> {
+public final class SessionTicketsQueueManager extends ConcurrentQueueManager<Session> {
 
   /**
    * Constructs a {@code SessionTicketsQueueManager} with the specified number of queues.
@@ -54,6 +54,6 @@ public final class SessionTicketsQueueManager extends BlockingQueueManager<Sessi
    * @throws IllegalArgumentException if {@code cacheSize} is less than or equal to 0
    */
   public SessionTicketsQueueManager(int cacheSize) {
-    super(cacheSize, LinkedBlockingQueue::new);
+    super(cacheSize, ConcurrentLinkedQueue::new);
   }
 }

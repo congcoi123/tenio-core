@@ -151,7 +151,9 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
       var session = iterator.next();
       if (packet.isMarkedAsLast()) {
         try {
-          session.close(ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
+          if (session.isActivated()) {
+            session.close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+          }
         } catch (IOException exception) {
           if (isErrorEnabled()) {
             error(exception, session.toString());

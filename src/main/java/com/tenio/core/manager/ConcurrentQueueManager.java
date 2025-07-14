@@ -26,20 +26,20 @@ package com.tenio.core.manager;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
 /**
  * A generic manager for distributing elements across a fixed number of
- * {@link BlockingQueue}s based on a long identifier (e.g., an entity or session ID).
+ * {@link Queue}s based on a long identifier (e.g., an entity or session ID).
  *
  * <p>This class is useful for load balancing or concurrent processing where
  * items (of type {@code T}) are grouped by an ID and each group is assigned
  * to a queue deterministically using {@code id % cacheSize}.</p>
  *
- * <p>Thread-safe: Uses {@link LinkedBlockingQueue}s, which are thread-safe
- * and suitable for producer-consumer scenarios.</p>
+ * <p>Thread-safe: Uses {@link ConcurrentLinkedQueue}s, which are thread-safe
+ * and suitable for high throughput scenarios.</p>
  *
  * <p>Typical use cases include event dispatching, game entity updates,
  * session handling, or message routing across multiple worker threads.</p>
@@ -47,12 +47,12 @@ import java.util.function.Supplier;
  * @param <T> the type of elements stored in the queues
  * @since 0.6.6
  */
-public class BlockingQueueManager<T> implements Manager {
+public class ConcurrentQueueManager<T> implements Manager {
 
   /**
    * List of internal queues, each holding elements of type {@code T}.
    */
-  private final List<BlockingQueue<T>> queues;
+  private final List<Queue<T>> queues;
   /**
    * Total number of queues created.
    */
@@ -62,10 +62,10 @@ public class BlockingQueueManager<T> implements Manager {
    * Constructs a manager with custom queue instances using a supplier (factory).
    *
    * @param cacheSize     the number of queues to manage
-   * @param queueSupplier a supplier (factory) to create instances of {@link BlockingQueue}
+   * @param queueSupplier a supplier (factory) to create instances of {@link Queue}
    * @throws IllegalArgumentException if {@code cacheSize <= 0}
    */
-  public BlockingQueueManager(int cacheSize, Supplier<BlockingQueue<T>> queueSupplier) {
+  public ConcurrentQueueManager(int cacheSize, Supplier<Queue<T>> queueSupplier) {
     if (cacheSize <= 0) {
       throw new IllegalArgumentException("cacheSize must be greater than 0");
     }
@@ -83,9 +83,9 @@ public class BlockingQueueManager<T> implements Manager {
    * that the same ID always maps to the same queue. Useful for partitioned processing.</p>
    *
    * @param elementId the identifier used to determine which queue to return
-   * @return the {@link BlockingQueue} assigned to the given {@code elementId}
+   * @return the {@link Queue} assigned to the given {@code elementId}
    */
-  public BlockingQueue<T> getQueueByElementId(long elementId) {
+  public Queue<T> getQueueByElementId(long elementId) {
     int index = Math.floorMod(elementId, cacheSize);
     return queues.get(index);
   }
@@ -94,9 +94,9 @@ public class BlockingQueueManager<T> implements Manager {
    * Retrieves the queue associated with the given index.
    *
    * @param index the identifier used to determine which queue to return
-   * @return the {@link BlockingQueue} assigned to the given {@code index}
+   * @return the {@link Queue} assigned to the given {@code index}
    */
-  public BlockingQueue<T> getQueueByIndex(int index) {
+  public Queue<T> getQueueByIndex(int index) {
     return queues.get(index);
   }
 

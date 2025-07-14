@@ -230,7 +230,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
         if (!keepPlayerOnDisconnection) {
           // player should leave room (if applicable) first
           if (player.isInRoom()) {
-            serverApi.leaveRoom(player, PlayerLeaveRoomMode.DEFAULT);
+            serverApi.leaveRoom(player, PlayerLeaveRoomMode.RECONNECTION);
           }
         }
 
@@ -254,7 +254,9 @@ public final class InternalProcessorServiceImpl extends AbstractController
       eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
           ConnectionEstablishedResult.REACHED_MAX_CONNECTION);
       try {
-        session.close(ConnectionDisconnectMode.REACHED_MAX_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
+        if (session.isActivated()) {
+          session.close(ConnectionDisconnectMode.REACHED_MAX_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
+        }
       } catch (IOException exception) {
         if (isErrorEnabled()) {
           error(exception, "Session closed with error: ", session.toString());
@@ -267,7 +269,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
   }
 
   private void processSessionWillBeClosed(Session session,
-                                                       PlayerDisconnectMode playerDisconnectMode) {
+                                          PlayerDisconnectMode playerDisconnectMode) {
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByIdentity(session.getName());
       // the player maybe existed
@@ -276,7 +278,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
         serverApi.unsubscribeFromAllChannels(player);
         // player should leave room (if applicable) first
         if (player.isInRoom()) {
-          serverApi.leaveRoom(player, PlayerLeaveRoomMode.DEFAULT);
+          serverApi.leaveRoom(player, PlayerLeaveRoomMode.SESSION_CLOSED);
         }
         eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
         player.setSession(null);

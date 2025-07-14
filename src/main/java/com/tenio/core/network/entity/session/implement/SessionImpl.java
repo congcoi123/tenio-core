@@ -33,6 +33,7 @@ import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
+import com.tenio.core.network.utility.SocketUtility;
 import com.tenio.core.network.zero.codec.packet.PacketReadState;
 import com.tenio.core.network.zero.codec.packet.PendingPacket;
 import com.tenio.core.network.zero.codec.packet.ProcessedPacket;
@@ -488,22 +489,11 @@ public final class SessionImpl implements Session {
 
     switch (transportType) {
       case TCP:
-        if (socketChannel != null) {
-          var socket = socketChannel.socket();
-          // Do we need to check connection status?
-          if (socket != null && !socket.isClosed()) {
-            socket.shutdownInput();
-            socket.shutdownOutput();
-            socket.close();
-            socketChannel.close();
-          }
-        }
+        SocketUtility.closeSocket(socketChannel, selectionKey);
         break;
 
       case WEB_SOCKET:
-        if (webSocketChannel != null) {
-          webSocketChannel.close();
-        }
+        SocketUtility.closeSocket(webSocketChannel);
         break;
 
       default:

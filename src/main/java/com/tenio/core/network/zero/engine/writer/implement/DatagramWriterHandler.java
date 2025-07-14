@@ -116,7 +116,7 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
     // if the packet queue still contains more packets, session is activated, then put the
     // session back to the tickets queue
     if (session.isActivated() && !packetQueue.isEmpty()) {
-      getSessionTicketsQueue(session.getId()).add(session);
+      getSessionTicketsQueue(session.getId()).offer(session);
     }
   }
 }

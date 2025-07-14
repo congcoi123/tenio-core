@@ -97,7 +97,9 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
       }
       // in this case, just disconnect the session, it's no longer help writing data
       try {
-        session.close(ConnectionDisconnectMode.LOST_IN_WRITTEN, PlayerDisconnectMode.CONNECTION_LOST);
+        if (session.isActivated()) {
+          session.close(ConnectionDisconnectMode.LOST_IN_WRITTEN, PlayerDisconnectMode.CONNECTION_LOST);
+        }
       } catch (IOException exception1) {
         if (isErrorEnabled()) {
           error(exception1, "Error occurred in writing on session: ", session.toString());
@@ -134,7 +136,9 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
       if (packet.isMarkedAsLast()) {
         packetQueue.clear();
         try {
-          session.close(ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
+          if (session.isActivated()) {
+            session.close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+          }
         } catch (IOException exception) {
           error(exception, "Error occurred in writing on session: ", session.toString());
         }
@@ -145,7 +149,7 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
       // is alive, then put the session back to the tickets queue
       if (session.isActivated() && channel.isOpen() && channel.isConnected() &&
           !packetQueue.isEmpty()) {
-        getSessionTicketsQueue(session.getId()).add(session);
+        getSessionTicketsQueue(session.getId()).offer(session);
       }
     }
 

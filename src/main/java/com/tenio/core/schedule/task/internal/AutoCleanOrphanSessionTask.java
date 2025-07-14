@@ -87,7 +87,7 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
                         "Session ", session.getId(),
                         " is going to be forced to remove by the cleaning task");
                   }
-                  session.close(ConnectionDisconnectMode.ORPHAN, PlayerDisconnectMode.DEFAULT);
+                  session.close(ConnectionDisconnectMode.ORPHAN, PlayerDisconnectMode.CONNECTION_LOST);
                 } catch (IOException exception) {
                   if (isErrorEnabled()) {
                     error(exception, session.toString());

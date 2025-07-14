@@ -79,7 +79,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     sessionByDatagrams = new HashMap<>();
     sessionByKcps = new HashMap<>();
     readonlySessionsList = new ArrayList<>();
-    packetQueueSize = DEFAULT_PACKET_QUEUE_SIZE;
+    packetQueueSize = DEFAULT_MAX_PACKET_QUEUE_SIZE;
   }
 
   /**

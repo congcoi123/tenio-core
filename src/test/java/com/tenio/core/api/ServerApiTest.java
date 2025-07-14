@@ -185,7 +185,7 @@ class ServerApiTest {
   @Test
   @DisplayName("When it tries to logout a null player, it should not do any further action")
   void itLogoutNullPlayerShouldDoNothingFurther() {
-    serverApi.logout(null, ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
+    serverApi.logout(null, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
     Mockito.verifyNoMoreInteractions(eventManager, playerManager);
   }
 
@@ -199,9 +199,9 @@ class ServerApiTest {
     var player = Mockito.mock(Player.class);
     var room = Mockito.mock(Room.class);
     room.addPlayer(player);
-    serverApi.logout(player, ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
+    serverApi.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
     Mockito.verify(eventManager, Mockito.times(1))
-        .emit(ServerEvent.DISCONNECT_PLAYER, player, PlayerDisconnectMode.DEFAULT);
+        .emit(ServerEvent.DISCONNECT_PLAYER, player, PlayerDisconnectMode.CLIENT_REQUEST);
   }
 
   @Test
@@ -215,9 +215,9 @@ class ServerApiTest {
     var player = Mockito.mock(Player.class);
     var room = Mockito.mock(Room.class);
     room.addPlayer(player);
-    serverApi.logout(player, ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
+    serverApi.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
     Mockito.verify(eventManager, Mockito.times(1))
-        .emit(ServerEvent.DISCONNECT_PLAYER, player, PlayerDisconnectMode.DEFAULT);
+        .emit(ServerEvent.DISCONNECT_PLAYER, player, PlayerDisconnectMode.CLIENT_REQUEST);
   }
 
   @Test
@@ -227,7 +227,7 @@ class ServerApiTest {
     var session = Mockito.mock(Session.class);
     Mockito.when(player.getSession()).thenReturn(Optional.of(session));
     Mockito.when(player.containsSession()).thenReturn(true);
-    serverApi.logout(player, ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
+    serverApi.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
   }
 
   @Test
@@ -238,7 +238,7 @@ class ServerApiTest {
     var session = Mockito.mock(Session.class);
     Mockito.when(player.getSession()).thenReturn(Optional.of(session));
     Mockito.when(player.containsSession()).thenReturn(true);
-    serverApi.logout(player, ConnectionDisconnectMode.DEFAULT, PlayerDisconnectMode.DEFAULT);
+    serverApi.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
   }
 
   @Test

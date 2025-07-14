@@ -26,6 +26,7 @@ package com.tenio.core.network.zero.engine.acceptor;
 
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.common.utility.OsUtility;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.exception.RefusedConnectionAddressException;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.network.configuration.SocketConfiguration;
@@ -153,9 +154,6 @@ public final class AcceptorHandler extends SystemLogger {
             connectionFilter.validateAndAddAddress(inetAddress.getHostAddress());
             socketChannel.configureBlocking(false);
             socketChannel.socket().setTcpNoDelay(true);
-            if (isDebugEnabled()) {
-              debug("ACCEPTABLE CHANNEL", buildgen(socketChannel.getRemoteAddress()));
-            }
             zeroReaderListener.acceptClientSocketChannel(socketChannel,
                 selectionKey -> {
                   socketIoHandler.channelActive(socketChannel, selectionKey);
@@ -169,30 +167,20 @@ public final class AcceptorHandler extends SystemLogger {
               error(exception1, "Refused connection with address: ", exception1.getMessage());
             }
             socketIoHandler.channelException(socketChannel, exception1);
-
-            try {
-              socketIoHandler.channelInactive(socketChannel);
-              socketChannel.socket().shutdownInput();
-              socketChannel.socket().shutdownOutput();
-              socketChannel.close();
-            } catch (IOException exception2) {
-              if (isErrorEnabled()) {
-                error(exception2,
-                    "Additional problem with refused connection. "
-                    , "Was not able to shut down the channel: ",
-                    exception2.getMessage());
-              }
-              socketIoHandler.channelException(socketChannel, exception2);
-            }
-          } catch (IOException exception3) {
+            var selectionKey = socketChannel.keyFor(acceptableSelector);
+            socketIoHandler.channelInactive(socketChannel,
+                selectionKey, ConnectionDisconnectMode.REFUSED_CONNECTION);
+          } catch (IOException exception2) {
             if (isErrorEnabled()) {
               var logger = buildgen("Failed accepting connection: ");
               if (socketChannel.socket() != null) {
                 logger.append(socketChannel.socket().getInetAddress().getHostAddress());
               }
-              error(exception3, logger);
+              error(exception2, logger);
             }
-            socketIoHandler.channelException(socketChannel, exception3);
+            socketIoHandler.channelException(socketChannel, exception2);
+            var selectionKey = socketChannel.keyFor(acceptableSelector);
+            socketIoHandler.channelInactive(socketChannel, selectionKey, ConnectionDisconnectMode.UNKNOWN);
           }
         }
       }
@@ -206,21 +194,9 @@ public final class AcceptorHandler extends SystemLogger {
 
       while (socketIterator.hasNext()) {
         var socketChannel = socketIterator.next();
+        var selectionKey = socketChannel.keyFor(acceptableSelector);
         socketIterator.remove();
-
-        try {
-          socketIoHandler.channelInactive(socketChannel);
-          if (!socketChannel.socket().isClosed()) {
-            socketChannel.socket().shutdownInput();
-            socketChannel.socket().shutdownOutput();
-            socketChannel.close();
-          }
-        } catch (IOException exception) {
-          if (isErrorEnabled()) {
-            error(exception);
-          }
-          socketIoHandler.channelException(socketChannel, exception);
-        }
+        socketIoHandler.channelInactive(socketChannel, selectionKey, ConnectionDisconnectMode.SERVER_DOWN);
       }
     }
   }

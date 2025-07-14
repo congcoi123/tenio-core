@@ -30,6 +30,7 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.engine.manager.SessionTicketsQueueManager;
 import java.nio.ByteBuffer;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 
 /**
@@ -67,14 +68,14 @@ public interface WriterHandler {
   void send(PacketQueue packetQueue, Session session, Packet packet);
 
   /**
-   * Retrieves a blocking queue of all sessions.
+   * Retrieves a queue of all sessions.
    *
    * @param sessionId the session id of which is used to determine which queue it should belong to
    * @return the blocking queue of all {@link Session}s
-   * @see BlockingQueue
+   * @see Queue
    * @see SessionTicketsQueueManager
    */
-  BlockingQueue<Session> getSessionTicketsQueue(long sessionId);
+  Queue<Session> getSessionTicketsQueue(long sessionId);
 
   /**
    * Sets a blocking queues manager.

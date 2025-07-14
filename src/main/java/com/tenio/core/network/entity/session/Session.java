@@ -229,7 +229,7 @@ public interface Session {
   /**
    * Sets a selection key for socket (TCP) channel, which is using to switch between channels.
    *
-   * @param selectionKey an instance of {@link SelectionKey}
+   * @param selectionKey an instance of {@link SelectionKey}, selected for a socket channel by a selector
    */
   void configureSelectionKey(SelectionKey selectionKey);
 

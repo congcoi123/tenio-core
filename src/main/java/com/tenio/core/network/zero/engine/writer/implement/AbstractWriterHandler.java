@@ -30,7 +30,7 @@ import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.engine.manager.SessionTicketsQueueManager;
 import com.tenio.core.network.zero.engine.writer.WriterHandler;
 import java.nio.ByteBuffer;
-import java.util.concurrent.BlockingQueue;
+import java.util.Queue;
 
 /**
  * The abstract writer handler.
@@ -42,7 +42,7 @@ public abstract class AbstractWriterHandler extends SystemLogger implements Writ
   private ByteBuffer byteBuffer;
 
   @Override
-  public BlockingQueue<Session> getSessionTicketsQueue(long sessionId) {
+  public Queue<Session> getSessionTicketsQueue(long sessionId) {
     return sessionTicketsQueueManager.getQueueByElementId(sessionId);
   }
 

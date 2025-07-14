@@ -49,9 +49,9 @@ import kcp.Ukcp;
 public interface SessionManager extends Manager {
 
   /**
-   * Default size value of packet queue.
+   * Default the maximum size value of a packet queue.
    */
-  int DEFAULT_PACKET_QUEUE_SIZE = 100;
+  int DEFAULT_MAX_PACKET_QUEUE_SIZE = 100;
 
   /**
    * Ensures the calculation on the session list is thread-safe.
@@ -65,7 +65,7 @@ public interface SessionManager extends Manager {
    * Creates a new socket (TCP) session and adds it to the management list.
    *
    * @param socketChannel the {@link SocketChannel}
-   * @param selectionKey  the {@link SelectionKey}
+   * @param selectionKey  the {@link SelectionKey}, selected for the socket channel by a selector
    * @return a new instance of {@link Session}
    */
   Session createSocketSession(SocketChannel socketChannel, SelectionKey selectionKey);

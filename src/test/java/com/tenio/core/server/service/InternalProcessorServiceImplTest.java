@@ -124,7 +124,7 @@ public class InternalProcessorServiceImplTest {
         InternalProcessorServiceImpl.class.getDeclaredMethod("processSessionWillBeClosed",
             Session.class, PlayerDisconnectMode.class);
     method.setAccessible(true);
-    method.invoke(processor, session, PlayerDisconnectMode.DEFAULT);
+    method.invoke(processor, session, PlayerDisconnectMode.CLIENT_REQUEST);
   }
 
   // Connection Handling Tests
@@ -210,7 +210,7 @@ public class InternalProcessorServiceImplTest {
     verify(session).setAssociatedToPlayer(Session.AssociatedState.NONE);
     verify(session).remove();
     verify(eventManager).emit(eq(ServerEvent.DISCONNECT_PLAYER), eq(player),
-        eq(PlayerDisconnectMode.DEFAULT));
+        eq(PlayerDisconnectMode.CLIENT_REQUEST));
   }
 
   @Test

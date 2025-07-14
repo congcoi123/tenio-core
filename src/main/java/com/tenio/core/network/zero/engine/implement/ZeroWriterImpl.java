@@ -37,7 +37,7 @@ import com.tenio.core.network.zero.engine.manager.SessionTicketsQueueManager;
 import com.tenio.core.network.zero.engine.writer.WriterHandler;
 import com.tenio.core.network.zero.engine.writer.implement.DatagramWriterHandler;
 import com.tenio.core.network.zero.engine.writer.implement.SocketWriterHandler;
-import java.util.concurrent.BlockingQueue;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -87,12 +87,14 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
     return datagramWriterHandler;
   }
 
-  private void writableLoop(BlockingQueue<Session> sessionTicketsQueue,
-                            WriterHandler socketWriterHandler,
-                            WriterHandler datagramWriterHandler) {
+  private void writing(Queue<Session> sessionTicketsQueue,
+                       WriterHandler socketWriterHandler,
+                       WriterHandler datagramWriterHandler) {
     try {
-      var session = sessionTicketsQueue.take();
-      processSessionQueue(session, socketWriterHandler, datagramWriterHandler);
+      Session session;
+      while ((session = sessionTicketsQueue.poll()) != null) {
+        processSessionQueue(session, socketWriterHandler, datagramWriterHandler);
+      }
     } catch (Throwable cause) {
       if (isErrorEnabled()) {
         error(cause, "Interruption occurred when process a session and its packet");
@@ -178,7 +180,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
         packetQueue.put(packet);
 
         // accept duplicated entries to prevent locking queue
-        sessionTicketsQueueManager.getQueueByElementId(session.getId()).add(session);
+        sessionTicketsQueueManager.getQueueByElementId(session.getId()).offer(session);
 
         packet.setRecipients(null);
       } catch (PacketQueuePolicyViolationException exception) {
@@ -194,7 +196,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
   @Override
   public void continueWriteInterestOp(Session session) {
     if (session != null) {
-      sessionTicketsQueueManager.getQueueByElementId(session.getId()).add(session);
+      sessionTicketsQueueManager.getQueueByElementId(session.getId()).offer(session);
     }
   }
 
@@ -231,7 +233,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
 
     while (!Thread.currentThread().isInterrupted()) {
       if (isActivated()) {
-        writableLoop(sessionTicketsQueue, socketWriterHandler, datagramWriterHandler);
+        writing(sessionTicketsQueue, socketWriterHandler, datagramWriterHandler);
       }
     }
   }
