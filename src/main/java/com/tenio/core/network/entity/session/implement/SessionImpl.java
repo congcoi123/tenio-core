@@ -218,18 +218,15 @@ public final class SessionImpl implements Session {
       throw new IllegalArgumentException("Null value is unacceptable");
     }
 
-    // Do we need to check connection status?
-    if (socketChannel.socket() != null && !socketChannel.socket().isClosed()) {
-      transportType = TransportType.TCP;
-      createPacketSocketHandler();
-      this.socketChannel = socketChannel;
+    transportType = TransportType.TCP;
+    createPacketSocketHandler();
+    this.socketChannel = socketChannel;
 
-      InetSocketAddress socketAddress =
-          (InetSocketAddress) this.socketChannel.socket().getRemoteSocketAddress();
-      InetAddress remoteAddress = socketAddress.getAddress();
-      clientAddress = remoteAddress.getHostAddress();
-      clientPort = socketAddress.getPort();
-    }
+    InetSocketAddress socketAddress =
+        (InetSocketAddress) this.socketChannel.socket().getRemoteSocketAddress();
+    InetAddress remoteAddress = socketAddress.getAddress();
+    clientAddress = remoteAddress.getHostAddress();
+    clientPort = socketAddress.getPort();
   }
 
   @Override
