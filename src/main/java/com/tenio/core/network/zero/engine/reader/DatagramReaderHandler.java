@@ -148,6 +148,13 @@ public final class DatagramReaderHandler extends SystemLogger {
     }
   }
 
+  /**
+   * Open a datagram channel.
+   *
+   * @param serverAddress the server IP address
+   * @param port          datagram (UDP) port
+   * @throws ServiceRuntimeException whenever there is exception occurred
+   */
   public void openDatagramChannel(String serverAddress, int port)
       throws ServiceRuntimeException {
     try {
