@@ -33,9 +33,7 @@ import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.CancelledKeyException;
-import java.nio.channels.ClosedSelectorException;
-import java.nio.channels.DatagramChannel;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -111,7 +109,7 @@ public final class SocketReaderHandler extends SystemLogger {
   public void registerClientSocketChannel(SocketChannel channel,
                                           Consumer<SelectionKey> onKeyRegistered) {
     pendingClientChannels.offer(Pair.of(channel, onKeyRegistered));
-    wakeup();
+    wakeup(); // this helps unblock the instruction select() in the method running()
   }
 
   /**
@@ -128,60 +126,56 @@ public final class SocketReaderHandler extends SystemLogger {
    * Processing. This should be run in a loop.
    */
   public void running() {
+    int countReadyKeys = 0;
     try {
-      // register channels to selector
-      if (!pendingClientChannels.isEmpty()) {
-        // readable selector was registered by OP_READ interested only socket channels,
-        // but in some cases, we can receive "can writable" signal from those sockets
-        Pair<SelectableChannel, Consumer<SelectionKey>> callbackableChannel;
-        while ((callbackableChannel = pendingClientChannels.poll()) != null) {
-          SelectableChannel channel = callbackableChannel.getKey();
-          Consumer<SelectionKey> callback = callbackableChannel.getValue();
-          var socketChannel = (SocketChannel) channel;
-          SelectionKey selectionKey =
-              socketChannel.register(readableSelector, SelectionKey.OP_READ);
-          callback.accept(selectionKey);
-        }
-      }
-
       // blocks until at least one channel is ready for the events you registered for
-      int countReadyKeys = readableSelector.select();
+      countReadyKeys = readableSelector.select();
+    } catch (IOException exception) {
+      error(exception, "I/O reading/selection error: ", exception.getMessage());
+    }
 
-      if (countReadyKeys == 0) {
-        return;
+    // register channels to selector
+    // readable selector was registered by OP_READ interested only socket channels,
+    // but in some cases, we can receive "can writable" signal from those sockets
+    Pair<SelectableChannel, Consumer<SelectionKey>> callbackableChannel;
+    while ((callbackableChannel = pendingClientChannels.poll()) != null) {
+      SelectableChannel channel = callbackableChannel.getKey();
+      Consumer<SelectionKey> callback = callbackableChannel.getValue();
+      var socketChannel = (SocketChannel) channel;
+      SelectionKey selectionKey;
+      try {
+        selectionKey = socketChannel.register(readableSelector, SelectionKey.OP_READ);
+        callback.accept(selectionKey);
+      } catch (ClosedChannelException exception) {
+        error(exception, "Channel is closed: ", exception.getMessage());
       }
+    }
 
-      var readyKeys = readableSelector.selectedKeys();
-      var keyIterator = readyKeys.iterator();
+    if (countReadyKeys == 0) {
+      return;
+    }
 
-      while (keyIterator.hasNext()) {
-        SelectionKey selectionKey = keyIterator.next();
-        // once a key is proceeded, it should be removed from the process to prevent
-        // duplicating manipulation
-        keyIterator.remove();
+    var readyKeys = readableSelector.selectedKeys();
+    var keyIterator = readyKeys.iterator();
 
-        if (selectionKey.isValid()) {
-          var selectableChannel = selectionKey.channel();
-          var socketChannel = (SocketChannel) selectableChannel;
-          readTcpData(socketChannel, selectionKey, readerBuffer);
-        }
+    while (keyIterator.hasNext()) {
+      SelectionKey selectionKey = keyIterator.next();
+      // once a key is proceeded, it should be removed from the process to prevent
+      // duplicating manipulation
+      keyIterator.remove();
+
+      if (selectionKey.isValid()) {
+        var selectableChannel = selectionKey.channel();
+        var socketChannel = (SocketChannel) selectableChannel;
+        readTcpData(socketChannel, selectionKey, readerBuffer);
       }
-    } catch (ClosedSelectorException exception1) {
-      if (isErrorEnabled()) {
-        error(exception1, "Selector is closed: ", exception1.getMessage());
-      }
-    } catch (CancelledKeyException exception2) {
-      if (isErrorEnabled()) {
-        error(exception2, "Cancelled key: ", exception2.getMessage());
-      }
-    } catch (IOException exception3) {
-      if (isErrorEnabled()) {
-        error(exception3, "I/O reading/selection error: ", exception3.getMessage());
-      }
-    } catch (Exception exception4) {
-      if (isErrorEnabled()) {
-        error(exception4, "Generic reading/selection error: ", exception4.getMessage());
-      }
+    }
+
+    // clear canceled keys
+    try {
+      readableSelector.selectNow(); // helps to quickly remove stale keys
+    } catch (IOException exception) {
+      error(exception, "I/O reading/selection error: ", exception.getMessage());
     }
   }
 

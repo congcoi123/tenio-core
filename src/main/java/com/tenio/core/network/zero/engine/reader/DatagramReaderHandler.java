@@ -43,8 +43,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
-import java.nio.channels.CancelledKeyException;
-import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -83,8 +81,6 @@ public final class DatagramReaderHandler extends SystemLogger {
   /**
    * Constructor.
    *
-   * @param serverAddress          the server address
-   * @param port                   the datagram (UDP) port
    * @param dataType               the {@link DataType}
    * @param readerBuffer           instance of {@link ByteBuffer}
    * @param zeroWriterListener     instance of {@link ZeroWriterListener}
@@ -93,9 +89,7 @@ public final class DatagramReaderHandler extends SystemLogger {
    * @param datagramIoHandler      instance of {@link DatagramIoHandler}
    * @throws IOException whenever any IO exception thrown
    */
-  public DatagramReaderHandler(String serverAddress,
-                               int port,
-                               DataType dataType,
+  public DatagramReaderHandler(DataType dataType,
                                ByteBuffer readerBuffer,
                                ZeroWriterListener zeroWriterListener,
                                SessionManager sessionManager,
@@ -109,8 +103,6 @@ public final class DatagramReaderHandler extends SystemLogger {
     this.datagramIoHandler = datagramIoHandler;
 
     readableSelector = Selector.open();
-    DatagramChannel datagramChannel = openDatagramChannel(serverAddress, port);
-    datagramChannel.register(readableSelector, SelectionKey.OP_READ);
   }
 
   /**
@@ -127,49 +119,36 @@ public final class DatagramReaderHandler extends SystemLogger {
    * Processing. This should be run in a loop.
    */
   public void running() {
+    int countReadyKeys = 0;
     try {
       // blocks until at least one channel is ready for the events you registered for
-      int countReadyKeys = readableSelector.select();
+      countReadyKeys = readableSelector.select();
+    } catch (IOException exception) {
+      error(exception, "I/O reading/selection error: ", exception.getMessage());
+    }
 
-      if (countReadyKeys == 0) {
-        return;
-      }
+    if (countReadyKeys == 0) {
+      return;
+    }
 
-      var readyKeys = readableSelector.selectedKeys();
-      var keyIterator = readyKeys.iterator();
+    var readyKeys = readableSelector.selectedKeys();
+    var keyIterator = readyKeys.iterator();
 
-      while (keyIterator.hasNext()) {
-        SelectionKey selectionKey = keyIterator.next();
-        // once a key is proceeded, it should be removed from the process to prevent
-        // duplicating manipulation
-        keyIterator.remove();
+    while (keyIterator.hasNext()) {
+      SelectionKey selectionKey = keyIterator.next();
+      // once a key is proceeded, it should be removed from the process to prevent
+      // duplicating manipulation
+      keyIterator.remove();
 
-        if (selectionKey.isValid()) {
-          var selectableChannel = selectionKey.channel();
-          var datagramChannel = (DatagramChannel) selectableChannel;
-          readUpdData(datagramChannel, selectionKey, readerBuffer);
-        }
-      }
-    } catch (ClosedSelectorException exception1) {
-      if (isErrorEnabled()) {
-        error(exception1, "Selector is closed: ", exception1.getMessage());
-      }
-    } catch (CancelledKeyException exception2) {
-      if (isErrorEnabled()) {
-        error(exception2, "Cancelled key: ", exception2.getMessage());
-      }
-    } catch (IOException exception3) {
-      if (isErrorEnabled()) {
-        error(exception3, "I/O reading/selection error: ", exception3.getMessage());
-      }
-    } catch (Exception exception4) {
-      if (isErrorEnabled()) {
-        error(exception4, "Generic reading/selection error: ", exception4.getMessage());
+      if (selectionKey.isValid()) {
+        var selectableChannel = selectionKey.channel();
+        var datagramChannel = (DatagramChannel) selectableChannel;
+        readUpdData(datagramChannel, selectionKey, readerBuffer);
       }
     }
   }
 
-  private DatagramChannel openDatagramChannel(String serverAddress, int port)
+  public void openDatagramChannel(String serverAddress, int port)
       throws ServiceRuntimeException {
     try {
       var datagramChannel = DatagramChannel.open();
@@ -188,7 +167,8 @@ public final class DatagramReaderHandler extends SystemLogger {
         info("UDP CHANNEL", buildgen("Opened at address: ", serverAddress, ", port: ",
             port));
       }
-      return datagramChannel;
+
+      datagramChannel.register(readableSelector, SelectionKey.OP_READ);
     } catch (IOException exception) {
       throw new ServiceRuntimeException(exception.getMessage());
     }
