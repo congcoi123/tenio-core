@@ -62,8 +62,8 @@ import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import com.tenio.core.schedule.ScheduleService;
 import com.tenio.core.schedule.ScheduleServiceImpl;
-import com.tenio.core.server.service.InternalProcessorService;
-import com.tenio.core.server.service.InternalProcessorServiceImpl;
+import com.tenio.core.server.service.ZeroProcessorService;
+import com.tenio.core.server.service.ZeroProcessorServiceImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
 import com.tenio.core.utility.CommandUtility;
 import java.io.IOError;
@@ -88,7 +88,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final PlayerManager playerManager;
   private final ChannelManager channelManager;
   private final DatagramChannelManager datagramChannelManager;
-  private final InternalProcessorService internalProcessorService;
+  private final ZeroProcessorService zeroProcessorService;
   private final ScheduleService scheduleService;
   private final NetworkService networkService;
   private final ServerApi serverApi;
@@ -106,7 +106,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     datagramChannelManager = DatagramChannelManager.newInstance();
     networkService = NetworkServiceImpl.newInstance(eventManager);
     serverApi = ServerApiImpl.newInstance(this);
-    internalProcessorService = InternalProcessorServiceImpl.newInstance(eventManager, serverApi, datagramChannelManager);
+    zeroProcessorService = ZeroProcessorServiceImpl.newInstance(eventManager, serverApi, datagramChannelManager);
     scheduleService = ScheduleServiceImpl.newInstance(eventManager);
   } // prevent creation manually
 
@@ -154,7 +154,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     }
 
     // subscribing for processes and handlers
-    internalProcessorService.subscribe();
+    zeroProcessorService.subscribe();
 
     bootstrapHandler.getEventHandler().initialize(eventManager);
 
@@ -191,13 +191,13 @@ public final class ServerImpl extends SystemLogger implements Server {
 
   private void initializeServices() {
     networkService.initialize();
-    internalProcessorService.initialize();
+    zeroProcessorService.initialize();
     scheduleService.initialize();
   }
 
   private void startServices() {
     networkService.start();
-    internalProcessorService.start();
+    zeroProcessorService.start();
     scheduleService.start();
   }
 
@@ -342,24 +342,24 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   private void setupInternalProcessorService(Configuration configuration, BootstrapHandler bootstrapHandler) {
-    internalProcessorService.setDataType(
+    zeroProcessorService.setDataType(
         DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION)));
     RequestPolicy requestPolicy = bootstrapHandler.getBeanByClazz(RequestPolicy.class);
-    internalProcessorService.setRequestPolicy(requestPolicy);
-    internalProcessorService
+    zeroProcessorService.setRequestPolicy(requestPolicy);
+    zeroProcessorService
         .setMaxNumberPlayers(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS));
-    internalProcessorService.setSessionManager(networkService.getSessionManager());
-    internalProcessorService.setPlayerManager(playerManager);
-    internalProcessorService
+    zeroProcessorService.setSessionManager(networkService.getSessionManager());
+    zeroProcessorService.setPlayerManager(playerManager);
+    zeroProcessorService
         .setMaxRequestQueueSize(
             configuration.getInt(CoreConfigurationType.PROP_MAX_REQUEST_QUEUE_SIZE));
-    internalProcessorService
+    zeroProcessorService
         .setThreadPoolSize(configuration.getInt(CoreConfigurationType.WORKER_INTERNAL_PROCESSOR));
-    internalProcessorService.setKeepPlayerOnDisconnection(
+    zeroProcessorService.setKeepPlayerOnDisconnection(
         configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION));
 
-    internalProcessorService.setNetworkReaderStatistic(networkService.getNetworkReaderStatistic());
-    internalProcessorService.setNetworkWriterStatistic(networkService.getNetworkWriterStatistic());
+    zeroProcessorService.setNetworkReaderStatistic(networkService.getNetworkReaderStatistic());
+    zeroProcessorService.setNetworkWriterStatistic(networkService.getNetworkWriterStatistic());
   }
 
   private void startConsole(SystemCommandManager systemCommandManager) {
@@ -422,7 +422,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   private void shutdownServices() {
-    internalProcessorService.shutdown();
+    zeroProcessorService.shutdown();
     networkService.shutdown();
     scheduleService.shutdown();
   }

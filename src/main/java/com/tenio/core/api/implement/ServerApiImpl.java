@@ -145,7 +145,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
     try {
       if (player.containsSession() && player.getSession().isPresent()) {
-        // check process on method InternalProcessorServiceImpl#processSessionWillBeClosed
+        // check process on method ZeroProcessorServiceImpl#processSessionWillBeClosed
         Session session = player.getSession().get();
         if (session.isActivated()) {
           session.close(connectionDisconnectMode, playerDisconnectMode);

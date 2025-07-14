@@ -56,10 +56,10 @@ import java.util.Optional;
 /**
  * The implementation for the processor service.
  *
- * @see InternalProcessorService
+ * @see ZeroProcessorService
  */
-public final class InternalProcessorServiceImpl extends AbstractController
-    implements InternalProcessorService {
+public final class ZeroProcessorServiceImpl extends AbstractController
+    implements ZeroProcessorService {
 
   private final ServerApi serverApi;
   private final DatagramChannelManager datagramChannelManager;
@@ -69,8 +69,8 @@ public final class InternalProcessorServiceImpl extends AbstractController
   private int maxNumberPlayers;
   private boolean keepPlayerOnDisconnection;
 
-  private InternalProcessorServiceImpl(EventManager eventManager, ServerApi serverApi,
-                                       DatagramChannelManager datagramChannelManager) {
+  private ZeroProcessorServiceImpl(EventManager eventManager, ServerApi serverApi,
+                                   DatagramChannelManager datagramChannelManager) {
     super(eventManager);
     this.serverApi = serverApi;
     this.datagramChannelManager = datagramChannelManager;
@@ -82,12 +82,12 @@ public final class InternalProcessorServiceImpl extends AbstractController
    * @param eventManager           an instance of {@link EventManager}
    * @param serverApi              an instance of {@link ServerApi}
    * @param datagramChannelManager an instance of {@link DatagramChannelManager}
-   * @return a new instance of {@link InternalProcessorService}
+   * @return a new instance of {@link ZeroProcessorService}
    */
-  public static InternalProcessorServiceImpl newInstance(EventManager eventManager,
-                                                         ServerApi serverApi,
-                                                         DatagramChannelManager datagramChannelManager) {
-    return new InternalProcessorServiceImpl(eventManager, serverApi, datagramChannelManager);
+  public static ZeroProcessorServiceImpl newInstance(EventManager eventManager,
+                                                     ServerApi serverApi,
+                                                     DatagramChannelManager datagramChannelManager) {
+    return new ZeroProcessorServiceImpl(eventManager, serverApi, datagramChannelManager);
   }
 
   @Override
@@ -379,7 +379,7 @@ public final class InternalProcessorServiceImpl extends AbstractController
 
   @Override
   public String getName() {
-    return "internal-processor";
+    return "zero-processor";
   }
 
   @Override

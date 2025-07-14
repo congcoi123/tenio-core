@@ -35,7 +35,7 @@ import com.tenio.core.network.statistic.NetworkWriterStatistic;
 /**
  * The internal processor service, the heart of the server.
  */
-public interface InternalProcessorService extends Controller {
+public interface ZeroProcessorService extends Controller {
 
   /**
    * Subscribes all events on the server.

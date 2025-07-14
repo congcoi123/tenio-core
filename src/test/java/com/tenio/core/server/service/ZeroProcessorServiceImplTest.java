@@ -64,7 +64,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class InternalProcessorServiceImplTest {
+public class ZeroProcessorServiceImplTest {
 
   private static final String PLAYER_IDENTITY = "test-player";
   private static final int MAX_PLAYERS = 100;
@@ -91,12 +91,12 @@ public class InternalProcessorServiceImplTest {
   private NetworkReaderStatistic networkReaderStatistic;
   @Mock
   private NetworkWriterStatistic networkWriterStatistic;
-  private InternalProcessorServiceImpl processor;
+  private ZeroProcessorServiceImpl processor;
 
   @Before
   public void setUp() {
     processor =
-        InternalProcessorServiceImpl.newInstance(eventManager, serverApi, datagramChannelManager);
+        ZeroProcessorServiceImpl.newInstance(eventManager, serverApi, datagramChannelManager);
     processor.setSessionManager(sessionManager);
     processor.setPlayerManager(playerManager);
     processor.setMaxNumberPlayers(MAX_PLAYERS);
@@ -121,7 +121,7 @@ public class InternalProcessorServiceImplTest {
   private void processSessionWillBeClosed(Session session)
       throws Exception {
     Method method =
-        InternalProcessorServiceImpl.class.getDeclaredMethod("processSessionWillBeClosed",
+        ZeroProcessorServiceImpl.class.getDeclaredMethod("processSessionWillBeClosed",
             Session.class, PlayerDisconnectMode.class);
     method.setAccessible(true);
     method.invoke(processor, session, PlayerDisconnectMode.CLIENT_REQUEST);
