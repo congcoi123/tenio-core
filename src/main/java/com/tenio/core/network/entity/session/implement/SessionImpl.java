@@ -324,15 +324,13 @@ public final class SessionImpl implements Session {
       throw new IllegalArgumentException("Null value is unacceptable");
     }
 
-    if (webSocketChannel.isActive()) {
-      transportType = TransportType.WEB_SOCKET;
-      this.webSocketChannel = webSocketChannel;
+    transportType = TransportType.WEB_SOCKET;
+    this.webSocketChannel = webSocketChannel;
 
-      var socketAddress = (InetSocketAddress) this.webSocketChannel.remoteAddress();
-      var remoteAddress = socketAddress.getAddress();
-      clientAddress = remoteAddress.getHostAddress();
-      clientPort = socketAddress.getPort();
-    }
+    var socketAddress = (InetSocketAddress) this.webSocketChannel.remoteAddress();
+    var remoteAddress = socketAddress.getAddress();
+    clientAddress = remoteAddress.getHostAddress();
+    clientPort = socketAddress.getPort();
   }
 
   @Override
