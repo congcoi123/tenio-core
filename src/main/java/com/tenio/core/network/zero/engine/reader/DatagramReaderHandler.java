@@ -149,14 +149,14 @@ public final class DatagramReaderHandler extends SystemLogger {
   }
 
   /**
-   * Open a datagram channel.
+   * Open datagram channels.
    *
    * @param serverAddress the server IP address
    * @param port          datagram (UDP) port
    * @param cacheSize     the number of datagram channels that registers in the same selector
    * @throws ServiceRuntimeException whenever there is exception occurred
    */
-  public void openDatagramChannel(String serverAddress, int port, int cacheSize)
+  public void openDatagramChannels(String serverAddress, int port, int cacheSize)
       throws ServiceRuntimeException {
     if (cacheSize <= 0) {
       throw new IllegalArgumentException("The cache size of datagram channels must be greater " +
