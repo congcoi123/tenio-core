@@ -126,7 +126,8 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
         datagramReaderHandler = new DatagramReaderHandler(dataType,
             SocketUtility.createReaderBuffer(getMaxBufferSize()), zeroWriterListener,
             getSessionManager(), getNetworkReaderStatistic(), getDatagramIoHandler());
-        datagramReaderHandler.openDatagramChannel(serverAddress, udpChannelConfiguration.port());
+        datagramReaderHandler.openDatagramChannel(serverAddress, udpChannelConfiguration.port(),
+            udpChannelConfiguration.cacheSize());
       } catch (IOException exception) {
         error(exception);
       }

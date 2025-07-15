@@ -153,14 +153,20 @@ public final class DatagramReaderHandler extends SystemLogger {
    *
    * @param serverAddress the server IP address
    * @param port          datagram (UDP) port
+   * @param cacheSize     the number of datagram channels that registers in the same selector
    * @throws ServiceRuntimeException whenever there is exception occurred
    */
-  public void openDatagramChannel(String serverAddress, int port)
+  public void openDatagramChannel(String serverAddress, int port, int cacheSize)
       throws ServiceRuntimeException {
+    if (cacheSize <= 0) {
+      throw new IllegalArgumentException("The cache size of datagram channels must be greater " +
+          "than 0");
+    }
     try {
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < cacheSize; i++) {
         var datagramChannel = DatagramChannel.open();
         datagramChannel.configureBlocking(false);
+        // this does not guarantee expected behaviours on windows or macOS
         if (OsUtility.getOperatingSystemType() == OsUtility.OsType.WINDOWS) {
           datagramChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
         } else {
@@ -171,11 +177,11 @@ public final class DatagramReaderHandler extends SystemLogger {
         // udp datagram is a connectionless protocol, we don't need to create
         // bi-direction connection, that why it's not necessary to register it to
         // acceptable selector. Just leave it to the reader selector later
-        if (isInfoEnabled()) {
-          info("UDP CHANNEL", buildgen("Opened at address: ", serverAddress, ", port: ",
-              port));
-        }
         datagramChannel.register(readableSelector, SelectionKey.OP_READ);
+      }
+      if (isInfoEnabled()) {
+        info("UDP CHANNEL(S)", buildgen("Opened at address: ", serverAddress, ", port: ",
+            port, ", cacheSize: ", cacheSize));
       }
     } catch (IOException exception) {
       throw new ServiceRuntimeException(exception.getMessage());
@@ -263,7 +269,7 @@ public final class DatagramReaderHandler extends SystemLogger {
       }
     }
 
-    if (selectionKey.isValid() && selectionKey.isWritable() ) {
+    if (selectionKey.isValid() && selectionKey.isWritable()) {
       // should continue put this session for sending all left packets first
       zeroWriterListener.interestWritingOnSession(session);
       // now we should set it back to interest in OP_READ

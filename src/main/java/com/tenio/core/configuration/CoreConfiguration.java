@@ -98,10 +98,13 @@ public abstract class CoreConfiguration extends CommonConfiguration {
     var attrNetworkSockets = XmlUtility.getNodeList(root, "//Server/Network/Sockets/Port");
     for (int j = 0; j < attrNetworkSockets.getLength(); j++) {
       var dataNode = attrNetworkSockets.item(j);
+      var cacheSizeNode = dataNode.getAttributes().getNamedItem("cacheSize");
+      int cacheSize = cacheSizeNode != null ?
+          Integer.parseInt(cacheSizeNode.getTextContent()) : 0; // The default value should be 0
       var socketConfiguration =
           new SocketConfiguration(dataNode.getAttributes().getNamedItem("name").getTextContent(),
               TransportType.getByValue(dataNode.getAttributes().getNamedItem("type").getTextContent()),
-              Integer.parseInt(dataNode.getTextContent()));
+              Integer.parseInt(dataNode.getTextContent()), cacheSize);
 
       if (socketConfiguration.type() == TransportType.TCP) {
         push(CoreConfigurationType.NETWORK_TCP, socketConfiguration);
