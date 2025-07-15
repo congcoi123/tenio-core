@@ -100,7 +100,7 @@ public abstract class CoreConfiguration extends CommonConfiguration {
       var dataNode = attrNetworkSockets.item(j);
       var cacheSizeNode = dataNode.getAttributes().getNamedItem("cacheSize");
       int cacheSize = cacheSizeNode != null ?
-          Integer.parseInt(cacheSizeNode.getTextContent()) : 0; // The default value should be 0
+          Integer.parseInt(cacheSizeNode.getTextContent()) : 1; // The default value should be 1
       var socketConfiguration =
           new SocketConfiguration(dataNode.getAttributes().getNamedItem("name").getTextContent(),
               TransportType.getByValue(dataNode.getAttributes().getNamedItem("type").getTextContent()),
