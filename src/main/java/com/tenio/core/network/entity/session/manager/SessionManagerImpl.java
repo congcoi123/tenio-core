@@ -34,18 +34,17 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.implement.SessionImpl;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import io.netty.channel.Channel;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import kcp.Ukcp;
-
 import javax.annotation.concurrent.GuardedBy;
-import java.nio.channels.DatagramChannel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
+import kcp.Ukcp;
 
 /**
  * The implementation for session manager.
@@ -102,8 +101,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   @Override
   public Session createSocketSession(SocketChannel socketChannel, SelectionKey selectionKey) {
     Session session = SessionImpl.newInstance();
-    session.configureSocketChannel(socketChannel);
-    session.configureSelectionKey(selectionKey);
+    session.configureSocketChannel(socketChannel, selectionKey);
     session.configureSessionManager(this);
     session.configurePacketQueue(configureNewPacketQueue());
     session.configureConnectionFilter(connectionFilter);
@@ -131,13 +129,14 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   }
 
   @Override
-  public void addDatagramForSession(DatagramChannel datagramChannel, int udpConvey, Session session) {
+  public void addDatagramForSession(DatagramChannel datagramChannel, SelectionKey selectionKey,
+                                    int udpConvey, Session session) {
     if (!session.isTcp()) {
       throw new IllegalArgumentException(
           String.format("Unable to add kcp channel for the non-TCP session: %s", session));
     }
     synchronized (sessionByDatagrams) {
-      session.configureDatagramChannel(datagramChannel, udpConvey);
+      session.configureDatagramChannel(datagramChannel, selectionKey, udpConvey);
       sessionByDatagrams.put(udpConvey, session);
     }
   }
@@ -220,7 +219,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
         case TCP -> {
           if (session.containsUdp()) {
             sessionByDatagrams.remove(session.getUdpConveyId());
-            session.configureDatagramChannel(null, Session.EMPTY_DATAGRAM_CONVEY_ID);
+            session.configureDatagramChannel(null, null, Session.EMPTY_DATAGRAM_CONVEY_ID);
           }
           if (session.containsKcp()) {
             sessionByKcps.remove(session.getKcpChannel().getConv());

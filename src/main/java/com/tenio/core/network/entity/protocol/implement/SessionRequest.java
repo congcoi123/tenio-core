@@ -76,6 +76,16 @@ public class SessionRequest implements Request {
   }
 
   @Override
+  public Object getExtra() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Request setExtra(Object extra) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public SocketAddress getRemoteSocketAddress() {
     throw new UnsupportedOperationException();
   }
@@ -150,7 +160,7 @@ public class SessionRequest implements Request {
         "id=" + id +
         ", timestamp=" + timestamp +
         ", event=" + event +
-        ", sender=" + session +
+        ", session=" + session +
         ", message=" + message +
         ", priority=" + priority +
         '}';

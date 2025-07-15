@@ -155,7 +155,7 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
 
     // want to know when the socket is alive and can write, which should be noticed on
     // isWritable() method when that event occurs, try to re-add the session to the tickets queue
-    var selectionKey = session.fetchSelectionKey();
+    var selectionKey = session.fetchSocketSelectionKey();
     try {
       if (selectionKey != null && selectionKey.channel().isOpen() && selectionKey.isValid()) {
         selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);

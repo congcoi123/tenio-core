@@ -30,6 +30,7 @@ import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.network.entity.protocol.Request;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
 
 /**
  * Request implementation for Datagram channels.
@@ -42,6 +43,7 @@ public class DatagramRequest implements Request {
   private final long timestamp;
   private ServerEvent event;
   private DatagramChannel datagramChannel;
+  private SelectionKey selectionKey;
   private SocketAddress datagramRemoteSocketAddress;
   private DataCollection message;
   private int priority;
@@ -73,6 +75,17 @@ public class DatagramRequest implements Request {
   @Override
   public Request setSender(Object sender) {
     datagramChannel = (DatagramChannel) sender;
+    return this;
+  }
+
+  @Override
+  public Object getExtra() {
+    return selectionKey;
+  }
+
+  @Override
+  public Request setExtra(Object extra) {
+    selectionKey = (SelectionKey) extra;
     return this;
   }
 
@@ -152,7 +165,8 @@ public class DatagramRequest implements Request {
         "id=" + id +
         ", timestamp=" + timestamp +
         ", event=" + event +
-        ", sender=" + datagramChannel +
+        ", datagramChannel=" + datagramChannel +
+        ", selectionKey=" + selectionKey +
         ", remoteSocketAddress=" + datagramRemoteSocketAddress +
         ", message=" + message +
         ", priority=" + priority +

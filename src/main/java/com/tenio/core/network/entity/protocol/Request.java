@@ -78,6 +78,23 @@ public interface Request {
   Request setSender(Object sender);
 
   /**
+   * Retrieves an extra object.
+   *
+   * @return an extra {@link Object}
+   * @since 0.6.6
+   */
+  Object getExtra();
+
+  /**
+   * Sets an extra object.
+   *
+   * @param extra an {@link Object}
+   * @return the pointer of request
+   * @since 0.6.6
+   */
+  Request setExtra(Object extra);
+
+  /**
    * Retrieves the remote address associating to the client side whenever the server receives
    * message from him.
    *

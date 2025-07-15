@@ -57,8 +57,7 @@ public interface SocketIoHandler extends BaseIoHandler {
    * then this method is invoked.
    *
    * @param socketChannel the active {@link SocketChannel}
-   * @param selectionKey  the {@link SelectionKey} used to distinguish each session, selected for
-   *                      the socket channel by a selector
+   * @param selectionKey  the {@link SelectionKey} used to distinguish each socket channel in a selector
    */
   void channelActive(SocketChannel socketChannel, SelectionKey selectionKey);
 

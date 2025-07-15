@@ -111,7 +111,7 @@ public final class DatagramReaderHandler extends SystemLogger {
    * @throws IOException whenever IO exceptions thrown
    */
   public void shutdown() throws IOException {
-    wakeup();
+    readableSelector.wakeup();
     readableSelector.close();
   }
 
@@ -158,24 +158,25 @@ public final class DatagramReaderHandler extends SystemLogger {
   public void openDatagramChannel(String serverAddress, int port)
       throws ServiceRuntimeException {
     try {
-      var datagramChannel = DatagramChannel.open();
-      datagramChannel.configureBlocking(false);
-      if (OsUtility.getOperatingSystemType() == OsUtility.OsType.WINDOWS) {
-        datagramChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-      } else {
-        datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
+      for (int i = 0; i < 10; i++) {
+        var datagramChannel = DatagramChannel.open();
+        datagramChannel.configureBlocking(false);
+        if (OsUtility.getOperatingSystemType() == OsUtility.OsType.WINDOWS) {
+          datagramChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+        } else {
+          datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
+        }
+        datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
+        datagramChannel.bind(new InetSocketAddress(serverAddress, port));
+        // udp datagram is a connectionless protocol, we don't need to create
+        // bi-direction connection, that why it's not necessary to register it to
+        // acceptable selector. Just leave it to the reader selector later
+        if (isInfoEnabled()) {
+          info("UDP CHANNEL", buildgen("Opened at address: ", serverAddress, ", port: ",
+              port));
+        }
+        datagramChannel.register(readableSelector, SelectionKey.OP_READ);
       }
-      datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
-      datagramChannel.bind(new InetSocketAddress(serverAddress, port));
-      // udp datagram is a connectionless protocol, we don't need to create
-      // bi-direction connection, that why it's not necessary to register it to
-      // acceptable selector. Just leave it to the reader selector later
-      if (isInfoEnabled()) {
-        info("UDP CHANNEL", buildgen("Opened at address: ", serverAddress, ", port: ",
-            port));
-      }
-
-      datagramChannel.register(readableSelector, SelectionKey.OP_READ);
     } catch (IOException exception) {
       throw new ServiceRuntimeException(exception.getMessage());
     }
@@ -248,7 +249,7 @@ public final class DatagramReaderHandler extends SystemLogger {
       session = sessionManager.getSessionByDatagram(udpConvey);
 
       if (session == null) {
-        datagramIoHandler.channelRead(datagramChannel, remoteAddress, message);
+        datagramIoHandler.channelRead(datagramChannel, selectionKey, remoteAddress, message);
       } else {
         if (session.isActivated()) {
           session.setDatagramRemoteSocketAddress(remoteAddress);
@@ -262,18 +263,11 @@ public final class DatagramReaderHandler extends SystemLogger {
       }
     }
 
-    if (selectionKey.isValid() && selectionKey.isWritable() && session != null) {
+    if (selectionKey.isValid() && selectionKey.isWritable() ) {
       // should continue put this session for sending all left packets first
-      zeroWriterListener.continueWriteInterestOp(session);
+      zeroWriterListener.interestWritingOnSession(session);
       // now we should set it back to interest in OP_READ
       selectionKey.interestOps(SelectionKey.OP_READ);
     }
-  }
-
-  /**
-   * Wakeup the reader selector.
-   */
-  private void wakeup() {
-    readableSelector.wakeup();
   }
 }

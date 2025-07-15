@@ -41,5 +41,5 @@ public interface ZeroWriterListener {
    * @param session the {@link Session} is in processing
    * @see ZeroReader
    */
-  void continueWriteInterestOp(Session session);
+  void interestWritingOnSession(Session session);
 }

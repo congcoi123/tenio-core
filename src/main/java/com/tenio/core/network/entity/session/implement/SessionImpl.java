@@ -64,8 +64,9 @@ public final class SessionImpl implements Session {
 
   private SessionManager sessionManager;
   private SocketChannel socketChannel;
-  private SelectionKey selectionKey;
+  private SelectionKey socketSelectionKey;
   private DatagramChannel datagramChannel;
+  private SelectionKey datagramSelectionKey;
   private Channel webSocketChannel;
   private ConnectionFilter connectionFilter;
 
@@ -197,17 +198,8 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public boolean isWebSocket() {
-    return getTransportType() == TransportType.WEB_SOCKET;
-  }
-
-  @Override
-  public SocketChannel fetchSocketChannel() {
-    return socketChannel;
-  }
-
-  @Override
-  public void configureSocketChannel(SocketChannel socketChannel) {
+  public void configureSocketChannel(SocketChannel socketChannel, SelectionKey selectionKey)
+      throws IllegalArgumentException, IllegalCallerException {
     if (getTransportType() != TransportType.UNKNOWN) {
       throw new IllegalCallerException(
           String.format("Unable to add another connection type, the current connection is: %s",
@@ -221,6 +213,7 @@ public final class SessionImpl implements Session {
     transportType = TransportType.TCP;
     createPacketSocketHandler();
     this.socketChannel = socketChannel;
+    this.socketSelectionKey = selectionKey;
 
     InetSocketAddress socketAddress =
         (InetSocketAddress) this.socketChannel.socket().getRemoteSocketAddress();
@@ -230,13 +223,18 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public SelectionKey fetchSelectionKey() {
-    return selectionKey;
+  public boolean isWebSocket() {
+    return getTransportType() == TransportType.WEB_SOCKET;
   }
 
   @Override
-  public void configureSelectionKey(SelectionKey selectionKey) {
-    this.selectionKey = selectionKey;
+  public SocketChannel fetchSocketChannel() {
+    return socketChannel;
+  }
+
+  @Override
+  public SelectionKey fetchSocketSelectionKey() {
+    return socketSelectionKey;
   }
 
   @Override
@@ -260,21 +258,28 @@ public final class SessionImpl implements Session {
   }
 
   @Override
-  public DatagramChannel fetchDatagramChannel() {
-    return datagramChannel;
-  }
-
-  @Override
-  public void configureDatagramChannel(DatagramChannel datagramChannel, int udpConvey) {
+  public void configureDatagramChannel(DatagramChannel datagramChannel, SelectionKey selectionKey,
+                                       int udpConvey) {
     this.datagramChannel = datagramChannel;
     if (this.datagramChannel == null) {
       datagramRemoteSocketAddress = null;
       this.udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
       hasUdp = false;
     } else {
+      this.datagramSelectionKey = selectionKey;
       this.udpConvey = udpConvey;
       hasUdp = true;
     }
+  }
+
+  @Override
+  public DatagramChannel fetchDatagramChannel() {
+    return datagramChannel;
+  }
+
+  @Override
+  public SelectionKey fetchDatagramSelectionKey() {
+    return datagramSelectionKey;
   }
 
   @Override
@@ -484,7 +489,7 @@ public final class SessionImpl implements Session {
 
     switch (transportType) {
       case TCP:
-        SocketUtility.closeSocket(socketChannel, selectionKey);
+        SocketUtility.closeSocket(socketChannel, socketSelectionKey);
         break;
 
       case WEB_SOCKET:

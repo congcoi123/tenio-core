@@ -34,14 +34,10 @@ import com.tenio.core.network.zero.handler.SocketIoHandler;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Handles read/write events on socket channels using a {@link Selector}.
@@ -69,7 +65,6 @@ public final class SocketReaderHandler extends SystemLogger {
 
   private final Selector readableSelector;
   private final ByteBuffer readerBuffer;
-  private final Queue<Pair<SelectableChannel, Consumer<SelectionKey>>> pendingClientChannels;
   private final ZeroWriterListener zeroWriterListener;
   private final SessionManager sessionManager;
   private final NetworkReaderStatistic networkReaderStatistic;
@@ -97,19 +92,28 @@ public final class SocketReaderHandler extends SystemLogger {
     this.socketIoHandler = socketIoHandler;
 
     readableSelector = Selector.open();
-    pendingClientChannels = new ConcurrentLinkedQueue<>();
   }
 
   /**
    * Registers a client socket to the reader selector.
    *
-   * @param channel         {@link SocketChannel} a client channel
+   * @param socketChannel   {@link SocketChannel} a client channel
    * @param onKeyRegistered when its {@link SelectionKey} is ready
    */
-  public void registerClientSocketChannel(SocketChannel channel,
+  public void registerClientSocketChannel(SocketChannel socketChannel,
                                           Consumer<SelectionKey> onKeyRegistered) {
-    pendingClientChannels.offer(Pair.of(channel, onKeyRegistered));
-    wakeup(); // this helps unblock the instruction select() in the method running()
+    // register channels to selector
+    // readable selector was registered by OP_READ interested only socket channels,
+    // but in some cases, we can receive "can writable" signal from those sockets
+    SelectionKey selectionKey;
+    try {
+      selectionKey = socketChannel.register(readableSelector, SelectionKey.OP_READ);
+      onKeyRegistered.accept(selectionKey);
+    } catch (ClosedChannelException exception) {
+      error(exception, "It was unable to register this channel to to selector: ",
+          exception.getMessage());
+    }
+    readableSelector.wakeup(); // this helps unblock the instruction select() in the method running()
   }
 
   /**
@@ -118,7 +122,7 @@ public final class SocketReaderHandler extends SystemLogger {
    * @throws IOException whenever IO exceptions thrown
    */
   public void shutdown() throws IOException {
-    wakeup();
+    readableSelector.wakeup(); // this helps unblock the instruction select() in the method running()
     readableSelector.close();
   }
 
@@ -132,23 +136,6 @@ public final class SocketReaderHandler extends SystemLogger {
       countReadyKeys = readableSelector.select();
     } catch (IOException exception) {
       error(exception, "I/O reading/selection error: ", exception.getMessage());
-    }
-
-    // register channels to selector
-    // readable selector was registered by OP_READ interested only socket channels,
-    // but in some cases, we can receive "can writable" signal from those sockets
-    Pair<SelectableChannel, Consumer<SelectionKey>> callbackableChannel;
-    while ((callbackableChannel = pendingClientChannels.poll()) != null) {
-      SelectableChannel channel = callbackableChannel.getKey();
-      Consumer<SelectionKey> callback = callbackableChannel.getValue();
-      var socketChannel = (SocketChannel) channel;
-      SelectionKey selectionKey;
-      try {
-        selectionKey = socketChannel.register(readableSelector, SelectionKey.OP_READ);
-        callback.accept(selectionKey);
-      } catch (ClosedChannelException exception) {
-        error(exception, "Channel is closed: ", exception.getMessage());
-      }
     }
 
     if (countReadyKeys == 0) {
@@ -203,7 +190,7 @@ public final class SocketReaderHandler extends SystemLogger {
     // manipulation
     if (selectionKey.isValid() && selectionKey.isWritable()) {
       // should continually put this session for sending all left packets first
-      zeroWriterListener.continueWriteInterestOp(session);
+      zeroWriterListener.interestWritingOnSession(session);
       // now we should set it back to interest in OP_READ
       selectionKey.interestOps(SelectionKey.OP_READ);
     }
@@ -242,12 +229,5 @@ public final class SocketReaderHandler extends SystemLogger {
         socketIoHandler.sessionRead(session, binary);
       }
     }
-  }
-
-  /**
-   * Wakeup the reader selector.
-   */
-  private void wakeup() {
-    readableSelector.wakeup();
   }
 }

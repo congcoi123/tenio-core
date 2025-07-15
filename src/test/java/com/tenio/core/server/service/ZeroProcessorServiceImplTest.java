@@ -56,6 +56,7 @@ import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -87,6 +88,8 @@ public class ZeroProcessorServiceImplTest {
   private DataCollection message;
   @Mock
   private DatagramChannel datagramChannel;
+  @Mock
+  private SelectionKey selectionKey;
   @Mock
   private NetworkReaderStatistic networkReaderStatistic;
   @Mock
@@ -241,13 +244,14 @@ public class ZeroProcessorServiceImplTest {
     Request request = DatagramRequest.newInstance()
         .setEvent(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME)
         .setSender(datagramChannel)
+        .setExtra(selectionKey)
         .setRemoteSocketAddress(REMOTE_ADDRESS)
         .setMessage(message);
 
     processor.processRequest(request);
 
     verify(session).setDatagramRemoteSocketAddress(REMOTE_ADDRESS);
-    verify(sessionManager).addDatagramForSession(datagramChannel, 1, session);
+    verify(sessionManager).addDatagramForSession(datagramChannel, selectionKey, 1, session);
     verify(eventManager).emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT),
         eq(player), eq(1), eq(AccessDatagramChannelResult.SUCCESS));
   }

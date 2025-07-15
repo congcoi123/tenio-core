@@ -51,6 +51,7 @@ import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
 import java.util.Optional;
 
 /**
@@ -143,8 +144,9 @@ public final class ZeroProcessorServiceImpl extends AbstractController
       var request = DatagramRequest.newInstance()
               .setEvent(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME);
       request.setSender(params[0]);
-      request.setRemoteSocketAddress((SocketAddress) params[1]);
-      request.setMessage((DataCollection) params[2]);
+      request.setExtra(params[1]);
+      request.setRemoteSocketAddress((SocketAddress) params[2]);
+      request.setMessage((DataCollection) params[3]);
       if (requestPolicy != null) {
         requestPolicy.applyPolicy(request);
       }
@@ -360,9 +362,10 @@ public final class ZeroProcessorServiceImpl extends AbstractController
         } else {
           var udpConvey = datagramChannelManager.getCurrentUdpConveyId();
           var datagramChannel = (DatagramChannel) request.getSender();
+          var selectionKey = (SelectionKey) request.getExtra();
 
           session.setDatagramRemoteSocketAddress(request.getRemoteSocketAddress());
-          sessionManager.addDatagramForSession(datagramChannel, udpConvey, session);
+          sessionManager.addDatagramForSession(datagramChannel, selectionKey, udpConvey, session);
 
           eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
               player,

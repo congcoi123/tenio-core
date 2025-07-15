@@ -28,6 +28,7 @@ import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
 import java.io.IOException;
+import java.nio.channels.SelectionKey;
 
 /**
  * The Datagram writing handler.
@@ -117,6 +118,17 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
     // session back to the tickets queue
     if (session.isActivated() && !packetQueue.isEmpty()) {
       getSessionTicketsQueue(session.getId()).add(session);
+    }
+
+    // want to know when the socket is alive and can write, which should be noticed on
+    // isWritable() method when that event occurs, try to re-add the session to the tickets queue
+    var selectionKey = session.fetchDatagramSelectionKey();
+    try {
+      if (selectionKey != null && selectionKey.channel().isOpen() && selectionKey.isValid()) {
+        selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+      }
+    } catch (Exception exception) {
+      error(exception, "Something went wrong with OP_WRITE key for session: ", session);
     }
   }
 }

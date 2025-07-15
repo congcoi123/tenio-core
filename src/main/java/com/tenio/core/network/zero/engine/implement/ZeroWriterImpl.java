@@ -192,7 +192,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
   }
 
   @Override
-  public void continueWriteInterestOp(Session session) {
+  public void interestWritingOnSession(Session session) {
     if (session != null && session.isActivated()) {
       sessionTicketsQueueManager.getQueueByElementId(session.getId()).add(session);
     }
