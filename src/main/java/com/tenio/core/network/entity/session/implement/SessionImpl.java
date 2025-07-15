@@ -262,6 +262,7 @@ public final class SessionImpl implements Session {
                                        int udpConvey) {
     this.datagramChannel = datagramChannel;
     if (this.datagramChannel == null) {
+      datagramSelectionKey = null;
       datagramRemoteSocketAddress = null;
       this.udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
       hasUdp = false;
