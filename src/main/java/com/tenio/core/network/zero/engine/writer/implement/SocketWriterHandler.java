@@ -30,7 +30,6 @@ import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
 import java.io.IOException;
-import java.nio.channels.SelectionKey;
 
 /**
  * The Socket writing handler.
@@ -88,7 +87,10 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
     int expectedWritingBytes = getBuffer().remaining();
     int realWrittenBytes;
 
-    // but it's up to the channel, so it's possible to get left unsent bytes
+    // but it's up to the channel, so it's possible to get left unsent bytes.
+    // We are asking for writing without checking whether the channel is writable,
+    // that may lead to creating several fragment packets.
+    // This needs to be reimplemented in better way later, for now, I have no idea yet
     try {
       realWrittenBytes = channel.write(getBuffer());
     } catch (IOException exception) {
@@ -151,17 +153,6 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
           !packetQueue.isEmpty()) {
         getSessionTicketsQueue(session.getId()).add(session);
       }
-    }
-
-    // want to know when the socket is alive and can write, which should be noticed on
-    // isWritable() method when that event occurs, try to re-add the session to the tickets queue
-    var selectionKey = session.fetchSocketSelectionKey();
-    try {
-      if (selectionKey != null && selectionKey.channel().isOpen() && selectionKey.isValid()) {
-        selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-      }
-    } catch (Exception exception) {
-      error(exception, "Something went wrong with OP_WRITE key for session: ", session);
     }
   }
 }

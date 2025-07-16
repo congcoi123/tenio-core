@@ -261,6 +261,11 @@ public final class DatagramReaderHandler extends SystemLogger {
           // Public IP: 203.0.113.42:61724
           // But these mappings are temporary and will expire after some idle time (often 30
           // seconds to a few minutes) if there's no traffic.
+          // Solution:
+          // Every 10 to 30 seconds, the client sends this to the server.
+          // The effects:
+          // - Keeps the NAT mapping alive (prevents expiry).
+          // - Server can update the client’s SocketAddress if the NAT changes the port dynamically.
           session.setDatagramRemoteAddress(remoteAddress);
           session.addReadBytes(byteCount);
           datagramIoHandler.sessionRead(session, message);

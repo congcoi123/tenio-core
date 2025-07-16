@@ -28,7 +28,6 @@ import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
 import java.io.IOException;
-import java.nio.channels.SelectionKey;
 
 /**
  * The Datagram writing handler.

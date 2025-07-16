@@ -221,13 +221,6 @@ public interface Session {
   SocketChannel fetchSocketChannel();
 
   /**
-   * Retrieves a selection key for socket (TCP) channel, which is using to switch between channels.
-   *
-   * @return an instance of {@link SelectionKey}
-   */
-  SelectionKey fetchSocketSelectionKey();
-
-  /**
    * Retrieves the remote address associating to the client side whenever the server receives
    * message from him.
    *
