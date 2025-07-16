@@ -185,7 +185,7 @@ public final class DatagramReaderHandler extends SystemLogger {
 
   private void readUpdData(DatagramChannel datagramChannel, SelectionKey selectionKey,
                            ByteBuffer readerBuffer) {
-    Session session = null;
+    Session session;
 
     if (selectionKey.isValid() && selectionKey.isReadable()) {
       // prepares the buffer first

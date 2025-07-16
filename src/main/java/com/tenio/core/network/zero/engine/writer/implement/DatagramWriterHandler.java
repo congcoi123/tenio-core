@@ -93,8 +93,8 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
     getBuffer().flip();
 
     int writtenBytes;
-    // send data to the client
     try {
+      // send data to the client
       writtenBytes = datagramChannel.send(getBuffer(), remoteAddress);
     } catch (IOException exception) {
       if (isErrorEnabled()) {
