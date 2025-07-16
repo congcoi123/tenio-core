@@ -24,5 +24,87 @@ THE SOFTWARE.
 
 package com.tenio.core.controller;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.network.entity.protocol.Request;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 class ControllerTest {
+
+  private TestController controller;
+  private EventManager eventManager;
+
+  static class TestController extends AbstractController {
+    TestController(EventManager eventManager) { super(eventManager); }
+    @Override protected boolean isEnabledPriority() { return false; }
+    @Override public void subscribe() {}
+    @Override public void processRequest(Request request) {}
+    @Override public void onInitialized() {}
+    @Override public void onStarted() {}
+    @Override public void onRunning() {}
+    @Override public void onShutdown() {}
+    @Override public void onDestroyed() {}
+  }
+
+  @BeforeEach
+  void setUp() {
+    eventManager = mock(EventManager.class);
+    controller = new TestController(eventManager);
+  }
+
+  @Test
+  void testNameGetterSetter() {
+    controller.setName("Test");
+    assertEquals("Test", controller.getName());
+  }
+
+  @Test
+  void testInitializeAndStartAndShutdown() {
+    controller.setName("Test");
+    controller.setThreadPoolSize(1);
+    controller.initialize();
+    assertFalse(controller.isActivated());
+    controller.start();
+    assertTrue(controller.isActivated());
+    controller.shutdown();
+    assertFalse(controller.isActivated());
+  }
+
+  @Test
+  void testDoubleStartAndShutdown() {
+    controller.setThreadPoolSize(1);
+    controller.initialize();
+    controller.start();
+    controller.start(); // Should not throw
+    controller.shutdown();
+    controller.shutdown(); // Should not throw
+  }
+
+  @Test
+  void testMaxRequestQueueSize() {
+    controller.setMaxRequestQueueSize(2);
+    assertEquals(2, controller.getMaxRequestQueueSize());
+  }
+
+  @Test
+  void testThreadPoolSize() {
+    controller.setThreadPoolSize(2);
+    assertEquals(2, controller.getThreadPoolSize());
+  }
+
+  @Test
+  void testEnqueueRequestQueueFull() {
+    controller.setThreadPoolSize(1);
+    controller.setMaxRequestQueueSize(1);
+    controller.initialize();
+    Request req1 = mock(Request.class);
+    when(req1.getId()).thenReturn(0L);
+    Request req2 = mock(Request.class);
+    when(req2.getId()).thenReturn(0L);
+    controller.enqueueRequest(req1);
+    assertThrows(Exception.class, () -> controller.enqueueRequest(req2));
+  }
 }

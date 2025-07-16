@@ -30,6 +30,9 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.mock;
 
 import com.tenio.core.bootstrap.bean.TestBeanClass;
 import com.tenio.core.bootstrap.injector.Injector;
@@ -43,8 +46,10 @@ import com.tenio.core.custom.DisabledTestFindingSolution;
 import com.tenio.core.exception.DuplicatedBeanCreationException;
 import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
 import com.tenio.core.exception.NoImplementedClassFoundException;
+import jakarta.servlet.http.HttpServlet;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +67,51 @@ class InjectorTest {
       constructor.setAccessible(true);
       constructor.newInstance();
     });
+  }
+
+  @Test
+  @DisplayName("Injector.newInstance() always returns singleton")
+  void testNewInstanceSingleton() {
+    Injector i1 = Injector.newInstance();
+    Injector i2 = Injector.newInstance();
+    assertSame(i1, i2);
+  }
+
+  @Test
+  @DisplayName("getClassesMap, getClassBeansMap, getServletBeansMap, getSystemCommandManager, getClientCommandManager should not be null")
+  void testGettersNotNull() {
+    Injector injector = Injector.newInstance();
+    assertNotNull(injector.getClassesMap());
+    assertNotNull(injector.getClassBeansMap());
+    assertNotNull(injector.getServletBeansMap());
+    assertNotNull(injector.getSystemCommandManager());
+    assertNotNull(injector.getClientCommandManager());
+  }
+
+  @Test
+  @DisplayName("getBean returns null for unknown class")
+  void testGetBeanReturnsNullForUnknownClass() {
+    Injector injector = Injector.newInstance();
+    assertNull(injector.getBean(String.class));
+  }
+
+  @Test
+  @DisplayName("getBean returns correct instance after scanPackages")
+  void testGetBeanAfterScanPackages() throws Exception {
+    Injector injector = Injector.newInstance();
+    injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
+    Object bean = injector.getBean(BootstrapComponent.class);
+    assertNotNull(bean);
+  }
+
+  @Test
+  @DisplayName("getServletBeansMap returns map that can be modified")
+  void testServletBeansMapModifiable() {
+    Injector injector = Injector.newInstance();
+    Map<String, HttpServlet> map = injector.getServletBeansMap();
+    HttpServlet servlet = mock(HttpServlet.class);
+    map.put("test", servlet);
+    assertSame(servlet, injector.getServletBeansMap().get("test"));
   }
 
   @Test
