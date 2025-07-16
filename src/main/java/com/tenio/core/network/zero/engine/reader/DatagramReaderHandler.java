@@ -36,7 +36,6 @@ import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
-import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -73,7 +72,6 @@ public final class DatagramReaderHandler extends SystemLogger {
   private final DataType dataType;
   private final Selector readableSelector;
   private final ByteBuffer readerBuffer;
-  private final ZeroWriterListener zeroWriterListener;
   private final SessionManager sessionManager;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final DatagramIoHandler datagramIoHandler;
@@ -83,7 +81,6 @@ public final class DatagramReaderHandler extends SystemLogger {
    *
    * @param dataType               the {@link DataType}
    * @param readerBuffer           instance of {@link ByteBuffer}
-   * @param zeroWriterListener     instance of {@link ZeroWriterListener}
    * @param sessionManager         instance of {@link SessionManager}
    * @param networkReaderStatistic instance of {@link NetworkReaderStatistic}
    * @param datagramIoHandler      instance of {@link DatagramIoHandler}
@@ -91,13 +88,11 @@ public final class DatagramReaderHandler extends SystemLogger {
    */
   public DatagramReaderHandler(DataType dataType,
                                ByteBuffer readerBuffer,
-                               ZeroWriterListener zeroWriterListener,
                                SessionManager sessionManager,
                                NetworkReaderStatistic networkReaderStatistic,
                                DatagramIoHandler datagramIoHandler) throws IOException {
     this.dataType = dataType;
     this.readerBuffer = readerBuffer;
-    this.zeroWriterListener = zeroWriterListener;
     this.sessionManager = sessionManager;
     this.networkReaderStatistic = networkReaderStatistic;
     this.datagramIoHandler = datagramIoHandler;
@@ -255,10 +250,18 @@ public final class DatagramReaderHandler extends SystemLogger {
       session = sessionManager.getSessionByDatagram(udpConvey);
 
       if (session == null) {
-        datagramIoHandler.channelRead(datagramChannel, selectionKey, remoteAddress, message);
+        datagramIoHandler.channelRead(datagramChannel, remoteAddress, message);
       } else {
         if (session.isActivated()) {
-          session.setDatagramRemoteSocketAddress(remoteAddress);
+          // When a client (like A or B) is behind a NAT (Network Address Translation), its
+          // private/internal IP and port are not directly visible to your server.
+          // Instead, the NAT device assigns a temporary public IP + port mapping like:
+          // Private client (B): 192.168.1.5:54321
+          // → NAT mapping →
+          // Public IP: 203.0.113.42:61724
+          // But these mappings are temporary and will expire after some idle time (often 30
+          // seconds to a few minutes) if there's no traffic.
+          session.setDatagramRemoteAddress(remoteAddress);
           session.addReadBytes(byteCount);
           datagramIoHandler.sessionRead(session, message);
         } else {
@@ -267,13 +270,6 @@ public final class DatagramReaderHandler extends SystemLogger {
           }
         }
       }
-    }
-
-    if (selectionKey.isValid() && selectionKey.isWritable()) {
-      // should continue put this session for sending all left packets first
-      zeroWriterListener.interestWritingOnSession(session);
-      // now we should set it back to interest in OP_READ
-      selectionKey.interestOps(SelectionKey.OP_READ);
     }
   }
 }

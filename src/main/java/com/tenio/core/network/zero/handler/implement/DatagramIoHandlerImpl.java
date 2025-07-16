@@ -31,7 +31,6 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
-import java.nio.channels.SelectionKey;
 
 /**
  * The implementation for datagram IO handler.
@@ -53,10 +52,10 @@ public final class DatagramIoHandlerImpl extends AbstractIoHandler implements Da
   }
 
   @Override
-  public void channelRead(DatagramChannel datagramChannel, SelectionKey selectionKey,
-                          SocketAddress remoteAddress, DataCollection message) {
+  public void channelRead(DatagramChannel datagramChannel, SocketAddress remoteAddress,
+                          DataCollection message) {
     eventManager.emit(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME, datagramChannel,
-        selectionKey, remoteAddress, message);
+        remoteAddress, message);
   }
 
   @Override

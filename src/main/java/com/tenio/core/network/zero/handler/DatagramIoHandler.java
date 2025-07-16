@@ -29,7 +29,6 @@ import com.tenio.common.data.DataType;
 import com.tenio.core.network.entity.session.Session;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
-import java.nio.channels.SelectionKey;
 
 /**
  * The Datagram IO handler.
@@ -47,15 +46,14 @@ public interface DatagramIoHandler extends BaseIoHandler {
    * When a new message comes from client side then this method is invoked.
    *
    * @param datagramChannel a {@link DatagramChannel} created on the server
-   * @param selectionKey    the {@link SelectionKey} used to distinguish each channel on a selector
    * @param remoteAddress   a remote {@link SocketAddress} of client side*
    * @param message         an instance of {@link DataCollection} sent from client side, it can be in
    *                        different formats base on {@link DataType} value defined in {@code
    *                        configuration.xml}. This message should contain credential
    *                        information to verify the sender
    */
-  void channelRead(DatagramChannel datagramChannel, SelectionKey selectionKey,
-                   SocketAddress remoteAddress, DataCollection message);
+  void channelRead(DatagramChannel datagramChannel, SocketAddress remoteAddress,
+                   DataCollection message);
 
   /**
    * When a new message comes from a session then this method is invoked.

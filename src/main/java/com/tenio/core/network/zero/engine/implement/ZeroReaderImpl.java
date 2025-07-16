@@ -31,7 +31,6 @@ import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.utility.SocketUtility;
 import com.tenio.core.network.zero.engine.ZeroReader;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
-import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
 import com.tenio.core.network.zero.engine.reader.DatagramReaderHandler;
 import com.tenio.core.network.zero.engine.reader.SocketReaderHandler;
 import java.io.IOException;
@@ -57,7 +56,6 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   private DataType dataType;
   private String serverAddress;
   private SocketConfiguration udpChannelConfiguration;
-  private ZeroWriterListener zeroWriterListener;
   private NetworkReaderStatistic networkReaderStatistic;
 
   private ZeroReaderImpl(EventManager eventManager) {
@@ -76,14 +74,16 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   }
 
   private SocketReaderHandler getSocketReaderHandler() {
-    int index = Math.floorMod(INDEXER.getAndIncrement(), getThreadPoolSize() - getNumberOfExtraWorkers());
+    int index =
+        Math.floorMod(INDEXER.getAndIncrement(), getThreadPoolSize() - getNumberOfExtraWorkers());
     return socketReaderHandlers.get(index);
   }
 
   @Override
   public void acceptClientSocketChannel(SocketChannel socketChannel,
-                                        Consumer<SelectionKey> onKeyRegistered) {
-    getSocketReaderHandler().registerClientSocketChannel(socketChannel, onKeyRegistered);
+                                        Consumer<SelectionKey> onSuccess,
+                                        Runnable onFailed) {
+    getSocketReaderHandler().registerClientSocketChannel(socketChannel, onSuccess, onFailed);
   }
 
   @Override
@@ -99,11 +99,6 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   @Override
   public void setUdpChannelConfiguration(SocketConfiguration udpChannelConfiguration) {
     this.udpChannelConfiguration = udpChannelConfiguration;
-  }
-
-  @Override
-  public void setZeroWriterListener(ZeroWriterListener zeroWriterListener) {
-    this.zeroWriterListener = zeroWriterListener;
   }
 
   @Override
@@ -124,8 +119,8 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     if (udpChannelConfiguration != null) {
       try {
         datagramReaderHandler = new DatagramReaderHandler(dataType,
-            SocketUtility.createReaderBuffer(getMaxBufferSize()), zeroWriterListener,
-            getSessionManager(), getNetworkReaderStatistic(), getDatagramIoHandler());
+            SocketUtility.createReaderBuffer(getMaxBufferSize()), getSessionManager(),
+            getNetworkReaderStatistic(), getDatagramIoHandler());
         datagramReaderHandler.openDatagramChannels(serverAddress, udpChannelConfiguration.port(),
             udpChannelConfiguration.cacheSize());
       } catch (IOException exception) {
@@ -158,8 +153,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     try {
       var readerHandler =
           new SocketReaderHandler(SocketUtility.createReaderBuffer(getMaxBufferSize()),
-              zeroWriterListener, getSessionManager(), getNetworkReaderStatistic(),
-              getSocketIoHandler());
+              getSessionManager(), getNetworkReaderStatistic(), getSocketIoHandler());
       socketReaderHandlers.add(readerHandler);
 
       while (!Thread.currentThread().isInterrupted()) {

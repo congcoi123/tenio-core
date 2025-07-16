@@ -26,6 +26,7 @@ package com.tenio.core.network.zero.engine.listener;
 
 import com.tenio.core.network.zero.engine.ZeroAcceptor;
 import com.tenio.core.network.zero.engine.ZeroReader;
+import com.tenio.core.network.zero.engine.reader.SocketReaderHandler;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -43,11 +44,14 @@ public interface ZeroReaderListener {
    * When a new coming socket connected to the server, and it is accepted by the acceptor. This
    * socket then is added to the reader engine to manage communication.
    *
-   * @param socketChannel   the accepted {@link SocketChannel}
-   * @param onKeyRegistered the callback when {@link SelectionKey} is ready
+   * @param socketChannel the accepted {@link SocketChannel}
+   * @param onSuccess     the callback when the reader {@link SelectionKey} is ready
+   * @param onFailed      it's failed to register this channel to a reader handler
    * @throws ClosedChannelException when a channel is closed unexpectedly
    * @see ZeroAcceptor
+   * @see SocketReaderHandler
    */
-  void acceptClientSocketChannel(SocketChannel socketChannel, Consumer<SelectionKey> onKeyRegistered)
+  void acceptClientSocketChannel(SocketChannel socketChannel, Consumer<SelectionKey> onSuccess,
+                                 Runnable onFailed)
       throws ClosedChannelException;
 }

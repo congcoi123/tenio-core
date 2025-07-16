@@ -57,7 +57,7 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
 
     // the InetSocketAddress should be saved and updated when the datagram channel receive
     // messages from the client
-    var remoteSocketAddress = session.getDatagramRemoteSocketAddress();
+    var remoteAddress = session.getDatagramRemoteAddress();
 
     // the datagram need to be declared first, something went wrong here, need to
     // log the exception content
@@ -67,7 +67,7 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
             ", no DatagramChannel was set");
       }
       return;
-    } else if (remoteSocketAddress == null) {
+    } else if (remoteAddress == null) {
       if (isErrorEnabled()) {
         error("{DATAGRAM CHANNEL SEND} ", "UDP Packet cannot be sent to ", session.toString(),
             ", no InetSocketAddress was set");
@@ -96,7 +96,7 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
     int writtenBytes;
     // send data to the client
     try {
-      writtenBytes = datagramChannel.send(getBuffer(), remoteSocketAddress);
+      writtenBytes = datagramChannel.send(getBuffer(), remoteAddress);
     } catch (IOException exception) {
       if (isErrorEnabled()) {
         error(exception, "Error occurred in writing on session: ", session.toString());
@@ -118,17 +118,6 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
     // session back to the tickets queue
     if (session.isActivated() && !packetQueue.isEmpty()) {
       getSessionTicketsQueue(session.getId()).add(session);
-    }
-
-    // want to know when the socket is alive and can write, which should be noticed on
-    // isWritable() method when that event occurs, try to re-add the session to the tickets queue
-    var selectionKey = session.fetchDatagramSelectionKey();
-    try {
-      if (selectionKey != null && selectionKey.channel().isOpen() && selectionKey.isValid()) {
-        selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-      }
-    } catch (Exception exception) {
-      error(exception, "Something went wrong with OP_WRITE key for session: ", session);
     }
   }
 }

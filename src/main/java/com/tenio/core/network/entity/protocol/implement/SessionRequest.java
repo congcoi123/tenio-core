@@ -76,22 +76,12 @@ public class SessionRequest implements Request {
   }
 
   @Override
-  public Object getExtra() {
+  public SocketAddress getRemoteAddress() {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Request setExtra(Object extra) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public SocketAddress getRemoteSocketAddress() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Request setRemoteSocketAddress(SocketAddress remoteSocketAddress) {
+  public Request setRemoteAddress(SocketAddress remoteAddress) {
     throw new UnsupportedOperationException();
   }
 

@@ -27,7 +27,6 @@ package com.tenio.core.network.zero.engine;
 import com.tenio.common.data.DataType;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
-import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
 
 /**
  * The engine supports reading binaries data from sockets.
@@ -54,14 +53,6 @@ public interface ZeroReader extends ZeroEngine {
    * @param udpChannelConfiguration an instance of {@link SocketConfiguration} for UDP
    */
   void setUdpChannelConfiguration(SocketConfiguration udpChannelConfiguration);
-
-  /**
-   * Sets a listener for the writer engine which is using for communication between two engines.
-   *
-   * @param zeroWriterListener the {@link ZeroWriterListener} instance
-   * @see ZeroWriter
-   */
-  void setZeroWriterListener(ZeroWriterListener zeroWriterListener);
 
   /**
    * Retrieves a network reader statistic instance which takes responsibility recording the

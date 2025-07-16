@@ -32,7 +32,6 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.engine.ZeroWriter;
-import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
 import com.tenio.core.network.zero.engine.manager.SessionTicketsQueueManager;
 import com.tenio.core.network.zero.engine.writer.WriterHandler;
 import com.tenio.core.network.zero.engine.writer.implement.DatagramWriterHandler;
@@ -45,8 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @see ZeroWriter
  */
-public final class ZeroWriterImpl extends AbstractZeroEngine
-    implements ZeroWriter, ZeroWriterListener {
+public final class ZeroWriterImpl extends AbstractZeroEngine implements ZeroWriter {
 
   private final AtomicInteger id;
   private SessionTicketsQueueManager sessionTicketsQueueManager;
@@ -177,7 +175,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
         // put new item into the queue
         packetQueue.put(packet);
 
-        // accept duplicated entries to prevent locking queue
+        // duplicated entries are expected
         sessionTicketsQueueManager.getQueueByElementId(session.getId()).add(session);
 
         packet.setRecipients(null);
@@ -188,13 +186,6 @@ public final class ZeroWriterImpl extends AbstractZeroEngine
         session.addDroppedPackets(1);
         networkWriterStatistic.updateWrittenDroppedPacketsByFull(1);
       }
-    }
-  }
-
-  @Override
-  public void interestWritingOnSession(Session session) {
-    if (session != null && session.isActivated()) {
-      sessionTicketsQueueManager.getQueueByElementId(session.getId()).add(session);
     }
   }
 

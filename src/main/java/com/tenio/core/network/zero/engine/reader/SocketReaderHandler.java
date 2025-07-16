@@ -29,7 +29,6 @@ import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.zero.engine.acceptor.AcceptorHandler;
-import com.tenio.core.network.zero.engine.listener.ZeroWriterListener;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -65,7 +64,6 @@ public final class SocketReaderHandler extends SystemLogger {
 
   private final Selector readableSelector;
   private final ByteBuffer readerBuffer;
-  private final ZeroWriterListener zeroWriterListener;
   private final SessionManager sessionManager;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final SocketIoHandler socketIoHandler;
@@ -74,19 +72,16 @@ public final class SocketReaderHandler extends SystemLogger {
    * Constructor.
    *
    * @param readerBuffer           instance of {@link ByteBuffer}
-   * @param zeroWriterListener     instance of {@link ZeroWriterListener}
    * @param sessionManager         instance of {@link SessionManager}
    * @param networkReaderStatistic instance of {@link NetworkReaderStatistic}
    * @param socketIoHandler        instance of {@link SocketIoHandler}
    * @throws IOException whenever any IO exception thrown
    */
   public SocketReaderHandler(ByteBuffer readerBuffer,
-                             ZeroWriterListener zeroWriterListener,
                              SessionManager sessionManager,
                              NetworkReaderStatistic networkReaderStatistic,
                              SocketIoHandler socketIoHandler) throws IOException {
     this.readerBuffer = readerBuffer;
-    this.zeroWriterListener = zeroWriterListener;
     this.sessionManager = sessionManager;
     this.networkReaderStatistic = networkReaderStatistic;
     this.socketIoHandler = socketIoHandler;
@@ -97,23 +92,26 @@ public final class SocketReaderHandler extends SystemLogger {
   /**
    * Registers a client socket to the reader selector.
    *
-   * @param socketChannel   {@link SocketChannel} a client channel
-   * @param onKeyRegistered when its {@link SelectionKey} is ready
+   * @param socketChannel {@link SocketChannel} a client channel
+   * @param onSuccess  when its {@link SelectionKey} is ready
+   * @param onFailed      it's failed to register this channel to a reader handler
    */
   public void registerClientSocketChannel(SocketChannel socketChannel,
-                                          Consumer<SelectionKey> onKeyRegistered) {
+                                          Consumer<SelectionKey> onSuccess,
+                                          Runnable onFailed) {
     // register channels to selector
     // readable selector was registered by OP_READ interested only socket channels,
     // but in some cases, we can receive "can writable" signal from those sockets
     SelectionKey selectionKey;
     try {
       selectionKey = socketChannel.register(readableSelector, SelectionKey.OP_READ);
-      onKeyRegistered.accept(selectionKey);
+      readableSelector.wakeup(); // this helps unblock the instruction select() in the method running()
+      onSuccess.accept(selectionKey);
     } catch (ClosedChannelException exception) {
       error(exception, "It was unable to register this channel to to selector: ",
           exception.getMessage());
+      onFailed.run();
     }
-    readableSelector.wakeup(); // this helps unblock the instruction select() in the method running()
   }
 
   /**
@@ -184,15 +182,6 @@ public final class SocketReaderHandler extends SystemLogger {
         debug("READ TCP CHANNEL", "Session is inactivated: ", session.toString());
       }
       return;
-    }
-
-    // when a socket channel is writable, should make it the highest priority
-    // manipulation
-    if (selectionKey.isValid() && selectionKey.isWritable()) {
-      // should continually put this session for sending all left packets first
-      zeroWriterListener.interestWritingOnSession(session);
-      // now we should set it back to interest in OP_READ
-      selectionKey.interestOps(SelectionKey.OP_READ);
     }
 
     if (selectionKey.isValid() && selectionKey.isReadable()) {
