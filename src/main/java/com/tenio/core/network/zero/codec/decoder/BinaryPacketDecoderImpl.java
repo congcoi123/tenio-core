@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.codec.decoder;
 
-import com.tenio.common.logger.SystemLogger;
 import com.tenio.common.utility.ByteUtility;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.codec.CodecUtility;
@@ -37,7 +36,7 @@ import java.nio.ByteBuffer;
 /**
  * The default implementation for the binary packet decoding.
  */
-public final class BinaryPacketDecoderImpl extends SystemLogger implements BinaryPacketDecoder {
+public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
 
   private BinaryPacketCompressor compressor;
   private BinaryPacketEncryptor encryptor;
@@ -75,7 +74,7 @@ public final class BinaryPacketDecoderImpl extends SystemLogger implements Binar
         }
       }
     } catch (Exception exception) {
-      error(exception);
+      // swallows the exception as it's expected
       readState = PacketReadState.WAIT_NEW_PACKET;
     }
 
