@@ -27,11 +27,11 @@ package com.tenio.core.bootstrap;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
 
 import com.tenio.core.bootstrap.bean.TestBeanClass;
@@ -191,16 +191,18 @@ class InjectorTest {
   @DisplayName("After scanning the package should throw an exception because there are more than " +
       "2 classes implement same interface without @AutowiredQualifier declaration")
   void scanPackageShouldThrowExceptionInInstanceOfD() {
-    assertThrows(MultipleImplementedClassForInterfaceException.class, () -> injector.scanPackages(null, "com.tenio.core.bootstrap.test.impl", "com.tenio.core" +
-        ".bootstrap.test.inf", "com.tenio.core.bootstrap.exception.one"));
+    assertThrows(MultipleImplementedClassForInterfaceException.class,
+        () -> injector.scanPackages(null, "com.tenio.core.bootstrap.test.impl", "com.tenio.core" +
+            ".bootstrap.test.inf", "com.tenio.core.bootstrap.exception.one"));
   }
 
   @Test
   @DisplayName("After scanning the package should throw an exception because there is no class " +
       "implement declared interface")
   void scanPackageShouldThrowExceptionInInstanceOfE() {
-    assertThrows(NoImplementedClassFoundException.class, () -> injector.scanPackages(null, "com.tenio.core.bootstrap.test.impl", "com.tenio.core" +
-        ".bootstrap.test.inf", "com.tenio.core.bootstrap.exception.two"));
+    assertThrows(NoImplementedClassFoundException.class,
+        () -> injector.scanPackages(null, "com.tenio.core.bootstrap.test.impl", "com.tenio.core" +
+            ".bootstrap.test.inf", "com.tenio.core.bootstrap.exception.two"));
   }
 
   @Test

@@ -24,22 +24,19 @@ THE SOFTWARE.
 
 package com.tenio.core.bootstrap;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.mock;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.tenio.core.bootstrap.annotation.Bootstrap;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Field;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import com.tenio.core.bootstrap.annotation.Bootstrap;
-import com.tenio.core.bootstrap.injector.Injector;
 
 @DisplayName("Unit Test Cases For Bootstrapper")
 class BootstrapperTest {
@@ -69,7 +66,8 @@ class BootstrapperTest {
   @Test
   @DisplayName("run() with a class not annotated with @Bootstrap should not initialize handler")
   void runWithNonBootstrapClassShouldNotInitHandler() {
-    class NotBootstrap {}
+    class NotBootstrap {
+    }
     assertDoesNotThrow(() -> bootstrapper.run(NotBootstrap.class));
     assertNull(bootstrapper.getBootstrapHandler());
   }
@@ -78,7 +76,8 @@ class BootstrapperTest {
   @DisplayName("run() with a class annotated with @Bootstrap should initialize handler")
   void runWithBootstrapClassShouldInitHandler() {
     @Bootstrap
-    class Annotated {}
+    class Annotated {
+    }
     assertDoesNotThrow(() -> bootstrapper.run(Annotated.class));
     // Handler should be set after run
     assertNotNull(bootstrapper.getBootstrapHandler());
@@ -95,7 +94,8 @@ class BootstrapperTest {
   @Test
   @DisplayName("run() should handle exceptions gracefully")
   void runShouldHandleException() {
-    class Failing {}
+    class Failing {
+    }
     // Use a spy or mock if needed for injector, but here just check no throw
     assertDoesNotThrow(() -> bootstrapper.run(Failing.class));
   }

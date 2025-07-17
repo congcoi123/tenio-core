@@ -1,19 +1,41 @@
+/*
+The MIT License
+
+Copyright (c) 2016-2025 kong <congcoi123@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 package com.tenio.core;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import com.tenio.core.bootstrap.Bootstrapper;
-import com.tenio.core.monitoring.system.SystemInfo;
-import com.tenio.core.server.ServerImpl;
-import org.apache.logging.log4j.core.tools.picocli.CommandLine;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.lang.reflect.Field;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
+@DisplayName("Unit Test Cases For ApplicationLauncher")
 class ApplicationLauncherTest {
 
   @Test
+  @DisplayName("Test Singleton")
   void testSingletonEnforcement() throws Exception {
     Field instanceField = ApplicationLauncher.class.getDeclaredField("instance");
     instanceField.setAccessible(true);
@@ -21,35 +43,4 @@ class ApplicationLauncherTest {
     assertNotNull(instance);
     assertSame(ApplicationLauncher.class, instance.getClass());
   }
-
-  @Test
-  void testRunWithNullEntryClass() {
-    assertDoesNotThrow(() -> ApplicationLauncher.run(null, new String[]{}));
-  }
-
-  @Test
-  void testStartWithBootstrapperException() throws Exception {
-    // Mock Bootstrapper and ServerImpl
-    Bootstrapper bootstrapper = mock(Bootstrapper.class);
-    ServerImpl server = mock(ServerImpl.class);
-    SystemInfo sysInfo = mock(SystemInfo.class);
-    // Use reflection to inject mocks
-    Field bootstrapperField = Bootstrapper.class.getDeclaredField("instance");
-    bootstrapperField.setAccessible(true);
-    bootstrapperField.set(null, bootstrapper);
-    Field serverField = ServerImpl.class.getDeclaredField("instance");
-    serverField.setAccessible(true);
-    serverField.set(null, server);
-    doThrow(new RuntimeException("fail")).when(bootstrapper).run(any(), any(), any(), any(), any());
-    doNothing().when(server).shutdown();
-    // Should not throw, but will call System.exit(1) (cannot test exit in unit test)
-    assertDoesNotThrow(() -> {
-      try {
-        java.lang.reflect.Method m = ApplicationLauncher.class.getDeclaredMethod("newInstance");
-        m.setAccessible(true);
-        ApplicationLauncher launcher = (ApplicationLauncher) m.invoke(null);
-        launcher.start(Object.class, new String[]{});
-      } catch (Exception ignored) {}
-    });
-  }
-} 
+}

@@ -27,14 +27,11 @@ package com.tenio.core.bootstrap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
-import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
 import com.tenio.core.bootstrap.injector.BeanClass;
 import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.system.SystemCommandManager;
-import com.tenio.core.event.handler.EventHandler;
 import jakarta.servlet.http.HttpServlet;
 import java.util.HashMap;
 import java.util.Map;

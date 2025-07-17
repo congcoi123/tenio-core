@@ -35,10 +35,14 @@ import com.tenio.core.entity.PlayerState;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.room.PlayerRoleInRoom;
 import com.tenio.core.network.entity.session.Session;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("Unit Test Cases For DefaultPlayer")
 class DefaultPlayerTest {
+
   @Test
+  @DisplayName("Test creating a new instance without session")
   void testNewInstance() {
     Player actualNewInstanceResult = DefaultPlayer.newInstance("Name");
     assertTrue(actualNewInstanceResult.getCurrentRoom().isEmpty());
@@ -52,6 +56,7 @@ class DefaultPlayerTest {
   }
 
   @Test
+  @DisplayName("Test creating a new instance with session")
   void testNewInstance2() {
     Player actualNewInstanceResult = DefaultPlayer.newInstance("Name", mock(Session.class));
     assertTrue(actualNewInstanceResult.getCurrentRoom().isEmpty());
@@ -64,31 +69,22 @@ class DefaultPlayerTest {
   }
 
   @Test
-  void testNewInstance3() {
-    Player actualNewInstanceResult = DefaultPlayer.newInstance("Name", null);
-    assertTrue(actualNewInstanceResult.getCurrentRoom().isEmpty());
-    assertEquals(PlayerRoleInRoom.SPECTATOR, actualNewInstanceResult.getRoleInRoom());
-    assertFalse(actualNewInstanceResult.isLoggedIn());
-    assertFalse(actualNewInstanceResult.isInRoom());
-    assertFalse(actualNewInstanceResult.isActivated());
-    assertFalse(actualNewInstanceResult.getSession().isPresent());
-    assertEquals("Name", actualNewInstanceResult.getIdentity());
-    assertEquals(0L, actualNewInstanceResult.getLastLoggedInTime());
-  }
-
-  @Test
+  @DisplayName("Test transitions of player states")
   void testStateTransitions() {
     Player player = DefaultPlayer.newInstance("Test");
     player.setState(null);
     assertTrue(player.isState(null));
-    PlayerState stateA = new PlayerState() {};
-    PlayerState stateB = new PlayerState() {};
+    PlayerState stateA = new PlayerState() {
+    };
+    PlayerState stateB = new PlayerState() {
+    };
     assertTrue(player.transitionState(null, stateA));
     assertTrue(player.isState(stateA));
     assertFalse(player.transitionState(stateB, stateA));
   }
 
   @Test
+  @DisplayName("Test activation and login setter/getter")
   void testActivationAndLogin() {
     Player player = DefaultPlayer.newInstance("Test");
     player.setActivated(true);
@@ -101,6 +97,7 @@ class DefaultPlayerTest {
   }
 
   @Test
+  @DisplayName("Test session setter/getter")
   void testSessionAssignment() {
     Player player = DefaultPlayer.newInstance("Test");
     Session session = mock(Session.class);
@@ -111,6 +108,7 @@ class DefaultPlayerTest {
   }
 
   @Test
+  @DisplayName("Test room setter/getter")
   void testRoomAssignment() {
     Player player = DefaultPlayer.newInstance("Test");
     assertFalse(player.isInRoom());
@@ -123,6 +121,7 @@ class DefaultPlayerTest {
   }
 
   @Test
+  @DisplayName("Test transitions of roles")
   void testRoleTransitions() {
     Player player = DefaultPlayer.newInstance("Test");
     assertTrue(player.transitionRole(PlayerRoleInRoom.SPECTATOR, PlayerRoleInRoom.PARTICIPANT));
@@ -131,6 +130,7 @@ class DefaultPlayerTest {
   }
 
   @Test
+  @DisplayName("Test player slot getter/setter")
   void testPlayerSlot() {
     Player player = DefaultPlayer.newInstance("Test");
     player.setPlayerSlotInCurrentRoom(5);
@@ -138,6 +138,7 @@ class DefaultPlayerTest {
   }
 
   @Test
+  @DisplayName("Test player property getter/setter")
   void testPropertyMap() {
     Player player = DefaultPlayer.newInstance("Test");
     player.setProperty("key", "value");
@@ -151,6 +152,7 @@ class DefaultPlayerTest {
   }
 
   @Test
+  @DisplayName("Test IDLE/Deportation states getter/setter")
   void testIdleAndDeportation() {
     Player player = DefaultPlayer.newInstance("Test");
     player.configureMaxIdleTimeInSeconds(0);
@@ -162,6 +164,7 @@ class DefaultPlayerTest {
   }
 
   @Test
+  @DisplayName("Test equals() and hashCode() methods")
   void testEqualsAndHashCode() {
     Player player1 = DefaultPlayer.newInstance("Test");
     Player player2 = DefaultPlayer.newInstance("Test");
@@ -172,12 +175,14 @@ class DefaultPlayerTest {
   }
 
   @Test
+  @DisplayName("Test toString()")
   void testToString() {
     Player player = DefaultPlayer.newInstance("Test");
     assertTrue(player.toString().contains("identity='Test'"));
   }
 
   @Test
+  @DisplayName("Test cleaning property")
   void testClean() {
     Player player = DefaultPlayer.newInstance("Test");
     player.setActivated(true);

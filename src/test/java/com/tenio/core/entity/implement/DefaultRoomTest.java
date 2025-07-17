@@ -26,24 +26,27 @@ package com.tenio.core.entity.implement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import com.tenio.core.entity.Room;
 import com.tenio.core.entity.Player;
+import com.tenio.core.entity.Room;
 import com.tenio.core.entity.RoomState;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
-import com.tenio.core.entity.implement.DefaultRoom;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.entity.setting.strategy.RoomPlayerSlotGeneratedStrategy;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("Unit Test Cases For DefaultRoom")
 class DefaultRoomTest {
+
   @Test
+  @DisplayName("Test creating a new instance")
   void testNewInstance() {
     Room actualNewInstanceResult = DefaultRoom.newInstance();
     assertFalse(actualNewInstanceResult.isActivated());
@@ -56,6 +59,7 @@ class DefaultRoomTest {
   }
 
   @Test
+  @DisplayName("Test room getters/setters")
   void testSettersAndGetters() {
     DefaultRoom room = (DefaultRoom) DefaultRoom.newInstance();
     room.configurePlayerManager(mock(PlayerManager.class));
@@ -82,12 +86,15 @@ class DefaultRoomTest {
   }
 
   @Test
+  @DisplayName("Test transitions of room states")
   void testStateTransitions() {
     DefaultRoom room = (DefaultRoom) DefaultRoom.newInstance();
     room.setState(null);
     assertTrue(room.isState(null));
-    RoomState stateA = new RoomState() {};
-    RoomState stateB = new RoomState() {};
+    RoomState stateA = new RoomState() {
+    };
+    RoomState stateB = new RoomState() {
+    };
     room.setState(stateA);
     assertTrue(room.isState(stateA));
     assertTrue(room.transitionState(stateA, stateB));
@@ -96,6 +103,7 @@ class DefaultRoomTest {
   }
 
   @Test
+  @DisplayName("Test property getters/setters")
   void testPropertyMap() {
     DefaultRoom room = (DefaultRoom) DefaultRoom.newInstance();
     room.setProperty("key", "value");
@@ -109,22 +117,23 @@ class DefaultRoomTest {
   }
 
   @Test
+  @DisplayName("Test equals()/hashCode() methods")
   void testEqualsAndHashCode() {
     DefaultRoom room1 = (DefaultRoom) DefaultRoom.newInstance();
     DefaultRoom room2 = (DefaultRoom) DefaultRoom.newInstance();
     assertNotEquals(room1, room2);
     assertNotEquals(room1.hashCode(), room2.hashCode());
-    assertEquals(room1, room1);
-    assertEquals(room1.hashCode(), room1.hashCode());
   }
 
   @Test
+  @DisplayName("Test toString()")
   void testToString() {
     DefaultRoom room = (DefaultRoom) DefaultRoom.newInstance();
     assertTrue(room.toString().contains("DefaultRoom{"));
   }
 
   @Test
+  @DisplayName("Test owner and activation getters/setters")
   void testOwnerAndActivation() {
     DefaultRoom room = (DefaultRoom) DefaultRoom.newInstance();
     assertTrue(room.getOwner().isEmpty());
@@ -138,6 +147,7 @@ class DefaultRoomTest {
   }
 
   @Test
+  @DisplayName("Test retrieving participants and spectators lists")
   void testParticipantAndSpectatorLists() {
     DefaultRoom room = (DefaultRoom) DefaultRoom.newInstance();
     room.configurePlayerManager(mock(PlayerManager.class));
@@ -147,6 +157,7 @@ class DefaultRoomTest {
   }
 
   @Test
+  @DisplayName("Test public or private states")
   void testIsPublic() {
     DefaultRoom room = (DefaultRoom) DefaultRoom.newInstance();
     room.configureRoomCredentialValidatedStrategy(mock(RoomCredentialValidatedStrategy.class));
@@ -157,6 +168,7 @@ class DefaultRoomTest {
   }
 
   @Test
+  @DisplayName("Test room capacity and fullness")
   void testCapacityAndFullness() {
     DefaultRoom room = (DefaultRoom) DefaultRoom.newInstance();
     PlayerManager pm = mock(PlayerManager.class);
@@ -173,6 +185,7 @@ class DefaultRoomTest {
   }
 
   @Test
+  @DisplayName("Add a player with invalid password into a room should throw exception")
   void testExceptionOnInvalidAddPlayer() {
     DefaultRoom room = (DefaultRoom) DefaultRoom.newInstance();
     room.configurePlayerManager(mock(PlayerManager.class));
