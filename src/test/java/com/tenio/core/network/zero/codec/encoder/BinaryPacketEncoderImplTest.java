@@ -22,32 +22,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core;
+package com.tenio.core.network.zero.codec.encoder;
 
-import org.junit.platform.runner.JUnitPlatform;
-import org.junit.platform.suite.api.SelectPackages;
-import org.junit.platform.suite.api.SuiteDisplayName;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-@RunWith(JUnitPlatform.class)
-// @Suite
-@SuiteDisplayName("Test all unit test cases for tenio-core module")
-@SelectPackages({
-    "com.tenio.core.api",
-    "com.tenio.core.bootstrap",
-    "com.tenio.core.command",
-    "com.tenio.core.configuration",
-    "com.tenio.core.controller",
-    "com.tenio.core.entity",
-    "com.tenio.core.event",
-    "com.tenio.core.exception",
-    "com.tenio.core.handler",
-    "com.tenio.core.manager",
-    "com.tenio.core.monitoring",
-    "com.tenio.core.network",
-    "com.tenio.core.scheduler",
-    "com.tenio.core.server",
-    "com.tenio.core.utility"
-})
-class TenIOCoreTest {
+import com.tenio.core.network.entity.packet.Packet;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+@DisplayName("Unit Test Cases For BinaryPacketEncoderImpl")
+class BinaryPacketEncoderImplTest {
+
+  private BinaryPacketEncoderImpl encoder;
+
+  @BeforeEach
+  void setUp() {
+    encoder = new BinaryPacketEncoderImpl();
+  }
+
+  @Test
+  @DisplayName("Try to encode a null packet should throw exception")
+  void testEncodeNullPacket() {
+    assertThrows(NullPointerException.class, () -> encoder.encode(null));
+  }
+
+  @Test
+  @DisplayName("Test encoding a valid packet")
+  void testEncodeValidPacket() {
+    Packet packet = mock(Packet.class);
+    when(packet.getData()).thenReturn(new byte[] {1, 2, 3});
+    assertNotNull(encoder.encode(packet));
+  }
 }

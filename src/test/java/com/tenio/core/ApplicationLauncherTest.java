@@ -24,30 +24,23 @@ THE SOFTWARE.
 
 package com.tenio.core;
 
-import org.junit.platform.runner.JUnitPlatform;
-import org.junit.platform.suite.api.SelectPackages;
-import org.junit.platform.suite.api.SuiteDisplayName;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
-@RunWith(JUnitPlatform.class)
-// @Suite
-@SuiteDisplayName("Test all unit test cases for tenio-core module")
-@SelectPackages({
-    "com.tenio.core.api",
-    "com.tenio.core.bootstrap",
-    "com.tenio.core.command",
-    "com.tenio.core.configuration",
-    "com.tenio.core.controller",
-    "com.tenio.core.entity",
-    "com.tenio.core.event",
-    "com.tenio.core.exception",
-    "com.tenio.core.handler",
-    "com.tenio.core.manager",
-    "com.tenio.core.monitoring",
-    "com.tenio.core.network",
-    "com.tenio.core.scheduler",
-    "com.tenio.core.server",
-    "com.tenio.core.utility"
-})
-class TenIOCoreTest {
+import java.lang.reflect.Field;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+@DisplayName("Unit Test Cases For ApplicationLauncher")
+class ApplicationLauncherTest {
+
+  @Test
+  @DisplayName("Test Singleton")
+  void testSingletonEnforcement() throws Exception {
+    Field instanceField = ApplicationLauncher.class.getDeclaredField("instance");
+    instanceField.setAccessible(true);
+    ApplicationLauncher instance = (ApplicationLauncher) instanceField.get(null);
+    assertNotNull(instance);
+    assertSame(ApplicationLauncher.class, instance.getClass());
+  }
 }

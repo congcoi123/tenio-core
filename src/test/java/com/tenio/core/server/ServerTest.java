@@ -24,5 +24,57 @@ THE SOFTWARE.
 
 package com.tenio.core.server;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import com.tenio.core.bootstrap.BootstrapHandler;
+import com.tenio.core.command.client.ClientCommandManager;
+import com.tenio.core.command.system.SystemCommandManager;
+import com.tenio.core.entity.manager.ChannelManager;
+import com.tenio.core.entity.manager.PlayerManager;
+import com.tenio.core.entity.manager.RoomManager;
+import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.network.entity.protocol.Response;
+import com.tenio.core.server.Server;
+import com.tenio.core.server.ServerImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 class ServerTest {
+
+  private Server server;
+
+  @BeforeEach
+  void setUp() {
+    server = ServerImpl.getInstance();
+  }
+
+  @Test
+  void testSingleton() {
+    Server s1 = ServerImpl.getInstance();
+    Server s2 = ServerImpl.getInstance();
+    assertSame(s1, s2);
+  }
+
+  // @Test
+  // void testGetters() {
+  //   assertNotNull(server.getApi());
+  //   assertNotNull(server.getClientCommandManager());
+  //   assertNotNull(server.getEventManager());
+  //   assertNotNull(server.getPlayerManager());
+  //   assertNotNull(server.getRoomManager());
+  //   assertNotNull(server.getChannelManager());
+  //   assertNotNull(server.getDatagramChannelManager());
+  //   assertNotNull(server.getConfiguration());
+  //   assertNotNull(server.getDataType());
+  //   assertTrue(server.getStartedTime() >= 0);
+  //   assertTrue(server.getUptime() >= 0);
+  // }
+
+  // @Test
+  // void testWrite() {
+  //   Response response = mock(Response.class);
+  //   assertDoesNotThrow(() -> server.write(response, true));
+  //   assertDoesNotThrow(() -> server.write(response, false));
+  // }
 }

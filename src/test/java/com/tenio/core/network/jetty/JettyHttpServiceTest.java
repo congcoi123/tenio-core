@@ -22,32 +22,37 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core;
+package com.tenio.core.network.jetty;
 
-import org.junit.platform.runner.JUnitPlatform;
-import org.junit.platform.suite.api.SelectPackages;
-import org.junit.platform.suite.api.SuiteDisplayName;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.Mockito.mock;
 
-@RunWith(JUnitPlatform.class)
-// @Suite
-@SuiteDisplayName("Test all unit test cases for tenio-core module")
-@SelectPackages({
-    "com.tenio.core.api",
-    "com.tenio.core.bootstrap",
-    "com.tenio.core.command",
-    "com.tenio.core.configuration",
-    "com.tenio.core.controller",
-    "com.tenio.core.entity",
-    "com.tenio.core.event",
-    "com.tenio.core.exception",
-    "com.tenio.core.handler",
-    "com.tenio.core.manager",
-    "com.tenio.core.monitoring",
-    "com.tenio.core.network",
-    "com.tenio.core.scheduler",
-    "com.tenio.core.server",
-    "com.tenio.core.utility"
-})
-class TenIOCoreTest {
+import com.tenio.core.event.implement.EventManager;
+import jakarta.servlet.http.HttpServlet;
+import java.util.Collections;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+@DisplayName("Unit Test Cases For JettyHttpService")
+class JettyHttpServiceTest {
+
+  private JettyHttpService service;
+
+  @BeforeEach
+  void setUp() {
+    EventManager eventManager = EventManager.newInstance();
+    service = JettyHttpService.newInstance(eventManager);
+    service.setThreadPoolSize(16); // valid max threads
+    service.setPort(8080); // valid port
+    service.setServletMap(Collections.singletonMap("test", mock(HttpServlet.class)));
+  }
+
+  @Test
+  @DisplayName("Test start() and shutdown() behaviours")
+  void testStartAndShutdown() {
+    assertDoesNotThrow(() -> service.initialize());
+    assertDoesNotThrow(() -> service.start());
+    assertDoesNotThrow(() -> service.shutdown());
+  }
 }

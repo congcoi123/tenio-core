@@ -22,32 +22,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core;
+package com.tenio.core.command.client;
 
-import org.junit.platform.runner.JUnitPlatform;
-import org.junit.platform.suite.api.SelectPackages;
-import org.junit.platform.suite.api.SuiteDisplayName;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
 
-@RunWith(JUnitPlatform.class)
-// @Suite
-@SuiteDisplayName("Test all unit test cases for tenio-core module")
-@SelectPackages({
-    "com.tenio.core.api",
-    "com.tenio.core.bootstrap",
-    "com.tenio.core.command",
-    "com.tenio.core.configuration",
-    "com.tenio.core.controller",
-    "com.tenio.core.entity",
-    "com.tenio.core.event",
-    "com.tenio.core.exception",
-    "com.tenio.core.handler",
-    "com.tenio.core.manager",
-    "com.tenio.core.monitoring",
-    "com.tenio.core.network",
-    "com.tenio.core.scheduler",
-    "com.tenio.core.server",
-    "com.tenio.core.utility"
-})
-class TenIOCoreTest {
+import com.tenio.common.data.DataCollection;
+import com.tenio.core.entity.Player;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+class TestClientCommandHandler extends AbstractClientCommandHandler<Player> {
+
+  @Override
+  public void execute(Player player, DataCollection message) {
+  }
+}
+
+@DisplayName("Unit Test Cases For AbstractClientCommandHandler")
+class AbstractClientCommandHandlerTest {
+
+  @Test
+  @DisplayName("Test handler getter/setter")
+  void testSetAndGetCommandManager() {
+    TestClientCommandHandler handler = new TestClientCommandHandler();
+    ClientCommandManager manager = mock(ClientCommandManager.class);
+    handler.setCommandManager(manager);
+    assertEquals(manager, handler.getCommandManager());
+  }
 }
