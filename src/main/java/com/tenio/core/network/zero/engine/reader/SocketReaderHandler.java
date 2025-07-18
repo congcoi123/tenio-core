@@ -105,8 +105,8 @@ public final class SocketReaderHandler extends SystemLogger {
     SelectionKey selectionKey;
     try {
       selectionKey = socketChannel.register(readableSelector, SelectionKey.OP_READ);
-      readableSelector.wakeup(); // this helps unblock the instruction select() in the method running()
       onSuccess.accept(selectionKey);
+      readableSelector.wakeup(); // this helps unblock the instruction select() in the method running()
     } catch (ClosedChannelException exception) {
       error(exception, "It was unable to register this channel to to selector: ",
           exception.getMessage());
