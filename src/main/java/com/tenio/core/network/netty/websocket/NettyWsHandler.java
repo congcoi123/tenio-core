@@ -130,7 +130,6 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
         }
 
         session = sessionManager.createWebSocketSession(ctx.channel());
-        session.activate();
       }
 
       if (!session.isActivated()) {
