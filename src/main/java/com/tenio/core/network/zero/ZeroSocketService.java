@@ -33,6 +33,7 @@ import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
+import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.service.Service;
 import java.nio.ByteBuffer;
 
@@ -160,6 +161,14 @@ public interface ZeroSocketService extends Service {
    * @param dataType the {@link DataType} value
    */
   void setDataType(DataType dataType);
+
+  /**
+   * Sets a datagram packet policy.
+   *
+   * @param datagramPacketPolicy instance of {@link DatagramPacketPolicy}
+   * @since 0.6.7
+   */
+  void setDatagramPacketPolicy(DatagramPacketPolicy datagramPacketPolicy);
 
   /**
    * Writes down (binaries) data to socket/channel in order to send them to client side.

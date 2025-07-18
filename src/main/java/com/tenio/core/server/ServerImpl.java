@@ -60,6 +60,8 @@ import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoderImpl;
 import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
+import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
+import com.tenio.core.network.zero.engine.reader.policy.DefaultDatagramPacketPolicy;
 import com.tenio.core.schedule.ScheduleService;
 import com.tenio.core.schedule.ScheduleServiceImpl;
 import com.tenio.core.server.service.ZeroProcessorService;
@@ -318,6 +320,12 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.setPacketQueuePolicy(packetQueuePolicy);
     networkService.setPacketQueueSize(
         configuration.getInt(CoreConfigurationType.PROP_MAX_RESPONSE_QUEUE_SIZE_PER_SESSION));
+
+    DatagramPacketPolicy datagramPacketPolicy = bootstrapHandler.getBeanByClazz(DatagramPacketPolicy.class);
+    if (datagramPacketPolicy == null) {
+      datagramPacketPolicy = new DefaultDatagramPacketPolicy();
+    }
+    networkService.setDatagramPacketPolicy(datagramPacketPolicy);
 
     networkService.setSessionMaxIdleTimeInSeconds(
         configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));

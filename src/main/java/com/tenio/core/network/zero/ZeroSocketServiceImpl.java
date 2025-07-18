@@ -42,6 +42,7 @@ import com.tenio.core.network.zero.engine.implement.ZeroAcceptorImpl;
 import com.tenio.core.network.zero.engine.implement.ZeroReaderImpl;
 import com.tenio.core.network.zero.engine.implement.ZeroWriterImpl;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
+import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
 import com.tenio.core.network.zero.handler.implement.DatagramIoHandlerImpl;
@@ -238,6 +239,11 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
     datagramIoHandler.setDataType(dataType);
     socketIoHandler.setDataType(dataType);
     readerEngine.setDataType(dataType);
+  }
+
+  @Override
+  public void setDatagramPacketPolicy(DatagramPacketPolicy datagramPacketPolicy) {
+    readerEngine.setDatagramPacketPolicy(datagramPacketPolicy);
   }
 
   @Override

@@ -76,7 +76,7 @@ public final class SessionImpl implements Session {
   private volatile Ukcp kcpChannel;
   private volatile TransportType transportType;
   private volatile InetSocketAddress socketRemoteAddress;
-  private volatile SocketAddress datagramRemoteAddress;
+  private volatile InetSocketAddress datagramRemoteAddress;
   private volatile int udpConvey;
 
   private volatile long inactivatedTime;
@@ -296,7 +296,7 @@ public final class SessionImpl implements Session {
 
   @Override
   public void setDatagramRemoteAddress(SocketAddress datagramRemoteAddress) {
-    this.datagramRemoteAddress = datagramRemoteAddress;
+    this.datagramRemoteAddress = (InetSocketAddress) datagramRemoteAddress;
   }
 
   @Override
@@ -525,8 +525,7 @@ public final class SessionImpl implements Session {
         (socketRemoteAddress == null ? "null" :
             (socketRemoteAddress.getAddress() + ":" + socketRemoteAddress.getPort())) + '\'' +
         ", datagramRemoteAddress='" + (datagramRemoteAddress == null ? "null" :
-        (((InetSocketAddress) datagramRemoteAddress).getAddress() + ":" +
-            ((InetSocketAddress) datagramRemoteAddress).getPort())) + '\'' +
+        (datagramRemoteAddress.getAddress() + ":" + datagramRemoteAddress.getPort())) + '\'' +
         ", udpConvey=" + udpConvey +
         ", maxIdleTimeInSecond=" + maxIdleTimeInSecond +
         ", inactivatedTime=" + inactivatedTime +

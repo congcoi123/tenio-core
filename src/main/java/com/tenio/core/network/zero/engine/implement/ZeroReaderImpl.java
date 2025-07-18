@@ -33,6 +33,7 @@ import com.tenio.core.network.zero.engine.ZeroReader;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
 import com.tenio.core.network.zero.engine.reader.DatagramReaderHandler;
 import com.tenio.core.network.zero.engine.reader.SocketReaderHandler;
+import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -53,6 +54,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
 
   private volatile List<SocketReaderHandler> socketReaderHandlers;
   private DatagramReaderHandler datagramReaderHandler;
+  private DatagramPacketPolicy datagramPacketPolicy;
   private DataType dataType;
   private String serverAddress;
   private SocketConfiguration udpChannelConfiguration;
@@ -112,6 +114,11 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   }
 
   @Override
+  public void setDatagramPacketPolicy(DatagramPacketPolicy datagramPacketPolicy) {
+    this.datagramPacketPolicy = datagramPacketPolicy;
+  }
+
+  @Override
   public void onInitialized() {
     // multiple socket reader handlers
     socketReaderHandlers = new ArrayList<>(getThreadPoolSize() - getNumberOfExtraWorkers());
@@ -120,7 +127,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
       try {
         datagramReaderHandler = new DatagramReaderHandler(dataType,
             SocketUtility.createReaderBuffer(getMaxBufferSize()), getSessionManager(),
-            getNetworkReaderStatistic(), getDatagramIoHandler());
+            getNetworkReaderStatistic(), getDatagramIoHandler(), datagramPacketPolicy);
         datagramReaderHandler.openDatagramChannels(serverAddress, udpChannelConfiguration.port(),
             udpChannelConfiguration.cacheSize());
       } catch (IOException exception) {

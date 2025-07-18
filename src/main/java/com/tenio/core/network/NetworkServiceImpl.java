@@ -50,6 +50,7 @@ import com.tenio.core.network.zero.ZeroSocketService;
 import com.tenio.core.network.zero.ZeroSocketServiceImpl;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
+import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import jakarta.servlet.http.HttpServlet;
 import java.util.Collection;
 import java.util.Map;
@@ -299,6 +300,11 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   @Override
   public void setPacketDecoder(BinaryPacketDecoder packetDecoder) {
     socketService.setPacketDecoder(packetDecoder);
+  }
+
+  @Override
+  public void setDatagramPacketPolicy(DatagramPacketPolicy datagramPacketPolicy) {
+    socketService.setDatagramPacketPolicy(datagramPacketPolicy);
   }
 
   @Override

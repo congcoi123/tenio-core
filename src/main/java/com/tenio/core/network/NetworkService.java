@@ -37,6 +37,7 @@ import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
+import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.service.Service;
 import jakarta.servlet.http.HttpServlet;
 import java.nio.ByteBuffer;
@@ -247,6 +248,14 @@ public interface NetworkService extends Service {
    * @param packetDecoder an instance of {@link BinaryPacketDecoder}
    */
   void setPacketDecoder(BinaryPacketDecoder packetDecoder);
+
+  /**
+   * Sets a datagram packet policy.
+   *
+   * @param datagramPacketPolicy instance of {@link DatagramPacketPolicy}
+   * @since 0.6.7
+   */
+  void setDatagramPacketPolicy(DatagramPacketPolicy datagramPacketPolicy);
 
   /**
    * Set the data serialization type.

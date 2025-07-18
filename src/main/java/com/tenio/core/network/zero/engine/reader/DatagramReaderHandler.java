@@ -27,15 +27,13 @@ package com.tenio.core.network.zero.engine.reader;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataType;
 import com.tenio.common.data.DataUtility;
-import com.tenio.common.data.msgpack.element.MsgPackMap;
-import com.tenio.common.data.zero.ZeroMap;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.common.utility.OsUtility;
-import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -75,6 +73,7 @@ public final class DatagramReaderHandler extends SystemLogger {
   private final SessionManager sessionManager;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final DatagramIoHandler datagramIoHandler;
+  private final DatagramPacketPolicy datagramPacketPolicy;
 
   /**
    * Constructor.
@@ -84,18 +83,21 @@ public final class DatagramReaderHandler extends SystemLogger {
    * @param sessionManager         instance of {@link SessionManager}
    * @param networkReaderStatistic instance of {@link NetworkReaderStatistic}
    * @param datagramIoHandler      instance of {@link DatagramIoHandler}
+   * @param datagramPacketPolicy   instance of {@link DatagramPacketPolicy}
    * @throws IOException whenever any IO exception thrown
    */
   public DatagramReaderHandler(DataType dataType,
                                ByteBuffer readerBuffer,
                                SessionManager sessionManager,
                                NetworkReaderStatistic networkReaderStatistic,
-                               DatagramIoHandler datagramIoHandler) throws IOException {
+                               DatagramIoHandler datagramIoHandler,
+                               DatagramPacketPolicy datagramPacketPolicy) throws IOException {
     this.dataType = dataType;
     this.readerBuffer = readerBuffer;
     this.sessionManager = sessionManager;
     this.networkReaderStatistic = networkReaderStatistic;
     this.datagramIoHandler = datagramIoHandler;
+    this.datagramPacketPolicy = datagramPacketPolicy;
 
     readableSelector = Selector.open();
   }
@@ -229,23 +231,9 @@ public final class DatagramReaderHandler extends SystemLogger {
       // retrieves session by its datagram channel, hence we are using only one
       // datagram channel for all sessions, we use incoming request convey ID to
       // distinguish them
-      var udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
-      DataCollection message = null;
-      if (dataCollection instanceof ZeroMap zeroMap) {
-        if (zeroMap.containsKey(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID)) {
-          udpConvey = zeroMap.getInteger(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID);
-        }
-        if (zeroMap.containsKey(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA)) {
-          message = zeroMap.getDataCollection(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA);
-        }
-      } else if (dataCollection instanceof MsgPackMap msgPackMap) {
-        if (msgPackMap.contains(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID)) {
-          udpConvey = msgPackMap.getInteger(CoreConstant.DEFAULT_KEY_UDP_CONVEY_ID);
-        }
-        if (msgPackMap.containsKey(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA)) {
-          message = msgPackMap.getMsgPackMap(CoreConstant.DEFAULT_KEY_UDP_MESSAGE_DATA);
-        }
-      }
+      var processedDataCollection = datagramPacketPolicy.applyPolicy(dataCollection);
+      int udpConvey = processedDataCollection.getLeft();
+      DataCollection message = processedDataCollection.getRight();
 
       session = sessionManager.getSessionByDatagram(udpConvey);
 

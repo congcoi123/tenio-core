@@ -79,13 +79,14 @@ EventWriteMessageToConnection
 ```txt
 Just create your own classes, implement desired interfaces and annotate them with @Component.
 In case you do not declare any change, their default implementations will be applied
-(DefaultConnectionFilter, DefaultPacketQueuePolicy).
+(DefaultConnectionFilter, DefaultPacketQueuePolicy, DefaultDatagramPacketPolicy).
 
 packet-encryptor: BinaryPacketEncryptor
 packet-compressor: BinaryPacketCompressor
 connection-filter: ConnectionFilter
 packet-queue-policy: PacketQueuePolicy
 request-policy: RequestPolicy
+datagram-packet-policy: DatagramPacketPolicy
 ```
 
 ## Requirements

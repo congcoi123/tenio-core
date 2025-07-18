@@ -94,4 +94,5 @@
 - Reworked on writer, reader and acceptor handlers
 - Supported Request Policy interface
 
-## 0.6.7 2025-09-02 Bugfix release
+## 0.6.7 2025-09-02 Feature release
+- Supported Datagram Packet Policy interface
