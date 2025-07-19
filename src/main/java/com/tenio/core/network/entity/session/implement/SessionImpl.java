@@ -52,7 +52,7 @@ import kcp.Ukcp;
  *
  * @see Session
  */
-public final class SessionImpl implements Session {
+public class SessionImpl implements Session {
 
   private final long id;
   private final long createdTime;
@@ -86,7 +86,7 @@ public final class SessionImpl implements Session {
 
   private int maxIdleTimeInSecond;
 
-  private SessionImpl() {
+  protected SessionImpl() {
     id = ID_COUNTER.getAndIncrement();
     transportType = TransportType.UNKNOWN;
     udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
@@ -105,17 +105,6 @@ public final class SessionImpl implements Session {
    */
   public static Session newInstance() {
     return new SessionImpl();
-  }
-
-  /**
-   * Special instance which is built for TCP.
-   *
-   * @return a new instance of {@link Session}
-   */
-  public static Session newInstanceForTcp() {
-    SessionImpl session = new SessionImpl();
-    session.createPacketSocketHandler();
-    return session;
   }
 
   @Override
@@ -483,7 +472,7 @@ public final class SessionImpl implements Session {
     atomicAssociatedState.set(associatedState);
   }
 
-  private void createPacketSocketHandler() {
+  protected void createPacketSocketHandler() {
     packetReadState = PacketReadState.WAIT_NEW_PACKET;
     processedPacket = ProcessedPacket.newInstance();
     pendingPacket = PendingPacket.newInstance();

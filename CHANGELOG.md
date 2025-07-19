@@ -95,4 +95,5 @@
 - Supported Request Policy interface
 
 ## 0.6.7 2025-09-02 Feature release
+- Fixed several bugs
 - Supported Datagram Packet Policy interface
