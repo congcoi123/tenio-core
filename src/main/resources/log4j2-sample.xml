@@ -67,9 +67,7 @@
 		<Logger name="org.hibernate" level="warn" additivity="false">
 			<AppenderRef ref="AsyncFile"/>
 		</Logger>
-
-		<Logger name="org.reflections" level="OFF"/>
-
+		
 		<!-- Application root logger -->
 		<Root level="${level}">
 			<AppenderRef ref="Console"/> <!-- remove this in production if needed -->
