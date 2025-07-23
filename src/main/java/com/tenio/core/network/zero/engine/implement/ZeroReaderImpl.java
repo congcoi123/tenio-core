@@ -189,14 +189,13 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   @Override
   public void onShutdown() {
     try {
-      Thread.sleep(500L);
       for (SocketReaderHandler socketReaderHandler : socketReaderHandlers) {
         socketReaderHandler.shutdown();
       }
       if (datagramReaderHandler != null) {
         datagramReaderHandler.shutdown();
       }
-    } catch (IOException | InterruptedException exception) {
+    } catch (IOException exception) {
       if (isErrorEnabled()) {
         error(exception, "Exception while closing the selector");
       }
