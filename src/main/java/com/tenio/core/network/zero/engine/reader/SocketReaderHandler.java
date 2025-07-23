@@ -153,7 +153,6 @@ public final class SocketReaderHandler extends SystemLogger {
         SelectionKey selectionKey =
             pendingSocketChannel.first().register(readableSelector, SelectionKey.OP_READ);
         pendingSocketChannel.second().accept(selectionKey);
-
       } catch (ClosedChannelException exception) {
         error(exception, "It was unable to register this channel to to selector: ",
             exception.getMessage());
