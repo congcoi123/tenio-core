@@ -33,6 +33,7 @@ import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.utility.SocketUtility;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import java.io.IOException;
@@ -68,6 +69,9 @@ import java.nio.channels.Selector;
 public final class DatagramReaderHandler extends SystemLogger {
 
   private final DataType dataType;
+  /**
+   * This selector manages {@link DatagramChannel} instances.
+   */
   private final Selector readableSelector;
   private final ByteBuffer readerBuffer;
   private final SessionManager sessionManager;
@@ -109,7 +113,7 @@ public final class DatagramReaderHandler extends SystemLogger {
    */
   public void shutdown() throws IOException {
     readableSelector.wakeup();
-    readableSelector.close();
+    SocketUtility.shutdownSelector(readableSelector);
   }
 
   /**

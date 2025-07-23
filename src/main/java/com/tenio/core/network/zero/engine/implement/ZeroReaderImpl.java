@@ -190,8 +190,8 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   public void onShutdown() {
     try {
       Thread.sleep(500L);
-      for (var readerHandler : socketReaderHandlers) {
-        readerHandler.shutdown();
+      for (SocketReaderHandler socketReaderHandler : socketReaderHandlers) {
+        socketReaderHandler.shutdown();
       }
       if (datagramReaderHandler != null) {
         datagramReaderHandler.shutdown();

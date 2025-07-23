@@ -33,6 +33,7 @@ import com.tenio.core.network.zero.handler.SocketIoHandler;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -62,6 +63,9 @@ import java.util.function.Consumer;
 
 public final class SocketReaderHandler extends SystemLogger {
 
+  /**
+   * This selector manages {@link SocketChannel} instances.
+   */
   private final Selector readableSelector;
   private final ByteBuffer readerBuffer;
   private final SessionManager sessionManager;
@@ -93,7 +97,7 @@ public final class SocketReaderHandler extends SystemLogger {
    * Registers a client socket to the reader selector.
    *
    * @param socketChannel {@link SocketChannel} a client channel
-   * @param onSuccess  when its {@link SelectionKey} is ready
+   * @param onSuccess     when its {@link SelectionKey} is ready
    * @param onFailed      it's failed to register this channel to a reader handler
    */
   public void registerClientSocketChannel(SocketChannel socketChannel,
@@ -121,6 +125,13 @@ public final class SocketReaderHandler extends SystemLogger {
    */
   public void shutdown() throws IOException {
     readableSelector.wakeup(); // this helps unblock the instruction select() in the method running()
+    for (SelectionKey selectionKey : readableSelector.keys()) {
+      SelectableChannel channel = selectionKey.channel();
+      if (channel instanceof SocketChannel socketChannel) {
+        socketIoHandler.channelInactive(socketChannel, selectionKey,
+            ConnectionDisconnectMode.SERVER_DOWN);
+      }
+    }
     readableSelector.close();
   }
 
