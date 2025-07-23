@@ -29,7 +29,7 @@ import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.zero.engine.acceptor.AcceptorHandler;
-import com.tenio.core.network.zero.engine.reader.entity.PendingSocketChannel;
+import com.tenio.core.utility.entity.Triple;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -74,7 +74,7 @@ public final class SocketReaderHandler extends SystemLogger {
   private final SessionManager sessionManager;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final SocketIoHandler socketIoHandler;
-  private final Queue<PendingSocketChannel<SocketChannel, Consumer<SelectionKey>, Runnable>>
+  private final Queue<Triple<SocketChannel, Consumer<SelectionKey>, Runnable>>
       pendingClientSocketChannels;
 
   /**
@@ -109,8 +109,7 @@ public final class SocketReaderHandler extends SystemLogger {
   public void registerClientSocketChannel(SocketChannel socketChannel,
                                           Consumer<SelectionKey> onSuccess,
                                           Runnable onFailed) {
-    pendingClientSocketChannels.offer(new PendingSocketChannel<>(socketChannel, onSuccess,
-        onFailed));
+    pendingClientSocketChannels.offer(new Triple<>(socketChannel, onSuccess, onFailed));
     readableSelector.wakeup(); // this helps unblock the instruction select() in the method running()
   }
 
@@ -147,7 +146,7 @@ public final class SocketReaderHandler extends SystemLogger {
     // register channels to selector
     // readable selector was registered by OP_READ interested only socket channels,
     // but in some cases, we can receive "can writable" signal from those sockets
-    PendingSocketChannel<SocketChannel, Consumer<SelectionKey>, Runnable> pendingSocketChannel;
+    Triple<SocketChannel, Consumer<SelectionKey>, Runnable> pendingSocketChannel;
     while ((pendingSocketChannel = pendingClientSocketChannels.poll()) != null) {
       try {
         SelectionKey selectionKey =

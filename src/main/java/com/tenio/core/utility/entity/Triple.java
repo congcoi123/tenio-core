@@ -22,13 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.engine.reader.entity;
-
-import com.tenio.core.network.zero.engine.acceptor.AcceptorHandler;
-import com.tenio.core.network.zero.engine.reader.SocketReaderHandler;
+package com.tenio.core.utility.entity;
 
 /**
- * Keeps a reference of a socket channel from the acceptor.
+ * Keeps a references to three objects.
  *
  * @param first  the first object
  * @param second the second object
@@ -36,9 +33,7 @@ import com.tenio.core.network.zero.engine.reader.SocketReaderHandler;
  * @param <F>    the first class template
  * @param <S>    the second class template
  * @param <T>    the third class template
- * @see AcceptorHandler
- * @see SocketReaderHandler
  * @since 0.6.7
  */
-public record PendingSocketChannel<F, S, T>(F first, S second, T third) {
+public record Triple<F, S, T>(F first, S second, T third) {
 }
