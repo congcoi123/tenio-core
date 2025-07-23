@@ -25,7 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.utility.entity;
 
 /**
- * Keeps a references to three objects.
+ * Keeps references to three objects.
  *
  * @param first  the first object
  * @param second the second object
