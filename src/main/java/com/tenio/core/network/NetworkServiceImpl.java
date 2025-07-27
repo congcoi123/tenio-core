@@ -288,8 +288,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   public void setPacketQueueSize(int queueSize) {
     sessionManager.configurePacketQueueSize(queueSize);
   }
-
-
+  
   @Override
   public void setPacketEncoder(BinaryPacketEncoder packetEncoder) {
     socketService.setPacketEncoder(packetEncoder);
