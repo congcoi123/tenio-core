@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.packet;
+package com.tenio.core.network.codec.packet;
 
 import com.tenio.common.data.DataType;
 import java.util.HashMap;

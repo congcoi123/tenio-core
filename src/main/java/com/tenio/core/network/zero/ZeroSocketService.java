@@ -30,8 +30,8 @@ import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
-import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.service.Service;
 import java.nio.ByteBuffer;
@@ -139,16 +139,14 @@ public interface ZeroSocketService extends Service {
                                SocketConfiguration udpChannelConfiguration);
 
   /**
-   * Sets an instance of packet encoder to encode packets for sending to clients side via the
-   * socket (TCP).
+   * Sets an instance of packet encoder to encode packets for sending to clients.
    *
    * @param packetEncoder an instance of {@link BinaryPacketEncoder}
    */
   void setPacketEncoder(BinaryPacketEncoder packetEncoder);
 
   /**
-   * Sets an instance of packet decoder to decode packets sent from clients side via the socket
-   * (TCP).
+   * Sets an instance of packet decoder to decode packets sent from clients.
    *
    * @param packetDecoder an instance of {@link BinaryPacketDecoder}
    */

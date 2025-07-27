@@ -35,7 +35,7 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.utility.SocketUtility;
-import com.tenio.core.network.zero.codec.CodecUtility;
+import com.tenio.core.network.codec.CodecUtility;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import java.io.IOException;

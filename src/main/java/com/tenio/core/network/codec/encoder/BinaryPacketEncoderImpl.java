@@ -22,15 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.encoder;
+package com.tenio.core.network.codec.encoder;
 
 import com.tenio.common.data.DataType;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.network.entity.packet.Packet;
-import com.tenio.core.network.zero.codec.CodecUtility;
-import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
-import com.tenio.core.network.zero.codec.packet.PacketHeader;
+import com.tenio.core.network.codec.CodecUtility;
+import com.tenio.core.network.codec.compression.BinaryPacketCompressor;
+import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.core.network.codec.packet.PacketHeader;
 import java.nio.ByteBuffer;
 
 /**
@@ -54,14 +54,14 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
   @Override
   public Packet encode(Packet packet) {
     // retrieve the packet data first
-    byte[] binary = packet.getData();
+    byte[] binaries = packet.getData();
 
     // check if the data needs to be encrypted
     boolean isEncrypted = packet.isEncrypted();
     if (isEncrypted) {
       if (encryptor != null) {
         try {
-          binary = encryptor.encrypt(binary);
+          binaries = encryptor.encrypt(binaries);
         } catch (Exception exception) {
           error(exception);
           isEncrypted = false;
@@ -74,10 +74,10 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
 
     // check if the data needs to be compressed
     boolean isCompressed = false;
-    if (compressionThresholdBytes > 0 && binary.length >= compressionThresholdBytes) {
+    if (compressionThresholdBytes > 0 && binaries.length >= compressionThresholdBytes) {
       if (compressor != null) {
         try {
-          binary = compressor.compress(binary);
+          binaries = compressor.compress(binaries);
           isCompressed = true;
         } catch (Exception exception) {
           error(exception);
@@ -92,7 +92,7 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
     // if the original size of data exceeded threshold, it needs to be resized the
     // header bytes value
     int headerSize = Short.BYTES;
-    if (binary.length > MAX_BYTES_FOR_NORMAL_SIZE) {
+    if (binaries.length > MAX_BYTES_FOR_NORMAL_SIZE) {
       headerSize = Integer.BYTES;
     }
 
@@ -103,20 +103,20 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
     byte headerByte = CodecUtility.encodeFirstHeaderByte(packetHeader);
 
     // allocate bytes for the new data and put all value to form a new packet
-    var packetBuffer = ByteBuffer.allocate(Byte.BYTES + headerSize + binary.length);
+    var packetBuffer = ByteBuffer.allocate(Byte.BYTES + headerSize + binaries.length);
 
     // put header byte indicator
     packetBuffer.put(headerByte);
 
     // put original data size for header bases on its length
     if (headerSize > Short.BYTES) {
-      packetBuffer.putInt(binary.length);
+      packetBuffer.putInt(binaries.length);
     } else {
-      packetBuffer.putShort((short) binary.length);
+      packetBuffer.putShort((short) binaries.length);
     }
 
     // put original data
-    packetBuffer.put(binary);
+    packetBuffer.put(binaries);
 
     // form new data for the packet
     packet.setData(packetBuffer.array());

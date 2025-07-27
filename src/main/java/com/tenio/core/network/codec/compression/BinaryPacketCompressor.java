@@ -22,32 +22,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.packet;
+package com.tenio.core.network.codec.compression;
+
+import com.tenio.core.exception.PacketCompressorException;
 
 /**
- * The definition of all reading packet states.
+ * The APIs designed for compressing binary packets.
  */
-public enum PacketReadState {
+public interface BinaryPacketCompressor {
 
   /**
-   * Waits for a new packet to handle.
+   * Compresses an array of binary size into another smaller one.
+   *
+   * @param binaries an array of {@code byte}
+   * @return a new smaller size of {@code byte} array
+   * @throws PacketCompressorException when an exception occurred during the compression process
    */
-  WAIT_NEW_PACKET,
-  /**
-   * Waits for the data's size.
-   */
-  WAIT_DATA_SIZE,
-  /**
-   * Waits for the data size of a fragment packet.
-   */
-  WAIT_DATA_SIZE_FRAGMENT,
-  /**
-   * Waits for the data to process.
-   */
-  WAIT_DATA;
+  byte[] compress(byte[] binaries) throws PacketCompressorException;
 
-  @Override
-  public String toString() {
-    return name();
-  }
+  /**
+   * Uncompressed an array of binary and reverts it to the original one.
+   *
+   * @param binaries compressed array of {@code byte}
+   * @return the original data of {@code byte} array
+   * @throws PacketCompressorException when an exception occurred during the compression process
+   */
+  byte[] uncompress(byte[] binaries) throws PacketCompressorException;
 }

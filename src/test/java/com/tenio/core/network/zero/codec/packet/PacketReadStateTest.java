@@ -26,6 +26,7 @@ package com.tenio.core.network.zero.codec.packet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.tenio.core.network.codec.packet.PacketReadState;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

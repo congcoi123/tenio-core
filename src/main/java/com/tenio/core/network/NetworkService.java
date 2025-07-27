@@ -34,10 +34,8 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.filter.DefaultConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
-import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.service.Service;
 import jakarta.servlet.http.HttpServlet;
@@ -235,32 +233,14 @@ public interface NetworkService extends Service {
   void setPacketQueueSize(int queueSize);
 
   /**
-   * Sets the compressor for compressing/uncompressing packets.
-   *
-   * @param compressor the {@link BinaryPacketCompressor} instance
-   * @since 0.6.7
-   */
-  void setPacketCompressor(BinaryPacketCompressor compressor);
-
-  /**
-   * Sets the encryptor for encrypting/encrypting packets.
-   *
-   * @param encryptor the {@link BinaryPacketEncryptor} instance
-   * @since 0.6.7
-   */
-  void setPacketEncryptor(BinaryPacketEncryptor encryptor);
-
-  /**
-   * Sets an instance of packet encoder to encode packets for sending to clients side via the
-   * socket (TCP).
+   * Sets an instance of packet encoder to encode packets for sending to clients.
    *
    * @param packetEncoder an instance of {@link BinaryPacketEncoder}
    */
   void setPacketEncoder(BinaryPacketEncoder packetEncoder);
 
   /**
-   * Sets an instance of packet decoder to decode packets sent from clients side via the socket
-   * (TCP).
+   * Sets an instance of packet decoder to decode packets sent from clients.
    *
    * @param packetDecoder an instance of {@link BinaryPacketDecoder}
    */

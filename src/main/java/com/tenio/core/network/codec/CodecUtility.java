@@ -22,10 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec;
+package com.tenio.core.network.codec;
 
-import com.tenio.core.network.zero.codec.packet.PacketHeader;
-import com.tenio.core.network.zero.codec.packet.PacketHeaderType;
+import com.tenio.core.network.codec.packet.PacketHeader;
+import com.tenio.core.network.codec.packet.PacketHeaderType;
 
 /**
  * The utility class provides methods to work with packet and binary data.

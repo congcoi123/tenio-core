@@ -47,10 +47,8 @@ import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.ZeroSocketService;
 import com.tenio.core.network.zero.ZeroSocketServiceImpl;
-import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
-import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import jakarta.servlet.http.HttpServlet;
 import java.util.Collection;
@@ -292,24 +290,17 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
     sessionManager.configurePacketQueueSize(queueSize);
   }
 
-  @Override
-  public void setPacketCompressor(BinaryPacketCompressor compressor) {
-    webSocketService.setPacketCompressor(compressor);
-  }
-
-  @Override
-  public void setPacketEncryptor(BinaryPacketEncryptor encryptor) {
-    webSocketService.setPacketEncryptor(encryptor);
-  }
 
   @Override
   public void setPacketEncoder(BinaryPacketEncoder packetEncoder) {
     socketService.setPacketEncoder(packetEncoder);
+    webSocketService.setPacketEncoder(packetEncoder);
   }
 
   @Override
   public void setPacketDecoder(BinaryPacketDecoder packetDecoder) {
     socketService.setPacketDecoder(packetDecoder);
+    webSocketService.setPacketDecoder(packetDecoder);
   }
 
   @Override

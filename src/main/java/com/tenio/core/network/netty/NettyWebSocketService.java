@@ -30,8 +30,8 @@ import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.service.Service;
 import java.nio.ByteBuffer;
 
@@ -78,20 +78,20 @@ public interface NettyWebSocketService extends Service {
   void setConnectionFilter(ConnectionFilter connectionFilter);
 
   /**
-   * Sets the compressor for compressing/uncompressing packets.
+   * Sets an instance of packet encoder to encode packets for sending to clients.
    *
-   * @param compressor the {@link BinaryPacketCompressor} instance
+   * @param packetEncoder an instance of {@link BinaryPacketEncoder}
    * @since 0.6.7
    */
-  void setPacketCompressor(BinaryPacketCompressor compressor);
+  void setPacketEncoder(BinaryPacketEncoder packetEncoder);
 
   /**
-   * Sets the encryptor for encrypting/encrypting packets.
+   * Sets an instance of packet decoder to decode packets sent from clients.
    *
-   * @param encryptor the {@link BinaryPacketEncryptor} instance
+   * @param packetDecoder an instance of {@link BinaryPacketDecoder}
    * @since 0.6.7
    */
-  void setPacketEncryptor(BinaryPacketEncryptor encryptor);
+  void setPacketDecoder(BinaryPacketDecoder packetDecoder);
 
   /**
    * Sets a session manager instance.

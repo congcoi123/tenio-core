@@ -37,8 +37,8 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.ssl.WebSocketSslContext;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -77,8 +77,8 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
 
   private ConnectionFilter connectionFilter;
   private SessionManager sessionManager;
-  private BinaryPacketCompressor compressor;
-  private BinaryPacketEncryptor encryptor;
+  private BinaryPacketEncoder binaryPacketEncoder;
+  private BinaryPacketDecoder binaryPacketDecoder;
   private NetworkReaderStatistic networkReaderStatistic;
   private NetworkWriterStatistic networkWriterStatistic;
   private SocketConfiguration socketConfiguration;
@@ -133,7 +133,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
         .childOption(ChannelOption.SO_RCVBUF, receiverBufferSize)
         .childOption(ChannelOption.SO_KEEPALIVE, true)
         .childHandler(NettyWsInitializer.newInstance(eventManager, sessionManager,
-            connectionFilter, compressor, encryptor, networkReaderStatistic, sslContext, usingSsl));
+            connectionFilter, binaryPacketDecoder, networkReaderStatistic, sslContext, usingSsl));
 
     var channelFuture = bootstrap.bind(socketConfiguration.port()).sync()
         .addListener(future -> {
@@ -262,13 +262,13 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
   }
 
   @Override
-  public void setPacketCompressor(BinaryPacketCompressor compressor) {
-    this.compressor = compressor;
+  public void setPacketEncoder(BinaryPacketEncoder packetEncoder) {
+    this.binaryPacketEncoder = packetEncoder;
   }
 
   @Override
-  public void setPacketEncryptor(BinaryPacketEncryptor encryptor) {
-    this.encryptor = encryptor;
+  public void setPacketDecoder(BinaryPacketDecoder packetDecoder) {
+    this.binaryPacketDecoder = packetDecoder;
   }
 
   @Override
@@ -315,6 +315,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
         return;
       }
       if (session.isActivated()) {
+        packet = binaryPacketEncoder.encode(packet);
         session.fetchWebSocketChannel()
             .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(packet.getData())));
         session.addWrittenBytes(packet.getOriginalSize());

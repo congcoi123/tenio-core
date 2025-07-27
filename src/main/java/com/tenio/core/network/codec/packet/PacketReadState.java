@@ -22,30 +22,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.encryption;
-
-import com.tenio.core.exception.PacketEncryptorException;
+package com.tenio.core.network.codec.packet;
 
 /**
- * The APIs designed for encrypting and decrypting packets.
+ * The definition of all reading packet states.
  */
-public interface BinaryPacketEncryptor {
+public enum PacketReadState {
 
   /**
-   * Encrypts the binary data in a packet.
-   *
-   * @param binary an array of {@code byte} data for encrypting
-   * @return an array of encrypted {@code byte} data
-   * @throws PacketEncryptorException when any issue emerged while encrypting process
+   * Waits for a new packet to handle.
    */
-  byte[] encrypt(byte[] binary) throws PacketEncryptorException;
-
+  WAIT_NEW_PACKET,
   /**
-   * Decrypts the binary data in a packet.
-   *
-   * @param binary an array of {@code byte} data for decrypting
-   * @return an array of decrypted {@code byte} data
-   * @throws PacketEncryptorException when any issue emerged while decrypting process
+   * Waits for the data's size.
    */
-  byte[] decrypt(byte[] binary) throws PacketEncryptorException;
+  WAIT_DATA_SIZE,
+  /**
+   * Waits for the data size of a fragment packet.
+   */
+  WAIT_DATA_SIZE_FRAGMENT,
+  /**
+   * Waits for the data to process.
+   */
+  WAIT_DATA;
+
+  @Override
+  public String toString() {
+    return name();
+  }
 }

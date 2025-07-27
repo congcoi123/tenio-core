@@ -79,9 +79,9 @@ public interface Packet {
   /**
    * Puts data of binaries into the packet.
    *
-   * @param binary data of {@code byte} array conveyed by the packet
+   * @param binaries data of {@code byte} array conveyed by the packet
    */
-  void setData(byte[] binary);
+  void setData(byte[] binaries);
 
   /**
    * Retrieves the data type of packet.
@@ -207,9 +207,9 @@ public interface Packet {
    * Updates the rest of sending binaries from the packet's data. The data may not be sent at
    * once, but it is split to some parts according to the sending process.
    *
-   * @param binary the rest of sending {@code byte} array from the packet's data
+   * @param binaries the rest of sending {@code byte} array from the packet's data
    */
-  void setFragmentBuffer(byte[] binary);
+  void setFragmentBuffer(byte[] binaries);
 
   /**
    * Determines whether the packet's data is fragmented.

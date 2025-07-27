@@ -79,9 +79,9 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   }
 
   @Override
-  public void setData(byte[] binary) {
-    data = binary;
-    originalSize = binary.length;
+  public void setData(byte[] binaries) {
+    data = binaries;
+    originalSize = binaries.length;
   }
 
   @Override
@@ -165,8 +165,8 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   }
 
   @Override
-  public void setFragmentBuffer(byte[] binary) {
-    fragmentBuffer = binary;
+  public void setFragmentBuffer(byte[] binaries) {
+    fragmentBuffer = binaries;
   }
 
   @Override

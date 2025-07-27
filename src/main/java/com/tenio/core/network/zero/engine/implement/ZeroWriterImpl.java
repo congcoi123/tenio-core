@@ -30,7 +30,7 @@ import com.tenio.core.exception.PacketQueuePolicyViolationException;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.engine.ZeroWriter;
 import com.tenio.core.network.zero.engine.manager.SessionTicketsQueueManager;
 import com.tenio.core.network.zero.engine.writer.WriterHandler;

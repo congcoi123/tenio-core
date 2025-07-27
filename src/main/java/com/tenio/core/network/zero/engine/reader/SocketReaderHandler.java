@@ -29,8 +29,8 @@ import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.zero.engine.acceptor.AcceptorHandler;
-import com.tenio.core.utility.entity.Triple;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
+import com.tenio.core.utility.entity.Triple;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -235,10 +235,10 @@ public final class SocketReaderHandler extends SystemLogger {
         // ready to read data from buffer
         readerBuffer.flip();
         // reads data from buffer and transfers them to the next process
-        byte[] binary = new byte[readerBuffer.limit()];
-        readerBuffer.get(binary);
+        byte[] binaries = new byte[readerBuffer.limit()];
+        readerBuffer.get(binaries);
 
-        socketIoHandler.sessionRead(session, binary);
+        socketIoHandler.sessionRead(session, binaries);
       }
     }
   }

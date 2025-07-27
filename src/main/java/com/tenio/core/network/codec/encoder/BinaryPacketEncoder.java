@@ -22,13 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.encoder;
+package com.tenio.core.network.codec.encoder;
 
 import com.tenio.core.exception.PacketCompressorException;
 import com.tenio.core.exception.PacketEncryptorException;
 import com.tenio.core.network.entity.packet.Packet;
-import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.core.network.codec.compression.BinaryPacketCompressor;
+import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
 
 /**
  * Provides APIs for encoding network packets into binary format.

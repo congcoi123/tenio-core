@@ -52,12 +52,12 @@ import com.tenio.core.network.entity.protocol.Response;
 import com.tenio.core.network.entity.protocol.policy.RequestPolicy;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.filter.DefaultConnectionFilter;
-import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
-import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoderImpl;
-import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
-import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoderImpl;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.core.network.codec.compression.BinaryPacketCompressor;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoderImpl;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoderImpl;
+import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.network.zero.engine.reader.policy.DefaultDatagramPacketPolicy;
@@ -338,8 +338,6 @@ public final class ServerImpl extends SystemLogger implements Server {
     binaryPacketDecoder.setCompressor(binaryPacketCompressor);
     binaryPacketDecoder.setEncryptor(binaryPacketEncryptor);
 
-    networkService.setPacketCompressor(binaryPacketCompressor);
-    networkService.setPacketEncryptor(binaryPacketEncryptor);
     networkService.setPacketDecoder(binaryPacketDecoder);
     networkService.setPacketEncoder(binaryPacketEncoder);
   }

@@ -22,11 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.decoder;
+package com.tenio.core.network.codec.decoder;
 
-import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.common.data.DataCollection;
+import com.tenio.core.network.codec.compression.BinaryPacketCompressor;
+import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.core.network.codec.packet.PacketHeader;
 
 /**
  * The APIs designed for decoding binary packets.
@@ -34,20 +35,24 @@ import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
 public interface BinaryPacketDecoder {
 
   /**
-   * Decodes data from clients side sent by session.
+   * Decodes binaries data.
    *
-   * @param session the receiving {@link Session}
-   * @param data    the receiving {@code byte} data
+   * @param binaries the receiving {@code byte} data
+   * @return an instance of {@link DataCollection}
    * @throws RuntimeException whenever an issue occurred
+   * @since 0.6.7
    */
-  void decode(Session session, byte[] data) throws RuntimeException;
+  DataCollection decode(byte[] binaries) throws RuntimeException;
 
   /**
-   * Sets the listener for packet decoder handler.
+   * Decodes binaries data.
    *
-   * @param resultListener the {@link PacketDecoderResultListener} instance
+   * @param binaries the receiving {@code byte} data
+   * @return an instance of {@link DataCollection}
+   * @throws RuntimeException whenever an issue occurred
+   * @since 0.6.7
    */
-  void setResultListener(PacketDecoderResultListener resultListener);
+  DataCollection decode(PacketHeader packetHeader, byte[] binaries) throws RuntimeException;
 
   /**
    * Sets the compressor for compressing/uncompressing packets.

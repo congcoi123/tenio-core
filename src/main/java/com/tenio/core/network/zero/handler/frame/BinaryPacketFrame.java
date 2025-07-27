@@ -22,29 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.decoder;
+package com.tenio.core.network.zero.handler.frame;
 
-import com.tenio.common.data.DataType;
 import com.tenio.common.utility.ByteUtility;
+import com.tenio.core.network.codec.CodecUtility;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.packet.PacketReadState;
+import com.tenio.core.network.codec.packet.ProcessedPacket;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.zero.codec.CodecUtility;
-import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
-import com.tenio.core.network.zero.codec.packet.PacketReadState;
-import com.tenio.core.network.zero.codec.packet.ProcessedPacket;
 import java.nio.ByteBuffer;
 
 /**
- * The default implementation for the binary packet decoding.
+ * Streaming packets must be processed in this framing steps.
+ *
+ * @since 0.6.7
  */
-public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
+public final class BinaryPacketFrame {
 
-  private BinaryPacketCompressor compressor;
-  private BinaryPacketEncryptor encryptor;
-  private PacketDecoderResultListener decoderResultListener;
+  private BinaryPacketDecoder binaryPacketDecoder;
+  private PacketFramingResult packetFramingResult;
 
-  @Override
-  public void decode(Session session, byte[] binaries) {
+  public void framing(Session session, byte[] binaries) {
     var readState = session.getPacketReadState();
 
     try {
@@ -82,19 +80,12 @@ public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
     session.setPacketReadState(readState);
   }
 
-  @Override
-  public void setResultListener(PacketDecoderResultListener resultListener) {
-    decoderResultListener = resultListener;
+  public void setBinaryPacketDecoder(BinaryPacketDecoder packetDecoder) {
+    this.binaryPacketDecoder = packetDecoder;
   }
 
-  @Override
-  public void setCompressor(BinaryPacketCompressor compressor) {
-    this.compressor = compressor;
-  }
-
-  @Override
-  public void setEncryptor(BinaryPacketEncryptor encryptor) {
-    this.encryptor = encryptor;
+  public void setPacketFramingResult(PacketFramingResult packetFramingResult) {
+    this.packetFramingResult = packetFramingResult;
   }
 
   private ProcessedPacket handleNewPacket(Session session, byte[] binaries) {
@@ -228,46 +219,11 @@ public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
                 + pendingPacket.getExpectedLength() + ", Buffer size: " + dataBuffer.capacity());
       }
 
-      // now the packet data is completely collected, we can do some kind of
-      // decompression or decryption
-      // check if data needs to be uncompressed
-      if (packetHeader.isCompressed()) {
-        if (compressor != null) {
-          byte[] compressedData = dataBuffer.array();
-          byte[] decompressedData = compressor.uncompress(compressedData);
-          dataBuffer = ByteBuffer.wrap(decompressedData);
-        } else {
-          throw new IllegalStateException("Expected the interface BinaryPacketCompressor was " +
-              "implemented due to the packet-compression-threshold-bytes configuration, but it is" +
-              " null");
-        }
-      }
-
-      // check if data needs to be unencrypted
-      if (packetHeader.isEncrypted()) {
-        if (encryptor != null) {
-          byte[] encryptedData = dataBuffer.array();
-          byte[] decryptedData = encryptor.decrypt(encryptedData);
-          dataBuffer = ByteBuffer.wrap(decryptedData);
-        } else {
-          throw new IllegalStateException("Expected the interface BinaryPacketEncryptor was " +
-              "implemented, but it is null");
-        }
-      }
-
-      // get the data type
-      DataType dataType = DataType.ZERO;
-      if (packetHeader.isMsgpack()) {
-        dataType = DataType.MSG_PACK;
-      }
-
-      byte[] result = dataBuffer.array();
+      // now the packet data is completely collected
+      var dataCollection = binaryPacketDecoder.decode(packetHeader, binaries);
 
       // result a framed packet data
-      decoderResultListener.resultFrame(session, dataType, result);
-
-      // counting read packets
-      decoderResultListener.updateReadPackets(1);
+      packetFramingResult.resultFrame(session, dataCollection);
 
       // change state for the next process, a new cycle
       packetReadState = PacketReadState.WAIT_NEW_PACKET;
@@ -282,7 +238,8 @@ public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
     // those bytes should be used to produce header bytes for the next packets
     if (isThereMore) {
       binaries =
-          ByteUtility.resizeBytesArray(binaries, inNeedPacketLength, binaries.length - inNeedPacketLength);
+          ByteUtility.resizeBytesArray(binaries, inNeedPacketLength,
+              binaries.length - inNeedPacketLength);
     } else {
       // reset data to wait more bytes from socket
       binaries = new byte[0];

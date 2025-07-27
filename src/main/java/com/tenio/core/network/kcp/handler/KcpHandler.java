@@ -36,7 +36,7 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
-import com.tenio.core.network.zero.codec.CodecUtility;
+import com.tenio.core.network.codec.CodecUtility;
 import io.netty.buffer.ByteBuf;
 import java.util.Optional;
 import kcp.KcpListener;
