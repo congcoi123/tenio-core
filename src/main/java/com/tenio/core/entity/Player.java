@@ -67,7 +67,7 @@ import java.util.function.Consumer;
  * player.setCurrentRoom(gameRoom);
  * player.setPlayerSlotInCurrentRoom(1);
  * 
- * // Listen for player updates
+ * // listen to player updates
  * player.onUpdateListener(field -> {
  *     // Handle player property changes
  * });
