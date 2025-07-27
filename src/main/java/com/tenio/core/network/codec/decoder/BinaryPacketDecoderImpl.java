@@ -78,7 +78,7 @@ public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
       dataType = DataType.MSG_PACK;
     }
 
-    return DataUtility.binaryToCollection(dataType, binaries);
+    return DataUtility.binariesToCollection(dataType, binaries);
   }
 
   @Override
