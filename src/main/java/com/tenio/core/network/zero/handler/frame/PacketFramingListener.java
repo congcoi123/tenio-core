@@ -28,9 +28,9 @@ import com.tenio.common.data.DataCollection;
 import com.tenio.core.network.entity.session.Session;
 
 /**
- * The listener for receiving data from the packet decoder.
+ * The listener for receiving data from sessions.
  */
-public interface PacketFramingResult {
+public interface PacketFramingListener {
 
   /**
    * The final binary data processed by the session.
@@ -39,5 +39,5 @@ public interface PacketFramingResult {
    * @param message the processed {@link DataCollection} result
    * @since 0.6.7
    */
-  void resultFrame(Session session, DataCollection message);
+  void onFramedResult(Session session, DataCollection message);
 }

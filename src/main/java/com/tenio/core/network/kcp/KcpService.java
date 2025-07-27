@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.network.kcp;
 
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.manager.SessionManager;
@@ -42,6 +44,22 @@ public interface KcpService extends Service {
    * @param sessionManager a {@link SessionManager} instance
    */
   void setSessionManager(SessionManager sessionManager);
+
+  /**
+   * Sets an instance of packet encoder to encode packets for sending to clients.
+   *
+   * @param packetEncoder an instance of {@link BinaryPacketEncoder}
+   * @since 0.6.7
+   */
+  void setPacketEncoder(BinaryPacketEncoder packetEncoder);
+
+  /**
+   * Sets an instance of packet decoder to decode packets sent from clients.
+   *
+   * @param packetDecoder an instance of {@link BinaryPacketDecoder}
+   * @since 0.6.7
+   */
+  void setPacketDecoder(BinaryPacketDecoder packetDecoder);
 
   /**
    * Sets a network reader statistic instance which takes responsibility recording the

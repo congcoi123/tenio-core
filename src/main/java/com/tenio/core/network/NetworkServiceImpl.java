@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network;
 
-import com.tenio.common.data.DataUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
@@ -325,7 +324,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
 
   @Override
   public void write(Response response, boolean markedAsLast) {
-    var message = DataUtility.binaryToCollection(response.getDataType(), response.getContent());
+    var message = response.getContent();
 
     var recipientPlayers = response.getRecipientPlayers();
     if (recipientPlayers != null && !recipientPlayers.isEmpty()) {
@@ -383,7 +382,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   private Packet createPacket(Response response, Collection<Session> recipients,
                               TransportType transportType) {
     var packet = PacketImpl.newInstance();
-    packet.setData(response.getContent());
+    packet.setData(response.getBinaries());
     packet.setEncrypted(response.isEncrypted());
     packet.setGuarantee(response.getGuarantee());
     packet.setRecipients(recipients);

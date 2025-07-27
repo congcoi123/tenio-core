@@ -37,11 +37,18 @@ import java.nio.ByteBuffer;
  *
  * @since 0.6.7
  */
-public final class BinaryPacketFrame {
+public final class BinaryPacketFramer {
 
   private BinaryPacketDecoder binaryPacketDecoder;
-  private PacketFramingResult packetFramingResult;
+  private PacketFramingListener packetFramingListener;
 
+  /**
+   * Processes streaming binaries data sent from sessions.
+   *
+   * @param session  the {@link Session} sends data
+   * @param binaries the binaries data is being sent. This might not be completed, so the process
+   *                 will ensure it chunks or waits for the data to finally provide a full packet
+   */
   public void framing(Session session, byte[] binaries) {
     var readState = session.getPacketReadState();
 
@@ -80,12 +87,31 @@ public final class BinaryPacketFrame {
     session.setPacketReadState(readState);
   }
 
+  /**
+   * Retrieves a packet decoder.
+   *
+   * @return an instance of {@link BinaryPacketDecoder}
+   */
+  public BinaryPacketDecoder getBinaryPacketDecoder() {
+    return binaryPacketDecoder;
+  }
+
+  /**
+   * Sets the packet decoder.
+   *
+   * @param packetDecoder an instance of {@link BinaryPacketDecoder}
+   */
   public void setBinaryPacketDecoder(BinaryPacketDecoder packetDecoder) {
     this.binaryPacketDecoder = packetDecoder;
   }
 
-  public void setPacketFramingResult(PacketFramingResult packetFramingResult) {
-    this.packetFramingResult = packetFramingResult;
+  /**
+   * Sets the framing result listener.
+   *
+   * @param packetFramingListener the {@link PacketFramingListener}
+   */
+  public void setPacketFramingResult(PacketFramingListener packetFramingListener) {
+    this.packetFramingListener = packetFramingListener;
   }
 
   private ProcessedPacket handleNewPacket(Session session, byte[] binaries) {
@@ -223,7 +249,7 @@ public final class BinaryPacketFrame {
       var dataCollection = binaryPacketDecoder.decode(packetHeader, binaries);
 
       // result a framed packet data
-      packetFramingResult.resultFrame(session, dataCollection);
+      packetFramingListener.onFramedResult(session, dataCollection);
 
       // change state for the next process, a new cycle
       packetReadState = PacketReadState.WAIT_NEW_PACKET;

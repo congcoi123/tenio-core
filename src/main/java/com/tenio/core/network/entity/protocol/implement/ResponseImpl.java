@@ -43,8 +43,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class ResponseImpl extends SystemLogger implements Response {
 
-  private byte[] content;
-  private DataType dataType;
+  private DataCollection content;
   private Collection<Player> players;
   private Collection<Player> nonSessionPlayers;
   private Collection<Session> socketSessions;
@@ -57,7 +56,6 @@ public final class ResponseImpl extends SystemLogger implements Response {
   private boolean isEncrypted;
 
   private ResponseImpl() {
-    dataType = DataType.ZERO; // Default
     players = null;
     socketSessions = null;
     datagramSessions = null;
@@ -80,28 +78,24 @@ public final class ResponseImpl extends SystemLogger implements Response {
   }
 
   @Override
-  public byte[] getContent() {
+  public byte[] getBinaries() {
+    return content.toBinaries();
+  }
+
+  @Override
+  public DataCollection getContent() {
     return content;
   }
 
   @Override
-  public Response setContent(byte[] content) {
-    this.content = content;
-
-    return this;
-  }
-
-  @Override
   public Response setContent(DataCollection content) {
-    this.dataType = content.getType();
-    this.content = content.toBinary();
-
+    this.content = content;
     return this;
   }
 
   @Override
   public DataType getDataType() {
-    return dataType;
+    return content.getType();
   }
 
   @Override
@@ -141,7 +135,6 @@ public final class ResponseImpl extends SystemLogger implements Response {
     } else {
       this.players.addAll(players);
     }
-
     return this;
   }
 
@@ -151,7 +144,6 @@ public final class ResponseImpl extends SystemLogger implements Response {
       players = new ArrayList<>();
     }
     players.add(player);
-
     return this;
   }
 
@@ -276,8 +268,7 @@ public final class ResponseImpl extends SystemLogger implements Response {
   @Override
   public String toString() {
     return "Response{" +
-        "content(bytes)=" + (content != null ? content.length : "null") +
-        ", dataType=" + dataType +
+        "content=" + content +
         ", players=" + players +
         ", nonSessionPlayers=" + nonSessionPlayers +
         ", socketSessions=" + socketSessions +

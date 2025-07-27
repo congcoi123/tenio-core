@@ -73,6 +73,14 @@ public interface SocketIoHandler extends BaseIoHandler {
   void channelException(SocketChannel socketChannel, Exception exception);
 
   /**
+   * Retrieves the packet decoder.
+   *
+   * @return an instance of {@link BinaryPacketDecoder}
+   * @since 0.6.7
+   */
+  BinaryPacketDecoder getPacketDecoder();
+
+  /**
    * Sets the packet decoder for the socket, every packet should be decoded for
    * the following steps. In theory, every kind of decoder should be acceptable,
    * for example a text decoder. However, this server is using binary decoder for all processes.

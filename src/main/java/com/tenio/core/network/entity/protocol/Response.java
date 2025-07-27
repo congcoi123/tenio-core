@@ -38,21 +38,18 @@ import java.util.Collection;
 public interface Response {
 
   /**
-   * Retrieves an array of binaries data that is carried by the response.
+   * Retrieves binaries data that is carried by the response.
    *
    * @return an array of {@code byte} data that is carried by the response
    */
-  byte[] getContent();
+  byte[] getBinaries();
 
   /**
-   * Sets content for the response.
-   * <b>NOTE:</b> The data type is default set to Zero
+   * Retrieves the content which is carried by the response.
    *
-   * @param content an array of {@code byte} data that is carried by the response
-   * @return the pointer of response
-   * @see DataType#ZERO
+   * @return an instance of {@link DataCollection}
    */
-  Response setContent(byte[] content);
+  DataCollection getContent();
 
   /**
    * Sets content for the response. This will automatically detect its data type.

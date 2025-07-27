@@ -323,7 +323,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
         networkWriterStatistic.updateWrittenPackets(1);
       } else {
         if (isDebugEnabled()) {
-          debug("READ WEBSOCKET CHANNEL", "Session is inactivated: ", session.toString());
+          debug("WRITE WEBSOCKET CHANNEL", "Session is inactivated: ", session.toString());
         }
       }
     }

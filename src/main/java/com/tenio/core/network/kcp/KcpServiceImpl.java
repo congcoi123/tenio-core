@@ -24,12 +24,13 @@ THE SOFTWARE.
 
 package com.tenio.core.network.kcp;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.manager.AbstractManager;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.configuration.KcpConfiguration;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.Packet;
@@ -48,6 +49,8 @@ import kcp.KcpServer;
 public class KcpServiceImpl extends AbstractManager implements KcpService {
 
   private SessionManager sessionManager;
+  private BinaryPacketEncoder binaryPacketEncoder;
+  private BinaryPacketDecoder binaryPacketDecoder;
   private NetworkReaderStatistic networkReaderStatistic;
   private NetworkWriterStatistic networkWriterStatistic;
   private SocketConfiguration socketConfiguration;
@@ -82,8 +85,8 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
     }
 
     kcpServer = new KcpServer();
-    kcpServer.init(new KcpHandler(eventManager, sessionManager, networkReaderStatistic
-    ), KcpConfiguration.inTurboMode(), socketConfiguration.port());
+    kcpServer.init(new KcpHandler(eventManager, sessionManager, binaryPacketDecoder,
+        networkReaderStatistic), KcpConfiguration.inTurboMode(), socketConfiguration.port());
 
     if (isInfoEnabled()) {
       info("KCP CHANNEL", buildgen("Started at port: ", socketConfiguration.port()));
@@ -120,6 +123,16 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
   }
 
   @Override
+  public void setPacketEncoder(BinaryPacketEncoder packetEncoder) {
+    this.binaryPacketEncoder = packetEncoder;
+  }
+
+  @Override
+  public void setPacketDecoder(BinaryPacketDecoder packetDecoder) {
+    this.binaryPacketDecoder = packetDecoder;
+  }
+
+  @Override
   public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
     this.networkReaderStatistic = networkReaderStatistic;
   }
@@ -153,6 +166,7 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
         return;
       }
       if (session.isActivated()) {
+        packet = binaryPacketEncoder.encode(packet);
         ByteBuf byteBuf = Unpooled.wrappedBuffer(packet.getData());
         session.getKcpChannel().write(byteBuf);
         byteBuf.release();
@@ -161,7 +175,7 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
         networkWriterStatistic.updateWrittenPackets(1);
       } else {
         if (isDebugEnabled()) {
-          debug("READ KCP CHANNEL", "Session is inactivated: ", session.toString());
+          debug("WRITE KCP CHANNEL", "Session is inactivated: ", session.toString());
         }
       }
     }

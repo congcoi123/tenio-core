@@ -34,8 +34,8 @@ import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.utility.SocketUtility;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
-import com.tenio.core.network.zero.handler.frame.BinaryPacketFrame;
-import com.tenio.core.network.zero.handler.frame.PacketFramingResult;
+import com.tenio.core.network.zero.handler.frame.BinaryPacketFramer;
+import com.tenio.core.network.zero.handler.frame.PacketFramingListener;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -44,13 +44,13 @@ import java.nio.channels.SocketChannel;
  * The implementation for socket IO handler.
  */
 public final class SocketIoHandlerImpl extends AbstractIoHandler
-    implements SocketIoHandler, PacketFramingResult {
+    implements SocketIoHandler, PacketFramingListener {
 
-  private final BinaryPacketFrame binaryPacketFrame;
+  private final BinaryPacketFramer binaryPacketFramer;
 
   private SocketIoHandlerImpl(EventManager eventManager) {
     super(eventManager);
-    binaryPacketFrame = new BinaryPacketFrame();
+    binaryPacketFramer = new BinaryPacketFramer();
   }
 
   /**
@@ -64,7 +64,7 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
   }
 
   @Override
-  public void resultFrame(Session session, DataCollection message) {
+  public void onFramedResult(Session session, DataCollection message) {
     networkReaderStatistic.updateReadPackets(1);
 
     if (session.isAssociatedToPlayer(Session.AssociatedState.DOING)) {
@@ -89,7 +89,7 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
 
   @Override
   public void sessionRead(Session session, byte[] binaries) {
-    binaryPacketFrame.framing(session, binaries);
+    binaryPacketFramer.framing(session, binaries);
   }
 
   @Override
@@ -128,13 +128,18 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
   }
 
   @Override
+  public BinaryPacketDecoder getPacketDecoder() {
+    return binaryPacketFramer.getBinaryPacketDecoder();
+  }
+
+  @Override
   public void sessionException(Session session, Exception exception) {
     eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
   }
 
   @Override
   public void setPacketDecoder(BinaryPacketDecoder packetDecoder) {
-    binaryPacketFrame.setBinaryPacketDecoder(packetDecoder);
-    binaryPacketFrame.setPacketFramingResult(this);
+    binaryPacketFramer.setBinaryPacketDecoder(packetDecoder);
+    binaryPacketFramer.setPacketFramingResult(this);
   }
 }

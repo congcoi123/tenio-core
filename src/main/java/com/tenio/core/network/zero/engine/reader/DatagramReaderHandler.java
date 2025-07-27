@@ -25,17 +25,14 @@ THE SOFTWARE.
 package com.tenio.core.network.zero.engine.reader;
 
 import com.tenio.common.data.DataCollection;
-import com.tenio.common.data.DataType;
-import com.tenio.common.data.DataUtility;
 import com.tenio.common.logger.SystemLogger;
-import com.tenio.common.utility.ByteUtility;
 import com.tenio.common.utility.OsUtility;
 import com.tenio.core.exception.ServiceRuntimeException;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.utility.SocketUtility;
-import com.tenio.core.network.codec.CodecUtility;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import java.io.IOException;
@@ -76,6 +73,7 @@ public final class DatagramReaderHandler extends SystemLogger {
   private final Selector readableSelector;
   private final ByteBuffer readerBuffer;
   private final SessionManager sessionManager;
+  private final BinaryPacketDecoder binaryPacketDecoder;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final DatagramIoHandler datagramIoHandler;
   private final DatagramPacketPolicy datagramPacketPolicy;
@@ -85,6 +83,7 @@ public final class DatagramReaderHandler extends SystemLogger {
    *
    * @param readerBuffer           instance of {@link ByteBuffer}
    * @param sessionManager         instance of {@link SessionManager}
+   * @param binaryPacketDecoder    instance of {@link BinaryPacketDecoder}
    * @param networkReaderStatistic instance of {@link NetworkReaderStatistic}
    * @param datagramIoHandler      instance of {@link DatagramIoHandler}
    * @param datagramPacketPolicy   instance of {@link DatagramPacketPolicy}
@@ -92,11 +91,13 @@ public final class DatagramReaderHandler extends SystemLogger {
    */
   public DatagramReaderHandler(ByteBuffer readerBuffer,
                                SessionManager sessionManager,
+                               BinaryPacketDecoder binaryPacketDecoder,
                                NetworkReaderStatistic networkReaderStatistic,
                                DatagramIoHandler datagramIoHandler,
                                DatagramPacketPolicy datagramPacketPolicy) throws IOException {
     this.readerBuffer = readerBuffer;
     this.sessionManager = sessionManager;
+    this.binaryPacketDecoder = binaryPacketDecoder;
     this.networkReaderStatistic = networkReaderStatistic;
     this.datagramIoHandler = datagramIoHandler;
     this.datagramPacketPolicy = datagramPacketPolicy;
@@ -228,13 +229,7 @@ public final class DatagramReaderHandler extends SystemLogger {
       readerBuffer.get(binaries);
 
       // convert binary to dataCollection object
-      var packetHeader = CodecUtility.decodeFirstHeaderByte(binaries[0]);
-      binaries = ByteUtility.resizeBytesArray(binaries, 1, binaries.length - 1);
-      DataType dataType = DataType.ZERO;
-      if (packetHeader.isMsgpack()) {
-        dataType = DataType.MSG_PACK;
-      }
-      var dataCollection = DataUtility.binaryToCollection(dataType, binaries);
+      var dataCollection = binaryPacketDecoder.decode(binaries);
 
       // retrieves session by its datagram channel, hence we are using only one
       // datagram channel for all sessions, we use incoming request convey ID to
