@@ -382,6 +382,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   private Packet createPacket(Response response, Collection<Session> recipients,
                               TransportType transportType) {
     var packet = PacketImpl.newInstance();
+    packet.setDataType(response.getDataType());
     packet.setData(response.getBinaries());
     packet.needsEncrypted(response.isEncrypted());
     packet.setGuarantee(response.getGuarantee());

@@ -223,8 +223,8 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
 
   public Packet deepCopy() {
     var packet = PacketImpl.newInstance();
-    packet.setData(data);
     packet.setDataType(dataType);
+    packet.setData(data);
     packet.setFragmentBuffer(fragmentBuffer);
     packet.setGuarantee(guarantee);
     packet.needsEncrypted(encrypted);
