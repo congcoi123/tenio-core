@@ -24,6 +24,9 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.protocol.implement;
 
+import com.tenio.common.data.DataCollection;
+import com.tenio.common.data.DataType;
+import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.entity.Player;
 import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.entity.protocol.Response;
@@ -38,9 +41,10 @@ import java.util.concurrent.TimeUnit;
  *
  * @see Response
  */
-public final class ResponseImpl implements Response {
+public final class ResponseImpl extends SystemLogger implements Response {
 
   private byte[] content;
+  private DataType dataType;
   private Collection<Player> players;
   private Collection<Player> nonSessionPlayers;
   private Collection<Session> socketSessions;
@@ -53,6 +57,7 @@ public final class ResponseImpl implements Response {
   private boolean isEncrypted;
 
   private ResponseImpl() {
+    dataType = DataType.ZERO; // Default
     players = null;
     socketSessions = null;
     datagramSessions = null;
@@ -84,6 +89,19 @@ public final class ResponseImpl implements Response {
     this.content = content;
 
     return this;
+  }
+
+  @Override
+  public Response setContent(DataCollection content) {
+    this.dataType = content.getType();
+    this.content = content.toBinary();
+
+    return this;
+  }
+
+  @Override
+  public DataType getDataType() {
+    return dataType;
   }
 
   @Override
@@ -195,7 +213,7 @@ public final class ResponseImpl implements Response {
       TimeUnit.MILLISECONDS.sleep(delayInMilliseconds);
       write();
     } catch (InterruptedException exception) {
-      exception.printStackTrace();
+      error(exception);
     }
   }
 
@@ -259,6 +277,7 @@ public final class ResponseImpl implements Response {
   public String toString() {
     return "Response{" +
         "content(bytes)=" + (content != null ? content.length : "null") +
+        ", dataType=" + dataType +
         ", players=" + players +
         ", nonSessionPlayers=" + nonSessionPlayers +
         ", socketSessions=" + socketSessions +

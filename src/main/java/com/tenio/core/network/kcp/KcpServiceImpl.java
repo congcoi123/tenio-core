@@ -47,7 +47,6 @@ import kcp.KcpServer;
  */
 public class KcpServiceImpl extends AbstractManager implements KcpService {
 
-  private DataType dataType;
   private SessionManager sessionManager;
   private NetworkReaderStatistic networkReaderStatistic;
   private NetworkWriterStatistic networkWriterStatistic;
@@ -83,11 +82,7 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
     }
 
     kcpServer = new KcpServer();
-    kcpServer.init(new KcpHandler(
-        eventManager,
-        sessionManager,
-        dataType,
-        networkReaderStatistic
+    kcpServer.init(new KcpHandler(eventManager, sessionManager, networkReaderStatistic
     ), KcpConfiguration.inTurboMode(), socketConfiguration.port());
 
     if (isInfoEnabled()) {
@@ -140,11 +135,6 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
   }
 
   @Override
-  public void setDataType(DataType dataType) {
-    this.dataType = dataType;
-  }
-
-  @Override
   public void write(Packet packet) {
     var iterator = packet.getRecipients().iterator();
     while (iterator.hasNext()) {
@@ -152,7 +142,8 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
       if (packet.isMarkedAsLast()) {
         try {
           if (session.isActivated()) {
-            session.close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+            session.close(ConnectionDisconnectMode.CLIENT_REQUEST,
+                PlayerDisconnectMode.CLIENT_REQUEST);
           }
         } catch (IOException exception) {
           if (isErrorEnabled()) {

@@ -24,11 +24,14 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.codec.packet;
 
+import com.tenio.common.data.DataType;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * The definition of all packet header setting flags.
+ * <p>
+ * <b>NOTE:</b> it's safely to define up to 8 flags per byte
  */
 public enum PacketHeaderType {
 
@@ -36,6 +39,12 @@ public enum PacketHeaderType {
    * The data type is binary.
    */
   BINARY(1),
+  /**
+   * This slot is reserved.
+   *
+   * @since 0.6.7
+   */
+  RESERVED_1(2),
   /**
    * The data size is considered as big size.
    */
@@ -47,7 +56,27 @@ public enum PacketHeaderType {
   /**
    * The data is encrypted.
    */
-  ENCRYPTION(16);
+  ENCRYPTION(16),
+  /**
+   * The data is encoded/decoded in Zero type.
+   *
+   * @see DataType#ZERO
+   * @since 0.6.7
+   */
+  ZERO(32),
+  /**
+   * The data is encoded/decoded in MsgPack type.
+   *
+   * @see DataType#MSG_PACK
+   * @since 0.6.7
+   */
+  MSG_PACK(64),
+  /**
+   * This slot is reserved.
+   *
+   * @since 0.6.7
+   */
+  RESERVED_2(128);
 
   // Reverse-lookup map for getting a type from a value
   private static final Map<Integer, PacketHeaderType> lookup = new HashMap<>();

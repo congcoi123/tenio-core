@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.packet;
 
+import com.tenio.common.data.DataType;
 import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
@@ -81,6 +82,22 @@ public interface Packet {
    * @param binary data of {@code byte} array conveyed by the packet
    */
   void setData(byte[] binary);
+
+  /**
+   * Retrieves the data type of packet.
+   *
+   * @return the {@link DataType} using by the packet
+   * @since 0.6.7
+   */
+  DataType getDataType();
+
+  /**
+   * Sets data type of packet.
+   *
+   * @param dataType the {@link DataType} using by the packet
+   * @since 0.6.7
+   */
+  void setDataType(DataType dataType);
 
   /**
    * Retrieves the transportation type of packet.

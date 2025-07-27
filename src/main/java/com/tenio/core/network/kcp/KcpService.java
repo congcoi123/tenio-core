@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.kcp;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.manager.SessionManager;
@@ -36,13 +35,6 @@ import com.tenio.core.service.Service;
  * The websockets handler is provided by the <a href="https://github.com/l42111996/java-Kcp">KCP</a> library.
  */
 public interface KcpService extends Service {
-
-  /**
-   * Set the data serialization type.
-   *
-   * @param dataType the {@link DataType} value
-   */
-  void setDataType(DataType dataType);
 
   /**
    * Sets a session manager instance.

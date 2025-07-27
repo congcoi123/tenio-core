@@ -28,6 +28,7 @@ import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataType;
 import com.tenio.common.data.DataUtility;
 import com.tenio.common.logger.SystemLogger;
+import com.tenio.common.utility.ByteUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.result.AccessDatagramChannelResult;
@@ -35,6 +36,7 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.zero.codec.CodecUtility;
 import io.netty.buffer.ByteBuf;
 import java.util.Optional;
 import kcp.KcpListener;
@@ -49,7 +51,6 @@ public class KcpHandler implements KcpListener {
 
   private final EventManager eventManager;
   private final SessionManager sessionManager;
-  private final DataType dataType;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final KcpHandlerPrivateLogger logger;
 
@@ -62,10 +63,9 @@ public class KcpHandler implements KcpListener {
    * @param networkReaderStatistic {@link NetworkReaderStatistic} instance
    */
   public KcpHandler(EventManager eventManager, SessionManager sessionManager,
-                    DataType dataType, NetworkReaderStatistic networkReaderStatistic) {
+                    NetworkReaderStatistic networkReaderStatistic) {
     this.eventManager = eventManager;
     this.sessionManager = sessionManager;
-    this.dataType = dataType;
     this.networkReaderStatistic = networkReaderStatistic;
     logger = new KcpHandlerPrivateLogger();
   }
@@ -79,20 +79,26 @@ public class KcpHandler implements KcpListener {
 
   @Override
   public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
-    var binary = new byte[byteBuf.readableBytes()];
-    byteBuf.getBytes(byteBuf.readerIndex(), binary);
+    var binaries = new byte[byteBuf.readableBytes()];
+    byteBuf.getBytes(byteBuf.readerIndex(), binaries);
 
-    var message = DataUtility.binaryToCollection(dataType, binary);
+    var packetHeader = CodecUtility.decodeFirstHeaderByte(binaries[0]);
+    binaries = ByteUtility.resizeBytesArray(binaries, 1, binaries.length - 1);
+    DataType dataType = DataType.ZERO;
+    if (packetHeader.isMsgpack()) {
+      dataType = DataType.MSG_PACK;
+    }
+    var dataCollection = DataUtility.binaryToCollection(dataType, binaries);
     Session session = sessionManager.getSessionByKcp(ukcp);
 
     if (session == null) {
-      processDatagramChannelReadMessageForTheFirstTime(ukcp, message);
+      processDatagramChannelReadMessageForTheFirstTime(ukcp, dataCollection);
     } else {
       if (session.isActivated()) {
-        session.addReadBytes(binary.length);
-        networkReaderStatistic.updateReadBytes(binary.length);
+        session.addReadBytes(binaries.length);
+        networkReaderStatistic.updateReadBytes(binaries.length);
         networkReaderStatistic.updateReadPackets(1);
-        eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
+        eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, dataCollection);
       } else {
         if (logger.isDebugEnabled()) {
           logger.debug("READ KCP CHANNEL", "Session is inactivated: ", session.toString());

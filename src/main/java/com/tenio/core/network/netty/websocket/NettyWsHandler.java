@@ -27,6 +27,7 @@ package com.tenio.core.network.netty.websocket;
 import com.tenio.common.data.DataType;
 import com.tenio.common.data.DataUtility;
 import com.tenio.common.logger.SystemLogger;
+import com.tenio.common.utility.ByteUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
@@ -37,6 +38,7 @@ import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.utility.SocketUtility;
+import com.tenio.core.network.zero.codec.CodecUtility;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
@@ -54,16 +56,14 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   private final SessionManager sessionManager;
   private final ConnectionFilter connectionFilter;
   private final NetworkReaderStatistic networkReaderStatistic;
-  private final DataType dataType;
   private final NettyWsHandlerPrivateLogger logger;
 
   private NettyWsHandler(EventManager eventManager, SessionManager sessionManager,
-                         ConnectionFilter connectionFilter, DataType dataType,
+                         ConnectionFilter connectionFilter,
                          NetworkReaderStatistic networkReaderStatistic) {
     this.eventManager = eventManager;
     this.sessionManager = sessionManager;
     this.connectionFilter = connectionFilter;
-    this.dataType = dataType;
     this.networkReaderStatistic = networkReaderStatistic;
     logger = new NettyWsHandlerPrivateLogger();
   }
@@ -74,15 +74,13 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
    * @param eventManager           the instance of {@link EventManager}
    * @param sessionManager         the instance of {@link SessionManager}
    * @param connectionFilter       the instance of {@link ConnectionFilter}
-   * @param dataType               the {@link DataType}
    * @param networkReaderStatistic the instance of {@link NetworkReaderStatistic}
    * @return a new instance of {@link NettyWsHandler}
    */
   public static NettyWsHandler newInstance(EventManager eventManager, SessionManager sessionManager,
-                                           ConnectionFilter connectionFilter, DataType dataType,
+                                           ConnectionFilter connectionFilter,
                                            NetworkReaderStatistic networkReaderStatistic) {
-    return new NettyWsHandler(eventManager, sessionManager, connectionFilter, dataType,
-        networkReaderStatistic);
+    return new NettyWsHandler(eventManager, sessionManager, connectionFilter, networkReaderStatistic);
   }
 
   @Override
@@ -110,8 +108,8 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
     if (raw instanceof BinaryWebSocketFrame) {
       // convert the BinaryWebSocketFrame to bytes' array
       var buffer = ((BinaryWebSocketFrame) raw).content();
-      var binary = new byte[buffer.readableBytes()];
-      buffer.getBytes(buffer.readerIndex(), binary);
+      var binaries = new byte[buffer.readableBytes()];
+      buffer.getBytes(buffer.readerIndex(), binaries);
       buffer.release();
 
       var session = sessionManager.getSessionByWebSocket(ctx.channel());
@@ -147,16 +145,22 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
         return;
       }
 
-      session.addReadBytes(binary.length);
-      networkReaderStatistic.updateReadBytes(binary.length);
+      session.addReadBytes(binaries.length);
+      networkReaderStatistic.updateReadBytes(binaries.length);
       networkReaderStatistic.updateReadPackets(1);
 
-      var message = DataUtility.binaryToCollection(dataType, binary);
+      var packetHeader = CodecUtility.decodeFirstHeaderByte(binaries[0]);
+      binaries = ByteUtility.resizeBytesArray(binaries, 1, binaries.length - 1);
+      DataType dataType = DataType.ZERO;
+      if (packetHeader.isMsgpack()) {
+        dataType = DataType.MSG_PACK;
+      }
+      var dataCollection = DataUtility.binaryToCollection(dataType, binaries);
 
       if (session.isAssociatedToPlayer(Session.AssociatedState.NONE)) {
-        eventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, message);
+        eventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, dataCollection);
       } else if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
-        eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
+        eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, dataCollection);
       }
     }
   }

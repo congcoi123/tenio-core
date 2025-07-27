@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.netty.websocket;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
@@ -44,19 +43,17 @@ public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> 
   private final EventManager eventManager;
   private final SessionManager sessionManager;
   private final ConnectionFilter connectionFilter;
-  private final DataType dataType;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final WebSocketSslContext sslContext;
   private final boolean usingSsl;
 
   private NettyWsInitializer(EventManager eventManager, SessionManager sessionManager,
-                             ConnectionFilter connectionFilter, DataType dataType,
+                             ConnectionFilter connectionFilter,
                              NetworkReaderStatistic networkReaderStatistic,
                              WebSocketSslContext sslContext, boolean usingSsl) {
     this.eventManager = eventManager;
     this.sessionManager = sessionManager;
     this.connectionFilter = connectionFilter;
-    this.dataType = dataType;
     this.networkReaderStatistic = networkReaderStatistic;
     this.sslContext = sslContext;
     this.usingSsl = usingSsl;
@@ -66,9 +63,8 @@ public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> 
    * Initialization.
    *
    * @param eventManager           the event manager
-   * @param sessionManager         the sessin manager
+   * @param sessionManager         the session manager
    * @param connectionFilter       the connection filter
-   * @param dataType               the {@link DataType}
    * @param networkReaderStatistic the network reader statistic
    * @param sslContext             the ssl context
    * @param usingSsl               is using ssl or not
@@ -77,10 +73,9 @@ public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> 
   public static NettyWsInitializer newInstance(EventManager eventManager,
                                                SessionManager sessionManager,
                                                ConnectionFilter connectionFilter,
-                                               DataType dataType,
                                                NetworkReaderStatistic networkReaderStatistic,
                                                WebSocketSslContext sslContext, boolean usingSsl) {
-    return new NettyWsInitializer(eventManager, sessionManager, connectionFilter, dataType,
+    return new NettyWsInitializer(eventManager, sessionManager, connectionFilter,
         networkReaderStatistic, sslContext, usingSsl);
   }
 
@@ -101,6 +96,6 @@ public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> 
     // the logic handler
     pipeline.addLast("http-handshake",
         NettyWsHandShake.newInstance(eventManager, sessionManager, connectionFilter,
-            dataType, networkReaderStatistic));
+            networkReaderStatistic));
   }
 }

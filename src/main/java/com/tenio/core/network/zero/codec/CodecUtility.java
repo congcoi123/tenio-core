@@ -46,7 +46,10 @@ public final class CodecUtility {
     return PacketHeader.newInstance((headerByte & PacketHeaderType.BINARY.getValue()) > 0,
         (headerByte & PacketHeaderType.COMPRESSION.getValue()) > 0,
         (headerByte & PacketHeaderType.BIG_SIZE.getValue()) > 0,
-        (headerByte & PacketHeaderType.ENCRYPTION.getValue()) > 0);
+        (headerByte & PacketHeaderType.ENCRYPTION.getValue()) > 0,
+        (headerByte & PacketHeaderType.ZERO.getValue()) > 0,
+        (headerByte & PacketHeaderType.MSG_PACK.getValue()) > 0
+    );
   }
 
   /**
@@ -72,6 +75,14 @@ public final class CodecUtility {
 
     if (packetHeader.isEncrypted()) {
       headerByte = (byte) (headerByte | PacketHeaderType.ENCRYPTION.getValue());
+    }
+
+    if (packetHeader.isEncrypted()) {
+      headerByte = (byte) (headerByte | PacketHeaderType.ZERO.getValue());
+    }
+
+    if (packetHeader.isEncrypted()) {
+      headerByte = (byte) (headerByte | PacketHeaderType.MSG_PACK.getValue());
     }
 
     return headerByte;

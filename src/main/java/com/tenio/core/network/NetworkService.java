@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.packet.policy.DefaultPacketQueuePolicy;
@@ -256,13 +255,6 @@ public interface NetworkService extends Service {
    * @since 0.6.7
    */
   void setDatagramPacketPolicy(DatagramPacketPolicy datagramPacketPolicy);
-
-  /**
-   * Set the data serialization type.
-   *
-   * @param dataType the {@link DataType} value
-   */
-  void setDataType(DataType dataType);
 
   /**
    * Retrieves the session manager instance.

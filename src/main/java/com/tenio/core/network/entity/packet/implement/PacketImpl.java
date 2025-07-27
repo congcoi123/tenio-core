@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.packet.implement;
 
+import com.tenio.common.data.DataType;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.define.TransportType;
@@ -41,6 +42,7 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   private final long id;
   private final long createdTime;
   private byte[] data;
+  private DataType dataType;
   private ResponseGuarantee guarantee;
   private boolean encrypted;
   private TransportType transportType;
@@ -54,6 +56,7 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
     createdTime = TimeUtility.currentTimeMillis();
     transportType = TransportType.UNKNOWN;
     guarantee = ResponseGuarantee.NORMAL;
+    dataType = DataType.ZERO; // Default
   }
 
   /**
@@ -79,6 +82,16 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   public void setData(byte[] binary) {
     data = binary;
     originalSize = binary.length;
+  }
+
+  @Override
+  public DataType getDataType() {
+    return dataType;
+  }
+
+  @Override
+  public void setDataType(DataType dataType) {
+    this.dataType = dataType;
   }
 
   @Override
@@ -202,6 +215,7 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
         "id=" + id +
         ", createdTime=" + createdTime +
         ", data(bytes)=" + (data != null ? data.length : "null") +
+        ", dataType=" + dataType +
         ", guarantee=" + guarantee +
         ", encrypted=" + encrypted +
         ", transportType=" + transportType +
@@ -215,6 +229,7 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   public Packet deepCopy() {
     var packet = PacketImpl.newInstance();
     packet.setData(data);
+    packet.setDataType(dataType);
     packet.setFragmentBuffer(fragmentBuffer);
     packet.setGuarantee(guarantee);
     packet.setEncrypted(encrypted);

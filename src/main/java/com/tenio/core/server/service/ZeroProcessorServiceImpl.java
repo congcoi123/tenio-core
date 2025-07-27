@@ -25,7 +25,6 @@ THE SOFTWARE.
 package com.tenio.core.server.service;
 
 import com.tenio.common.data.DataCollection;
-import com.tenio.common.data.DataType;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.configuration.define.ServerEvent;
@@ -153,10 +152,6 @@ public final class ZeroProcessorServiceImpl extends AbstractController
 
       return null;
     });
-  }
-
-  @Override
-  public void setDataType(DataType dataType) {
   }
 
   @Override

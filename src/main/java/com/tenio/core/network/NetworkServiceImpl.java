@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network;
 
-import com.tenio.common.data.DataType;
 import com.tenio.common.data.DataUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
@@ -69,7 +68,6 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   private final ZeroSocketService socketService;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final NetworkWriterStatistic networkWriterStatistic;
-  private DataType dataType;
   private boolean initialized;
 
   private boolean httpServiceInitialized;
@@ -308,15 +306,6 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
-  public void setDataType(DataType dataType) {
-    this.dataType = dataType;
-
-    socketService.setDataType(dataType);
-    webSocketService.setDataType(dataType);
-    kcpChannelService.setDataType(dataType);
-  }
-
-  @Override
   public SessionManager getSessionManager() {
     return sessionManager;
   }
@@ -333,7 +322,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
 
   @Override
   public void write(Response response, boolean markedAsLast) {
-    var message = DataUtility.binaryToCollection(dataType, response.getContent());
+    var message = DataUtility.binaryToCollection(response.getDataType(), response.getContent());
 
     var recipientPlayers = response.getRecipientPlayers();
     if (recipientPlayers != null && !recipientPlayers.isEmpty()) {

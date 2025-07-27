@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.protocol;
 
+import com.tenio.common.data.DataCollection;
+import com.tenio.common.data.DataType;
 import com.tenio.core.entity.Player;
 import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
@@ -44,11 +46,31 @@ public interface Response {
 
   /**
    * Sets content for the response.
+   * <b>NOTE:</b> The data type is default set to Zero
    *
    * @param content an array of {@code byte} data that is carried by the response
    * @return the pointer of response
+   * @see DataType#ZERO
    */
   Response setContent(byte[] content);
+
+  /**
+   * Sets content for the response. This will automatically detect its data type.
+   *
+   * @param content an instance of {@link DataCollection}
+   * @return the pointer of response
+   * @see DataType
+   * @since 0.6.7
+   */
+  Response setContent(DataCollection content);
+
+  /**
+   * Retrieves the data type.
+   *
+   * @return the {@link DataType}
+   * @since 0.6.7
+   */
+  DataType getDataType();
 
   /**
    * Retrieves a collection of recipient players.

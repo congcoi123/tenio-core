@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.codec.packet;
 
+import com.tenio.common.data.DataType;
+
 /**
  * The packet header contains all settings for a packet by combining some conditions.
  */
@@ -33,16 +35,28 @@ public final class PacketHeader {
   private final boolean compressed;
   private final boolean bigSized;
   private final boolean encrypted;
+  private final boolean zero;
+  private final boolean msgpack;
 
-  private PacketHeader(boolean binary, boolean compressed, boolean bigSized, boolean encrypted) {
+  private PacketHeader(boolean binary, boolean compressed, boolean bigSized, boolean encrypted,
+                       boolean zero, boolean msgpack) {
     this.binary = binary;
     this.compressed = compressed;
     this.bigSized = bigSized;
     this.encrypted = encrypted;
+    this.zero = zero;
+    this.msgpack = msgpack;
   }
 
   /**
-   * Initialization.
+   * Initialization. Only the one of zero or msgpack flag must be enabled.
+   * <p>
+   * Scenarios:
+   * <ul>
+   * <li>If 2 values are {@code true}, it throws an exception</li>
+   * <li>If 2 values are {@code false}, the zero flag is enabled by default</li>
+   * </ul>
+   * </p>
    *
    * @param binary     sets to {@code true} if the data is written by binary, otherwise
    *                   {@code false}
@@ -52,11 +66,20 @@ public final class PacketHeader {
    *                   otherwise returns {@code false}
    * @param encrypted  sets to {@code true} if the data is encrypted, otherwise
    *                   {@code false}
+   * @param zero       sets to {@code true} if the data is encoded/decoded in Zero Type.
+   * @param msgpack    sets to {@code true} if the data is encoded/decoded in MsgPack Type.
    * @return a new instance of {@link PacketHeader}
+   * @see DataType
    */
   public static PacketHeader newInstance(boolean binary, boolean compressed, boolean bigSized,
-                                         boolean encrypted) {
-    return new PacketHeader(binary, compressed, bigSized, encrypted);
+                                         boolean encrypted, boolean zero, boolean msgpack) {
+    if (zero && msgpack) {
+      throw new IllegalArgumentException("Only one of zero or msgpack flag should be enabled");
+    }
+    if (!zero && !msgpack) {
+      zero = true;
+    }
+    return new PacketHeader(binary, compressed, bigSized, encrypted, zero, msgpack);
   }
 
   /**
@@ -96,6 +119,28 @@ public final class PacketHeader {
     return encrypted;
   }
 
+  /**
+   * Determines whether the data is encoded/decoded in Zero type.
+   *
+   * @return {@code true} if the data is encoded/decoded in Zero type, otherwise returns {@code false}
+   * @see DataType#ZERO
+   * @since 0.6.7
+   */
+  public boolean isZero() {
+    return zero;
+  }
+
+  /**
+   * Determines whether the data is encoded/decoded in MsgPack type.
+   *
+   * @return {@code true} if the data is encoded/decoded in MsgPack type, otherwise returns {@code false}
+   * @see DataType#MSG_PACK
+   * @since 0.6.7
+   */
+  public boolean isMsgpack() {
+    return msgpack;
+  }
+
   @Override
   public String toString() {
     return "PacketHeader{" +
@@ -103,6 +148,8 @@ public final class PacketHeader {
         ", compressed=" + compressed +
         ", bigSized=" + bigSized +
         ", encrypted=" + encrypted +
+        ", zero=" + zero +
+        ", msgpack=" + msgpack +
         '}';
   }
 }

@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.codec.encoder;
 
+import com.tenio.common.data.DataType;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.zero.codec.CodecUtility;
@@ -97,7 +98,8 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
 
     // create new packet header and encode the first indicated byte
     var packetHeader =
-        PacketHeader.newInstance(true, isCompressed, headerSize > Short.BYTES, isEncrypted);
+        PacketHeader.newInstance(true, isCompressed, headerSize > Short.BYTES, isEncrypted,
+            packet.getDataType() == DataType.ZERO, packet.getDataType() == DataType.MSG_PACK);
     byte headerByte = CodecUtility.encodeFirstHeaderByte(packetHeader);
 
     // allocate bytes for the new data and put all value to form a new packet

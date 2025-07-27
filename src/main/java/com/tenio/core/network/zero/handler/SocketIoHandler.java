@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.handler;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
@@ -35,14 +34,6 @@ import java.nio.channels.SocketChannel;
  * The Socket IO handler.
  */
 public interface SocketIoHandler extends BaseIoHandler {
-
-  /**
-   * Set the data serialization type.
-   *
-   * @param dataType the {@link DataType} value
-   */
-  void setDataType(DataType dataType);
-
 
   /**
    * When a new message comes from a session then this method is invoked.

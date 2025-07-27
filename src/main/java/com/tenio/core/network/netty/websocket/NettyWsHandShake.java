@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.netty.websocket;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
@@ -50,35 +49,31 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
   private final EventManager eventManager;
   private final SessionManager sessionManager;
   private final ConnectionFilter connectionFilter;
-  private final DataType dataType;
   private final NetworkReaderStatistic networkReaderStatistic;
 
   private NettyWsHandShake(EventManager eventManager, SessionManager sessionManager,
-                           ConnectionFilter connectionFilter, DataType dataType,
+                           ConnectionFilter connectionFilter,
                            NetworkReaderStatistic networkReaderStatistic) {
     this.eventManager = eventManager;
     this.sessionManager = sessionManager;
     this.connectionFilter = connectionFilter;
-    this.dataType = dataType;
     this.networkReaderStatistic = networkReaderStatistic;
   }
 
   /**
-   * Creates a new instance of the websocket hand shaker.
+   * Creates a new instance of the websocket handshaker.
    *
    * @param eventManager           the instance of {@link EventManager}
    * @param sessionManager         the instance of {@link SessionManager}
    * @param connectionFilter       the instance of {@link ConnectionFilter}
-   * @param dataType               the {@link DataType}
    * @param networkReaderStatistic the instance of {@link NetworkReaderStatistic}
    * @return a new instance of {@link NettyWsHandShake}
    */
   public static NettyWsHandShake newInstance(EventManager eventManager,
                                              SessionManager sessionManager,
                                              ConnectionFilter connectionFilter,
-                                             DataType dataType,
                                              NetworkReaderStatistic networkReaderStatistic) {
-    return new NettyWsHandShake(eventManager, sessionManager, connectionFilter, dataType,
+    return new NettyWsHandShake(eventManager, sessionManager, connectionFilter,
         networkReaderStatistic);
   }
 
@@ -94,9 +89,9 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
 
         // add new handler to the existing pipeline to handle HandShake-WebSocket
         // Messages
-        ctx.pipeline()
-            .replace(this, "handler", NettyWsHandler.newInstance(eventManager, sessionManager,
-                connectionFilter, dataType, networkReaderStatistic));
+        ctx.pipeline().replace(this, "handler",
+            NettyWsHandler.newInstance(eventManager, sessionManager, connectionFilter,
+                networkReaderStatistic));
 
         // do the Handshake to upgrade connection from HTTP to WebSocket protocol
         handleHandshake(ctx, httpRequest);

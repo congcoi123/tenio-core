@@ -25,7 +25,6 @@ THE SOFTWARE.
 package com.tenio.core.server.setting;
 
 import com.tenio.common.configuration.Configuration;
-import com.tenio.common.data.DataType;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
@@ -37,7 +36,6 @@ import com.tenio.core.handler.event.EventAccessKcpChannelRequestValidation;
 import com.tenio.core.handler.event.EventAccessKcpChannelRequestValidationResult;
 import com.tenio.core.handler.event.EventPlayerReconnectRequestHandle;
 import com.tenio.core.handler.event.EventPlayerReconnectedResult;
-import java.util.Arrays;
 
 /**
  * Performs validation and assessment of server configuration settings.
@@ -76,12 +74,12 @@ public final class ConfigurationAssessment {
   /**
    * Creates a new instance of configuration assessment.
    *
-   * @param eventManager   the {@link EventManager} instance for event handling
-   * @param configuration  the {@link Configuration} instance to assess
+   * @param eventManager  the {@link EventManager} instance for event handling
+   * @param configuration the {@link Configuration} instance to assess
    * @return a new instance of {@link ConfigurationAssessment}
    */
   public static ConfigurationAssessment newInstance(EventManager eventManager,
-                                                  Configuration configuration) {
+                                                    Configuration configuration) {
     return new ConfigurationAssessment(eventManager, configuration);
   }
 
@@ -96,27 +94,13 @@ public final class ConfigurationAssessment {
    * </ul>
    *
    * @throws NotDefinedSubscribersException if required subscribers are not defined
-   * @throws ConfigurationException if configuration settings are invalid
+   * @throws ConfigurationException         if configuration settings are invalid
    */
   public void assess() throws NotDefinedSubscribersException, ConfigurationException {
-    checkDataSerialization();
     checkSubscriberReconnection();
     checkSubscriberRequestAccessingDatagramChannelHandler();
     checkSubscriberRequestAccessingKcpChannelHandler();
     checkDefinedMainSocketConnection();
-  }
-
-  /**
-   * Validates the data serialization configuration.
-   * Ensures that a valid data serialization type is specified.
-   */
-  private void checkDataSerialization() {
-    var dataSerialization = configuration.getString(CoreConfigurationType.DATA_SERIALIZATION);
-    if (DataType.getByValue(dataSerialization) == null) {
-      throw new ConfigurationException(String.format("Data Serialization Type {%s} is not " +
-              "supported, please reference to the supporting list: %s", dataSerialization,
-          Arrays.toString(DataType.values())));
-    }
   }
 
   /**

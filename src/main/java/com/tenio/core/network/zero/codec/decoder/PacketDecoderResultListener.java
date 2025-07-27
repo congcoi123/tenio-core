@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.codec.decoder;
 
+import com.tenio.common.data.DataType;
 import com.tenio.core.network.entity.session.Session;
 
 /**
@@ -34,10 +35,11 @@ public interface PacketDecoderResultListener {
   /**
    * The final binary data processed by the session.
    *
-   * @param session the processing {@link Session}
-   * @param binary  the processed {@code byte} data
+   * @param session  the processing {@link Session}
+   * @param dataType the {@link DataType}
+   * @param binary   the processed {@code byte} data
    */
-  void resultFrame(Session session, byte[] binary);
+  void resultFrame(Session session, DataType dataType, byte[] binary);
 
   /**
    * Updates the current number of refused packets from clients side which violated the policies.

@@ -25,7 +25,6 @@ THE SOFTWARE.
 package com.tenio.core.server;
 
 import com.tenio.common.configuration.Configuration;
-import com.tenio.common.data.DataType;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.api.ServerApi;
@@ -96,7 +95,6 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final ServerApi serverApi;
   private ClientCommandManager clientCommandManager;
   private Configuration configuration;
-  private DataType dataType;
   private long startedTime;
   private String serverName;
 
@@ -147,8 +145,6 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     this.configuration = configuration;
 
-    dataType =
-        DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION));
     serverName = configuration.getString(CoreConfigurationType.SERVER_NAME);
 
     if (isInfoEnabled()) {
@@ -302,9 +298,6 @@ public final class ServerImpl extends SystemLogger implements Server {
         .setWebSocketProducerWorkers(
             configuration.getInt(CoreConfigurationType.WORKER_WEBSOCKET_PRODUCER));
 
-    networkService.setDataType(
-        DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION)));
-
     networkService.setWebSocketReceiverBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_RECEIVER_BUFFER_SIZE));
     networkService.setWebSocketSenderBufferSize(
@@ -350,8 +343,6 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   private void setupInternalProcessorService(Configuration configuration, BootstrapHandler bootstrapHandler) {
-    zeroProcessorService.setDataType(
-        DataType.getByValue(configuration.getString(CoreConfigurationType.DATA_SERIALIZATION)));
     RequestPolicy requestPolicy = bootstrapHandler.getBeanByClazz(RequestPolicy.class);
     zeroProcessorService.setRequestPolicy(requestPolicy);
     zeroProcessorService
@@ -473,11 +464,6 @@ public final class ServerImpl extends SystemLogger implements Server {
   @Override
   public Configuration getConfiguration() {
     return configuration;
-  }
-
-  @Override
-  public DataType getDataType() {
-    return dataType;
   }
 
   @Override

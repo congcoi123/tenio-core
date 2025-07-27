@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.implement;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
@@ -55,7 +54,6 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
   private volatile List<SocketReaderHandler> socketReaderHandlers;
   private DatagramReaderHandler datagramReaderHandler;
   private DatagramPacketPolicy datagramPacketPolicy;
-  private DataType dataType;
   private String serverAddress;
   private SocketConfiguration udpChannelConfiguration;
   private NetworkReaderStatistic networkReaderStatistic;
@@ -86,11 +84,6 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
                                         Consumer<SelectionKey> onSuccess,
                                         Runnable onFailed) {
     getSocketReaderHandler().registerClientSocketChannel(socketChannel, onSuccess, onFailed);
-  }
-
-  @Override
-  public void setDataType(DataType dataType) {
-    this.dataType = dataType;
   }
 
   @Override
@@ -125,9 +118,10 @@ public final class ZeroReaderImpl extends AbstractZeroEngine
     // but only one datagram reader handler allowed
     if (udpChannelConfiguration != null) {
       try {
-        datagramReaderHandler = new DatagramReaderHandler(dataType,
-            SocketUtility.createReaderBuffer(getMaxBufferSize()), getSessionManager(),
-            getNetworkReaderStatistic(), getDatagramIoHandler(), datagramPacketPolicy);
+        datagramReaderHandler =
+            new DatagramReaderHandler(SocketUtility.createReaderBuffer(getMaxBufferSize()),
+                getSessionManager(), getNetworkReaderStatistic(), getDatagramIoHandler(),
+                datagramPacketPolicy);
         datagramReaderHandler.openDatagramChannels(serverAddress, udpChannelConfiguration.port(),
             udpChannelConfiguration.cacheSize());
       } catch (IOException exception) {

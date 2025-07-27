@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.manager.SessionManager;
@@ -154,13 +153,6 @@ public interface ZeroSocketService extends Service {
    * @param packetDecoder an instance of {@link BinaryPacketDecoder}
    */
   void setPacketDecoder(BinaryPacketDecoder packetDecoder);
-
-  /**
-   * Set the data serialization type.
-   *
-   * @param dataType the {@link DataType} value
-   */
-  void setDataType(DataType dataType);
 
   /**
    * Sets a datagram packet policy.
