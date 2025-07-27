@@ -77,11 +77,11 @@ public final class CodecUtility {
       headerByte = (byte) (headerByte | PacketHeaderType.ENCRYPTION.getValue());
     }
 
-    if (packetHeader.isEncrypted()) {
+    if (packetHeader.isZero()) {
       headerByte = (byte) (headerByte | PacketHeaderType.ZERO.getValue());
     }
 
-    if (packetHeader.isEncrypted()) {
+    if (packetHeader.isMsgpack()) {
       headerByte = (byte) (headerByte | PacketHeaderType.MSG_PACK.getValue());
     }
 

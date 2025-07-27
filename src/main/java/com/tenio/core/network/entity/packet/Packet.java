@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * <p>Key features:
  * <ul>
- *   <li>Multiple transport type support (TCP, WebSocket, UDP)</li>
+ *   <li>Multiple transport type support (TCP, UDP)</li>
  *   <li>Priority-based packet handling</li>
  *   <li>Session association</li>
  *   <li>Deep copy capabilities</li>
@@ -132,7 +132,7 @@ public interface Packet {
    *
    * @return {@code true} if the packet data is encrypted, otherwise returns {@code false}
    */
-  boolean isEncrypted();
+  boolean needsEncrypted();
 
   /**
    * Marks the packet data is encrypted or not.
@@ -140,7 +140,7 @@ public interface Packet {
    * @param encrypted is set to {@code true} if the packet data is encrypted, otherwise
    *                  {@code false}
    */
-  void setEncrypted(boolean encrypted);
+  void needsEncrypted(boolean encrypted);
 
   /**
    * Retrieves a collection of sessions which play roles as recipients.
@@ -187,14 +187,6 @@ public interface Packet {
    * {@code false}
    */
   boolean isUdp();
-
-  /**
-   * Determines whether the packet's transportation type is WebSocket.
-   *
-   * @return {@code true} if the packet's transportation type is WebSocket, otherwise
-   * {@code false}
-   */
-  boolean isWebSocket();
 
   /**
    * Retrieves the rest of sending binaries from the packet's data.

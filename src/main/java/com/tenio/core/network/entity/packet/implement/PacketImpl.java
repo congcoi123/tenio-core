@@ -115,12 +115,12 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   }
 
   @Override
-  public boolean isEncrypted() {
+  public boolean needsEncrypted() {
     return encrypted;
   }
 
   @Override
-  public void setEncrypted(boolean encrypted) {
+  public void needsEncrypted(boolean encrypted) {
     this.encrypted = encrypted;
   }
 
@@ -152,11 +152,6 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   @Override
   public boolean isUdp() {
     return transportType == TransportType.UDP;
-  }
-
-  @Override
-  public boolean isWebSocket() {
-    return transportType == TransportType.WEB_SOCKET;
   }
 
   @Override
@@ -232,7 +227,7 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
     packet.setDataType(dataType);
     packet.setFragmentBuffer(fragmentBuffer);
     packet.setGuarantee(guarantee);
-    packet.setEncrypted(encrypted);
+    packet.needsEncrypted(encrypted);
     packet.setRecipients(recipients);
     packet.setTransportType(transportType);
     packet.setMarkedAsLast(last);

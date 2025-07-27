@@ -28,15 +28,15 @@ import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
+import com.tenio.core.network.codec.packet.PacketReadState;
+import com.tenio.core.network.codec.packet.PendingPacket;
+import com.tenio.core.network.codec.packet.ProcessedPacket;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.utility.SocketUtility;
-import com.tenio.core.network.codec.packet.PacketReadState;
-import com.tenio.core.network.codec.packet.PendingPacket;
-import com.tenio.core.network.codec.packet.ProcessedPacket;
 import io.netty.channel.Channel;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -86,6 +86,11 @@ public class SessionImpl implements Session {
 
   private int maxIdleTimeInSecond;
 
+  /**
+   * Constructor.
+   *
+   * @since 0.6.7
+   */
   protected SessionImpl() {
     id = ID_COUNTER.getAndIncrement();
     transportType = TransportType.UNKNOWN;
@@ -472,6 +477,11 @@ public class SessionImpl implements Session {
     atomicAssociatedState.set(associatedState);
   }
 
+  /**
+   * Creates packet handler objects.
+   *
+   * @since 0.6.7
+   */
   protected void createPacketSocketHandler() {
     packetReadState = PacketReadState.WAIT_NEW_PACKET;
     processedPacket = ProcessedPacket.newInstance();

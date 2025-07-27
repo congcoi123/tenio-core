@@ -56,7 +56,6 @@ public final class PacketHeader {
    * <li>If 2 values are {@code true}, it throws an exception</li>
    * <li>If 2 values are {@code false}, the zero flag is enabled by default</li>
    * </ul>
-   * </p>
    *
    * @param binary     sets to {@code true} if the data is written by binary, otherwise
    *                   {@code false}

@@ -315,7 +315,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
         return;
       }
       if (session.isActivated()) {
-        packet = binaryPacketEncoder.encode(packet);
+        packet = binaryPacketEncoder.encode(packet, false);
         session.fetchWebSocketChannel()
             .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(packet.getData())));
         session.addWrittenBytes(packet.getOriginalSize());

@@ -47,7 +47,8 @@ public interface BinaryPacketDecoder {
   /**
    * Decodes binaries data.
    *
-   * @param binaries the receiving {@code byte} data
+   * @param packetHeader instance of {@link PacketHeader}
+   * @param binaries     the receiving {@code byte} data
    * @return an instance of {@link DataCollection}
    * @throws RuntimeException whenever an issue occurred
    * @since 0.6.7

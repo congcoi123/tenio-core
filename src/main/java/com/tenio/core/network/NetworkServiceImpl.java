@@ -383,7 +383,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
                               TransportType transportType) {
     var packet = PacketImpl.newInstance();
     packet.setData(response.getBinaries());
-    packet.setEncrypted(response.isEncrypted());
+    packet.needsEncrypted(response.isEncrypted());
     packet.setGuarantee(response.getGuarantee());
     packet.setRecipients(recipients);
     packet.setTransportType(transportType);

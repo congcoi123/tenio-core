@@ -166,7 +166,7 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
         return;
       }
       if (session.isActivated()) {
-        packet = binaryPacketEncoder.encode(packet);
+        packet = binaryPacketEncoder.encode(packet, false);
         ByteBuf byteBuf = Unpooled.wrappedBuffer(packet.getData());
         session.getKcpChannel().write(byteBuf);
         byteBuf.release();

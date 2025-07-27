@@ -52,19 +52,19 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
   }
 
   @Override
-  public Packet encode(Packet packet) {
-    // retrieve the packet data first
+  public Packet encode(Packet packet, boolean includedHeaderSize) {
+    // retrieve the packet original data first
     byte[] binaries = packet.getData();
 
     // check if the data needs to be encrypted
-    boolean isEncrypted = packet.isEncrypted();
-    if (isEncrypted) {
+    boolean needsEncrypted = packet.needsEncrypted();
+    if (needsEncrypted) {
       if (encryptor != null) {
         try {
           binaries = encryptor.encrypt(binaries);
         } catch (Exception exception) {
           error(exception);
-          isEncrypted = false;
+          needsEncrypted = false;
         }
       } else {
         throw new IllegalStateException("Expected the interface BinaryPacketEncryptor was " +
@@ -73,12 +73,12 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
     }
 
     // check if the data needs to be compressed
-    boolean isCompressed = false;
+    boolean needsCompressed = false;
     if (compressionThresholdBytes > 0 && binaries.length >= compressionThresholdBytes) {
       if (compressor != null) {
         try {
           binaries = compressor.compress(binaries);
-          isCompressed = true;
+          needsCompressed = true;
         } catch (Exception exception) {
           error(exception);
         }
@@ -89,33 +89,40 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
       }
     }
 
-    // if the original size of data exceeded threshold, it needs to be resized the
-    // header bytes value
-    int headerSize = Short.BYTES;
-    if (binaries.length > MAX_BYTES_FOR_NORMAL_SIZE) {
-      headerSize = Integer.BYTES;
+    // in default, there is no header size
+    int headerSize = 0;
+    // in case of stream-oriented type
+    if (includedHeaderSize) {
+      // if the original size of data exceeded threshold, it needs to be resized the
+      // header bytes value
+      headerSize = Short.BYTES;
+      if (binaries.length > MAX_BYTES_FOR_NORMAL_SIZE) {
+        headerSize = Integer.BYTES;
+      }
     }
 
     // create new packet header and encode the first indicated byte
     var packetHeader =
-        PacketHeader.newInstance(true, isCompressed, headerSize > Short.BYTES, isEncrypted,
+        PacketHeader.newInstance(true, needsCompressed, headerSize > Short.BYTES, needsEncrypted,
             packet.getDataType() == DataType.ZERO, packet.getDataType() == DataType.MSG_PACK);
     byte headerByte = CodecUtility.encodeFirstHeaderByte(packetHeader);
 
     // allocate bytes for the new data and put all value to form a new packet
     var packetBuffer = ByteBuffer.allocate(Byte.BYTES + headerSize + binaries.length);
 
-    // put header byte indicator
+    // 1. put header byte indicator
     packetBuffer.put(headerByte);
 
-    // put original data size for header bases on its length
-    if (headerSize > Short.BYTES) {
-      packetBuffer.putInt(binaries.length);
-    } else {
-      packetBuffer.putShort((short) binaries.length);
+    // 2. put original data size for header bases on its length (in case of stream-oriented type)
+    if (includedHeaderSize) {
+      if (headerSize > Short.BYTES) {
+        packetBuffer.putInt(binaries.length);
+      } else {
+        packetBuffer.putShort((short) binaries.length);
+      }
     }
 
-    // put original data
+    // 3. put original data
     packetBuffer.put(binaries);
 
     // form new data for the packet

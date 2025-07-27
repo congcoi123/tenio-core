@@ -26,9 +26,9 @@ package com.tenio.core.network.codec.encoder;
 
 import com.tenio.core.exception.PacketCompressorException;
 import com.tenio.core.exception.PacketEncryptorException;
-import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.codec.compression.BinaryPacketCompressor;
 import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.core.network.entity.packet.Packet;
 
 /**
  * Provides APIs for encoding network packets into binary format.
@@ -81,12 +81,15 @@ public interface BinaryPacketEncoder {
    * This method performs the complete encoding process including
    * compression and encryption if configured.
    *
-   * @param packet the incoming {@link Packet} to be encoded
+   * @param packet             the incoming {@link Packet} to be encoded
+   * @param includedHeaderSize sets to {@code true} if the packet is stream-oriented, otherwise
+   *                           {@code false} if it is message-oriented type
    * @return the encoded {@link Packet} ready for transmission
    * @throws PacketCompressorException if compression fails
-   * @throws PacketEncryptorException if encryption fails
+   * @throws PacketEncryptorException  if encryption fails
+   * @since 0.6.7
    */
-  Packet encode(Packet packet);
+  Packet encode(Packet packet, boolean includedHeaderSize);
 
   /**
    * Sets the compressor for packet compression/decompression.

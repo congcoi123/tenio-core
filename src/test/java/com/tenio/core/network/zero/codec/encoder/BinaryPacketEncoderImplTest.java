@@ -48,7 +48,7 @@ class BinaryPacketEncoderImplTest {
   @Test
   @DisplayName("Try to encode a null packet should throw exception")
   void testEncodeNullPacket() {
-    assertThrows(NullPointerException.class, () -> encoder.encode(null));
+    assertThrows(NullPointerException.class, () -> encoder.encode(null, false));
   }
 
   @Test
@@ -56,6 +56,6 @@ class BinaryPacketEncoderImplTest {
   void testEncodeValidPacket() {
     Packet packet = mock(Packet.class);
     when(packet.getData()).thenReturn(new byte[] {1, 2, 3});
-    assertNotNull(encoder.encode(packet));
+    assertNotNull(encoder.encode(packet, true));
   }
 }
