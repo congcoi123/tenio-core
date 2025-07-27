@@ -51,6 +51,6 @@ class BinaryPacketDecoderImplTest {
   @DisplayName("Decode invalid data should throw an exception")
   void testDecodeInvalidData() {
     byte[] binaries = new byte[] {1, 2, 3};
-    assertThrows(UnsupportedOperationException.class, () -> decoder.decode(binaries));
+    assertThrows(IllegalArgumentException.class, () -> decoder.decode(binaries));
   }
 }

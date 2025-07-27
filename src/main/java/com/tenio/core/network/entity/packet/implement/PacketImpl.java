@@ -56,7 +56,6 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
     createdTime = TimeUtility.currentTimeMillis();
     transportType = TransportType.UNKNOWN;
     guarantee = ResponseGuarantee.NORMAL;
-    dataType = DataType.ZERO; // Default
   }
 
   /**

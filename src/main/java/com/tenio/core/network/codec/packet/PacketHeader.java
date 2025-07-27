@@ -76,7 +76,7 @@ public final class PacketHeader {
       throw new IllegalArgumentException("Only one of zero or msgpack flag should be enabled");
     }
     if (!zero && !msgpack) {
-      zero = true;
+      throw new IllegalArgumentException("Either zero or msgpack flag should be enabled");
     }
     return new PacketHeader(binary, compressed, bigSized, encrypted, zero, msgpack);
   }

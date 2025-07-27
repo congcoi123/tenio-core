@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.tenio.common.data.DataType;
 import com.tenio.core.network.codec.encoder.BinaryPacketEncoderImpl;
 import com.tenio.core.network.entity.packet.Packet;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,6 +56,7 @@ class BinaryPacketEncoderImplTest {
   @DisplayName("Test encoding a valid packet")
   void testEncodeValidPacket() {
     Packet packet = mock(Packet.class);
+    when(packet.getDataType()).thenReturn(DataType.ZERO);
     when(packet.getData()).thenReturn(new byte[] {1, 2, 3});
     assertNotNull(encoder.encode(packet, true));
   }
