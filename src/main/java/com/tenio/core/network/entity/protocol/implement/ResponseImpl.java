@@ -51,9 +51,9 @@ public final class ResponseImpl extends SystemLogger implements Response {
   private Collection<Session> kcpSessions;
   private Collection<Session> webSocketSessions;
   private ResponseGuarantee guarantee;
-  private boolean isPrioritizedUdp;
-  private boolean isPrioritizedKcp;
-  private boolean isEncrypted;
+  private boolean prioritizedUdp;
+  private boolean prioritizedKcp;
+  private boolean encrypted;
 
   private ResponseImpl() {
     players = null;
@@ -63,9 +63,9 @@ public final class ResponseImpl extends SystemLogger implements Response {
     webSocketSessions = null;
     nonSessionPlayers = null;
     guarantee = ResponseGuarantee.NORMAL;
-    isPrioritizedUdp = false;
-    isPrioritizedKcp = false;
-    isEncrypted = false;
+    prioritizedUdp = false;
+    prioritizedKcp = false;
+    encrypted = false;
   }
 
   /**
@@ -75,11 +75,6 @@ public final class ResponseImpl extends SystemLogger implements Response {
    */
   public static Response newInstance() {
     return new ResponseImpl();
-  }
-
-  @Override
-  public byte[] getBinaries() {
-    return content.toBinaries();
   }
 
   @Override
@@ -161,19 +156,19 @@ public final class ResponseImpl extends SystemLogger implements Response {
 
   @Override
   public Response prioritizedUdp() {
-    isPrioritizedUdp = true;
+    prioritizedUdp = true;
     return this;
   }
 
   @Override
   public Response prioritizedKcp() {
-    isPrioritizedKcp = true;
+    prioritizedKcp = true;
     return this;
   }
 
   @Override
   public Response encrypted() {
-    isEncrypted = true;
+    encrypted = true;
     return this;
   }
 
@@ -184,8 +179,8 @@ public final class ResponseImpl extends SystemLogger implements Response {
   }
 
   @Override
-  public boolean isEncrypted() {
-    return isEncrypted;
+  public boolean needsEncrypted() {
+    return encrypted;
   }
 
   @Override
@@ -239,13 +234,13 @@ public final class ResponseImpl extends SystemLogger implements Response {
     if (session.isTcp()) {
       // when the session contains a UDP connection and the response requires it, add its session
       // to the list: UDP > KCP > Socket
-      if (isPrioritizedUdp && session.containsUdp()) {
+      if (prioritizedUdp && session.containsUdp()) {
         if (datagramSessions == null) {
           datagramSessions = new ArrayList<>();
         }
         datagramSessions.add(session);
       } else {
-        if (isPrioritizedKcp && session.containsKcp()) {
+        if (prioritizedKcp && session.containsKcp()) {
           if (kcpSessions == null) {
             kcpSessions = new ArrayList<>();
           }
@@ -276,8 +271,9 @@ public final class ResponseImpl extends SystemLogger implements Response {
         ", kcpSessions=" + kcpSessions +
         ", webSocketSessions=" + webSocketSessions +
         ", guarantee=" + guarantee +
-        ", isPrioritizedUdp=" + isPrioritizedUdp +
-        ", isEncrypted=" + isEncrypted +
+        ", prioritizedUdp=" + prioritizedUdp +
+        ", prioritizedKcp=" + prioritizedKcp +
+        ", encrypted=" + encrypted +
         '}';
   }
 }

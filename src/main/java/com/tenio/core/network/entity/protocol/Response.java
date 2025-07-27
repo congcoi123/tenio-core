@@ -38,13 +38,6 @@ import java.util.Collection;
 public interface Response {
 
   /**
-   * Retrieves binaries data that is carried by the response.
-   *
-   * @return an array of {@code byte} data that is carried by the response
-   */
-  byte[] getBinaries();
-
-  /**
    * Retrieves the content which is carried by the response.
    *
    * @return an instance of {@link DataCollection}
@@ -192,11 +185,11 @@ public interface Response {
   ResponseGuarantee getGuarantee();
 
   /**
-   * Determines whether the response's content is encrypted.
+   * Determines whether the response's content needs to be encrypted.
    *
    * @return {@code true} if the response's content is encrypted, otherwise returns {@code false}
    */
-  boolean isEncrypted();
+  boolean needsEncrypted();
 
   /**
    * Writes down the content data to sessions for sending to client sides.

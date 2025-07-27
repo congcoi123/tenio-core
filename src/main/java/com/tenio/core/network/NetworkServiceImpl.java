@@ -288,7 +288,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   public void setPacketQueueSize(int queueSize) {
     sessionManager.configurePacketQueueSize(queueSize);
   }
-  
+
   @Override
   public void setPacketEncoder(BinaryPacketEncoder packetEncoder) {
     socketService.setPacketEncoder(packetEncoder);
@@ -382,8 +382,8 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
                               TransportType transportType) {
     var packet = PacketImpl.newInstance();
     packet.setDataType(response.getDataType());
-    packet.setData(response.getBinaries());
-    packet.needsEncrypted(response.isEncrypted());
+    packet.setData(response.getContent().toBinaries());
+    packet.needsEncrypted(response.needsEncrypted());
     packet.setGuarantee(response.getGuarantee());
     packet.setRecipients(recipients);
     packet.setTransportType(transportType);
