@@ -28,6 +28,8 @@ import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
+import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
@@ -49,14 +51,19 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
   private final EventManager eventManager;
   private final SessionManager sessionManager;
   private final ConnectionFilter connectionFilter;
+  private final BinaryPacketCompressor compressor;
+  private final BinaryPacketEncryptor encryptor;
   private final NetworkReaderStatistic networkReaderStatistic;
 
   private NettyWsHandShake(EventManager eventManager, SessionManager sessionManager,
-                           ConnectionFilter connectionFilter,
+                           ConnectionFilter connectionFilter, BinaryPacketCompressor compressor,
+                           BinaryPacketEncryptor encryptor,
                            NetworkReaderStatistic networkReaderStatistic) {
     this.eventManager = eventManager;
     this.sessionManager = sessionManager;
     this.connectionFilter = connectionFilter;
+    this.compressor = compressor;
+    this.encryptor = encryptor;
     this.networkReaderStatistic = networkReaderStatistic;
   }
 
@@ -66,15 +73,19 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
    * @param eventManager           the instance of {@link EventManager}
    * @param sessionManager         the instance of {@link SessionManager}
    * @param connectionFilter       the instance of {@link ConnectionFilter}
+   * @param compressor             the instance of {@link BinaryPacketCompressor}
+   * @param encryptor              the instance of {@link BinaryPacketEncryptor}
    * @param networkReaderStatistic the instance of {@link NetworkReaderStatistic}
    * @return a new instance of {@link NettyWsHandShake}
    */
   public static NettyWsHandShake newInstance(EventManager eventManager,
                                              SessionManager sessionManager,
                                              ConnectionFilter connectionFilter,
+                                             BinaryPacketCompressor compressor,
+                                             BinaryPacketEncryptor encryptor,
                                              NetworkReaderStatistic networkReaderStatistic) {
-    return new NettyWsHandShake(eventManager, sessionManager, connectionFilter,
-        networkReaderStatistic);
+    return new NettyWsHandShake(eventManager, sessionManager, connectionFilter, compressor,
+        encryptor, networkReaderStatistic);
   }
 
   @Override
@@ -90,8 +101,8 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
         // add new handler to the existing pipeline to handle HandShake-WebSocket
         // Messages
         ctx.pipeline().replace(this, "handler",
-            NettyWsHandler.newInstance(eventManager, sessionManager, connectionFilter,
-                networkReaderStatistic));
+            NettyWsHandler.newInstance(eventManager, sessionManager, connectionFilter, compressor
+                , encryptor, networkReaderStatistic));
 
         // do the Handshake to upgrade connection from HTTP to WebSocket protocol
         handleHandshake(ctx, httpRequest);

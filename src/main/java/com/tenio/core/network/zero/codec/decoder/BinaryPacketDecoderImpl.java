@@ -255,13 +255,15 @@ public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
         }
       }
 
-      byte[] result = dataBuffer.array();
-
-      // result a framed packet data
+      // get the data type
       DataType dataType = DataType.ZERO;
       if (packetHeader.isMsgpack()) {
         dataType = DataType.MSG_PACK;
       }
+
+      byte[] result = dataBuffer.array();
+
+      // result a framed packet data
       decoderResultListener.resultFrame(session, dataType, result);
 
       // counting read packets

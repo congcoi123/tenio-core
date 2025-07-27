@@ -37,6 +37,8 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.ssl.WebSocketSslContext;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
+import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -75,6 +77,8 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
 
   private ConnectionFilter connectionFilter;
   private SessionManager sessionManager;
+  private BinaryPacketCompressor compressor;
+  private BinaryPacketEncryptor encryptor;
   private NetworkReaderStatistic networkReaderStatistic;
   private NetworkWriterStatistic networkWriterStatistic;
   private SocketConfiguration socketConfiguration;
@@ -128,7 +132,8 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
         .childOption(ChannelOption.SO_SNDBUF, senderBufferSize)
         .childOption(ChannelOption.SO_RCVBUF, receiverBufferSize)
         .childOption(ChannelOption.SO_KEEPALIVE, true)
-        .childHandler(NettyWsInitializer.newInstance(eventManager, sessionManager, connectionFilter, networkReaderStatistic, sslContext, usingSsl));
+        .childHandler(NettyWsInitializer.newInstance(eventManager, sessionManager,
+            connectionFilter, compressor, encryptor, networkReaderStatistic, sslContext, usingSsl));
 
     var channelFuture = bootstrap.bind(socketConfiguration.port()).sync()
         .addListener(future -> {
@@ -257,6 +262,16 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
   }
 
   @Override
+  public void setPacketCompressor(BinaryPacketCompressor compressor) {
+    this.compressor = compressor;
+  }
+
+  @Override
+  public void setPacketEncryptor(BinaryPacketEncryptor encryptor) {
+    this.encryptor = encryptor;
+  }
+
+  @Override
   public void setSessionManager(SessionManager sessionManager) {
     this.sessionManager = sessionManager;
   }
@@ -289,7 +304,8 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
       if (packet.isMarkedAsLast()) {
         try {
           if (session.isActivated()) {
-            session.close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+            session.close(ConnectionDisconnectMode.CLIENT_REQUEST,
+                PlayerDisconnectMode.CLIENT_REQUEST);
           }
         } catch (IOException exception) {
           if (isErrorEnabled()) {

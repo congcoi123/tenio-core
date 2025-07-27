@@ -39,6 +39,8 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.utility.SocketUtility;
 import com.tenio.core.network.zero.codec.CodecUtility;
+import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
+import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
@@ -55,15 +57,20 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   private final EventManager eventManager;
   private final SessionManager sessionManager;
   private final ConnectionFilter connectionFilter;
+  private final BinaryPacketCompressor compressor;
+  private final BinaryPacketEncryptor encryptor;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final NettyWsHandlerPrivateLogger logger;
 
   private NettyWsHandler(EventManager eventManager, SessionManager sessionManager,
-                         ConnectionFilter connectionFilter,
+                         ConnectionFilter connectionFilter, BinaryPacketCompressor compressor,
+                         BinaryPacketEncryptor encryptor,
                          NetworkReaderStatistic networkReaderStatistic) {
     this.eventManager = eventManager;
     this.sessionManager = sessionManager;
     this.connectionFilter = connectionFilter;
+    this.compressor = compressor;
+    this.encryptor = encryptor;
     this.networkReaderStatistic = networkReaderStatistic;
     logger = new NettyWsHandlerPrivateLogger();
   }
@@ -74,13 +81,18 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
    * @param eventManager           the instance of {@link EventManager}
    * @param sessionManager         the instance of {@link SessionManager}
    * @param connectionFilter       the instance of {@link ConnectionFilter}
+   * @param compressor             the instance of {@link BinaryPacketCompressor}
+   * @param encryptor              the instance of {@link BinaryPacketEncryptor}
    * @param networkReaderStatistic the instance of {@link NetworkReaderStatistic}
    * @return a new instance of {@link NettyWsHandler}
    */
   public static NettyWsHandler newInstance(EventManager eventManager, SessionManager sessionManager,
                                            ConnectionFilter connectionFilter,
+                                           BinaryPacketCompressor compressor,
+                                           BinaryPacketEncryptor encryptor,
                                            NetworkReaderStatistic networkReaderStatistic) {
-    return new NettyWsHandler(eventManager, sessionManager, connectionFilter, networkReaderStatistic);
+    return new NettyWsHandler(eventManager, sessionManager, connectionFilter,
+        compressor, encryptor, networkReaderStatistic);
   }
 
   @Override
@@ -149,12 +161,37 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       networkReaderStatistic.updateReadBytes(binaries.length);
       networkReaderStatistic.updateReadPackets(1);
 
+      // get the packet header
       var packetHeader = CodecUtility.decodeFirstHeaderByte(binaries[0]);
       binaries = ByteUtility.resizeBytesArray(binaries, 1, binaries.length - 1);
+
+      // check if data needs to be uncompressed
+      if (packetHeader.isCompressed()) {
+        if (compressor != null) {
+          binaries = compressor.uncompress(binaries);
+        } else {
+          throw new IllegalStateException("Expected the interface BinaryPacketCompressor was " +
+              "implemented due to the packet-compression-threshold-bytes configuration, but it is" +
+              " null");
+        }
+      }
+
+      // check if data needs to be unencrypted
+      if (packetHeader.isEncrypted()) {
+        if (encryptor != null) {
+          binaries = encryptor.decrypt(binaries);
+        } else {
+          throw new IllegalStateException("Expected the interface BinaryPacketEncryptor was " +
+              "implemented, but it is null");
+        }
+      }
+
+      // get the data type
       DataType dataType = DataType.ZERO;
       if (packetHeader.isMsgpack()) {
         dataType = DataType.MSG_PACK;
       }
+
       var dataCollection = DataUtility.binaryToCollection(dataType, binaries);
 
       if (session.isAssociatedToPlayer(Session.AssociatedState.NONE)) {

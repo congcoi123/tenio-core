@@ -338,6 +338,8 @@ public final class ServerImpl extends SystemLogger implements Server {
     binaryPacketDecoder.setCompressor(binaryPacketCompressor);
     binaryPacketDecoder.setEncryptor(binaryPacketEncryptor);
 
+    networkService.setPacketCompressor(binaryPacketCompressor);
+    networkService.setPacketEncryptor(binaryPacketEncryptor);
     networkService.setPacketDecoder(binaryPacketDecoder);
     networkService.setPacketEncoder(binaryPacketEncoder);
   }
