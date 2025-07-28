@@ -45,6 +45,7 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   private DataType dataType;
   private ResponseGuarantee guarantee;
   private boolean encrypted;
+  private boolean counting;
   private TransportType transportType;
   private int originalSize;
   private Collection<Session> recipients;
@@ -124,6 +125,16 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   }
 
   @Override
+  public boolean needsDataCounting() {
+    return counting;
+  }
+
+  @Override
+  public void needsDataCounting(boolean counting) {
+    this.counting = counting;
+  }
+
+  @Override
   public Collection<Session> getRecipients() {
     return recipients;
   }
@@ -197,10 +208,8 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
 
   @Override
   public int compareTo(Packet packet2) {
-    var packet1 = this;
-    return packet1.getGuarantee().getValue() != packet2.getGuarantee().getValue()
-        ? Integer.compare(packet1.getGuarantee().getValue(), packet2.getGuarantee().getValue())
-        : Long.compare(packet2.getId(), packet1.getId());
+    Packet packet1 = this;
+    return Long.compare(packet2.getId(), packet1.getId());
   }
 
   @Override
@@ -212,6 +221,7 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
         ", dataType=" + dataType +
         ", guarantee=" + guarantee +
         ", encrypted=" + encrypted +
+        ", counting=" + counting +
         ", transportType=" + transportType +
         ", originalSize=" + originalSize +
         ", recipients=" + recipients +
@@ -221,12 +231,13 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   }
 
   public Packet deepCopy() {
-    var packet = PacketImpl.newInstance();
+    Packet packet = PacketImpl.newInstance();
     packet.setDataType(dataType);
     packet.setData(data);
     packet.setFragmentBuffer(fragmentBuffer);
     packet.setGuarantee(guarantee);
     packet.needsEncrypted(encrypted);
+    packet.needsDataCounting(counting);
     packet.setRecipients(recipients);
     packet.setTransportType(transportType);
     packet.setMarkedAsLast(last);

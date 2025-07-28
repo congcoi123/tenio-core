@@ -77,19 +77,16 @@ public interface BinaryPacketEncoder {
   int MAX_BYTES_FOR_NORMAL_SIZE = Short.MAX_VALUE * 2 + 1;
 
   /**
-   * Encodes a packet for transmission to clients.
-   * This method performs the complete encoding process including
-   * compression and encryption if configured.
+   * Encodes a packet for transmission to clients. This method performs the complete encoding
+   * process including compression and encryption if configured.
    *
-   * @param packet             the incoming {@link Packet} to be encoded
-   * @param includedHeaderSize sets to {@code true} if the packet is stream-oriented, otherwise
-   *                           {@code false} if it is message-oriented type
+   * @param packet the incoming {@link Packet} to be encoded
    * @return the encoded {@link Packet} ready for transmission
    * @throws PacketCompressorException if compression fails
    * @throws PacketEncryptorException  if encryption fails
    * @since 0.6.7
    */
-  Packet encode(Packet packet, boolean includedHeaderSize);
+  Packet encode(Packet packet);
 
   /**
    * Sets the compressor for packet compression/decompression.

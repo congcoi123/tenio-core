@@ -40,11 +40,11 @@ public enum PacketHeaderType {
    */
   BINARY(1),
   /**
-   * This slot is reserved.
+   * The packet needs data counting which show the total number of bytes for data.
    *
    * @since 0.6.7
    */
-  RESERVED_1(2),
+  COUNTING(2),
   /**
    * The data size is considered as big size.
    */
@@ -82,7 +82,7 @@ public enum PacketHeaderType {
   private static final Map<Integer, PacketHeaderType> lookup = new HashMap<>();
 
   static {
-    for (var type : PacketHeaderType.values()) {
+    for (PacketHeaderType type : PacketHeaderType.values()) {
       lookup.put(type.getValue(), type);
     }
   }

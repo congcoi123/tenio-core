@@ -143,6 +143,23 @@ public interface Packet {
   void needsEncrypted(boolean encrypted);
 
   /**
+   * Determines whether the packet needs data counting in the header.
+   *
+   * @return {@code true} if the packet data needs data counting, otherwise returns {@code false}
+   * @since 0.6.7
+   */
+  boolean needsDataCounting();
+
+  /**
+   * Marks the packet is needed data counting or not.
+   *
+   * @param counting is set to {@code true} if the packet needs data counting, otherwise
+   *                 {@code false}
+   * @since 0.6.7
+   */
+  void needsDataCounting(boolean counting);
+
+  /**
    * Retrieves a collection of sessions which play roles as recipients.
    *
    * @return an unmodifiable collection of {@link Session}s and this can be empty

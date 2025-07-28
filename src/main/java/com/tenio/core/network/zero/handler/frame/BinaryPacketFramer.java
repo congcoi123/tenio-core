@@ -24,10 +24,13 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.handler.frame;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.common.utility.ByteUtility;
 import com.tenio.core.network.codec.CodecUtility;
 import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.packet.PacketHeader;
 import com.tenio.core.network.codec.packet.PacketReadState;
+import com.tenio.core.network.codec.packet.PendingPacket;
 import com.tenio.core.network.codec.packet.ProcessedPacket;
 import com.tenio.core.network.entity.session.Session;
 import java.nio.ByteBuffer;
@@ -50,11 +53,11 @@ public final class BinaryPacketFramer {
    *                 will ensure it chunks or waits for the data to finally provide a full packet
    */
   public void framing(Session session, byte[] binaries) {
-    var readState = session.getPacketReadState();
+    PacketReadState readState = session.getPacketReadState();
 
     try {
       while (binaries.length > 0) {
-        var processedPacket = session.getProcessedPacket();
+        ProcessedPacket processedPacket;
         if (readState == PacketReadState.WAIT_NEW_PACKET) {
           processedPacket = handleNewPacket(session, binaries);
           readState = processedPacket.getPacketReadState();
@@ -115,11 +118,15 @@ public final class BinaryPacketFramer {
   }
 
   private ProcessedPacket handleNewPacket(Session session, byte[] binaries) {
-    var packetHeader = CodecUtility.decodeFirstHeaderByte(binaries[0]);
+    PacketHeader packetHeader = CodecUtility.decodeFirstHeaderByte(binaries[0]);
+    if (!packetHeader.needsCounting()) {
+      throw new IllegalArgumentException("The packet must have data counting attached in the " +
+          "header to process");
+    }
     session.getPendingPacket().setPacketHeader(packetHeader);
     binaries = ByteUtility.resizeBytesArray(binaries, 1, binaries.length - 1);
 
-    var processedPacket = session.getProcessedPacket();
+    ProcessedPacket processedPacket = session.getProcessedPacket();
     processedPacket.setPacketReadState(PacketReadState.WAIT_DATA_SIZE);
     processedPacket.setData(binaries);
 
@@ -127,9 +134,9 @@ public final class BinaryPacketFramer {
   }
 
   private ProcessedPacket handleDataSize(Session session, byte[] binaries) {
-    var packetReadState = PacketReadState.WAIT_DATA;
+    PacketReadState packetReadState = PacketReadState.WAIT_DATA;
 
-    var pendingPacket = session.getPendingPacket();
+    PendingPacket pendingPacket = session.getPendingPacket();
     int dataSize = -1;
     // default header bytes are Short.BYTES, we consider it's big size on the next
     // step
@@ -158,7 +165,7 @@ public final class BinaryPacketFramer {
       // still need to wait to know the length of packet data
       packetReadState = PacketReadState.WAIT_DATA_SIZE_FRAGMENT;
       // put the current data bytes to the pending packet to use later
-      var headerBytesBuffer = ByteBuffer.allocate(headerBytes);
+      ByteBuffer headerBytesBuffer = ByteBuffer.allocate(headerBytes);
       headerBytesBuffer.put(binaries);
       pendingPacket.setBuffer(headerBytesBuffer);
       // now we should create an empty array to prevent processing later
@@ -166,7 +173,7 @@ public final class BinaryPacketFramer {
       binaries = new byte[0];
     }
 
-    var processedPacket = session.getProcessedPacket();
+    ProcessedPacket processedPacket = session.getProcessedPacket();
     processedPacket.setPacketReadState(packetReadState);
     processedPacket.setData(binaries);
 
@@ -174,9 +181,9 @@ public final class BinaryPacketFramer {
   }
 
   private ProcessedPacket handleDataSizeFragment(Session session, byte[] binaries) {
-    var packetReadState = PacketReadState.WAIT_DATA_SIZE_FRAGMENT;
-    var pendingPacket = session.getPendingPacket();
-    var headerBytesBuffer = pendingPacket.getBuffer();
+    PacketReadState packetReadState = PacketReadState.WAIT_DATA_SIZE_FRAGMENT;
+    PendingPacket pendingPacket = session.getPendingPacket();
+    ByteBuffer headerBytesBuffer = pendingPacket.getBuffer();
 
     int remainingBytesNeedForHeader = pendingPacket.getPacketHeader().isBigSized()
         ? Integer.BYTES - headerBytesBuffer.position()
@@ -217,7 +224,7 @@ public final class BinaryPacketFramer {
       binaries = new byte[0];
     }
 
-    var processedPacket = session.getProcessedPacket();
+    ProcessedPacket processedPacket = session.getProcessedPacket();
     processedPacket.setPacketReadState(packetReadState);
     processedPacket.setData(binaries);
 
@@ -225,10 +232,10 @@ public final class BinaryPacketFramer {
   }
 
   private ProcessedPacket handlePacketData(Session session, byte[] binaries) {
-    var packetReadState = PacketReadState.WAIT_DATA;
-    var pendingPacket = session.getPendingPacket();
-    var packetHeader = pendingPacket.getPacketHeader();
-    var dataBuffer = pendingPacket.getBuffer();
+    PacketReadState packetReadState = PacketReadState.WAIT_DATA;
+    PendingPacket pendingPacket = session.getPendingPacket();
+    PacketHeader packetHeader = pendingPacket.getPacketHeader();
+    ByteBuffer dataBuffer = pendingPacket.getBuffer();
 
     int inNeedPacketLength = dataBuffer.remaining();
     boolean isThereMore = binaries.length > inNeedPacketLength;
@@ -246,7 +253,7 @@ public final class BinaryPacketFramer {
       }
 
       // now the packet data is completely collected
-      var dataCollection = binaryPacketDecoder.decode(packetHeader, binaries);
+      DataCollection dataCollection = binaryPacketDecoder.decode(packetHeader, binaries);
 
       // result a framed packet data
       packetFramingListener.onFramedResult(session, dataCollection);
@@ -271,7 +278,7 @@ public final class BinaryPacketFramer {
       binaries = new byte[0];
     }
 
-    var processedPacket = session.getProcessedPacket();
+    ProcessedPacket processedPacket = session.getProcessedPacket();
     processedPacket.setPacketReadState(packetReadState);
     processedPacket.setData(binaries);
 

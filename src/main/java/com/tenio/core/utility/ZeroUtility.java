@@ -22,22 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.packet;
+package com.tenio.core.utility;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+/**
+ * The utility class for server.
+ *
+ * @since 0.6.7
+ */
+public final class ZeroUtility {
 
-import com.tenio.core.network.codec.packet.PacketHeaderType;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+  private static final int CONVERT_TO_MB = 1024 * 1024;
 
-@DisplayName("Unit Test Cases For PacketHeaderType")
-class PacketHeaderTypeTest {
+  private ZeroUtility() {
+    throw new UnsupportedOperationException();
+  }
 
-  @Test
-  @DisplayName("Test all enum values")
-  void testAllEnumValues() {
-    for (PacketHeaderType type : PacketHeaderType.values()) {
-      assertEquals(type.name(), type.toString());
-    }
+  public static float convertBytesToMB(long bytes) {
+    return (float) bytes / CONVERT_TO_MB;
   }
 }

@@ -44,6 +44,7 @@ public final class CodecUtility {
    */
   public static PacketHeader decodeFirstHeaderByte(byte headerByte) {
     return PacketHeader.newInstance((headerByte & PacketHeaderType.BINARY.getValue()) > 0,
+        (headerByte & PacketHeaderType.COUNTING.getValue()) > 0,
         (headerByte & PacketHeaderType.COMPRESSION.getValue()) > 0,
         (headerByte & PacketHeaderType.BIG_SIZE.getValue()) > 0,
         (headerByte & PacketHeaderType.ENCRYPTION.getValue()) > 0,
@@ -63,6 +64,10 @@ public final class CodecUtility {
 
     if (packetHeader.isBinary()) {
       headerByte = (byte) (headerByte | PacketHeaderType.BINARY.getValue());
+    }
+
+    if (packetHeader.needsCounting()) {
+      headerByte = (byte) (headerByte | PacketHeaderType.COUNTING.getValue());
     }
 
     if (packetHeader.isCompressed()) {

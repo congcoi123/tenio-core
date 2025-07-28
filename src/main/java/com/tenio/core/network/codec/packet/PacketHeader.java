@@ -32,15 +32,17 @@ import com.tenio.common.data.DataType;
 public final class PacketHeader {
 
   private final boolean binary;
+  private final boolean counting;
   private final boolean compressed;
   private final boolean bigSized;
   private final boolean encrypted;
   private final boolean zero;
   private final boolean msgpack;
 
-  private PacketHeader(boolean binary, boolean compressed, boolean bigSized, boolean encrypted,
-                       boolean zero, boolean msgpack) {
+  private PacketHeader(boolean binary, boolean counting, boolean compressed, boolean bigSized,
+                       boolean encrypted, boolean zero, boolean msgpack) {
     this.binary = binary;
+    this.counting = counting;
     this.compressed = compressed;
     this.bigSized = bigSized;
     this.encrypted = encrypted;
@@ -57,28 +59,31 @@ public final class PacketHeader {
    * <li>If 2 values are {@code false}, the zero flag is enabled by default</li>
    * </ul>
    *
-   * @param binary     sets to {@code true} if the data is written by binary, otherwise
-   *                   {@code false}
-   * @param compressed sets to {@code true} if the data is compressed, otherwise
-   *                   {@code false}
-   * @param bigSized   sets to {@code true} if the data size is considered big size,
-   *                   otherwise returns {@code false}
-   * @param encrypted  sets to {@code true} if the data is encrypted, otherwise
-   *                   {@code false}
-   * @param zero       sets to {@code true} if the data is encoded/decoded in Zero Type.
-   * @param msgpack    sets to {@code true} if the data is encoded/decoded in MsgPack Type.
+   * @param binary      sets to {@code true} if the data is written by binary, otherwise
+   *                    {@code false}
+   * @param counting sets to {@code true} if the packet needs to include the total number of
+   *                    bytes for data in the header, otherwise {@code false}
+   * @param compressed  sets to {@code true} if the data is compressed, otherwise
+   *                    {@code false}
+   * @param bigSized    sets to {@code true} if the data size is considered big size,
+   *                    otherwise returns {@code false}
+   * @param encrypted   sets to {@code true} if the data is encrypted, otherwise
+   *                    {@code false}
+   * @param zero        sets to {@code true} if the data is encoded/decoded in Zero Type.
+   * @param msgpack     sets to {@code true} if the data is encoded/decoded in MsgPack Type.
    * @return a new instance of {@link PacketHeader}
    * @see DataType
    */
-  public static PacketHeader newInstance(boolean binary, boolean compressed, boolean bigSized,
-                                         boolean encrypted, boolean zero, boolean msgpack) {
+  public static PacketHeader newInstance(boolean binary, boolean counting, boolean compressed,
+                                         boolean bigSized, boolean encrypted, boolean zero,
+                                         boolean msgpack) {
     if (zero && msgpack) {
       throw new IllegalArgumentException("Only one of zero or msgpack flag should be enabled");
     }
     if (!zero && !msgpack) {
       throw new IllegalArgumentException("Either zero or msgpack flag should be enabled");
     }
-    return new PacketHeader(binary, compressed, bigSized, encrypted, zero, msgpack);
+    return new PacketHeader(binary, counting, compressed, bigSized, encrypted, zero, msgpack);
   }
 
   /**
@@ -88,6 +93,16 @@ public final class PacketHeader {
    */
   public boolean isBinary() {
     return binary;
+  }
+
+  /**
+   * Determines whether the packet needs data counting.
+   *
+   * @return {@code true} if the packet needs data counting, otherwise returns {@code false}
+   * @since 0.6.7
+   */
+  public boolean needsCounting() {
+    return counting;
   }
 
   /**
@@ -144,6 +159,7 @@ public final class PacketHeader {
   public String toString() {
     return "PacketHeader{" +
         "binary=" + binary +
+        ", counting=" + counting +
         ", compressed=" + compressed +
         ", bigSized=" + bigSized +
         ", encrypted=" + encrypted +
