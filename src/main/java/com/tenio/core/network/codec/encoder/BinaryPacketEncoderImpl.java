@@ -56,7 +56,8 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
     // retrieve the packet original data first
     byte[] binaries = packet.getData();
 
-    // check if the data needs to be encrypted
+    // Order: encryption -> compression (It must be reversed in Decoder)
+    // 1. check if the data needs to be encrypted
     boolean needsEncrypted = packet.needsEncrypted();
     if (needsEncrypted) {
       if (encryptor != null) {
@@ -72,7 +73,7 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
       }
     }
 
-    // check if the data needs to be compressed
+    // 2. check if the data needs to be compressed
     boolean needsCompressed = false;
     if (compressionThresholdBytes > 0 && binaries.length >= compressionThresholdBytes) {
       if (compressor != null) {
