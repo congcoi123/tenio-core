@@ -76,7 +76,7 @@ public enum PacketHeaderType {
    *
    * @since 0.6.7
    */
-  RESERVED_2(128);
+  RESERVED(128);
 
   // Reverse-lookup map for getting a type from a value
   private static final Map<Integer, PacketHeaderType> lookup = new HashMap<>();
