@@ -22,21 +22,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.packet;
+package com.tenio.core.network.codec.packet;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+/**
+ * The definition of all reading packet states.
+ */
+public enum PacketReadState {
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+  /**
+   * Waits for a new packet to handle.
+   */
+  WAIT_NEW_PACKET,
+  /**
+   * Waits for the data's size.
+   */
+  WAIT_DATA_SIZE,
+  /**
+   * Waits for the data size of a fragment packet.
+   */
+  WAIT_DATA_SIZE_FRAGMENT,
+  /**
+   * Waits for the data to process.
+   */
+  WAIT_DATA;
 
-@DisplayName("Unit Test Cases For PacketReadState")
-class PacketReadStateTest {
-
-  @Test
-  @DisplayName("Test all enum values")
-  void testAllEnumValues() {
-    for (PacketReadState state : PacketReadState.values()) {
-      assertEquals(state.name(), state.toString());
-    }
+  @Override
+  public String toString() {
+    return name();
   }
 }

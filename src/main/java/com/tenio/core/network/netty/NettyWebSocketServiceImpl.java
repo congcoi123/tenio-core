@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.netty;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
@@ -38,6 +37,8 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.ssl.WebSocketSslContext;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -75,8 +76,9 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
   private int consumerWorkerSize;
 
   private ConnectionFilter connectionFilter;
-  private DataType dataType;
   private SessionManager sessionManager;
+  private BinaryPacketEncoder binaryPacketEncoder;
+  private BinaryPacketDecoder binaryPacketDecoder;
   private NetworkReaderStatistic networkReaderStatistic;
   private NetworkWriterStatistic networkWriterStatistic;
   private SocketConfiguration socketConfiguration;
@@ -130,9 +132,8 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
         .childOption(ChannelOption.SO_SNDBUF, senderBufferSize)
         .childOption(ChannelOption.SO_RCVBUF, receiverBufferSize)
         .childOption(ChannelOption.SO_KEEPALIVE, true)
-        .childHandler(
-            NettyWsInitializer.newInstance(eventManager, sessionManager, connectionFilter, dataType,
-                networkReaderStatistic, sslContext, usingSsl));
+        .childHandler(NettyWsInitializer.newInstance(eventManager, sessionManager,
+            connectionFilter, binaryPacketDecoder, networkReaderStatistic, sslContext, usingSsl));
 
     var channelFuture = bootstrap.bind(socketConfiguration.port()).sync()
         .addListener(future -> {
@@ -261,8 +262,13 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
   }
 
   @Override
-  public void setDataType(DataType dataType) {
-    this.dataType = dataType;
+  public void setPacketEncoder(BinaryPacketEncoder packetEncoder) {
+    this.binaryPacketEncoder = packetEncoder;
+  }
+
+  @Override
+  public void setPacketDecoder(BinaryPacketDecoder packetDecoder) {
+    this.binaryPacketDecoder = packetDecoder;
   }
 
   @Override
@@ -298,7 +304,8 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
       if (packet.isMarkedAsLast()) {
         try {
           if (session.isActivated()) {
-            session.close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+            session.close(ConnectionDisconnectMode.CLIENT_REQUEST,
+                PlayerDisconnectMode.CLIENT_REQUEST);
           }
         } catch (IOException exception) {
           if (isErrorEnabled()) {
@@ -308,6 +315,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
         return;
       }
       if (session.isActivated()) {
+        packet = binaryPacketEncoder.encode(packet);
         session.fetchWebSocketChannel()
             .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(packet.getData())));
         session.addWrittenBytes(packet.getOriginalSize());
@@ -315,7 +323,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
         networkWriterStatistic.updateWrittenPackets(1);
       } else {
         if (isDebugEnabled()) {
-          debug("READ WEBSOCKET CHANNEL", "Session is inactivated: ", session.toString());
+          debug("WRITE WEBSOCKET CHANNEL", "Session is inactivated: ", session.toString());
         }
       }
     }

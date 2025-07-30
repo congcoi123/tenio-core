@@ -24,8 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network;
 
-import com.tenio.common.data.DataType;
-import com.tenio.common.data.DataUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
@@ -48,8 +46,8 @@ import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.ZeroSocketService;
 import com.tenio.core.network.zero.ZeroSocketServiceImpl;
-import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
-import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import jakarta.servlet.http.HttpServlet;
 import java.util.Collection;
@@ -69,7 +67,6 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   private final ZeroSocketService socketService;
   private final NetworkReaderStatistic networkReaderStatistic;
   private final NetworkWriterStatistic networkWriterStatistic;
-  private DataType dataType;
   private boolean initialized;
 
   private boolean httpServiceInitialized;
@@ -295,25 +292,18 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   @Override
   public void setPacketEncoder(BinaryPacketEncoder packetEncoder) {
     socketService.setPacketEncoder(packetEncoder);
+    webSocketService.setPacketEncoder(packetEncoder);
   }
 
   @Override
   public void setPacketDecoder(BinaryPacketDecoder packetDecoder) {
     socketService.setPacketDecoder(packetDecoder);
+    webSocketService.setPacketDecoder(packetDecoder);
   }
 
   @Override
   public void setDatagramPacketPolicy(DatagramPacketPolicy datagramPacketPolicy) {
     socketService.setDatagramPacketPolicy(datagramPacketPolicy);
-  }
-
-  @Override
-  public void setDataType(DataType dataType) {
-    this.dataType = dataType;
-
-    socketService.setDataType(dataType);
-    webSocketService.setDataType(dataType);
-    kcpChannelService.setDataType(dataType);
   }
 
   @Override
@@ -333,7 +323,7 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
 
   @Override
   public void write(Response response, boolean markedAsLast) {
-    var message = DataUtility.binaryToCollection(dataType, response.getContent());
+    var message = response.getContent();
 
     var recipientPlayers = response.getRecipientPlayers();
     if (recipientPlayers != null && !recipientPlayers.isEmpty()) {
@@ -391,8 +381,9 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   private Packet createPacket(Response response, Collection<Session> recipients,
                               TransportType transportType) {
     var packet = PacketImpl.newInstance();
-    packet.setData(response.getContent());
-    packet.setEncrypted(response.isEncrypted());
+    packet.setDataType(response.getDataType());
+    packet.setData(response.getContent().toBinaries());
+    packet.needsEncrypted(response.needsEncrypted());
     packet.setGuarantee(response.getGuarantee());
     packet.setRecipients(recipients);
     packet.setTransportType(transportType);

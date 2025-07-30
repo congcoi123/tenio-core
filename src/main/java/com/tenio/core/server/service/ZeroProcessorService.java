@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.server.service;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.controller.Controller;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.network.entity.protocol.policy.RequestPolicy;
@@ -41,13 +40,6 @@ public interface ZeroProcessorService extends Controller {
    * Subscribes all events on the server.
    */
   void subscribe();
-
-  /**
-   * Set the data serialization type.
-   *
-   * @param dataType the {@link DataType} value
-   */
-  void setDataType(DataType dataType);
 
   /**
    * Set the request policy.

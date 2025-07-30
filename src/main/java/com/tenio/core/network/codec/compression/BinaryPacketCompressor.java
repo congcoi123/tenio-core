@@ -22,21 +22,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.packet;
+package com.tenio.core.network.codec.compression;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.tenio.core.exception.PacketCompressorException;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+/**
+ * The APIs designed for compressing binary packets.
+ */
+public interface BinaryPacketCompressor {
 
-@DisplayName("Unit Test Cases For PacketHeaderType")
-class PacketHeaderTypeTest {
+  /**
+   * Compresses an array of binary size into another smaller one.
+   *
+   * @param binaries an array of {@code byte}
+   * @return a new smaller size of {@code byte} array
+   * @throws PacketCompressorException when an exception occurred during the compression process
+   */
+  byte[] compress(byte[] binaries) throws PacketCompressorException;
 
-  @Test
-  @DisplayName("Test all enum values")
-  void testAllEnumValues() {
-    for (PacketHeaderType type : PacketHeaderType.values()) {
-      assertEquals(type.name(), type.toString());
-    }
-  }
+  /**
+   * Uncompressed an array of binary and reverts it to the original one.
+   *
+   * @param binaries compressed array of {@code byte}
+   * @return the original data of {@code byte} array
+   * @throws PacketCompressorException when an exception occurred during the compression process
+   */
+  byte[] uncompress(byte[] binaries) throws PacketCompressorException;
 }

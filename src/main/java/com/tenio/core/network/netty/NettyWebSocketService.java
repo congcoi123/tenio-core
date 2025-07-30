@@ -24,13 +24,14 @@ THE SOFTWARE.
 
 package com.tenio.core.network.netty;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.service.Service;
 import java.nio.ByteBuffer;
 
@@ -77,11 +78,20 @@ public interface NettyWebSocketService extends Service {
   void setConnectionFilter(ConnectionFilter connectionFilter);
 
   /**
-   * Set the data serialization type.
+   * Sets an instance of packet encoder to encode packets for sending to clients.
    *
-   * @param dataType the {@link DataType} value
+   * @param packetEncoder an instance of {@link BinaryPacketEncoder}
+   * @since 0.6.7
    */
-  void setDataType(DataType dataType);
+  void setPacketEncoder(BinaryPacketEncoder packetEncoder);
+
+  /**
+   * Sets an instance of packet decoder to decode packets sent from clients.
+   *
+   * @param packetDecoder an instance of {@link BinaryPacketDecoder}
+   * @since 0.6.7
+   */
+  void setPacketDecoder(BinaryPacketDecoder packetDecoder);
 
   /**
    * Sets a session manager instance.

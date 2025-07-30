@@ -65,6 +65,8 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
     // clear the buffer first
     getBuffer().clear();
 
+    packet.needsDataCounting(true);
+    packet = getPacketEncoder().encode(packet);
     // set priority for packet left unsent data (fragment)
     byte[] sendingData = packet.isFragmented() ? packet.getFragmentBuffer() : packet.getData();
 

@@ -22,14 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.encoder;
+package com.tenio.core.network.codec.encoder;
 
+import com.tenio.common.data.DataType;
 import com.tenio.common.logger.SystemLogger;
+import com.tenio.core.network.codec.CodecUtility;
+import com.tenio.core.network.codec.compression.BinaryPacketCompressor;
+import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.core.network.codec.packet.PacketHeader;
 import com.tenio.core.network.entity.packet.Packet;
-import com.tenio.core.network.zero.codec.CodecUtility;
-import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
-import com.tenio.core.network.zero.codec.packet.PacketHeader;
 import java.nio.ByteBuffer;
 
 /**
@@ -52,18 +53,19 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
 
   @Override
   public Packet encode(Packet packet) {
-    // retrieve the packet data first
-    byte[] binary = packet.getData();
+    // retrieve the packet original data first
+    byte[] binaries = packet.getData();
 
-    // check if the data needs to be encrypted
-    boolean isEncrypted = packet.isEncrypted();
-    if (isEncrypted) {
+    // Order: encryption -> compression (It must be reversed in Decoder)
+    // 1. check if the data needs to be encrypted
+    boolean needsEncrypted = packet.needsEncrypted();
+    if (needsEncrypted) {
       if (encryptor != null) {
         try {
-          binary = encryptor.encrypt(binary);
+          binaries = encryptor.encrypt(binaries);
         } catch (Exception exception) {
           error(exception);
-          isEncrypted = false;
+          needsEncrypted = false;
         }
       } else {
         throw new IllegalStateException("Expected the interface BinaryPacketEncryptor was " +
@@ -71,13 +73,13 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
       }
     }
 
-    // check if the data needs to be compressed
-    boolean isCompressed = false;
-    if (compressionThresholdBytes > 0 && binary.length >= compressionThresholdBytes) {
+    // 2. check if the data needs to be compressed
+    boolean needsCompressed = false;
+    if (compressionThresholdBytes > 0 && binaries.length >= compressionThresholdBytes) {
       if (compressor != null) {
         try {
-          binary = compressor.compress(binary);
-          isCompressed = true;
+          binaries = compressor.compress(binaries);
+          needsCompressed = true;
         } catch (Exception exception) {
           error(exception);
         }
@@ -88,33 +90,42 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
       }
     }
 
-    // if the original size of data exceeded threshold, it needs to be resized the
-    // header bytes value
-    int headerSize = Short.BYTES;
-    if (binary.length > MAX_BYTES_FOR_NORMAL_SIZE) {
-      headerSize = Integer.BYTES;
+    // in default, there is no header size
+    int headerSize = 0;
+    // in case of stream-oriented type
+    if (packet.needsDataCounting()) {
+      // if the original size of data exceeded threshold, it needs to be resized the
+      // header bytes value
+      headerSize = Short.BYTES;
+      if (binaries.length > MAX_BYTES_FOR_NORMAL_SIZE) {
+        headerSize = Integer.BYTES;
+      }
     }
 
     // create new packet header and encode the first indicated byte
-    var packetHeader =
-        PacketHeader.newInstance(true, isCompressed, headerSize > Short.BYTES, isEncrypted);
+    PacketHeader packetHeader =
+        PacketHeader.newInstance(true, packet.needsDataCounting(), needsCompressed,
+            headerSize > Short.BYTES, needsEncrypted, packet.getDataType() == DataType.ZERO,
+            packet.getDataType() == DataType.MSG_PACK);
     byte headerByte = CodecUtility.encodeFirstHeaderByte(packetHeader);
 
     // allocate bytes for the new data and put all value to form a new packet
-    var packetBuffer = ByteBuffer.allocate(Byte.BYTES + headerSize + binary.length);
+    var packetBuffer = ByteBuffer.allocate(Byte.BYTES + headerSize + binaries.length);
 
-    // put header byte indicator
+    // 1. put header byte indicator
     packetBuffer.put(headerByte);
 
-    // put original data size for header bases on its length
-    if (headerSize > Short.BYTES) {
-      packetBuffer.putInt(binary.length);
-    } else {
-      packetBuffer.putShort((short) binary.length);
+    // 2. put original data size for header bases on its length (in case of stream-oriented type)
+    if (packetHeader.needsCounting()) {
+      if (headerSize > Short.BYTES) {
+        packetBuffer.putInt(binaries.length);
+      } else {
+        packetBuffer.putShort((short) binaries.length);
+      }
     }
 
-    // put original data
-    packetBuffer.put(binary);
+    // 3. put original data
+    packetBuffer.put(binaries);
 
     // form new data for the packet
     packet.setData(packetBuffer.array());

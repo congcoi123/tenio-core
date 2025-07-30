@@ -22,30 +22,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.encryption;
+package com.tenio.core.network.codec.decoder;
 
-import com.tenio.core.exception.PacketEncryptorException;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/**
- * The APIs designed for encrypting and decrypting packets.
- */
-public interface BinaryPacketEncryptor {
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoderImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-  /**
-   * Encrypts the binary data in a packet.
-   *
-   * @param binary an array of {@code byte} data for encrypting
-   * @return an array of encrypted {@code byte} data
-   * @throws PacketEncryptorException when any issue emerged while encrypting process
-   */
-  byte[] encrypt(byte[] binary) throws PacketEncryptorException;
+@DisplayName("Unit Test Cases For BinaryPacketDecoderImpl")
+class BinaryPacketDecoderImplTest {
 
-  /**
-   * Decrypts the binary data in a packet.
-   *
-   * @param binary an array of {@code byte} data for decrypting
-   * @return an array of decrypted {@code byte} data
-   * @throws PacketEncryptorException when any issue emerged while decrypting process
-   */
-  byte[] decrypt(byte[] binary) throws PacketEncryptorException;
+  private BinaryPacketDecoderImpl decoder;
+
+  @BeforeEach
+  void setUp() {
+    decoder = new BinaryPacketDecoderImpl();
+  }
+
+  @Test
+  @DisplayName("Decode null data should throw an exception")
+  void testDecodeNullData() {
+    assertThrows(NullPointerException.class, () -> decoder.decode(null));
+  }
+
+  @Test
+  @DisplayName("Decode invalid data should throw an exception")
+  void testDecodeInvalidData() {
+    byte[] binaries = new byte[] {1, 2, 3};
+    assertThrows(IllegalArgumentException.class, () -> decoder.decode(binaries));
+  }
 }

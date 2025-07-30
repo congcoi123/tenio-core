@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.packet;
+package com.tenio.core.network.codec.packet;
 
 /**
  * Holds the processed packet for the next steps.
@@ -30,7 +30,7 @@ package com.tenio.core.network.zero.codec.packet;
 public final class ProcessedPacket {
 
   private PacketReadState packetReadState;
-  private byte[] binary;
+  private byte[] binaries;
 
   private ProcessedPacket() {
   }
@@ -50,16 +50,16 @@ public final class ProcessedPacket {
    * @return the {@code byte} array, current processing data in the packet
    */
   public byte[] getData() {
-    return binary;
+    return binaries;
   }
 
   /**
    * Sets the current processing data in the packet.
    *
-   * @param binary the {@code byte} array, current processing data in the packet
+   * @param binaries the {@code byte} array, current processing data in the packet
    */
-  public void setData(byte[] binary) {
-    this.binary = binary;
+  public void setData(byte[] binaries) {
+    this.binaries = binaries;
   }
 
   /**
@@ -84,7 +84,7 @@ public final class ProcessedPacket {
   public String toString() {
     return "ProcessedPacket{" +
         "packetReadState=" + packetReadState +
-        ", binary(bytes)=" + (binary != null ? binary.length : "null") +
+        ", binary(bytes)=" + (binaries != null ? binaries.length : "null") +
         '}';
   }
 }

@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
@@ -33,13 +32,6 @@ import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
  * The engine supports reading binaries data from sockets.
  */
 public interface ZeroReader extends ZeroEngine {
-
-  /**
-   * Set the data serialization type.
-   *
-   * @param dataType the {@link DataType} value
-   */
-  void setDataType(DataType dataType);
 
   /**
    * Declares the server IP address.

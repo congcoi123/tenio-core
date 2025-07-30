@@ -22,30 +22,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.compression;
+package com.tenio.core.network.codec.encryption;
 
-import com.tenio.core.exception.PacketCompressorException;
+import com.tenio.core.exception.PacketEncryptorException;
 
 /**
- * The APIs designed for compressing binary packets.
+ * The APIs designed for encrypting and decrypting packets.
  */
-public interface BinaryPacketCompressor {
+public interface BinaryPacketEncryptor {
 
   /**
-   * Compresses an array of binary size into another smaller one.
+   * Encrypts the binary data in a packet.
    *
-   * @param binary an array of {@code byte}
-   * @return a new smaller size of {@code byte} array
-   * @throws PacketCompressorException when an exception occurred during the compression process
+   * @param binaries an array of {@code byte} data for encrypting
+   * @return an array of encrypted {@code byte} data
+   * @throws PacketEncryptorException when any issue emerged while encrypting process
    */
-  byte[] compress(byte[] binary) throws PacketCompressorException;
+  byte[] encrypt(byte[] binaries) throws PacketEncryptorException;
 
   /**
-   * Uncompressed an array of binary and reverts it to the original one.
+   * Decrypts the binary data in a packet.
    *
-   * @param binary compressed array of {@code byte}
-   * @return the original data of {@code byte} array
-   * @throws PacketCompressorException when an exception occurred during the compression process
+   * @param binaries an array of {@code byte} data for decrypting
+   * @return an array of decrypted {@code byte} data
+   * @throws PacketEncryptorException when any issue emerged while decrypting process
    */
-  byte[] uncompress(byte[] binary) throws PacketCompressorException;
+  byte[] decrypt(byte[] binaries) throws PacketEncryptorException;
 }

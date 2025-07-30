@@ -22,55 +22,64 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.decoder;
+package com.tenio.core.network.zero.handler.frame;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.common.utility.ByteUtility;
+import com.tenio.core.network.codec.CodecUtility;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.packet.PacketHeader;
+import com.tenio.core.network.codec.packet.PacketReadState;
+import com.tenio.core.network.codec.packet.PendingPacket;
+import com.tenio.core.network.codec.packet.ProcessedPacket;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.zero.codec.CodecUtility;
-import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
-import com.tenio.core.network.zero.codec.packet.PacketReadState;
-import com.tenio.core.network.zero.codec.packet.ProcessedPacket;
 import java.nio.ByteBuffer;
 
 /**
- * The default implementation for the binary packet decoding.
+ * Streaming packets must be processed in this framing steps.
+ *
+ * @since 0.6.7
  */
-public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
+public final class BinaryPacketFramer {
 
-  private BinaryPacketCompressor compressor;
-  private BinaryPacketEncryptor encryptor;
-  private PacketDecoderResultListener decoderResultListener;
+  private BinaryPacketDecoder binaryPacketDecoder;
+  private PacketFramingListener packetFramingListener;
 
-  @Override
-  public void decode(Session session, byte[] data) {
-    var readState = session.getPacketReadState();
+  /**
+   * Processes streaming binaries data sent from sessions.
+   *
+   * @param session  the {@link Session} sends data
+   * @param binaries the binaries data is being sent. This might not be completed, so the process
+   *                 will ensure it chunks or waits for the data to finally provide a full packet
+   */
+  public void framing(Session session, byte[] binaries) {
+    PacketReadState readState = session.getPacketReadState();
 
     try {
-      while (data.length > 0) {
-        var processedPacket = session.getProcessedPacket();
+      while (binaries.length > 0) {
+        ProcessedPacket processedPacket;
         if (readState == PacketReadState.WAIT_NEW_PACKET) {
-          processedPacket = handleNewPacket(session, data);
+          processedPacket = handleNewPacket(session, binaries);
           readState = processedPacket.getPacketReadState();
-          data = processedPacket.getData();
+          binaries = processedPacket.getData();
         }
 
         if (readState == PacketReadState.WAIT_DATA_SIZE) {
-          processedPacket = handleDataSize(session, data);
+          processedPacket = handleDataSize(session, binaries);
           readState = processedPacket.getPacketReadState();
-          data = processedPacket.getData();
+          binaries = processedPacket.getData();
         }
 
         if (readState == PacketReadState.WAIT_DATA_SIZE_FRAGMENT) {
-          processedPacket = handleDataSizeFragment(session, data);
+          processedPacket = handleDataSizeFragment(session, binaries);
           readState = processedPacket.getPacketReadState();
-          data = processedPacket.getData();
+          binaries = processedPacket.getData();
         }
 
         if (readState == PacketReadState.WAIT_DATA) {
-          processedPacket = handlePacketData(session, data);
+          processedPacket = handlePacketData(session, binaries);
           readState = processedPacket.getPacketReadState();
-          data = processedPacket.getData();
+          binaries = processedPacket.getData();
         }
       }
     } catch (Exception exception) {
@@ -81,50 +90,66 @@ public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
     session.setPacketReadState(readState);
   }
 
-  @Override
-  public void setResultListener(PacketDecoderResultListener resultListener) {
-    decoderResultListener = resultListener;
+  /**
+   * Retrieves a packet decoder.
+   *
+   * @return an instance of {@link BinaryPacketDecoder}
+   */
+  public BinaryPacketDecoder getBinaryPacketDecoder() {
+    return binaryPacketDecoder;
   }
 
-  @Override
-  public void setCompressor(BinaryPacketCompressor compressor) {
-    this.compressor = compressor;
+  /**
+   * Sets the packet decoder.
+   *
+   * @param packetDecoder an instance of {@link BinaryPacketDecoder}
+   */
+  public void setBinaryPacketDecoder(BinaryPacketDecoder packetDecoder) {
+    this.binaryPacketDecoder = packetDecoder;
   }
 
-  @Override
-  public void setEncryptor(BinaryPacketEncryptor encryptor) {
-    this.encryptor = encryptor;
+  /**
+   * Sets the framing result listener.
+   *
+   * @param packetFramingListener the {@link PacketFramingListener}
+   */
+  public void setPacketFramingResult(PacketFramingListener packetFramingListener) {
+    this.packetFramingListener = packetFramingListener;
   }
 
-  private ProcessedPacket handleNewPacket(Session session, byte[] data) {
-    var packetHeader = CodecUtility.decodeFirstHeaderByte(data[0]);
+  private ProcessedPacket handleNewPacket(Session session, byte[] binaries) {
+    PacketHeader packetHeader = CodecUtility.decodeFirstHeaderByte(binaries[0]);
+    if (!packetHeader.needsCounting()) {
+      throw new IllegalArgumentException("The packet must have data counting attached in the " +
+          "header to process");
+    }
     session.getPendingPacket().setPacketHeader(packetHeader);
-    data = ByteUtility.resizeBytesArray(data, 1, data.length - 1);
+    binaries = ByteUtility.resizeBytesArray(binaries, 1, binaries.length - 1);
 
-    var processedPacket = session.getProcessedPacket();
+    ProcessedPacket processedPacket = session.getProcessedPacket();
     processedPacket.setPacketReadState(PacketReadState.WAIT_DATA_SIZE);
-    processedPacket.setData(data);
+    processedPacket.setData(binaries);
 
     return processedPacket;
   }
 
-  private ProcessedPacket handleDataSize(Session session, byte[] data) {
-    var packetReadState = PacketReadState.WAIT_DATA;
+  private ProcessedPacket handleDataSize(Session session, byte[] binaries) {
+    PacketReadState packetReadState = PacketReadState.WAIT_DATA;
 
-    var pendingPacket = session.getPendingPacket();
+    PendingPacket pendingPacket = session.getPendingPacket();
     int dataSize = -1;
     // default header bytes are Short.BYTES, we consider it's big size on the next
     // step
     int headerBytes = Short.BYTES;
 
     if (pendingPacket.getPacketHeader().isBigSized()) {
-      if (data.length >= Integer.BYTES) {
-        dataSize = ByteUtility.bytesToInt(data);
+      if (binaries.length >= Integer.BYTES) {
+        dataSize = ByteUtility.bytesToInt(binaries);
       }
       headerBytes = Integer.BYTES;
     } else {
-      if (data.length >= Short.BYTES) {
-        dataSize = ByteUtility.bytesToShort(data);
+      if (binaries.length >= Short.BYTES) {
+        dataSize = ByteUtility.bytesToShort(binaries);
       }
     }
 
@@ -135,43 +160,43 @@ public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
       // we allocate an enough size of bytes for the buffer to handle packet data
       // later
       pendingPacket.setBuffer(ByteBuffer.allocate(dataSize));
-      data = ByteUtility.resizeBytesArray(data, headerBytes, data.length - headerBytes);
+      binaries = ByteUtility.resizeBytesArray(binaries, headerBytes, binaries.length - headerBytes);
     } else {
       // still need to wait to know the length of packet data
       packetReadState = PacketReadState.WAIT_DATA_SIZE_FRAGMENT;
       // put the current data bytes to the pending packet to use later
-      var headerBytesBuffer = ByteBuffer.allocate(headerBytes);
-      headerBytesBuffer.put(data);
+      ByteBuffer headerBytesBuffer = ByteBuffer.allocate(headerBytes);
+      headerBytesBuffer.put(binaries);
       pendingPacket.setBuffer(headerBytesBuffer);
       // now we should create an empty array to prevent processing later
       // we need to wait until the socket reads more bytes
-      data = new byte[0];
+      binaries = new byte[0];
     }
 
-    var processedPacket = session.getProcessedPacket();
+    ProcessedPacket processedPacket = session.getProcessedPacket();
     processedPacket.setPacketReadState(packetReadState);
-    processedPacket.setData(data);
+    processedPacket.setData(binaries);
 
     return processedPacket;
   }
 
-  private ProcessedPacket handleDataSizeFragment(Session session, byte[] data) {
-    var packetReadState = PacketReadState.WAIT_DATA_SIZE_FRAGMENT;
-    var pendingPacket = session.getPendingPacket();
-    var headerBytesBuffer = pendingPacket.getBuffer();
+  private ProcessedPacket handleDataSizeFragment(Session session, byte[] binaries) {
+    PacketReadState packetReadState = PacketReadState.WAIT_DATA_SIZE_FRAGMENT;
+    PendingPacket pendingPacket = session.getPendingPacket();
+    ByteBuffer headerBytesBuffer = pendingPacket.getBuffer();
 
     int remainingBytesNeedForHeader = pendingPacket.getPacketHeader().isBigSized()
         ? Integer.BYTES - headerBytesBuffer.position()
         : Short.BYTES - headerBytesBuffer.position();
 
     // can retrieve left necessary bytes to form a headerBytes
-    if (data.length >= remainingBytesNeedForHeader) {
+    if (binaries.length >= remainingBytesNeedForHeader) {
       // put more bytes
-      headerBytesBuffer.put(data, 0, remainingBytesNeedForHeader);
+      headerBytesBuffer.put(binaries, 0, remainingBytesNeedForHeader);
       // now can get bytes array from buffer
       headerBytesBuffer.flip();
 
-      // we now have exactly the number of bytes in need, no need to use bit wise
+      // we now have exactly the number of bytes in need, no need to use bitwise
       // method here, just feel free to use utility functions of ByteBuffer
       int dataSize = pendingPacket.getPacketHeader().isBigSized() ? headerBytesBuffer.getInt()
           : headerBytesBuffer.getShort();
@@ -186,38 +211,39 @@ public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
 
       // the left bytes, that no need for the header bytes must be saved for the next
       // process
-      if (data.length > remainingBytesNeedForHeader) {
-        data = ByteUtility.resizeBytesArray(data, remainingBytesNeedForHeader,
-            data.length - remainingBytesNeedForHeader);
+      if (binaries.length > remainingBytesNeedForHeader) {
+        binaries = ByteUtility.resizeBytesArray(binaries, remainingBytesNeedForHeader,
+            binaries.length - remainingBytesNeedForHeader);
       } else {
-        data = new byte[0];
+        binaries = new byte[0];
       }
     } else {
       // still need to wait more bytes for forming headerBytes
-      headerBytesBuffer.put(data);
+      headerBytesBuffer.put(binaries);
       // ignore the current data of this method, wait for more bytes come from socket
-      data = new byte[0];
+      binaries = new byte[0];
     }
 
-    var processedPacket = session.getProcessedPacket();
+    ProcessedPacket processedPacket = session.getProcessedPacket();
     processedPacket.setPacketReadState(packetReadState);
-    processedPacket.setData(data);
+    processedPacket.setData(binaries);
 
     return processedPacket;
   }
 
-  private ProcessedPacket handlePacketData(Session session, byte[] data) {
-    var packetReadState = PacketReadState.WAIT_DATA;
-    var pendingPacket = session.getPendingPacket();
-    var dataBuffer = pendingPacket.getBuffer();
+  private ProcessedPacket handlePacketData(Session session, byte[] binaries) {
+    PacketReadState packetReadState = PacketReadState.WAIT_DATA;
+    PendingPacket pendingPacket = session.getPendingPacket();
+    PacketHeader packetHeader = pendingPacket.getPacketHeader();
+    ByteBuffer dataBuffer = pendingPacket.getBuffer();
 
     int inNeedPacketLength = dataBuffer.remaining();
-    boolean isThereMore = data.length > inNeedPacketLength;
+    boolean isThereMore = binaries.length > inNeedPacketLength;
 
     // when we receive enough bytes to create packet data
-    if (data.length >= inNeedPacketLength) {
+    if (binaries.length >= inNeedPacketLength) {
       // put bytes data to buffer, from position 0 with the length of packet data
-      dataBuffer.put(data, 0, inNeedPacketLength);
+      dataBuffer.put(binaries, 0, inNeedPacketLength);
 
       // something went wrong here
       if (pendingPacket.getExpectedLength() != dataBuffer.capacity()) {
@@ -226,63 +252,35 @@ public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
                 + pendingPacket.getExpectedLength() + ", Buffer size: " + dataBuffer.capacity());
       }
 
-      // now the packet data is completely collected, we can do some kind of
-      // decompression or decryption
-      // check if data needs to be uncompressed
-      if (pendingPacket.getPacketHeader().isCompressed()) {
-        if (compressor != null) {
-          byte[] compressedData = dataBuffer.array();
-          byte[] decompressedData = compressor.uncompress(compressedData);
-          dataBuffer = ByteBuffer.wrap(decompressedData);
-        } else {
-          throw new IllegalStateException("Expected the interface BinaryPacketCompressor was " +
-              "implemented due to the packet-compression-threshold-bytes configuration, but it is" +
-              " null");
-        }
-      }
-
-      // check if data needs to be unencrypted
-      if (pendingPacket.getPacketHeader().isEncrypted()) {
-        if (encryptor != null) {
-          byte[] encryptedData = dataBuffer.array();
-          byte[] decryptedData = encryptor.decrypt(encryptedData);
-          dataBuffer = ByteBuffer.wrap(decryptedData);
-        } else {
-          throw new IllegalStateException("Expected the interface BinaryPacketEncryptor was " +
-              "implemented, but it is null");
-        }
-      }
-
-      byte[] result = dataBuffer.array();
+      // now the packet data is completely collected
+      DataCollection dataCollection = binaryPacketDecoder.decode(packetHeader, binaries);
 
       // result a framed packet data
-      decoderResultListener.resultFrame(session, result);
-
-      // counting read packets
-      decoderResultListener.updateReadPackets(1);
+      packetFramingListener.onFramedResult(session, dataCollection);
 
       // change state for the next process, a new cycle
       packetReadState = PacketReadState.WAIT_NEW_PACKET;
 
     } else {
       // need to wait more data to generate packet data
-      dataBuffer.put(data);
+      dataBuffer.put(binaries);
     }
 
     // in this case, we have more than bytes in need to construct packet data, so
     // save the left bytes for the next step (WAIT_NEW_PACKET)
     // those bytes should be used to produce header bytes for the next packets
     if (isThereMore) {
-      data =
-          ByteUtility.resizeBytesArray(data, inNeedPacketLength, data.length - inNeedPacketLength);
+      binaries =
+          ByteUtility.resizeBytesArray(binaries, inNeedPacketLength,
+              binaries.length - inNeedPacketLength);
     } else {
       // reset data to wait more bytes from socket
-      data = new byte[0];
+      binaries = new byte[0];
     }
 
-    var processedPacket = session.getProcessedPacket();
+    ProcessedPacket processedPacket = session.getProcessedPacket();
     processedPacket.setPacketReadState(packetReadState);
-    processedPacket.setData(data);
+    processedPacket.setData(binaries);
 
     return processedPacket;
   }

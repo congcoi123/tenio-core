@@ -22,10 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec;
+package com.tenio.core.network.codec;
 
-import com.tenio.core.network.zero.codec.packet.PacketHeader;
-import com.tenio.core.network.zero.codec.packet.PacketHeaderType;
+import com.tenio.core.network.codec.packet.PacketHeader;
+import com.tenio.core.network.codec.packet.PacketHeaderType;
 
 /**
  * The utility class provides methods to work with packet and binary data.
@@ -44,9 +44,13 @@ public final class CodecUtility {
    */
   public static PacketHeader decodeFirstHeaderByte(byte headerByte) {
     return PacketHeader.newInstance((headerByte & PacketHeaderType.BINARY.getValue()) > 0,
+        (headerByte & PacketHeaderType.COUNTING.getValue()) > 0,
         (headerByte & PacketHeaderType.COMPRESSION.getValue()) > 0,
         (headerByte & PacketHeaderType.BIG_SIZE.getValue()) > 0,
-        (headerByte & PacketHeaderType.ENCRYPTION.getValue()) > 0);
+        (headerByte & PacketHeaderType.ENCRYPTION.getValue()) > 0,
+        (headerByte & PacketHeaderType.ZERO.getValue()) > 0,
+        (headerByte & PacketHeaderType.MSG_PACK.getValue()) > 0
+    );
   }
 
   /**
@@ -62,6 +66,10 @@ public final class CodecUtility {
       headerByte = (byte) (headerByte | PacketHeaderType.BINARY.getValue());
     }
 
+    if (packetHeader.needsCounting()) {
+      headerByte = (byte) (headerByte | PacketHeaderType.COUNTING.getValue());
+    }
+
     if (packetHeader.isCompressed()) {
       headerByte = (byte) (headerByte | PacketHeaderType.COMPRESSION.getValue());
     }
@@ -72,6 +80,14 @@ public final class CodecUtility {
 
     if (packetHeader.isEncrypted()) {
       headerByte = (byte) (headerByte | PacketHeaderType.ENCRYPTION.getValue());
+    }
+
+    if (packetHeader.isZero()) {
+      headerByte = (byte) (headerByte | PacketHeaderType.ZERO.getValue());
+    }
+
+    if (packetHeader.isMsgpack()) {
+      headerByte = (byte) (headerByte | PacketHeaderType.MSG_PACK.getValue());
     }
 
     return headerByte;

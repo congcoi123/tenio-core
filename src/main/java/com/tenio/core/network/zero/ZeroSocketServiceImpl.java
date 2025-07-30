@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.network.configuration.SocketConfiguration;
@@ -33,8 +32,8 @@ import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
-import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.engine.ZeroAcceptor;
 import com.tenio.core.network.zero.engine.ZeroReader;
 import com.tenio.core.network.zero.engine.ZeroWriter;
@@ -232,13 +231,6 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   @Override
   public void setPacketDecoder(BinaryPacketDecoder packetDecoder) {
     socketIoHandler.setPacketDecoder(packetDecoder);
-  }
-
-  @Override
-  public void setDataType(DataType dataType) {
-    datagramIoHandler.setDataType(dataType);
-    socketIoHandler.setDataType(dataType);
-    readerEngine.setDataType(dataType);
   }
 
   @Override

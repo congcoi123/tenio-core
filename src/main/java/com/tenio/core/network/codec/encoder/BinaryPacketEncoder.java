@@ -22,13 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.encoder;
+package com.tenio.core.network.codec.encoder;
 
 import com.tenio.core.exception.PacketCompressorException;
 import com.tenio.core.exception.PacketEncryptorException;
+import com.tenio.core.network.codec.compression.BinaryPacketCompressor;
+import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
 import com.tenio.core.network.entity.packet.Packet;
-import com.tenio.core.network.zero.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.zero.codec.encryption.BinaryPacketEncryptor;
 
 /**
  * Provides APIs for encoding network packets into binary format.
@@ -77,14 +77,14 @@ public interface BinaryPacketEncoder {
   int MAX_BYTES_FOR_NORMAL_SIZE = Short.MAX_VALUE * 2 + 1;
 
   /**
-   * Encodes a packet for transmission to clients.
-   * This method performs the complete encoding process including
-   * compression and encryption if configured.
+   * Encodes a packet for transmission to clients. This method performs the complete encoding
+   * process including compression and encryption if configured.
    *
    * @param packet the incoming {@link Packet} to be encoded
    * @return the encoded {@link Packet} ready for transmission
    * @throws PacketCompressorException if compression fails
-   * @throws PacketEncryptorException if encryption fails
+   * @throws PacketEncryptorException  if encryption fails
+   * @since 0.6.7
    */
   Packet encode(Packet packet);
 

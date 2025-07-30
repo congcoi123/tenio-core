@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network;
 
-import com.tenio.common.data.DataType;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.PacketQueue;
 import com.tenio.core.network.entity.packet.policy.DefaultPacketQueuePolicy;
@@ -35,8 +34,8 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.filter.DefaultConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.network.zero.codec.decoder.BinaryPacketDecoder;
-import com.tenio.core.network.zero.codec.encoder.BinaryPacketEncoder;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.service.Service;
 import jakarta.servlet.http.HttpServlet;
@@ -234,16 +233,14 @@ public interface NetworkService extends Service {
   void setPacketQueueSize(int queueSize);
 
   /**
-   * Sets an instance of packet encoder to encode packets for sending to clients side via the
-   * socket (TCP).
+   * Sets an instance of packet encoder to encode packets for sending to clients.
    *
    * @param packetEncoder an instance of {@link BinaryPacketEncoder}
    */
   void setPacketEncoder(BinaryPacketEncoder packetEncoder);
 
   /**
-   * Sets an instance of packet decoder to decode packets sent from clients side via the socket
-   * (TCP).
+   * Sets an instance of packet decoder to decode packets sent from clients.
    *
    * @param packetDecoder an instance of {@link BinaryPacketDecoder}
    */
@@ -256,13 +253,6 @@ public interface NetworkService extends Service {
    * @since 0.6.7
    */
   void setDatagramPacketPolicy(DatagramPacketPolicy datagramPacketPolicy);
-
-  /**
-   * Set the data serialization type.
-   *
-   * @param dataType the {@link DataType} value
-   */
-  void setDataType(DataType dataType);
 
   /**
    * Retrieves the session manager instance.

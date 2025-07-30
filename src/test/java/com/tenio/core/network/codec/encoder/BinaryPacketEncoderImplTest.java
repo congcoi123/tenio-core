@@ -22,45 +22,41 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.decoder;
+package com.tenio.core.network.codec.encoder;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.network.zero.codec.packet.PacketReadState;
+import com.tenio.common.data.DataType;
+import com.tenio.core.network.entity.packet.Packet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("Unit Test Cases For BinaryPacketDecoderImpl")
-class BinaryPacketDecoderImplTest {
+@DisplayName("Unit Test Cases For BinaryPacketEncoderImpl")
+class BinaryPacketEncoderImplTest {
 
-  private BinaryPacketDecoderImpl decoder;
-  private Session session;
+  private BinaryPacketEncoderImpl encoder;
 
   @BeforeEach
   void setUp() {
-    decoder = new BinaryPacketDecoderImpl();
-    session = mock(Session.class);
-    when(session.getPacketReadState()).thenReturn(PacketReadState.WAIT_NEW_PACKET);
-    when(session.getProcessedPacket()).thenReturn(
-        mock(com.tenio.core.network.zero.codec.packet.ProcessedPacket.class));
-    when(session.getPendingPacket()).thenReturn(
-        mock(com.tenio.core.network.zero.codec.packet.PendingPacket.class));
+    encoder = new BinaryPacketEncoderImpl();
   }
 
   @Test
-  @DisplayName("Decode null data should not throw any exception")
-  void testDecodeNullData() {
-    assertDoesNotThrow(() -> decoder.decode(session, null));
+  @DisplayName("Try to encode a null packet should throw exception")
+  void testEncodeNullPacket() {
+    assertThrows(NullPointerException.class, () -> encoder.encode(null));
   }
 
   @Test
-  @DisplayName("Decode valid data should not throw any exception")
-  void testDecodeValidData() {
-    byte[] data = new byte[] {1, 2, 3};
-    assertDoesNotThrow(() -> decoder.decode(session, data));
+  @DisplayName("Test encoding a valid packet")
+  void testEncodeValidPacket() {
+    Packet packet = mock(Packet.class);
+    when(packet.getDataType()).thenReturn(DataType.ZERO);
+    when(packet.getData()).thenReturn(new byte[] {1, 2, 3});
+    assertNotNull(encoder.encode(packet));
   }
 }

@@ -22,39 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.encoder;
+package com.tenio.core.network.codec.packet;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.tenio.core.network.entity.packet.Packet;
-import org.junit.jupiter.api.BeforeEach;
+import com.tenio.core.network.codec.packet.PacketHeaderType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("Unit Test Cases For BinaryPacketEncoderImpl")
-class BinaryPacketEncoderImplTest {
-
-  private BinaryPacketEncoderImpl encoder;
-
-  @BeforeEach
-  void setUp() {
-    encoder = new BinaryPacketEncoderImpl();
-  }
+@DisplayName("Unit Test Cases For PacketHeaderType")
+class PacketHeaderTypeTest {
 
   @Test
-  @DisplayName("Try to encode a null packet should throw exception")
-  void testEncodeNullPacket() {
-    assertThrows(NullPointerException.class, () -> encoder.encode(null));
-  }
-
-  @Test
-  @DisplayName("Test encoding a valid packet")
-  void testEncodeValidPacket() {
-    Packet packet = mock(Packet.class);
-    when(packet.getData()).thenReturn(new byte[] {1, 2, 3});
-    assertNotNull(encoder.encode(packet));
+  @DisplayName("Test all enum values")
+  void testAllEnumValues() {
+    for (PacketHeaderType type : PacketHeaderType.values()) {
+      assertEquals(type.name(), type.toString());
+    }
   }
 }

@@ -22,22 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.entity.packet.implement;
+package com.tenio.core.utility;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+/**
+ * The utility class for server.
+ *
+ * @since 0.6.7
+ */
+public final class ZeroUtility {
 
-import com.tenio.core.network.define.ResponseGuarantee;
-import com.tenio.core.network.define.TransportType;
-import com.tenio.core.network.entity.packet.Packet;
-import org.junit.jupiter.api.Test;
+  private static final int CONVERT_TO_MB = 1024 * 1024;
 
-class PacketImplTest {
-  @Test
-  void testNewInstance() {
-    Packet actualNewInstanceResult = PacketImpl.newInstance();
-    assertFalse(actualNewInstanceResult.needsEncrypted());
-    assertEquals(TransportType.UNKNOWN, actualNewInstanceResult.getTransportType());
-    assertEquals(ResponseGuarantee.NORMAL, actualNewInstanceResult.getGuarantee());
+  private ZeroUtility() {
+    throw new UnsupportedOperationException();
+  }
+
+  public static float convertBytesToMB(long bytes) {
+    return (float) bytes / CONVERT_TO_MB;
   }
 }

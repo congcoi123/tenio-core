@@ -22,36 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.zero.codec.decoder;
+package com.tenio.core.network.zero.handler.frame;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.core.network.entity.session.Session;
 
 /**
- * The listener for receiving data from the packet decoder.
+ * The listener for receiving data from sessions.
  */
-public interface PacketDecoderResultListener {
+public interface PacketFramingListener {
 
   /**
    * The final binary data processed by the session.
    *
    * @param session the processing {@link Session}
-   * @param binary  the processed {@code byte} data
+   * @param message the processed {@link DataCollection} result
+   * @since 0.6.7
    */
-  void resultFrame(Session session, byte[] binary);
-
-  /**
-   * Updates the current number of refused packets from clients side which violated the policies.
-   *
-   * @param numberPackets the additional packets refused to handle from clients side
-   *                      ({@code long} value)
-   */
-  void updateReadDroppedPackets(long numberPackets);
-
-  /**
-   * Updates the current number of received packets from clients side.
-   *
-   * @param numberPackets the additional packets received from client sides ({@code long}
-   *                      value)
-   */
-  void updateReadPackets(long numberPackets);
+  void onFramedResult(Session session, DataCollection message);
 }
