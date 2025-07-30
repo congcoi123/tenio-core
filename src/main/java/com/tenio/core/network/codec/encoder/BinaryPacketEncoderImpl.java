@@ -104,7 +104,7 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
 
     // create new packet header and encode the first indicated byte
     PacketHeader packetHeader =
-        PacketHeader.newInstance(true, packet.needsDataCounting(), needsCompressed,
+        PacketHeader.newInstance(packet.needsDataCounting(), needsCompressed,
             headerSize > Short.BYTES, needsEncrypted, packet.getDataType() == DataType.ZERO,
             packet.getDataType() == DataType.MSG_PACK);
     byte headerByte = CodecUtility.encodeFirstHeaderByte(packetHeader);

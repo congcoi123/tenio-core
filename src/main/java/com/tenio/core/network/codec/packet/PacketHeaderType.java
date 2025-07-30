@@ -36,9 +36,11 @@ import java.util.Map;
 public enum PacketHeaderType {
 
   /**
-   * The data type is binary.
+   * This slot is reserved.
+   *
+   * @since 0.6.7
    */
-  BINARY(1),
+  RESERVED_1(1),
   /**
    * The packet needs data counting which show the total number of bytes for data.
    *
@@ -76,7 +78,7 @@ public enum PacketHeaderType {
    *
    * @since 0.6.7
    */
-  RESERVED(128);
+  RESERVED_2(128);
 
   // Reverse-lookup map for getting a type from a value
   private static final Map<Integer, PacketHeaderType> lookup = new HashMap<>();

@@ -31,7 +31,6 @@ import com.tenio.common.data.DataType;
  */
 public final class PacketHeader {
 
-  private final boolean binary;
   private final boolean counting;
   private final boolean compressed;
   private final boolean bigSized;
@@ -39,9 +38,8 @@ public final class PacketHeader {
   private final boolean zero;
   private final boolean msgpack;
 
-  private PacketHeader(boolean binary, boolean counting, boolean compressed, boolean bigSized,
+  private PacketHeader(boolean counting, boolean compressed, boolean bigSized,
                        boolean encrypted, boolean zero, boolean msgpack) {
-    this.binary = binary;
     this.counting = counting;
     this.compressed = compressed;
     this.bigSized = bigSized;
@@ -59,8 +57,6 @@ public final class PacketHeader {
    * <li>If 2 values are {@code false}, the zero flag is enabled by default</li>
    * </ul>
    *
-   * @param binary      sets to {@code true} if the data is written by binary, otherwise
-   *                    {@code false}
    * @param counting sets to {@code true} if the packet needs to include the total number of
    *                    bytes for data in the header, otherwise {@code false}
    * @param compressed  sets to {@code true} if the data is compressed, otherwise
@@ -74,25 +70,15 @@ public final class PacketHeader {
    * @return a new instance of {@link PacketHeader}
    * @see DataType
    */
-  public static PacketHeader newInstance(boolean binary, boolean counting, boolean compressed,
-                                         boolean bigSized, boolean encrypted, boolean zero,
-                                         boolean msgpack) {
+  public static PacketHeader newInstance(boolean counting, boolean compressed, boolean bigSized,
+                                         boolean encrypted, boolean zero, boolean msgpack) {
     if (zero && msgpack) {
       throw new IllegalArgumentException("Only one of zero or msgpack flag should be enabled");
     }
     if (!zero && !msgpack) {
       throw new IllegalArgumentException("Either zero or msgpack flag should be enabled");
     }
-    return new PacketHeader(binary, counting, compressed, bigSized, encrypted, zero, msgpack);
-  }
-
-  /**
-   * Determines whether the data is written by binary.
-   *
-   * @return {@code true} if the data is written by binary, otherwise returns {@code false}
-   */
-  public boolean isBinary() {
-    return binary;
+    return new PacketHeader(counting, compressed, bigSized, encrypted, zero, msgpack);
   }
 
   /**
@@ -158,8 +144,7 @@ public final class PacketHeader {
   @Override
   public String toString() {
     return "PacketHeader{" +
-        "binary=" + binary +
-        ", counting=" + counting +
+        "counting=" + counting +
         ", compressed=" + compressed +
         ", bigSized=" + bigSized +
         ", encrypted=" + encrypted +
