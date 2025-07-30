@@ -50,7 +50,6 @@ import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
-import java.nio.channels.SelectionKey;
 import java.util.Optional;
 
 /**
@@ -188,7 +187,7 @@ public final class ZeroProcessorServiceImpl extends AbstractController
     // case, the player is remained on the server side, so we should always check this event
     Object reconnectedObject = null;
     try {
-      reconnectedObject = eventManager.emit(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLE, session, message);
+      reconnectedObject = eventManager.emit(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLING, session, message);
     } catch (Exception exception) {
       if (isErrorEnabled()) {
         error(exception, request);

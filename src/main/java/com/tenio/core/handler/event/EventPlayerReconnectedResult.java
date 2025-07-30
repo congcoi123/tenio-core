@@ -46,7 +46,7 @@ public interface EventPlayerReconnectedResult<P extends Player> {
    * @see PlayerReconnectedResult#SUCCESS
    * @see CoreConfigurationType#PROP_KEEP_PLAYER_ON_DISCONNECTION
    * @see CoreConfigurationType#PROP_MAX_PLAYER_IDLE_TIME
-   * @see EventPlayerReconnectRequestHandle
+   * @see EventPlayerReconnectRequestHandling
    */
   void handle(P player, Session session, PlayerReconnectedResult result);
 }

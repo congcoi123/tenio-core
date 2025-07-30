@@ -51,7 +51,7 @@ class EventHandlerInterfacesTest {
   @Test
   @DisplayName("Test EventReceivedMessageFromPlayer")
   void testEventReceivedMessageFromPlayer() {
-    EventReceivedMessageFromPlayer<Player> handler = (player, message) -> {
+    EventReceivedMessageFromPlayer<Player, DataCollection> handler = (player, message) -> {
     };
     handler.handle(Mockito.mock(Player.class), Mockito.mock(DataCollection.class));
   }
@@ -59,7 +59,7 @@ class EventHandlerInterfacesTest {
   @Test
   @DisplayName("Test EventSendMessageToPlayer")
   void testEventSendMessageToPlayer() {
-    EventSendMessageToPlayer<Player> handler = (player, message) -> {
+    EventSendMessageToPlayer<Player, DataCollection> handler = (player, message) -> {
     };
     handler.handle(Mockito.mock(Player.class), Mockito.mock(DataCollection.class));
   }
@@ -99,7 +99,7 @@ class EventHandlerInterfacesTest {
   @Test
   @DisplayName("Test EventBroadcastToChannel")
   void testEventBroadcastToChannel() {
-    EventBroadcastToChannel<Player> handler = (channel, player, message) -> {
+    EventBroadcastToChannel<Player, DataCollection> handler = (channel, player, message) -> {
     };
     handler.handle(Mockito.mock(com.tenio.core.entity.Channel.class), Mockito.mock(Player.class),
         Mockito.mock(DataCollection.class));
@@ -180,9 +180,9 @@ class EventHandlerInterfacesTest {
   }
 
   @Test
-  @DisplayName("Test EventPlayerReconnectRequestHandle")
-  void testEventPlayerReconnectRequestHandle() {
-    EventPlayerReconnectRequestHandle<Player> handler = (session, message) -> Optional.empty();
+  @DisplayName("Test EventPlayerReconnectRequestHandling")
+  void testEventPlayerReconnectRequestHandling() {
+    EventPlayerReconnectRequestHandling<Player, DataCollection> handler = (session, message) -> Optional.empty();
     handler.handle(Mockito.mock(Session.class), Mockito.mock(DataCollection.class));
     assertTrue(true);
   }
@@ -208,7 +208,7 @@ class EventHandlerInterfacesTest {
   @Test
   @DisplayName("Test EventConnectionEstablishedResult")
   void testEventConnectionEstablishedResult() {
-    EventConnectionEstablishedResult handler = (session, message, result) -> {
+    EventConnectionEstablishedResult<DataCollection> handler = (session, message, result) -> {
     };
     handler.handle(Mockito.mock(Session.class), Mockito.mock(DataCollection.class),
         ConnectionEstablishedResult.SUCCESS);

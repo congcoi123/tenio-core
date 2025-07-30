@@ -173,7 +173,7 @@ public class ZeroProcessorServiceImplTest {
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING))
         .thenReturn(true);
-    when(eventManager.emit(eq(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLE), eq(session),
+    when(eventManager.emit(eq(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLING), eq(session),
         eq(message)))
         .thenReturn(Optional.of(player));
     when(player.getSession()).thenReturn(Optional.of(session));

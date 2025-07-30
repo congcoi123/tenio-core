@@ -34,7 +34,7 @@ import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidation;
 import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidationResult;
 import com.tenio.core.handler.event.EventAccessKcpChannelRequestValidation;
 import com.tenio.core.handler.event.EventAccessKcpChannelRequestValidationResult;
-import com.tenio.core.handler.event.EventPlayerReconnectRequestHandle;
+import com.tenio.core.handler.event.EventPlayerReconnectRequestHandling;
 import com.tenio.core.handler.event.EventPlayerReconnectedResult;
 
 /**
@@ -110,9 +110,9 @@ public final class ConfigurationAssessment {
    */
   private void checkSubscriberReconnection() throws NotDefinedSubscribersException {
     if (configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION)) {
-      if (!eventManager.hasSubscriber(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLE)
+      if (!eventManager.hasSubscriber(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLING)
           || !eventManager.hasSubscriber(ServerEvent.PLAYER_RECONNECTED_RESULT)) {
-        throw new NotDefinedSubscribersException(EventPlayerReconnectRequestHandle.class,
+        throw new NotDefinedSubscribersException(EventPlayerReconnectRequestHandling.class,
             EventPlayerReconnectedResult.class);
       }
     }

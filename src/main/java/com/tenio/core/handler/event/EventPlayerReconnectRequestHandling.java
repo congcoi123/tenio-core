@@ -33,18 +33,18 @@ import java.util.Optional;
  * When a player sends a request to reconnect to the server.
  */
 @FunctionalInterface
-public interface EventPlayerReconnectRequestHandle<P extends Player> {
+public interface EventPlayerReconnectRequestHandling<P extends Player, D extends DataCollection> {
 
   /**
    * When a player tried to reconnect to the server. The situation happens if the player gets in
    * an IDLE state for long time enough to be disconnected from the server automatically.
    *
    * @param session a new {@link Session} which the player is using to reconnect to the server
-   * @param message a {@link DataCollection} that the client side tries to send to the server to
-   *                judge if the corresponding player could reconnect
+   * @param message a {@link D} message that the client side tries to send to the server to judge
+   *               if the corresponding player could reconnect
    * @return an instance of {@link Player} if available
    * @see EventPlayerReconnectedResult
    * @since 0.5.0
    */
-  Optional<P> handle(Session session, DataCollection message);
+  Optional<P> handle(Session session, D message);
 }
