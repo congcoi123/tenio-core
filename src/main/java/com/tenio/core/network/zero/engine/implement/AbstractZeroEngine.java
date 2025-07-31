@@ -192,18 +192,9 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
           "executor size");
     }
     for (int i = 0; i < executorSize - getNumberOfExtraWorkers(); i++) {
-      try {
-        Thread.sleep(100L);
-      } catch (InterruptedException exception) {
-        Thread.currentThread().interrupt();
-        if (isErrorEnabled()) {
-          error(exception);
-        }
-      }
       executorService.execute(this);
     }
     onStarted();
-    activated = true;
     if (isInfoEnabled()) {
       info("START SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
     }
@@ -212,6 +203,11 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   @Override
   public void shutdown() {
     halting();
+  }
+
+  @Override
+  public void activate() {
+    activated = true;
   }
 
   public boolean isActivated() {

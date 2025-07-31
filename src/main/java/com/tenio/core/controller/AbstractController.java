@@ -203,17 +203,8 @@ public abstract class AbstractController extends AbstractManager implements Cont
   @Override
   public void start() {
     for (int i = 0; i < executorSize; i++) {
-      try {
-        Thread.sleep(100L);
-      } catch (InterruptedException exception) {
-        Thread.currentThread().interrupt();
-        if (isErrorEnabled()) {
-          error(exception);
-        }
-      }
       executorService.execute(this);
     }
-    activated = true;
     if (isInfoEnabled()) {
       info("START SERVICE", buildgen(getName(), " (", executorSize, ")"));
     }
@@ -235,6 +226,11 @@ public abstract class AbstractController extends AbstractManager implements Cont
   @Override
   public void setName(String name) {
     this.name = name;
+  }
+
+  @Override
+  public void activate() {
+    activated = true;
   }
 
   @Override

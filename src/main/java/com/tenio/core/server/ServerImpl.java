@@ -178,8 +178,12 @@ public final class ServerImpl extends SystemLogger implements Server {
       info("SERVER", serverName, "Started");
     }
 
-    // emit "server started" event
+    // emit "server initialization" event
     eventManager.emit(ServerEvent.SERVER_INITIALIZATION, serverName, configuration);
+
+    // now it can be able to accept connections
+    networkService.activate();
+    zeroProcessorService.activate();
 
     if (((Setting) configuration.get(CoreConfigurationType.SERVER_SETTING)).getCommand()
         .isEnabled()) {

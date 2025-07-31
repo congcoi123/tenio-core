@@ -153,6 +153,14 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
     attemptToShutdown();
   }
 
+  @Override
+  public void activate() {
+    httpService.activate();
+    webSocketService.activate();
+    socketService.activate();
+    kcpChannelService.activate();
+  }
+
   private void attemptToShutdown() {
     httpService.shutdown();
     webSocketService.shutdown();

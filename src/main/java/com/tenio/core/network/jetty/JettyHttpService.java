@@ -92,11 +92,6 @@ public final class JettyHttpService extends AbstractManager implements Service, 
   @Override
   public void run() {
     try {
-      if (isInfoEnabled()) {
-        info("START SERVICE", buildgen(getName(), " (", 1, ")"));
-        info("Http Info",
-            buildgen("Started at port: ", port, ", Endpoints: ", servletMap.keySet().toString()));
-      }
       server.start();
       server.join();
     } catch (Throwable cause) {
@@ -122,7 +117,11 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     var threadFactory =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("jetty-http-management-%d").build();
     executorService = Executors.newSingleThreadExecutor(threadFactory);
-    executorService.execute(this);
+    if (isInfoEnabled()) {
+      info("START SERVICE", buildgen(getName(), " (", 1, ")"));
+      info("Http Info",
+          buildgen("Started at port: ", port, ", Endpoints: ", servletMap.keySet().toString()));
+    }
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       if (executorService != null && !executorService.isShutdown()) {
@@ -160,6 +159,15 @@ public final class JettyHttpService extends AbstractManager implements Service, 
         error(exception);
       }
     }
+  }
+
+  @Override
+  public void activate() {
+    if (!initialized) {
+      return;
+    }
+
+    executorService.execute(this);
   }
 
   @Override

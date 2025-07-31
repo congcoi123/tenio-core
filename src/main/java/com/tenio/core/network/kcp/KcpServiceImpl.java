@@ -85,8 +85,6 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
     }
 
     kcpServer = new KcpServer();
-    kcpServer.init(new KcpHandler(eventManager, sessionManager, binaryPacketDecoder,
-        networkReaderStatistic), KcpConfiguration.inTurboMode(), socketConfiguration.port());
 
     if (isInfoEnabled()) {
       info("KCP CHANNEL", buildgen("Started at port: ", socketConfiguration.port()));
@@ -100,6 +98,16 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
     }
 
     kcpServer.stop();
+  }
+
+  @Override
+  public void activate() {
+    if (!initialized) {
+      return;
+    }
+
+    kcpServer.init(new KcpHandler(eventManager, sessionManager, binaryPacketDecoder,
+        networkReaderStatistic), KcpConfiguration.inTurboMode(), socketConfiguration.port());
   }
 
   @Override

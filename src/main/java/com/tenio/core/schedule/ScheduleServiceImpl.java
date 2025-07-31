@@ -133,6 +133,11 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
     attemptToShutdown();
   }
 
+  @Override
+  public void activate() {
+    throw new UnsupportedOperationException();
+  }
+
   private void attemptToShutdown() {
     taskManager.clear();
     if (isInfoEnabled()) {

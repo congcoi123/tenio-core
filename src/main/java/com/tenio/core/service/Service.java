@@ -51,6 +51,13 @@ public interface Service {
   void shutdown();
 
   /**
+   * Activate the service.
+   *
+   * @since 0.6.7
+   */
+  void activate();
+
+  /**
    * Determines whether the service is activated.
    *
    * @return {@code true} if the service is activated, {@code false} otherwise

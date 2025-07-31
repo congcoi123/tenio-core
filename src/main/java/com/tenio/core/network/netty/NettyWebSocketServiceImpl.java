@@ -42,6 +42,7 @@ import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -66,6 +67,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
   private static final int DEFAULT_CONSUMER_WORKER_SIZE =
       Runtime.getRuntime().availableProcessors() * 2;
 
+  private ServerBootstrap bootstrap;
   private EventLoopGroup webSocketAcceptors;
   private EventLoopGroup webSocketWorkers;
   private List<Channel> serverWebSockets;
@@ -126,7 +128,7 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
       sslContext = new WebSocketSslContext();
     }
 
-    var bootstrap = new ServerBootstrap();
+    bootstrap = new ServerBootstrap();
     bootstrap.group(webSocketAcceptors, webSocketWorkers).channel(NioServerSocketChannel.class)
         .option(ChannelOption.SO_BACKLOG, 5)
         .childOption(ChannelOption.SO_SNDBUF, senderBufferSize)
@@ -134,17 +136,6 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
         .childOption(ChannelOption.SO_KEEPALIVE, true)
         .childHandler(NettyWsInitializer.newInstance(eventManager, sessionManager,
             connectionFilter, binaryPacketDecoder, networkReaderStatistic, sslContext, usingSsl));
-
-    var channelFuture = bootstrap.bind(socketConfiguration.port()).sync()
-        .addListener(future -> {
-          if (!future.isSuccess()) {
-            if (isErrorEnabled()) {
-              error(future.cause());
-            }
-            throw new IOException(String.valueOf(socketConfiguration.port()));
-          }
-        });
-    serverWebSockets.add(channelFuture.channel());
 
     if (isInfoEnabled()) {
       info("WEB SOCKET", buildgen("Started at port: ", socketConfiguration.port()));
@@ -219,6 +210,29 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
       return;
     }
     attemptToShutdown();
+  }
+
+  @Override
+  public void activate() {
+    if (!initialized) {
+      return;
+    }
+
+    ChannelFuture channelFuture;
+    try {
+      channelFuture = bootstrap.bind(socketConfiguration.port()).sync()
+          .addListener(future -> {
+            if (!future.isSuccess()) {
+              if (isErrorEnabled()) {
+                error(future.cause());
+              }
+              throw new IOException(String.valueOf(socketConfiguration.port()));
+            }
+          });
+    } catch (InterruptedException exception) {
+      throw new RuntimeException(exception);
+    }
+    serverWebSockets.add(channelFuture.channel());
   }
 
   @Override

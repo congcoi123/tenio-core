@@ -138,6 +138,13 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   }
 
   @Override
+  public void activate() {
+    readerEngine.activate();
+    writerEngine.activate();
+    acceptorEngine.activate();
+  }
+
+  @Override
   public boolean isActivated() {
     throw new UnsupportedOperationException();
   }
