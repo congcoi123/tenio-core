@@ -37,6 +37,12 @@ public final class ZeroUtility {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Converts from Bytes to Megabytes.
+   *
+   * @param bytes value in Bytes
+   * @return value in Megabytes
+   */
   public static float convertBytesToMB(long bytes) {
     return (float) bytes / CONVERT_TO_MB;
   }
