@@ -24,14 +24,14 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero;
 
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
-import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.service.Service;
 import java.nio.ByteBuffer;
@@ -159,6 +159,14 @@ public interface ZeroSocketService extends Service {
    * @since 0.6.7
    */
   void setDatagramPacketPolicy(DatagramPacketPolicy datagramPacketPolicy);
+
+  /**
+   * Retrieves the maximum starting time in milliseconds.
+   *
+   * @return the maximum starting time in milliseconds
+   * @since 0.6.7
+   */
+  int getMaximumStartingTimeInMilliseconds();
 
   /**
    * Writes down (binaries) data to socket/channel in order to send them to client side.

@@ -161,6 +161,11 @@ public final class ScheduleServiceImpl extends AbstractManager implements Schedu
   }
 
   @Override
+  public int getMaximumStartingTimeInMilliseconds() {
+    return 0;
+  }
+
+  @Override
   public void setRemovedRoomScanInterval(int interval) {
     autoRemoveRoomTask.setInterval(interval);
   }

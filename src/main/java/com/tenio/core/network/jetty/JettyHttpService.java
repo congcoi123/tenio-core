@@ -185,6 +185,11 @@ public final class JettyHttpService extends AbstractManager implements Service, 
     throw new UnsupportedOperationException();
   }
 
+  @Override
+  public int getMaximumStartingTimeInMilliseconds() {
+    return 0;
+  }
+
   /**
    * Sets the thread pool size.
    *

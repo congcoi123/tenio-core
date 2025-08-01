@@ -77,4 +77,12 @@ public interface Service {
    * @param name the {@link String} service's name
    */
   void setName(String name);
+
+  /**
+   * Retrieves the maximum starting time in milliseconds.
+   *
+   * @return the maximum starting time in milliseconds
+   * @since 0.6.7
+   */
+  int getMaximumStartingTimeInMilliseconds();
 }

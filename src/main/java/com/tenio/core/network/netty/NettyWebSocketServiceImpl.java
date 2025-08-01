@@ -246,6 +246,11 @@ public final class NettyWebSocketServiceImpl extends AbstractManager
   }
 
   @Override
+  public int getMaximumStartingTimeInMilliseconds() {
+    return 0;
+  }
+
+  @Override
   public boolean isActivated() {
     throw new UnsupportedOperationException();
   }

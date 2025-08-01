@@ -184,6 +184,17 @@ public final class NetworkServiceImpl extends AbstractManager implements Network
   }
 
   @Override
+  public int getMaximumStartingTimeInMilliseconds() {
+    int httpServiceStartingTime = httpService.getMaximumStartingTimeInMilliseconds();
+    int webSocketServiceStartingTime = httpService.getMaximumStartingTimeInMilliseconds();
+    int socketServiceStartingTime = socketService.getMaximumStartingTimeInMilliseconds();
+    int kcpChannelServiceStartingTime = kcpChannelService.getMaximumStartingTimeInMilliseconds();
+
+    return Math.max(Math.max(httpServiceStartingTime, webSocketServiceStartingTime),
+        Math.max(socketServiceStartingTime, kcpChannelServiceStartingTime));
+  }
+
+  @Override
   public void setHttpConfiguration(int threadPoolSize, int port,
                                    Map<String, HttpServlet> servletMap) {
     httpService.setThreadPoolSize(threadPoolSize);

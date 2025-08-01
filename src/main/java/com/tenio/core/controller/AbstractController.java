@@ -26,6 +26,7 @@ package com.tenio.core.controller;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.common.utility.StringUtility;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.RequestQueueFullException;
 import com.tenio.core.manager.AbstractManager;
@@ -204,6 +205,13 @@ public abstract class AbstractController extends AbstractManager implements Cont
   public void start() {
     for (int i = 0; i < executorSize; i++) {
       executorService.execute(this);
+      try {
+        // noinspection BusyWait
+        Thread.sleep(CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS); // wait between each submission
+      } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt(); // restore interrupt flag
+        error(exception);
+      }
     }
     if (isInfoEnabled()) {
       info("START SERVICE", buildgen(getName(), " (", executorSize, ")"));
@@ -272,6 +280,11 @@ public abstract class AbstractController extends AbstractManager implements Cont
       throw new IllegalArgumentException("Thread pool size must be greater than 0");
     }
     executorSize = maxSize;
+  }
+
+  @Override
+  public int getMaximumStartingTimeInMilliseconds() {
+    return getThreadPoolSize() * CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS;
   }
 
   /**

@@ -26,6 +26,7 @@ package com.tenio.core.network.zero.engine.implement;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.common.utility.StringUtility;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.manager.AbstractManager;
@@ -193,6 +194,13 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
     }
     for (int i = 0; i < executorSize - getNumberOfExtraWorkers(); i++) {
       executorService.execute(this);
+      try {
+        // noinspection BusyWait
+        Thread.sleep(CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS); // wait between each submission
+      } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt(); // restore interrupt flag
+        error(exception);
+      }
     }
     onStarted();
     if (isInfoEnabled()) {
@@ -251,6 +259,11 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   @Override
   public void setName(String name) {
     this.name = name;
+  }
+
+  @Override
+  public int getMaximumStartingTimeInMilliseconds() {
+    return getThreadPoolSize() * CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS;
   }
 
   private void setThreadName(int id, String extra) {

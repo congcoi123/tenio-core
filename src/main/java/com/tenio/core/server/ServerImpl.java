@@ -45,6 +45,12 @@ import com.tenio.core.entity.manager.implement.RoomManagerImpl;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.NetworkService;
 import com.tenio.core.network.NetworkServiceImpl;
+import com.tenio.core.network.codec.compression.BinaryPacketCompressor;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoderImpl;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoderImpl;
+import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.packet.policy.DefaultPacketQueuePolicy;
 import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
@@ -52,12 +58,6 @@ import com.tenio.core.network.entity.protocol.Response;
 import com.tenio.core.network.entity.protocol.policy.RequestPolicy;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.filter.DefaultConnectionFilter;
-import com.tenio.core.network.codec.compression.BinaryPacketCompressor;
-import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
-import com.tenio.core.network.codec.decoder.BinaryPacketDecoderImpl;
-import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
-import com.tenio.core.network.codec.encoder.BinaryPacketEncoderImpl;
-import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.network.zero.engine.reader.policy.DefaultDatagramPacketPolicy;
@@ -106,7 +106,8 @@ public final class ServerImpl extends SystemLogger implements Server {
     datagramChannelManager = DatagramChannelManager.newInstance();
     networkService = NetworkServiceImpl.newInstance(eventManager);
     serverApi = ServerApiImpl.newInstance(this);
-    zeroProcessorService = ZeroProcessorServiceImpl.newInstance(eventManager, serverApi, datagramChannelManager);
+    zeroProcessorService =
+        ZeroProcessorServiceImpl.newInstance(eventManager, serverApi, datagramChannelManager);
     scheduleService = ScheduleServiceImpl.newInstance(eventManager);
   } // prevent creation manually
 
@@ -172,10 +173,15 @@ public final class ServerImpl extends SystemLogger implements Server {
     startServices();
 
     // it should wait for a while to let everything settles down
-    Thread.sleep(1000);
+    int servicesTakeTime = Math.max(Math.max(networkService.getMaximumStartingTimeInMilliseconds(),
+        zeroProcessorService.getMaximumStartingTimeInMilliseconds()),
+        scheduleService.getMaximumStartingTimeInMilliseconds());
+    int totalWaitingTime =
+        servicesTakeTime + CoreConstant.DELAY_BEFORE_SERVER_IS_READY_IN_MILLISECONDS;
+    Thread.sleep(totalWaitingTime);
 
     if (isInfoEnabled()) {
-      info("SERVER", serverName, "Started");
+      info("SERVER", serverName, buildgen("Started after ", totalWaitingTime, " milliseconds"));
     }
 
     // emit "server initialization" event
@@ -208,9 +214,12 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   private void setupEntitiesManagementService(Configuration configuration) {
-    playerManager.configureMaxIdleTimeInSeconds(configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
-    playerManager.configureMaxIdleTimeNeverDeportedInSeconds(configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME_NEVER_DEPORTED));
-    roomManager.configureMaxRooms(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_ROOMS));
+    playerManager.configureMaxIdleTimeInSeconds(
+        configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
+    playerManager.configureMaxIdleTimeNeverDeportedInSeconds(
+        configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME_NEVER_DEPORTED));
+    roomManager.configureMaxRooms(
+        configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_ROOMS));
   }
 
   private void setupScheduleService(Configuration configuration) {
@@ -275,7 +284,8 @@ public final class ServerImpl extends SystemLogger implements Server {
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_TCP) : null),
         udpChannelConfiguration,
         (configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) != null ?
-            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) : null),
+            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) :
+            null),
         kcpSocketConfiguration);
 
     if (udpChannelConfiguration != null) {
@@ -318,7 +328,8 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.setPacketQueueSize(
         configuration.getInt(CoreConfigurationType.PROP_MAX_RESPONSE_QUEUE_SIZE_PER_SESSION));
 
-    DatagramPacketPolicy datagramPacketPolicy = bootstrapHandler.getBeanByClazz(DatagramPacketPolicy.class);
+    DatagramPacketPolicy datagramPacketPolicy =
+        bootstrapHandler.getBeanByClazz(DatagramPacketPolicy.class);
     if (datagramPacketPolicy == null) {
       datagramPacketPolicy = new DefaultDatagramPacketPolicy();
     }
@@ -335,7 +346,8 @@ public final class ServerImpl extends SystemLogger implements Server {
     BinaryPacketDecoder binaryPacketDecoder = new BinaryPacketDecoderImpl();
 
     binaryPacketEncoder.setCompressionThresholdBytes(
-        configuration.getInt(CoreConfigurationType.NETWORK_PROP_PACKET_COMPRESSION_THRESHOLD_BYTES));
+        configuration.getInt(
+            CoreConfigurationType.NETWORK_PROP_PACKET_COMPRESSION_THRESHOLD_BYTES));
     binaryPacketEncoder.setCompressor(binaryPacketCompressor);
     binaryPacketEncoder.setEncryptor(binaryPacketEncryptor);
 
@@ -346,7 +358,8 @@ public final class ServerImpl extends SystemLogger implements Server {
     networkService.setPacketEncoder(binaryPacketEncoder);
   }
 
-  private void setupInternalProcessorService(Configuration configuration, BootstrapHandler bootstrapHandler) {
+  private void setupInternalProcessorService(Configuration configuration,
+                                             BootstrapHandler bootstrapHandler) {
     RequestPolicy requestPolicy = bootstrapHandler.getBeanByClazz(RequestPolicy.class);
     zeroProcessorService.setRequestPolicy(requestPolicy);
     zeroProcessorService

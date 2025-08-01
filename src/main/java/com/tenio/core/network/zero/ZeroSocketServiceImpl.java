@@ -246,6 +246,14 @@ public final class ZeroSocketServiceImpl extends AbstractManager implements Zero
   }
 
   @Override
+  public int getMaximumStartingTimeInMilliseconds() {
+    int acceptorStartingTime = acceptorEngine.getMaximumStartingTimeInMilliseconds();
+    int readerStartingTime = readerEngine.getMaximumStartingTimeInMilliseconds();
+    int writerStartingTime = writerEngine.getMaximumStartingTimeInMilliseconds();
+    return Math.max(acceptorStartingTime, Math.max(readerStartingTime, writerStartingTime));
+  }
+
+  @Override
   public void write(Packet packet) {
     writerEngine.enqueuePacket(packet);
   }

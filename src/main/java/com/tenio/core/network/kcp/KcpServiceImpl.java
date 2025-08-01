@@ -126,6 +126,11 @@ public class KcpServiceImpl extends AbstractManager implements KcpService {
   }
 
   @Override
+  public int getMaximumStartingTimeInMilliseconds() {
+    return 0;
+  }
+
+  @Override
   public void setSessionManager(SessionManager sessionManager) {
     this.sessionManager = sessionManager;
   }
