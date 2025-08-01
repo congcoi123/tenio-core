@@ -116,8 +116,7 @@ public final class ZeroProcessorServiceImpl extends AbstractController
     });
 
     eventManager.on(ServerEvent.SESSION_WILL_BE_CLOSED, params -> {
-      processSessionWillBeClosed((Session) params[0],
-          (PlayerDisconnectMode) params[2]);
+      processSessionWillBeClosed((Session) params[0], (PlayerDisconnectMode) params[2]);
 
       return null;
     });
