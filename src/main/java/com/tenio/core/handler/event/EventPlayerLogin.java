@@ -25,21 +25,17 @@ THE SOFTWARE.
 package com.tenio.core.handler.event;
 
 import com.tenio.core.entity.Player;
-import com.tenio.core.entity.define.result.PlayerLoginResult;
 
 /**
- * Returns the result when a player tried to log in the server.
+ * Returns the result when a player logs in the server.
  */
 @FunctionalInterface
-public interface EventPlayerLoginResult<P extends Player> {
+public interface EventPlayerLogin<P extends Player> {
 
   /**
-   * When a player tried to log in the server.
+   * When a player logs in the server.
    *
    * @param player the joining {@link Player}
-   * @param result the joining result presented by {@link PlayerLoginResult}. A player is
-   *               considered as it joined the server when the result equals to success
-   * @see PlayerLoginResult#SUCCESS
    */
-  void handle(P player, PlayerLoginResult result);
+  void handle(P player);
 }

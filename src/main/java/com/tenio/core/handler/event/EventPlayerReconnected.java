@@ -22,15 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.entity.define.result;
+package com.tenio.core.handler.event;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.tenio.core.configuration.define.CoreConfigurationType;
+import com.tenio.core.entity.Player;
+import com.tenio.core.network.entity.session.Session;
 
-import org.junit.jupiter.api.Test;
+/**
+ * Returns the result when a player tried to reconnect to the server.
+ */
+@FunctionalInterface
+public interface EventPlayerReconnected<P extends Player> {
 
-class PlayerReconnectedResultTest {
-  @Test
-  void testValueOf() {
-    assertEquals("SUCCESS", PlayerReconnectedResult.valueOf("SUCCESS").toString());
-  }
+  /**
+   * When a player tried to reconnect to the server. The situation happens if the player gets in
+   * an IDLE state for long time enough to be disconnected from the server automatically.
+   *
+   * @param player  the reconnecting {@link Player}
+   * @param session a new {@link Session} which the player is using to reconnect to the server
+   * @see CoreConfigurationType#PROP_KEEP_PLAYER_ON_DISCONNECTION
+   * @see CoreConfigurationType#PROP_MAX_PLAYER_IDLE_TIME
+   * @see EventPlayerReconnectRequestHandling
+   */
+  void handle(P player, Session session);
 }

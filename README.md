@@ -55,8 +55,8 @@ EventFetchedCcuInfo
 EventPlayerAfterLeftRoom
 EventPlayerBeforeLeaveRoom
 EventPlayerJoinedRoomResult
-EventPlayerLoginResult
-EventPlayerReconnectedResult
+EventPlayerLogin
+EventPlayerReconnected
 EventPlayerReconnectRequestHandle
 EventPlayerSubscribedChannel
 EventPlayerUnsubscribedChannel

@@ -43,7 +43,7 @@ public interface EventPlayerReconnectRequestHandling<P extends Player, D extends
    * @param message a {@link D} message that the client side tries to send to the server to judge
    *               if the corresponding player could reconnect
    * @return an instance of {@link Player} if available
-   * @see EventPlayerReconnectedResult
+   * @see EventPlayerReconnected
    * @since 0.5.0
    */
   Optional<P> handle(Session session, D message);

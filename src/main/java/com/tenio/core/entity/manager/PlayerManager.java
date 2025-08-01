@@ -97,14 +97,6 @@ public interface PlayerManager extends Manager {
       throws AddedDuplicatedPlayerException, NullPointerException;
 
   /**
-   * Configures basic info when a player is initially created, or before it is added into
-   * the management list.
-   *
-   * @param player the target player
-   */
-  void configureInitialPlayer(Player player);
-
-  /**
    * Retrieves a player by their unique identity.
    * This method provides thread-safe access to player instances.
    *

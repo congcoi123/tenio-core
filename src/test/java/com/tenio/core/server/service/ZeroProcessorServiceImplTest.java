@@ -40,7 +40,6 @@ import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.entity.define.result.AccessDatagramChannelResult;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
-import com.tenio.core.entity.define.result.PlayerReconnectedResult;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.protocol.Request;
@@ -188,8 +187,7 @@ public class ZeroProcessorServiceImplTest {
     processor.processRequest(request);
 
     verify(player).setSession(session);
-    verify(eventManager).emit(eq(ServerEvent.PLAYER_RECONNECTED_RESULT),
-        eq(player), eq(session), eq(PlayerReconnectedResult.SUCCESS));
+    verify(eventManager).emit(eq(ServerEvent.PLAYER_RECONNECTED), eq(player), eq(session));
   }
 
   // Session Management Tests

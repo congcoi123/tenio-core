@@ -34,7 +34,6 @@ import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
-import com.tenio.core.entity.define.result.PlayerLoginResult;
 import com.tenio.core.exception.RefusedConnectionAddressException;
 import com.tenio.core.network.entity.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
@@ -114,11 +113,11 @@ class EventHandlerInterfacesTest {
   }
 
   @Test
-  @DisplayName("Test EventPlayerLoginResult")
-  void testEventPlayerLoginResult() {
-    EventPlayerLoginResult<Player> handler = (player, result) -> {
+  @DisplayName("Test EventPlayerLogin")
+  void testEventPlayerLogin() {
+    EventPlayerLogin<Player> handler = player -> {
     };
-    handler.handle(Mockito.mock(Player.class), PlayerLoginResult.SUCCESS);
+    handler.handle(Mockito.mock(Player.class));
   }
 
   @Test
@@ -182,7 +181,8 @@ class EventHandlerInterfacesTest {
   @Test
   @DisplayName("Test EventPlayerReconnectRequestHandling")
   void testEventPlayerReconnectRequestHandling() {
-    EventPlayerReconnectRequestHandling<Player, DataCollection> handler = (session, message) -> Optional.empty();
+    EventPlayerReconnectRequestHandling<Player, DataCollection> handler =
+        (session, message) -> Optional.empty();
     handler.handle(Mockito.mock(Session.class), Mockito.mock(DataCollection.class));
     assertTrue(true);
   }

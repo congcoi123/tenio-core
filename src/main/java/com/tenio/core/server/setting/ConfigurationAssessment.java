@@ -35,7 +35,7 @@ import com.tenio.core.handler.event.EventAccessDatagramChannelRequestValidationR
 import com.tenio.core.handler.event.EventAccessKcpChannelRequestValidation;
 import com.tenio.core.handler.event.EventAccessKcpChannelRequestValidationResult;
 import com.tenio.core.handler.event.EventPlayerReconnectRequestHandling;
-import com.tenio.core.handler.event.EventPlayerReconnectedResult;
+import com.tenio.core.handler.event.EventPlayerReconnected;
 
 /**
  * Performs validation and assessment of server configuration settings.
@@ -111,9 +111,9 @@ public final class ConfigurationAssessment {
   private void checkSubscriberReconnection() throws NotDefinedSubscribersException {
     if (configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION)) {
       if (!eventManager.hasSubscriber(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLING)
-          || !eventManager.hasSubscriber(ServerEvent.PLAYER_RECONNECTED_RESULT)) {
+          || !eventManager.hasSubscriber(ServerEvent.PLAYER_RECONNECTED)) {
         throw new NotDefinedSubscribersException(EventPlayerReconnectRequestHandling.class,
-            EventPlayerReconnectedResult.class);
+            EventPlayerReconnected.class);
       }
     }
   }

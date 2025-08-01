@@ -35,7 +35,6 @@ import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
 import com.tenio.core.entity.define.result.AccessDatagramChannelResult;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
-import com.tenio.core.entity.define.result.PlayerReconnectedResult;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.protocol.Request;
@@ -232,8 +231,7 @@ public final class ZeroProcessorServiceImpl extends AbstractController
         player.setSession(session);
         player.setLastReadTime(now());
         player.setLastWriteTime(now());
-        eventManager.emit(ServerEvent.PLAYER_RECONNECTED_RESULT, player, session,
-            PlayerReconnectedResult.SUCCESS);
+        eventManager.emit(ServerEvent.PLAYER_RECONNECTED, player, session);
       } else {
         establishNewPlayerConnection(session, message);
       }
