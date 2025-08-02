@@ -22,24 +22,50 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.entity;
+package com.tenio.core.scheduler.task;
 
-import com.tenio.core.scheduler.task.core.AutoRemoveRoomTask;
+import com.tenio.common.logger.SystemLogger;
+import com.tenio.common.task.Task;
+import com.tenio.core.event.implement.EventManager;
 
 /**
- * Definitions for room states. All customized states must be implemented this interface.
+ * The abstract task for system related schedule.
  */
-public interface RoomState {
+public abstract class AbstractSystemTask extends SystemLogger implements Task {
+
+  private static final int DEFAULT_INITIAL_DELAY_IN_SECONDS = 60;
+  private static final int DEFAULT_INTERVAL_IN_SECONDS = 60;
 
   /**
-   * Determines whether the room state is in IDLE, this will be used in auto removing room
-   * mechanism.
-   *
-   * @return {@code true} if the current room state is IDLE, otherwise returns {@code false}
-   * @see AutoRemoveRoomTask
-   * @since 0.5.0
+   * The event manager.
    */
-  default boolean isIdle() {
-    return false;
+  protected final EventManager eventManager;
+  /**
+   * The initial delay time. The task should wait a little until the system becomes stable.
+   */
+  protected final int initialDelay;
+  /**
+   * The interval value.
+   */
+  protected int interval;
+
+  /**
+   * Initialization.
+   *
+   * @param eventManager the event manager
+   */
+  protected AbstractSystemTask(EventManager eventManager) {
+    this.eventManager = eventManager;
+    initialDelay = DEFAULT_INITIAL_DELAY_IN_SECONDS;
+    interval = DEFAULT_INTERVAL_IN_SECONDS;
+  }
+
+  /**
+   * Set the interval.
+   *
+   * @param interval the value
+   */
+  public void setInterval(int interval) {
+    this.interval = interval;
   }
 }

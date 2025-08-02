@@ -29,7 +29,7 @@ import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import com.tenio.core.exception.RemovedNonExistentPlayerException;
 import com.tenio.core.manager.Manager;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.schedule.task.internal.AutoDisconnectPlayerTask;
+import com.tenio.core.scheduler.task.core.AutoDisconnectPlayerTask;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;

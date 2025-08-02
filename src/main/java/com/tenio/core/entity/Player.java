@@ -27,7 +27,7 @@ package com.tenio.core.entity;
 import com.tenio.core.entity.define.room.PlayerRoleInRoom;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.schedule.task.internal.AutoDisconnectPlayerTask;
+import com.tenio.core.scheduler.task.core.AutoDisconnectPlayerTask;
 import java.util.Optional;
 import java.util.function.Consumer;
 

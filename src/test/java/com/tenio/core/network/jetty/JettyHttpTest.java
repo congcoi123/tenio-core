@@ -22,24 +22,37 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.entity;
+package com.tenio.core.network.jetty;
 
-import com.tenio.core.scheduler.task.core.AutoRemoveRoomTask;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.Mockito.mock;
 
-/**
- * Definitions for room states. All customized states must be implemented this interface.
- */
-public interface RoomState {
+import com.tenio.core.event.implement.EventManager;
+import jakarta.servlet.http.HttpServlet;
+import java.util.Collections;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-  /**
-   * Determines whether the room state is in IDLE, this will be used in auto removing room
-   * mechanism.
-   *
-   * @return {@code true} if the current room state is IDLE, otherwise returns {@code false}
-   * @see AutoRemoveRoomTask
-   * @since 0.5.0
-   */
-  default boolean isIdle() {
-    return false;
+@DisplayName("Unit Test Cases For JettyHttp")
+class JettyHttpTest {
+
+  private JettyHttp service;
+
+  @BeforeEach
+  void setUp() {
+    EventManager eventManager = EventManager.newInstance();
+    service = JettyHttp.newInstance(eventManager);
+    service.setThreadPoolSize(16); // valid max threads
+    service.setPort(8080); // valid port
+    service.setServletMap(Collections.singletonMap("test", mock(HttpServlet.class)));
+  }
+
+  @Test
+  @DisplayName("Test start() and shutdown() behaviours")
+  void testStartAndShutdown() {
+    assertDoesNotThrow(() -> service.initialize());
+    assertDoesNotThrow(() -> service.start());
+    assertDoesNotThrow(() -> service.shutdown());
   }
 }

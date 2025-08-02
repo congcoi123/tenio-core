@@ -22,24 +22,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.entity;
+package com.tenio.core.scheduler.task;
 
-import com.tenio.core.scheduler.task.core.AutoRemoveRoomTask;
+import com.tenio.common.logger.AbstractLogger;
+import com.tenio.common.task.Task;
 
 /**
- * Definitions for room states. All customized states must be implemented this interface.
+ * The abstract task.
+ *
+ * @since 0.5.0
  */
-public interface RoomState {
+public abstract class AbstractTask extends AbstractLogger implements Task {
+
+  private static final int DEFAULT_INTERVAL_IN_SECONDS = 60;
 
   /**
-   * Determines whether the room state is in IDLE, this will be used in auto removing room
-   * mechanism.
-   *
-   * @return {@code true} if the current room state is IDLE, otherwise returns {@code false}
-   * @see AutoRemoveRoomTask
-   * @since 0.5.0
+   * The interval value.
    */
-  default boolean isIdle() {
-    return false;
+  protected int interval;
+
+  /**
+   * Initialization.
+   */
+  protected AbstractTask() {
+    interval = DEFAULT_INTERVAL_IN_SECONDS;
+  }
+
+  /**
+   * Set the interval.
+   *
+   * @param interval the value
+   */
+  public void setInterval(int interval) {
+    this.interval = interval;
   }
 }

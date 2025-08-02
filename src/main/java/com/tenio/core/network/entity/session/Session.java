@@ -34,7 +34,7 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.codec.packet.PacketReadState;
 import com.tenio.core.network.codec.packet.PendingPacket;
 import com.tenio.core.network.codec.packet.ProcessedPacket;
-import com.tenio.core.schedule.task.internal.AutoCleanOrphanSessionTask;
+import com.tenio.core.scheduler.task.core.AutoCleanOrphanSessionTask;
 import io.netty.channel.Channel;
 import java.io.IOException;
 import java.net.SocketAddress;
