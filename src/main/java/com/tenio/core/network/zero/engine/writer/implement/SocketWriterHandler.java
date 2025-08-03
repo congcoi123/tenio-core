@@ -74,9 +74,7 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
       return;
     }
 
-    // clear the buffer first
-    getBuffer().clear();
-
+    // encode the packet
     packet.needsDataCounting(true);
     packet = getPacketEncoder().encode(packet);
     // set priority for packet left unsent data (fragment)
@@ -98,6 +96,9 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
       }
       allocateBuffer(sendingData.length);
     }
+
+    // clear the buffer first
+    getBuffer().clear();
 
     // start to read data to buffer
     getBuffer().put(sendingData);

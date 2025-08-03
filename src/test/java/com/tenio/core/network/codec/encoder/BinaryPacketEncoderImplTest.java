@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
 
 import com.tenio.common.data.DataType;
 import com.tenio.core.network.entity.packet.Packet;
+import com.tenio.core.network.entity.packet.implement.PacketImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,9 +47,12 @@ class BinaryPacketEncoderImplTest {
   }
 
   @Test
-  @DisplayName("Try to encode a null packet should throw exception")
+  @DisplayName("Try to encode an empty packet should throw exception")
   void testEncodeNullPacket() {
-    assertThrows(NullPointerException.class, () -> encoder.encode(null));
+    var packet = PacketImpl.newInstance();
+    assertThrows(IllegalArgumentException.class, () -> encoder.encode(packet));
+    packet.setData(new byte[0]);
+    assertThrows(IllegalArgumentException.class, () -> encoder.encode(packet));
   }
 
   @Test

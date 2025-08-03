@@ -65,6 +65,14 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
 
   @Override
   public void onFramedResult(Session session, DataCollection message) {
+    if (message == null) {
+      if (isDebugEnabled()) {
+        debug("READ TCP CHANNEL", "Trying to decode a null message on session: ",
+            session.toString());
+      }
+      return;
+    }
+
     networkReaderStatistic.updateReadPackets(1);
 
     if (session.isAssociatedToPlayer(Session.AssociatedState.DOING)) {

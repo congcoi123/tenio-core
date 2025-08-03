@@ -55,6 +55,9 @@ public final class BinaryPacketEncoderImpl extends SystemLogger implements Binar
   public Packet encode(Packet packet) {
     // retrieve the packet original data first
     byte[] binaries = packet.getData();
+    if (binaries == null || binaries.length == 0) {
+      throw new IllegalArgumentException("Th packet has empty data to encode");
+    }
 
     // Order: encryption -> compression (It must be reversed in Decoder)
     // 1. check if the data needs to be encrypted

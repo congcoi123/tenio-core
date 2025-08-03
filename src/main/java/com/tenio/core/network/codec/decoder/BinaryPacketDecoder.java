@@ -38,7 +38,7 @@ public interface BinaryPacketDecoder {
    * Decodes binaries data.
    *
    * @param binaries the receiving {@code byte} data
-   * @return an instance of {@link DataCollection}
+   * @return an instance of {@link DataCollection}, or {@code null} if the binaries' length is 0
    * @throws RuntimeException whenever an issue occurred
    * @since 0.6.7
    */
@@ -49,7 +49,7 @@ public interface BinaryPacketDecoder {
    *
    * @param packetHeader instance of {@link PacketHeader}
    * @param binaries     the receiving {@code byte} data
-   * @return an instance of {@link DataCollection}
+   * @return an instance of {@link DataCollection}, or {@code null} if the binaries' length is 0
    * @throws RuntimeException whenever an issue occurred
    * @since 0.6.7
    */

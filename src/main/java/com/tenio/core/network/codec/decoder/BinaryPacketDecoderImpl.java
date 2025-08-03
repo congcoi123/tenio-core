@@ -51,6 +51,10 @@ public final class BinaryPacketDecoderImpl implements BinaryPacketDecoder {
 
   @Override
   public DataCollection decode(PacketHeader packetHeader, byte[] binaries) throws RuntimeException {
+    if (binaries == null || binaries.length == 0) {
+      return null;
+    }
+
     // Order: uncompression -> decryption (It must be reversed in Encoder)
     // 1. checks if data needs to be uncompressed
     if (packetHeader.isCompressed()) {
