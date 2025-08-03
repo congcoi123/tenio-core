@@ -221,6 +221,11 @@ public class SessionImpl implements Session {
   }
 
   @Override
+  public SelectionKey fectchSocketSelectionKey() {
+    return socketSelectionKey;
+  }
+
+  @Override
   public SocketAddress getSocketRemoteAddress() {
     return socketRemoteAddress;
   }
