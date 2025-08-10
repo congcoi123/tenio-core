@@ -99,3 +99,6 @@
 - Supported Datagram Packet Policy interface
 - Reworked on Binary Packet Encoder / Decoder
 - Full support Codec for all Transportations
+
+## 0.6.8 2025-09-03 Bugfix release
+- Fixed several bugs
