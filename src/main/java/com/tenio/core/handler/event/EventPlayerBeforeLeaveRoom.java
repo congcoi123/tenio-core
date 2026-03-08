@@ -27,7 +27,6 @@ package com.tenio.core.handler.event;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
-import javax.annotation.Nullable;
 
 /**
  * The event occurs before a player leave its current room.
@@ -45,5 +44,5 @@ public interface EventPlayerBeforeLeaveRoom<P extends Player, R extends Room> {
    *               the room
    * @see EventPlayerAfterLeftRoom
    */
-  void handle(P player, @Nullable R room, PlayerLeaveRoomMode mode);
+  void handle(P player, R room, PlayerLeaveRoomMode mode);
 }

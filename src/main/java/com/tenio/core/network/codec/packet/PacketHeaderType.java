@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.codec.packet;
 
-import com.tenio.common.data.DataType;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,52 +35,38 @@ import java.util.Map;
 public enum PacketHeaderType {
 
   /**
-   * This slot is reserved.
+   * The packet needs data length prefixed value which show the total number of bytes for data.
    *
    * @since 0.6.7
    */
-  RESERVED_1(1),
-  /**
-   * The packet needs data counting which show the total number of bytes for data.
-   *
-   * @since 0.6.7
-   */
-  COUNTING(2),
+  LENGTH_PREFIXED((byte) 0b10000000),
   /**
    * The data size is considered as big size.
    */
-  BIG_SIZE(4),
+  BIG_SIZE((byte) 0b01000000),
   /**
    * The data is compressed.
    */
-  COMPRESSION(8),
+  COMPRESSION((byte) 0b00100000),
   /**
    * The data is encrypted.
    */
-  ENCRYPTION(16),
-  /**
-   * The data is encoded/decoded in Zero type.
-   *
-   * @see DataType#ZERO
-   * @since 0.6.7
-   */
-  ZERO(32),
-  /**
-   * The data is encoded/decoded in MsgPack type.
-   *
-   * @see DataType#MSG_PACK
-   * @since 0.6.7
-   */
-  MSG_PACK(64),
+  ENCRYPTION((byte) 0b00010000),
   /**
    * This slot is reserved.
    *
    * @since 0.6.7
    */
-  RESERVED_2(128);
+  RESERVED_1((byte) 0b00001000),
+  /**
+   * This slot is reserved.
+   *
+   * @since 0.6.7
+   */
+  RESERVED_2((byte) 0b00000100);
 
   // Reverse-lookup map for getting a type from a value
-  private static final Map<Integer, PacketHeaderType> lookup = new HashMap<>();
+  private static final Map<Byte, PacketHeaderType> lookup = new HashMap<>();
 
   static {
     for (PacketHeaderType type : PacketHeaderType.values()) {
@@ -89,9 +74,9 @@ public enum PacketHeaderType {
     }
   }
 
-  private final int value;
+  private final byte value;
 
-  PacketHeaderType(final int value) {
+  PacketHeaderType(final byte value) {
     this.value = value;
   }
 
@@ -101,7 +86,7 @@ public enum PacketHeaderType {
    * @param value the {@code integer} value of header type
    * @return the corresponding {@link PacketHeaderType}
    */
-  public static PacketHeaderType getByValue(int value) {
+  public static PacketHeaderType getByValue(byte value) {
     return lookup.get(value);
   }
 
@@ -110,7 +95,7 @@ public enum PacketHeaderType {
    *
    * @return the {@code integer} value of header type
    */
-  public final int getValue() {
+  public final byte getValue() {
     return value;
   }
 
