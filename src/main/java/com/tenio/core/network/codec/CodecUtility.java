@@ -34,9 +34,9 @@ import com.tenio.core.network.codec.packet.PacketHeaderType;
 public final class CodecUtility {
 
   /**
-   * The last 2 bits are reversed to encode {@link DataType} instance.
+   * The last 2 bits are reserved to encode {@link DataType} instance.
    */
-  private static final int DATA_TYPE_MASK = 0b00000011;
+  private static final byte DATA_TYPE_MASK = 0b00000011;
 
   private CodecUtility() {
     throw new UnsupportedOperationException("This class does not support to create new instance");
@@ -59,12 +59,16 @@ public final class CodecUtility {
     // 00000001
     // With masking, it won't break the header byte layout
     byte dataTypeValue = (byte) (headerByte & DATA_TYPE_MASK);
+    DataType dataType = DataType.getByValue(dataTypeValue);
+    if (dataType == null) {
+      throw new IllegalArgumentException("Unsupported data type value in header: " + dataTypeValue);
+    }
     return PacketHeader.newInstance(
-        (headerByte & PacketHeaderType.LENGTH_PREFIXED.getValue()) > 0,
-        (headerByte & PacketHeaderType.COMPRESSION.getValue()) > 0,
-        (headerByte & PacketHeaderType.BIG_SIZE.getValue()) > 0,
-        (headerByte & PacketHeaderType.ENCRYPTION.getValue()) > 0,
-        DataType.getByValue(dataTypeValue)
+        (headerByte & PacketHeaderType.LENGTH_PREFIXED.getValue()) != 0,
+        (headerByte & PacketHeaderType.COMPRESSION.getValue()) != 0,
+        (headerByte & PacketHeaderType.BIG_SIZE.getValue()) != 0,
+        (headerByte & PacketHeaderType.ENCRYPTION.getValue()) != 0,
+        dataType
     );
   }
 

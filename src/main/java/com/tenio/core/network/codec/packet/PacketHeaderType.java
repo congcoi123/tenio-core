@@ -24,13 +24,14 @@ THE SOFTWARE.
 
 package com.tenio.core.network.codec.packet;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * The definition of all packet header setting flags.
  * <p>
- * <b>NOTE:</b> it's safely to define up to 8 flags per byte
+ * <b>NOTE:</b> it's safe to define up to 8 flags per byte.
  */
 public enum PacketHeaderType {
 
@@ -65,7 +66,7 @@ public enum PacketHeaderType {
    */
   RESERVED_2((byte) 0b00000100);
 
-  // Reverse-lookup map for getting a type from a value
+  // Reverse-lookup map for getting a type from an exact value.
   private static final Map<Byte, PacketHeaderType> lookup = new HashMap<>();
 
   static {
@@ -81,26 +82,26 @@ public enum PacketHeaderType {
   }
 
   /**
-   * Retrieves the header type by using its value.
+   * Retrieves the header type by its exact value.
    *
-   * @param value the {@code integer} value of header type
-   * @return the corresponding {@link PacketHeaderType}
+   * @param value the {@code byte} value of a header type
+   * @return the corresponding {@link PacketHeaderType}, or {@code null} if no exact match exists
    */
-  public static PacketHeaderType getByValue(byte value) {
+  public static PacketHeaderType getByValue(final byte value) {
     return lookup.get(value);
   }
 
   /**
    * Retrieves the value of a header type.
    *
-   * @return the {@code integer} value of header type
+   * @return the {@code byte} value of a header type
    */
-  public final byte getValue() {
+  public byte getValue() {
     return value;
   }
 
   @Override
-  public final String toString() {
+  public String toString() {
     return name();
   }
 }
