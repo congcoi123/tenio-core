@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.codec.packet;
 
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
