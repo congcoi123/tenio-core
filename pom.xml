@@ -39,7 +39,7 @@
     </scm>
 
     <properties>
-        <io.github.congcoi123.tenio.common>0.6.8</io.github.congcoi123.tenio.common>
+        <io.github.congcoi123.tenio.common>0.6.9</io.github.congcoi123.tenio.common>
 
         <io.netty.version>4.2.10.Final</io.netty.version>
         <org.eclipse.jetty.server.version>12.1.6</org.eclipse.jetty.server.version>
