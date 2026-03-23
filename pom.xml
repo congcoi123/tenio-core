@@ -5,7 +5,7 @@
 
     <groupId>io.github.congcoi123</groupId>
     <artifactId>tenio-core</artifactId>
-    <version>0.6.8</version>
+    <version>0.6.9</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -227,7 +227,6 @@
 
                 <configuration>
                     <configLocation>checkstyle.xml</configLocation>
-                    <encoding>UTF-8</encoding>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <linkXRef>false</linkXRef>
