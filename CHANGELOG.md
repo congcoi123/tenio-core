@@ -111,3 +111,4 @@
 
 ## 0.6.10 2026-XX-XX Bugfix release
 - Supported default embedded configurations
+- Refactored inbound/outbound packages
