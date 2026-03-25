@@ -71,6 +71,12 @@ public final class CoreConstant {
   public static final String DEFAULT_CONFIGURATION_FILE = "configuration.xml";
 
   /**
+   * Default setting file path.
+   * Used when no specific setting file is provided.
+   */
+  public static final String DEFAULT_SETTING_FILE = "setting.json";
+
+  /**
    * Default package path for bootstrap components.
    * Used for component scanning and initialization.
    */

@@ -105,8 +105,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     datagramChannelManager = DatagramChannelManager.newInstance();
     network = NetworkImpl.newInstance(eventManager);
     serverApi = ServerApiImpl.newInstance(this);
-    zeroProcessor =
-        ZeroProcessorImpl.newInstance(eventManager, serverApi, datagramChannelManager);
+    zeroProcessor = ZeroProcessorImpl.newInstance(eventManager, serverApi, datagramChannelManager);
     scheduler = SchedulerImpl.newInstance(eventManager);
   } // prevent creation manually
 
