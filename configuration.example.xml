@@ -98,15 +98,17 @@
     </Configuration>
 
     <!-- Customizable Behaviors -->
-    <!-- Just create your own classes, implement desired interfaces and annotate them with @Component.
-         In case you do not declare any change, their default implementations will be applied
-         (DefaultConnectionFilter, DefaultPacketQueuePolicy).
+    <!--
+        Just create your own classes, implement desired interfaces and annotate them with @Component.
+        In case you do not declare any change, their default implementations will be applied
+        (DefaultConnectionFilter, DefaultOutboundQueuePolicy, DefaultDatagramPacketPolicy).
 
-            packet-encryptor: BinaryPacketEncryptor
-            packet-compressor: BinaryPacketCompressor
-            connection-filter: ConnectionFilter
-            packet-queue-policy: PacketQueuePolicy
-            request-policy: RequestPolicy
+        packet-encryptor: BinaryPacketEncryptor
+        packet-compressor: BinaryPacketCompressor
+        connection-filter: ConnectionFilter
+        outbound-queue-policy: OutboundQueuePolicy
+        request-policy: RequestPolicy
+        datagram-packet-policy: DatagramPacketPolicy
     -->
 
     <!-- Your Customizable Configurations -->

@@ -26,7 +26,7 @@ package com.tenio.core.server.core;
 
 import com.tenio.core.controller.Controller;
 import com.tenio.core.entity.manager.PlayerManager;
-import com.tenio.core.network.entity.protocol.policy.RequestPolicy;
+import com.tenio.core.network.entity.inbound.policy.RequestPolicy;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;

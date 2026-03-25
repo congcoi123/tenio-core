@@ -53,10 +53,10 @@ import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.codec.encoder.BinaryPacketEncoderImpl;
 import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
 import com.tenio.core.network.configuration.SocketConfiguration;
-import com.tenio.core.network.entity.packet.policy.DefaultPacketQueuePolicy;
-import com.tenio.core.network.entity.packet.policy.PacketQueuePolicy;
-import com.tenio.core.network.entity.protocol.Response;
-import com.tenio.core.network.entity.protocol.policy.RequestPolicy;
+import com.tenio.core.network.entity.outbound.packet.policy.DefaultOutboundQueuePolicy;
+import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
+import com.tenio.core.network.entity.outbound.Response;
+import com.tenio.core.network.entity.inbound.policy.RequestPolicy;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.filter.DefaultConnectionFilter;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
@@ -325,12 +325,12 @@ public final class ServerImpl extends SystemLogger implements Server {
         .setWebSocketUsingSsl(
             configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_USING_SSL));
 
-    PacketQueuePolicy packetQueuePolicy = bootstrapHandler.getBeanByClazz(PacketQueuePolicy.class);
-    if (packetQueuePolicy == null) {
-      packetQueuePolicy = new DefaultPacketQueuePolicy();
+    OutboundQueuePolicy outboundQueuePolicy = bootstrapHandler.getBeanByClazz(OutboundQueuePolicy.class);
+    if (outboundQueuePolicy == null) {
+      outboundQueuePolicy = new DefaultOutboundQueuePolicy();
     }
-    network.setPacketQueuePolicy(packetQueuePolicy);
-    network.setPacketQueueSize(
+    network.setOutboundQueuePolicy(outboundQueuePolicy);
+    network.setOutboundQueueSize(
         configuration.getInt(CoreConfigurationType.PROP_MAX_RESPONSE_QUEUE_SIZE_PER_SESSION));
 
     DatagramPacketPolicy datagramPacketPolicy =
