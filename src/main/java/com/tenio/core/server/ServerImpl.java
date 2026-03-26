@@ -127,13 +127,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     // record the started time
     startedTime = TimeUtility.currentTimeMillis();
 
-    // get the file path
-    var file = params.length == 0 ? null : params[0];
-    if (file == null) {
-      file = CoreConstant.DEFAULT_CONFIGURATION_FILE;
-    }
-
-    // load configuration file
+    // create a new configuration instance
     Configuration configuration = bootstrapHandler.getConfigurationHandler().getConfiguration();
     if (configuration == null) {
       if (isInfoEnabled()) {
@@ -142,6 +136,11 @@ public final class ServerImpl extends SystemLogger implements Server {
 
       configuration = new DefaultCoreConfiguration();
     }
+
+    // get the file path
+    var file = params.length == 0 ? null : params[0];
+
+    // load the file
     configuration.load(file);
 
     // Put the current configurations to the logger
@@ -158,7 +157,9 @@ public final class ServerImpl extends SystemLogger implements Server {
     }
 
     // subscribing for processes and handlers
-    zeroProcessor.subscribe();
+    zeroProcessor.subscribe(configuration.get(CoreConfigurationType.NETWORK_TCP) != null ||
+            configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) != null,
+            configuration.get(CoreConfigurationType.NETWORK_UDP) != null);
 
     bootstrapHandler.getEventHandler().initialize(eventManager);
 
@@ -371,9 +372,7 @@ public final class ServerImpl extends SystemLogger implements Server {
         .setMaxNumberPlayers(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS));
     zeroProcessor.setSessionManager(network.getSessionManager());
     zeroProcessor.setPlayerManager(playerManager);
-    zeroProcessor
-        .setMaxRequestQueueSize(
-            configuration.getInt(CoreConfigurationType.PROP_MAX_REQUEST_QUEUE_SIZE));
+    zeroProcessor.setMaxRequestQueueSize(configuration.getInt(CoreConfigurationType.PROP_MAX_REQUEST_QUEUE_SIZE));
     zeroProcessor
         .setThreadPoolSize(configuration.getInt(CoreConfigurationType.WORKER_INTERNAL_PROCESSOR));
     zeroProcessor.setKeepPlayerOnDisconnection(

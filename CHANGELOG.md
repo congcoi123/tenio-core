@@ -109,6 +109,6 @@
 - Renamed all events' main method
 - Updated License
 
-## 0.6.10 2026-XX-XX Bugfix release
+## 0.6.10 2026-03-26 Bugfix release
 - Supported default embedded configurations
 - Refactored inbound/outbound packages

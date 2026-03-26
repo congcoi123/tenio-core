@@ -71,10 +71,10 @@ public abstract class CoreConfiguration extends CommonConfiguration {
   public void load(String file) throws Exception {
 
     // 1. Check external file (user-provided)
-    File externalFile = new File(file);
+    File externalFile = file == null ? null : new File(file);
     Document document;
 
-    if (externalFile.exists()) {
+    if (file != null && externalFile.exists()) {
       if (isInfoEnabled()) {
         info("CONFIGURATION", buildgen("The external configuration file: ", file));
       }
@@ -82,9 +82,9 @@ public abstract class CoreConfiguration extends CommonConfiguration {
     } else {
       // 2. Fallback to embedded default
       if (isInfoEnabled()) {
-        info("CONFIGURATION", "The external configuration file is not found, use the default: configuration.xml");
+        info("CONFIGURATION", buildgen("The external configuration file is not found, use the default: ", CoreConstant.DEFAULT_CONFIGURATION_FILE));
       }
-      try (InputStream configStream = getClass().getClassLoader().getResourceAsStream(file)) {
+      try (InputStream configStream = getClass().getClassLoader().getResourceAsStream(CoreConstant.DEFAULT_CONFIGURATION_FILE)) {
         document = XmlUtility.parseStream(configStream);
       } catch (Exception exception) {
         throw new Exception(exception);
@@ -112,7 +112,7 @@ public abstract class CoreConfiguration extends CommonConfiguration {
         } else {
           // 2. Fallback to embedded default
           if (isInfoEnabled()) {
-            info("CONFIGURATION", "The external setting file is not found, use the default: setting.json");
+            info("CONFIGURATION", buildgen("The external setting file is not found, use the default: ", CoreConstant.DEFAULT_SETTING_FILE));
           }
           try (InputStream configStream = getClass().getClassLoader().getResourceAsStream(CoreConstant.DEFAULT_SETTING_FILE)) {
             setting = objectMapper.readValue(configStream, Setting.class);

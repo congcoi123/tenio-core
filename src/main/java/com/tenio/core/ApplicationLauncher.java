@@ -82,7 +82,7 @@ public final class ApplicationLauncher extends SystemLogger {
    */
   public static void run(Class<?> entryClass, String[] params) {
     // Logger Configuration
-    LoggerBootstrap.initialize();
+    LoggerBootstrap.initialize(CoreConstant.DEFAULT_FW_LOG4J2_FILE, CoreConstant.EXPECTED_USER_LOG4J2_FILE);
 
     // Start the application
     var application = ApplicationLauncher.newInstance();
@@ -122,8 +122,7 @@ public final class ApplicationLauncher extends SystemLogger {
             CoreConstant.DEFAULT_REST_CONTROLLER_PACKAGE);
       } catch (Exception exception) {
         if (isErrorEnabled()) {
-          error(exception, "The application started with exceptions occurred: ",
-              exception.getMessage());
+          error(exception, "The application started with exceptions occurred: ", exception.getMessage());
         }
         // exit with errors
         System.exit(1);

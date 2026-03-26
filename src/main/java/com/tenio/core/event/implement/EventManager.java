@@ -133,8 +133,12 @@ public final class EventManager extends SystemLogger {
     });
     if (isInfoEnabled()) {
       StringBuilder sb = new StringBuilder("[\n");
-      for (Object item : events) {
-        sb.append("  - ").append(item).append("\n");
+      if (events.isEmpty()) {
+        sb.append("<empty>\n");
+      } else {
+        for (Object item : events) {
+          sb.append("  - ").append(item).append("\n");
+        }
       }
       sb.append("]");
       info("SERVER EVENT SUBSCRIBERS", sb.toString());
