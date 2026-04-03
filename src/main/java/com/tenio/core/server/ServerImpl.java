@@ -283,22 +283,17 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     var udpChannelConfiguration = configuration.get(CoreConfigurationType.NETWORK_UDP) != null ?
         (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_UDP) : null;
-    var kcpSocketConfiguration = configuration.get(CoreConfigurationType.NETWORK_KCP) != null ?
-        (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_KCP) : null;
     network.setSocketConfigurations(
         (configuration.get(CoreConfigurationType.NETWORK_TCP) != null ?
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_TCP) : null),
         udpChannelConfiguration,
         (configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) != null ?
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) :
-            null),
-        kcpSocketConfiguration);
+            null)
+    );
 
     if (udpChannelConfiguration != null) {
       datagramChannelManager.configureUdpPort(udpChannelConfiguration.port());
-    }
-    if (kcpSocketConfiguration != null) {
-      datagramChannelManager.configureKcpPort(kcpSocketConfiguration.port());
     }
 
     network.setSocketReaderBufferSize(
