@@ -150,12 +150,12 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       networkReaderStatistic.updateReadBytes(binaries.length);
       networkReaderStatistic.updateReadPackets(1);
 
-      var dataCollection = binaryPacketDecoder.decode(binaries);
+      var message = binaryPacketDecoder.decode(binaries);
 
       if (session.isAssociatedToPlayer(Session.AssociatedState.NONE)) {
-        eventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, dataCollection);
+        eventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, message);
       } else if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
-        eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, dataCollection);
+        eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
       }
     }
   }
