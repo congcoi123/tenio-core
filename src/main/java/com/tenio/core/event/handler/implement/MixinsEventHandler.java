@@ -139,9 +139,9 @@ public final class MixinsEventHandler {
           long totalMemory = (long) params[1];
           long usedMemory = (long) params[2];
           long freeMemory = (long) params[3];
-          int countRunningThreads = (int) params[4];
+          long platformThreads = (long) params[4];
 
-          event.onSystemMonitoring(cpuUsage, totalMemory, usedMemory, freeMemory, countRunningThreads);
+          event.onSystemMonitoring(cpuUsage, totalMemory, usedMemory, freeMemory, platformThreads);
 
           return null;
         }));

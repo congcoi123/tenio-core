@@ -86,7 +86,7 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
     if (session.isAssociatedToPlayer(Session.AssociatedState.NONE)) {
       eventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, message);
     } else if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
-      eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
+      session.enqueueInboundMessage(message);
     }
   }
 

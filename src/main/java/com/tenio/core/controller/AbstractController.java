@@ -101,8 +101,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
   private void initializeWorkers() {
     if (isEnabledPriority()) {
       requestManager = new BlockingQueueManager<>(getThreadPoolSize(),
-          () -> new PriorityBlockingQueue<>(DEFAULT_INITIAL_QUEUE_SIZE,
-              RequestComparator.newInstance()));
+          () -> new PriorityBlockingQueue<>(DEFAULT_INITIAL_QUEUE_SIZE, RequestComparator.newInstance()));
     } else {
       requestManager = new BlockingQueueManager<>(getThreadPoolSize(), LinkedBlockingQueue::new);
     }

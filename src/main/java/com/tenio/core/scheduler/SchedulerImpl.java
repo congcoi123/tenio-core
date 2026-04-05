@@ -104,20 +104,20 @@ public final class SchedulerImpl extends AbstractManager implements Scheduler {
       info("START SERVICE", buildgen(getName(), " (", 1, ")"));
     }
 
-    taskManager.create("auto-disconnect-player", autoDisconnectPlayerTask.run());
-    taskManager.create("auto-clean-orphan-session", autoCleanOrphanSessionTask.run());
-    taskManager.create("auto-remove-room", autoRemoveRoomTask.run());
+    taskManager.create("auto-disconnect-player", autoDisconnectPlayerTask);
+    taskManager.create("auto-clean-orphan-session", autoCleanOrphanSessionTask);
+    taskManager.create("auto-remove-room", autoRemoveRoomTask);
     if (enableCcuReportTask) {
-      taskManager.create("ccu-report", ccuReportTask.run());
+      taskManager.create("ccu-report", ccuReportTask);
     }
     if (enableDeadLockScanTask) {
-      taskManager.create("dead-lock", deadlockScanTask.run());
+      taskManager.create("dead-lock", deadlockScanTask);
     }
     if (enableSystemMonitoringTask) {
-      taskManager.create("system-monitoring", systemMonitoringTask.run());
+      taskManager.create("system-monitoring", systemMonitoringTask);
     }
     if (enableTrafficCounterTask) {
-      taskManager.create("traffic-counter", trafficCounterTask.run());
+      taskManager.create("traffic-counter", trafficCounterTask);
     }
   }
 

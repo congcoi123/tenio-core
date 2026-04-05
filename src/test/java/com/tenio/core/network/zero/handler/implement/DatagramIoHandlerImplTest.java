@@ -83,7 +83,7 @@ class DatagramIoHandlerImplTest {
 
     handler.sessionRead(session, message);
 
-    verify(eventManager).emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
+    verify(session).enqueueInboundMessage(message);
   }
 
   @Test

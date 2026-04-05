@@ -151,7 +151,7 @@ class SocketIoHandlerImplTest {
     handler.onFramedResult(session, message);
 
     verify(readerStatistic).updateReadPackets(1);
-    verify(eventManager).emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
+    verify(session).enqueueInboundMessage(message);
   }
 
   @Test

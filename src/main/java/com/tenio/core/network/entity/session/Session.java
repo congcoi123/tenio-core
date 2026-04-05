@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.session;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
@@ -142,6 +143,15 @@ public interface Session {
    * @since 0.5.0
    */
   boolean isOrphan();
+
+  /**
+   * Enqueue message into the internal inbound queue.
+   *
+   * @param message an instance of {@link DataCollection}
+   * @since 0.7.0
+   */
+  void enqueueInboundMessage(DataCollection message);
+
 
   /**
    * Retrieves an outbound queue of session which is using to send messages to clients side.

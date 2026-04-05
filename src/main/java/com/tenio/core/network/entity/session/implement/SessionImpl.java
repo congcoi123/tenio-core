@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.session.implement;
 
+import com.tenio.common.data.DataCollection;
+import com.tenio.common.logger.AbstractLogger;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
@@ -44,6 +46,8 @@ import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -51,7 +55,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @see Session
  */
-public class SessionImpl implements Session {
+public class SessionImpl extends AbstractLogger implements Session {
 
   private final long id;
   private final long createdTime;
@@ -66,6 +70,9 @@ public class SessionImpl implements Session {
   private DatagramChannel datagramChannel;
   private Channel webSocketChannel;
   private ConnectionFilter connectionFilter;
+
+  private final Thread inboundProcess;
+  private final BlockingQueue<DataCollection> inboundQueue;
 
   private OutboundQueue outboundQueue;
   private ProcessedPacket processedPacket;
@@ -98,6 +105,9 @@ public class SessionImpl implements Session {
     createdTime = currentTime;
     setLastReadTime(currentTime);
     setLastWriteTime(currentTime);
+
+    inboundQueue = new LinkedBlockingQueue<>();
+    inboundProcess = Thread.ofVirtual().unstarted(this::processInboundQueue);
   }
 
   /**
@@ -154,6 +164,11 @@ public class SessionImpl implements Session {
   public boolean isOrphan() {
     return (!isAssociatedToPlayer(AssociatedState.DONE) &&
         (now() - createdTime) >= ORPHAN_ALLOWANCE_TIME_IN_MILLISECONDS);
+  }
+
+  @Override
+  public void enqueueInboundMessage(DataCollection message) {
+    inboundQueue.add(message);
   }
 
   @Override
@@ -402,6 +417,7 @@ public class SessionImpl implements Session {
   @Override
   public synchronized void activate() {
     activated = true;
+    inboundProcess.start();
   }
 
   @Override
@@ -433,6 +449,11 @@ public class SessionImpl implements Session {
 
     connectionFilter.removeAddress(socketRemoteAddress.getAddress().getHostAddress());
 
+    // clear inbound queue
+    inboundProcess.interrupt();
+    inboundQueue.clear();
+
+    // clear outbound queue
     if (outboundQueue != null) {
       outboundQueue.clear();
     }
@@ -468,6 +489,21 @@ public class SessionImpl implements Session {
     packetReadState = PacketReadState.WAIT_NEW_PACKET;
     processedPacket = ProcessedPacket.newInstance();
     pendingPacket = PendingPacket.newInstance();
+  }
+
+  private void processInboundQueue() {
+    while (!Thread.currentThread().isInterrupted()) {
+      if (activated) {
+        try {
+          DataCollection message = inboundQueue.take();
+          sessionManager.emitEvent(ServerEvent.SESSION_READ_MESSAGE, this, message);
+        } catch (Throwable cause) {
+          if (isErrorEnabled()) {
+            error(cause);
+          }
+        }
+      }
+    }
   }
 
   private long now() {
