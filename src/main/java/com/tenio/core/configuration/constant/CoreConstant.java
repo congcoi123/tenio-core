@@ -139,18 +139,12 @@ public final class CoreConstant {
   public static final int DELAY_BEFORE_SERVER_IS_READY_IN_MILLISECONDS = 1000;
   /**
    * The temporary flag to turn on preview performance of session process (virtual thread).
+   * Ideally, there should be any packet left in session inbound or outbound queues.
    * This should be removed in the next releases.
    *
    * @since 0.7.0
    */
   public static final boolean PREVIEW_SESSION_PROCESS = true;
-  /**
-   * The temporary variable to value the performance of session process (virtual thread).
-   * This should be removed in the next releases.
-   *
-   * @since 0.7.0
-   */
-  public static final int PREVIEW_SESSION_ACCEPTABLE_REMAINING_QUEUE_SIZE = 2;
 
   /**
    * Private constructor to prevent instantiation.

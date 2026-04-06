@@ -108,7 +108,7 @@ public class SessionImpl extends AbstractLogger implements Session {
     setLastWriteTime(currentTime);
 
     inboundQueue = new LinkedBlockingQueue<>();
-    inboundProcess = Thread.ofVirtual().unstarted(this::processInboundQueue);
+    inboundProcess = Thread.ofVirtual().name("session-" + id).unstarted(this::processInboundQueue);
   }
 
   /**
@@ -171,8 +171,8 @@ public class SessionImpl extends AbstractLogger implements Session {
   public void enqueueInboundMessage(DataCollection message) {
     if (CoreConstant.PREVIEW_SESSION_PROCESS && isWarnEnabled()) {
       int inboundQueueSize = inboundQueue.size();
-      if (inboundQueueSize >= CoreConstant.PREVIEW_SESSION_ACCEPTABLE_REMAINING_QUEUE_SIZE) {
-        warn("Slow Consuming Inbound Queue: ", inboundQueueSize, " > ", this);
+      if (inboundQueueSize > 0) {
+        warn("[Slow Consuming Inbound Queue] Remaining: ", inboundQueueSize, " > ", this);
       }
     }
     inboundQueue.add(message);

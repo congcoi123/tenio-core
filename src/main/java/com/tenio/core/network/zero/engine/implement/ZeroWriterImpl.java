@@ -173,8 +173,8 @@ public final class ZeroWriterImpl extends AbstractZeroEngine implements ZeroWrit
       try {
         if (CoreConstant.PREVIEW_SESSION_PROCESS && isWarnEnabled()) {
           int outboundQueueSize = outboundQueue.getSize();
-          if (outboundQueueSize >= CoreConstant.PREVIEW_SESSION_ACCEPTABLE_REMAINING_QUEUE_SIZE) {
-            warn("Slow Consuming Outbound Queue: ", outboundQueueSize, " > ", session);
+          if (outboundQueueSize > 0) {
+            warn("[Slow Consuming Outbound Queue] Remaining: ", outboundQueueSize, " > ", session);
           }
         }
 
