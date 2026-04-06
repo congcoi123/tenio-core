@@ -71,7 +71,7 @@ class DatagramIoHandlerImplTest {
 
     handler.channelRead(datagramChannel, remoteAddress, message);
 
-    verify(eventManager).emit(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME,
+    verify(eventManager).emit(ServerEvent.DATAGRAM_CHANNEL_REQUEST_CONNECTION,
         datagramChannel, remoteAddress, message);
   }
 

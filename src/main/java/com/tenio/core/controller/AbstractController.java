@@ -247,8 +247,9 @@ public abstract class AbstractController extends AbstractManager implements Cont
   @Override
   public void enqueueRequest(Request request) {
     var requestQueue = requestManager.getQueueByElementId(request.getId());
-    if (maxQueueSize > 0 && requestQueue.size() >= maxQueueSize) {
-      var exception = new RequestQueueFullException(requestQueue.size());
+    int requestSize = requestQueue.size();
+    if (maxQueueSize > 0 && requestSize >= maxQueueSize) {
+      var exception = new RequestQueueFullException(requestSize);
       if (isErrorEnabled()) {
         error(exception, exception.getMessage());
       }

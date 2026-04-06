@@ -550,6 +550,8 @@ public class SessionImpl extends AbstractLogger implements Session {
         ", activated=" + activated +
         ", hasUdp=" + hasUdp +
         ", associatedState=" + associatedState +
+        ", inboundQueueSize=" + inboundQueue.size() +
+        ", outboundQueueSize=" + outboundQueue.getSize() +
         '}';
   }
 }

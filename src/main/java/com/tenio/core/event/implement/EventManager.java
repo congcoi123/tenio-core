@@ -170,7 +170,7 @@ public final class EventManager extends SystemLogger {
 
   private boolean isEventForTracing(ServerEvent event) {
     return switch (event) {
-      case DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME, RECEIVED_MESSAGE_FROM_PLAYER, SESSION_READ_MESSAGE,
+      case DATAGRAM_CHANNEL_REQUEST_CONNECTION, RECEIVED_MESSAGE_FROM_PLAYER, SESSION_READ_MESSAGE,
           SEND_MESSAGE_TO_PLAYER, SESSION_WRITE_MESSAGE -> true;
       default -> false;
     };

@@ -114,30 +114,27 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
       });
 
       eventManager.on(ServerEvent.SESSION_WILL_BE_CLOSED, params -> {
-        processSessionWillBeClosed((Session) params[0], (PlayerDisconnectMode) params[2]);
+        var session = (Session) params[0];
+        var playerDisconnectMode = (PlayerDisconnectMode) params[2];
+        processSessionWillBeClosed(session, playerDisconnectMode);
 
         return null;
       });
 
       eventManager.on(ServerEvent.SESSION_READ_MESSAGE, params -> {
         var session = (Session) params[0];
-        var request = SessionRequest.newInstance().setEvent(ServerEvent.SESSION_READ_MESSAGE);
-        request.setSender(session);
-        request.setMessage((DataCollection) params[1]);
+        var message = (DataCollection) params[1];
         session.setLastReadTime(TimeUtility.currentTimeMillis());
         session.increaseReadMessages();
-        if (requestPolicy != null) {
-          requestPolicy.applyPolicy(request);
-        }
-        enqueueRequest(request);
+        processSessionReadMessage(session, message);
 
         return null;
       });
     }
 
     if (supportDatagramChannel) {
-      eventManager.on(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME, params -> {
-        var request = DatagramRequest.newInstance().setEvent(ServerEvent.DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME);
+      eventManager.on(ServerEvent.DATAGRAM_CHANNEL_REQUEST_CONNECTION, params -> {
+        var request = DatagramRequest.newInstance().setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_CONNECTION);
         request.setSender(params[0]);
         request.setRemoteAddress((SocketAddress) params[1]);
         request.setMessage((DataCollection) params[2]);
@@ -165,8 +162,7 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
   public void processRequest(Request request) {
     switch (request.getEvent()) {
       case SESSION_REQUEST_CONNECTION -> processSessionRequestsConnection(request);
-      case SESSION_READ_MESSAGE -> processSessionReadMessage(request);
-      case DATAGRAM_CHANNEL_READ_MESSAGE_FIRST_TIME -> processDatagramChannelReadMessageForTheFirstTime(request);
+      case DATAGRAM_CHANNEL_REQUEST_CONNECTION -> processDatagramChannelRequestsConnection(request);
       default -> {
         // do nothing
       }
@@ -278,7 +274,7 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
         }
         eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
         player.setSession(null);
-        // When it gets disconnected from client side, the server may not recognise it. In this
+        // When it gets disconnected from client side, the server may not recognize it. In this
         // case, the player is remained on the server side
         if (!keepPlayerOnDisconnection) {
           playerManager.removePlayerByIdentity(player.getIdentity());
@@ -298,9 +294,9 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
 
   // In this phase, the session must be bound with a player, a free session can only be accepted
   // when it is being handled in the connection established phase
-  private void processSessionReadMessage(Request request) {
-    var session = (Session) request.getSender();
-
+  // NOTE: Since version 0.7.0, this kind of request doesn't need to get in the processor queue as it's using
+  // its independent session queue (thanks to virtual thread)
+  private void processSessionReadMessage(Session session, DataCollection message) {
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByIdentity(session.getName());
       if (player == null) {
@@ -312,12 +308,11 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
         eventManager.emit(ServerEvent.SERVER_EXCEPTION, illegalValueException);
         return;
       }
-      var message = request.getMessage();
       eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
     }
   }
 
-  private void processDatagramChannelReadMessageForTheFirstTime(Request request) {
+  private void processDatagramChannelRequestsConnection(Request request) {
     var message = request.getMessage();
 
     // verify the datagram channel accessing request
@@ -336,23 +331,17 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
 
     if (optionalPlayer.isEmpty()) {
       eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-          null,
-          Session.EMPTY_DATAGRAM_CONVEY_ID,
-          AccessDatagramChannelResult.PLAYER_NOT_FOUND);
+          null, Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.PLAYER_NOT_FOUND);
     } else {
       Player player = (Player) optionalPlayer.get();
       if (!player.containsSession() || player.getSession().isEmpty()) {
         eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-            player,
-            Session.EMPTY_DATAGRAM_CONVEY_ID,
-            AccessDatagramChannelResult.SESSION_NOT_FOUND);
+            player, Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.SESSION_NOT_FOUND);
       } else {
         Session session = player.getSession().get();
         if (!session.isTcp()) {
           eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-              player,
-              Session.EMPTY_DATAGRAM_CONVEY_ID,
-              AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
+              player, Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
         } else {
           var udpConvey = datagramChannelManager.getCurrentUdpConveyId();
           var datagramChannel = (DatagramChannel) request.getSender();
@@ -361,9 +350,7 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
           sessionManager.addDatagramForSession(datagramChannel, udpConvey, session);
 
           eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-              player,
-              udpConvey,
-              AccessDatagramChannelResult.SUCCESS);
+              player, udpConvey, AccessDatagramChannelResult.SUCCESS);
         }
       }
     }
