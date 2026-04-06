@@ -56,7 +56,8 @@
             <Worker name="websocket-consumer">2</Worker>
             <!-- The minimum number of threads to keep alive in the thread pool is 8 -->
             <Worker name="http-worker">8</Worker>
-            <Worker name="internal-processor">2</Worker>
+            <!-- This is recommended to set to 1 since from v0.7.0, no much workload is handled in this processor -->
+            <Worker name="internal-processor">1</Worker>
         </Workers>
         <Schedules>
             <!-- Get the period checking in seconds which server can keep the empty
