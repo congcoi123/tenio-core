@@ -62,7 +62,7 @@ public final class Trademark {
       "**                       TenIO                        **",
       "**            Copyright (c) 2016-2026, Kong           **",
       "**                 All rights reserved                **",
-      "**                       (v" + VERSION + ")                   **",
+      "**                       (v" + VERSION + ")                     **",
       "**                                                    **",
       "********************************************************"
   };
