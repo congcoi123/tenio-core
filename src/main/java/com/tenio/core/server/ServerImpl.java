@@ -178,15 +178,16 @@ public final class ServerImpl extends SystemLogger implements Server {
     startServices();
 
     // it should wait for a while to let everything settles down
-    int servicesTakeTime = Math.max(Math.max(network.getMaximumStartingTimeInMilliseconds(),
-        zeroProcessor.getMaximumStartingTimeInMilliseconds()),
-        scheduler.getMaximumStartingTimeInMilliseconds());
-    int totalWaitingTime =
-        servicesTakeTime + CoreConstant.DELAY_BEFORE_SERVER_IS_READY_IN_MILLISECONDS;
-    Thread.sleep(totalWaitingTime);
+    if (!CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
+      int servicesTakeTime = Math.max(Math.max(network.getMaximumStartingTimeInMilliseconds(),
+                      zeroProcessor.getMaximumStartingTimeInMilliseconds()),
+              scheduler.getMaximumStartingTimeInMilliseconds());
+      int totalWaitingTime = servicesTakeTime + CoreConstant.DELAY_BEFORE_SERVER_IS_READY_IN_MILLISECONDS;
+      Thread.sleep(totalWaitingTime);
 
-    if (isInfoEnabled()) {
-      info("SERVER", serverName, buildgen("Started after ", totalWaitingTime, " milliseconds"));
+      if (isInfoEnabled()) {
+        info("SERVER", serverName, buildgen("Started after ", totalWaitingTime, " milliseconds"));
+      }
     }
 
     // emit "server initialization" event

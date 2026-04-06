@@ -32,6 +32,7 @@ import com.tenio.core.exception.RequestQueueFullException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.manager.BlockingQueueManager;
 import com.tenio.core.network.entity.inbound.Request;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -106,8 +107,12 @@ public abstract class AbstractController extends AbstractManager implements Cont
       requestManager = new BlockingQueueManager<>(getThreadPoolSize(), LinkedBlockingQueue::new);
     }
 
-    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
-    executorService = Executors.newFixedThreadPool(executorSize, threadFactory);
+    if (CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
+      executorService = Executors.newVirtualThreadPerTaskExecutor();
+    } else {
+      var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+      executorService = Executors.newFixedThreadPool(executorSize, threadFactory);
+    }
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       if (executorService != null && !executorService.isShutdown()) {
@@ -174,6 +179,10 @@ public abstract class AbstractController extends AbstractManager implements Cont
   }
 
   private void setThreadName(int currentId) {
+    if (CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
+      return;
+    }
+
     Thread currentThread = Thread.currentThread();
     currentThread.setName(StringUtility.strgen(getName(), "-", (currentId + 1)));
     currentThread.setUncaughtExceptionHandler((thread, cause) -> {
@@ -201,14 +210,16 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   @Override
   public void start() {
-    for (int i = 0; i < executorSize; i++) {
+    for (int count = 0; count < executorSize; count++) {
       executorService.execute(this);
-      try {
-        // noinspection BusyWait
-        Thread.sleep(CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS); // wait between each submission
-      } catch (InterruptedException exception) {
-        Thread.currentThread().interrupt(); // restore interrupt flag
-        error(exception);
+      if (!CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
+        try {
+          // noinspection BusyWait
+          Thread.sleep(CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS); // wait between each submission
+        } catch (InterruptedException exception) {
+          Thread.currentThread().interrupt(); // restore interrupt flag
+          error(exception);
+        }
       }
     }
     if (isInfoEnabled()) {

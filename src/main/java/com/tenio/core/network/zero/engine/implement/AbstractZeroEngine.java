@@ -34,6 +34,7 @@ import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.zero.engine.ZeroEngine;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -75,8 +76,12 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   }
 
   private void initializeWorkers() {
-    var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
-    executorService = Executors.newFixedThreadPool(executorSize, threadFactory);
+    if (CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
+      executorService = Executors.newVirtualThreadPerTaskExecutor();
+    } else {
+      var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
+      executorService = Executors.newFixedThreadPool(executorSize, threadFactory);
+    }
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       if (executorService != null && !executorService.isShutdown()) {
@@ -192,14 +197,16 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
       throw new IllegalArgumentException("The number of extra workers must be less than the " +
           "executor size");
     }
-    for (int i = 0; i < executorSize - getNumberOfExtraWorkers(); i++) {
+    for (int count = 0; count < executorSize - getNumberOfExtraWorkers(); count++) {
       executorService.execute(this);
-      try {
-        // noinspection BusyWait
-        Thread.sleep(CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS); // wait between each submission
-      } catch (InterruptedException exception) {
-        Thread.currentThread().interrupt(); // restore interrupt flag
-        error(exception);
+      if (!CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
+        try {
+          // noinspection BusyWait
+          Thread.sleep(CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS); // wait between each submission
+        } catch (InterruptedException exception) {
+          Thread.currentThread().interrupt(); // restore interrupt flag
+          error(exception);
+        }
       }
     }
     onStarted();
@@ -267,6 +274,10 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   }
 
   private void setThreadName(int id, String extra) {
+    if (CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
+      return;
+    }
+
     Thread currentThread = Thread.currentThread();
     currentThread.setName(extra == null ? StringUtility.strgen("zero-", getName(), "-", id) :
         StringUtility.strgen("zero-", getName(), "-", extra, "-", id));
