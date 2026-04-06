@@ -27,6 +27,7 @@ package com.tenio.core.network.entity.session.implement;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.logger.AbstractLogger;
 import com.tenio.common.utility.TimeUtility;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
@@ -168,6 +169,12 @@ public class SessionImpl extends AbstractLogger implements Session {
 
   @Override
   public void enqueueInboundMessage(DataCollection message) {
+    if (CoreConstant.PREVIEW_SESSION_PROCESS && isWarnEnabled()) {
+      int inboundQueueSize = inboundQueue.size();
+      if (inboundQueueSize >= CoreConstant.PREVIEW_SESSION_ACCEPTABLE_REMAINING_QUEUE_SIZE) {
+        warn("Slow Consuming Inbound Queue: ", inboundQueueSize, " > ", this);
+      }
+    }
     inboundQueue.add(message);
   }
 

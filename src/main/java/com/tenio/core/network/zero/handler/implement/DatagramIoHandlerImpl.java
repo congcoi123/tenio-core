@@ -54,7 +54,7 @@ public final class DatagramIoHandlerImpl extends AbstractIoHandler implements Da
   @Override
   public void channelRead(DatagramChannel datagramChannel, SocketAddress remoteAddress,
                           DataCollection message) {
-    eventManager.emit(ServerEvent.DATAGRAM_CHANNEL_REQUEST_CONNECTION, datagramChannel,
+    eventManager.emit(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS, datagramChannel,
         remoteAddress, message);
   }
 

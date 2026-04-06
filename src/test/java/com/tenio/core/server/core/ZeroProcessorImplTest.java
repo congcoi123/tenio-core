@@ -237,7 +237,7 @@ public class ZeroProcessorImplTest {
     when(datagramChannelManager.getCurrentUdpConveyId()).thenReturn(1);
 
     Request request = DatagramRequest.newInstance()
-        .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_CONNECTION)
+        .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS)
         .setSender(datagramChannel)
         .setRemoteAddress(REMOTE_ADDRESS)
         .setMessage(message);
@@ -256,7 +256,7 @@ public class ZeroProcessorImplTest {
         .thenReturn(Optional.empty());
 
     Request request = DatagramRequest.newInstance()
-        .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_CONNECTION)
+        .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS)
         .setSender(datagramChannel)
         .setRemoteAddress(REMOTE_ADDRESS)
         .setMessage(message);

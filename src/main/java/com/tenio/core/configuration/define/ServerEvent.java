@@ -111,7 +111,7 @@ public enum ServerEvent {
    * @see ZeroReaderImpl
    */
   @Asynchronous
-  DATAGRAM_CHANNEL_REQUEST_CONNECTION,
+  DATAGRAM_CHANNEL_REQUEST_ACCESS,
   /**
    * When the server finished initialization and is ready.
    *

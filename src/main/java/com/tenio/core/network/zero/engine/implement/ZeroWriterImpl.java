@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.implement;
 
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.OutboundQueueFullException;
 import com.tenio.core.exception.OutboundQueuePolicyViolationException;
@@ -170,6 +171,13 @@ public final class ZeroWriterImpl extends AbstractZeroEngine implements ZeroWrit
     var outboundQueue = session.fetchOutboundQueue();
     if (outboundQueue != null) {
       try {
+        if (CoreConstant.PREVIEW_SESSION_PROCESS && isWarnEnabled()) {
+          int outboundQueueSize = outboundQueue.getSize();
+          if (outboundQueueSize >= CoreConstant.PREVIEW_SESSION_ACCEPTABLE_REMAINING_QUEUE_SIZE) {
+            warn("Slow Consuming Outbound Queue: ", outboundQueueSize, " > ", session);
+          }
+        }
+
         // put new item into the queue
         outboundQueue.put(packet);
 

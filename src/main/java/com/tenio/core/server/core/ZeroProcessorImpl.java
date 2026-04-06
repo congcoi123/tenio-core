@@ -133,8 +133,8 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
     }
 
     if (supportDatagramChannel) {
-      eventManager.on(ServerEvent.DATAGRAM_CHANNEL_REQUEST_CONNECTION, params -> {
-        var request = DatagramRequest.newInstance().setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_CONNECTION);
+      eventManager.on(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS, params -> {
+        var request = DatagramRequest.newInstance().setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS);
         request.setSender(params[0]);
         request.setRemoteAddress((SocketAddress) params[1]);
         request.setMessage((DataCollection) params[2]);
@@ -162,7 +162,7 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
   public void processRequest(Request request) {
     switch (request.getEvent()) {
       case SESSION_REQUEST_CONNECTION -> processSessionRequestsConnection(request);
-      case DATAGRAM_CHANNEL_REQUEST_CONNECTION -> processDatagramChannelRequestsConnection(request);
+      case DATAGRAM_CHANNEL_REQUEST_ACCESS -> processDatagramChannelRequestsAccess(request);
       default -> {
         // do nothing
       }
@@ -312,7 +312,7 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
     }
   }
 
-  private void processDatagramChannelRequestsConnection(Request request) {
+  private void processDatagramChannelRequestsAccess(Request request) {
     var message = request.getMessage();
 
     // verify the datagram channel accessing request
