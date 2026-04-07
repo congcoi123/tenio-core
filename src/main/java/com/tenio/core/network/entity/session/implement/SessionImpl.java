@@ -171,7 +171,7 @@ public class SessionImpl extends AbstractLogger implements Session {
   }
 
   @Override
-  public void enqueueInboundMessage(DataCollection message) {
+  public void enqueueInbound(DataCollection message) {
     int remaining = inboundQueue.size();
     if (isWarnEnabled()) {
       if (slowConsumingInboundQueueWarningThreshold > 0

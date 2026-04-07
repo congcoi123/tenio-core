@@ -60,7 +60,7 @@ public final class DatagramIoHandlerImpl extends AbstractIoHandler implements Da
 
   @Override
   public void sessionRead(Session session, DataCollection message) {
-    session.enqueueInboundMessage(message);
+    session.enqueueInbound(message);
   }
 
   @Override

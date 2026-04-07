@@ -146,12 +146,12 @@ public interface Session {
   boolean isOrphan();
 
   /**
-   * Enqueue message into the internal inbound queue.
+   * Enqueue a new message into the internal inbound queue.
    *
    * @param message an instance of {@link DataCollection}
    * @since 0.7.0
    */
-  void enqueueInboundMessage(DataCollection message);
+  void enqueueInbound(DataCollection message);
 
   /**
    * Sets the inbound queue size.

@@ -155,7 +155,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       if (session.isAssociatedToPlayer(Session.AssociatedState.NONE)) {
         eventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, message);
       } else if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
-        session.enqueueInboundMessage(message);
+        session.enqueueInbound(message);
       }
     }
   }
