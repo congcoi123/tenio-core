@@ -62,7 +62,6 @@ EventReceivedMessageFromPlayer
 EventRoomCreatedResult
 EventRoomWillBeRemoved
 EventSendMessageToPlayer
-EventServerException
 EventServerInitialization
 EventServerTeardown
 EventSocketConnectionRefused

@@ -30,6 +30,7 @@ import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.zero.engine.acceptor.AcceptorHandler;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
+import com.tenio.core.utility.ExceptionUtility;
 import com.tenio.core.utility.entity.Triple;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -223,7 +224,8 @@ public final class SocketReaderHandler extends SystemLogger {
           return;
         }
       } catch (IOException exception) {
-        if (isErrorEnabled()) {
+        if (isErrorEnabled() && !ExceptionUtility.messageContains(exception,
+                ExceptionUtility.IGNORE_LOGGING_EXCEPTIONS)) {
           error(exception, "An exception was occurred on channel: ", socketChannel.toString());
         }
         socketIoHandler.sessionException(session, exception);

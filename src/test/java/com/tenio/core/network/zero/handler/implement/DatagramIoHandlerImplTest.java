@@ -36,6 +36,8 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
+
+import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,13 +98,13 @@ class DatagramIoHandlerImplTest {
   }
 
   @Test
-  @DisplayName("sessionException emits SESSION_OCCURRED_EXCEPTION")
-  void testSessionExceptionEmitsSessionOccurredException() {
+  @DisplayName("sessionException closes session")
+  void testSessionExceptionEmitsSessionOccurredException() throws IOException {
     Session session = mock(Session.class);
     Exception exception = new RuntimeException("session error");
 
     handler.sessionException(session, exception);
 
-    verify(eventManager).emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
+    verify(session).close();
   }
 }

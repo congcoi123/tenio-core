@@ -95,7 +95,6 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
         if (logger.isErrorEnabled()) {
           logger.error(exception, "Session: ", session.toString());
         }
-        eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
       }
     } else {
       // let the socket be closed
@@ -167,7 +166,13 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       if (logger.isErrorEnabled()) {
         logger.error(cause, "Session: ", session.toString());
       }
-      eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, cause);
+        try {
+            session.close();
+        } catch (IOException exception) {
+          if (logger.isErrorEnabled()) {
+            logger.error(exception, "Session closed with error: ", session.toString());
+          }
+        }
     } else {
       if (logger.isErrorEnabled()) {
         logger.error(cause, "Exception was occurred on channel: ", ctx.channel().toString());

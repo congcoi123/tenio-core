@@ -29,6 +29,8 @@ import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
+
+import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 
@@ -70,6 +72,12 @@ public final class DatagramIoHandlerImpl extends AbstractIoHandler implements Da
 
   @Override
   public void sessionException(Session session, Exception exception) {
-    eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
+      try {
+          session.close();
+      } catch (IOException exception1) {
+        if (isErrorEnabled()) {
+          error(exception1, "Session closed with error: ", session.toString());
+        }
+      }
   }
 }

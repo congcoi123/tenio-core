@@ -175,8 +175,7 @@ public final class AcceptorHandler extends SystemLogger {
               error(exception2, logger);
             }
             socketIoHandler.channelException(socketChannel, exception2);
-            socketIoHandler.channelInactive(socketChannel, acceptorSelectionKey,
-                ConnectionDisconnectMode.UNKNOWN);
+            socketIoHandler.channelInactive(socketChannel, acceptorSelectionKey, ConnectionDisconnectMode.EXCEPTION);
           }
         }
       }

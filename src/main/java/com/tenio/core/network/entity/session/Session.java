@@ -544,11 +544,11 @@ public interface Session {
    * default modes.
    *
    * @throws IOException when the closing process went through any issue
-   * @see ConnectionDisconnectMode#UNKNOWN
-   * @see PlayerDisconnectMode#UNKNOWN
+   * @see ConnectionDisconnectMode#EXCEPTION
+   * @see PlayerDisconnectMode#EXCEPTION
    */
   default void close() throws IOException {
-    close(ConnectionDisconnectMode.UNKNOWN, PlayerDisconnectMode.UNKNOWN);
+    close(ConnectionDisconnectMode.EXCEPTION, PlayerDisconnectMode.EXCEPTION);
   }
 
   /**

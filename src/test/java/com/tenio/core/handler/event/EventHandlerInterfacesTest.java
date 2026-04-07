@@ -88,14 +88,6 @@ class EventHandlerInterfacesTest {
   }
 
   @Test
-  @DisplayName("Test EventServerException")
-  void testEventServerException() {
-    EventServerException handler = throwable -> {
-    };
-    handler.onServerException(new Exception("test"));
-  }
-
-  @Test
   @DisplayName("Test EventBroadcastToChannel")
   void testEventBroadcastToChannel() {
     EventBroadcastToChannel<Player, DataCollection> handler = (channel, player, message) -> {

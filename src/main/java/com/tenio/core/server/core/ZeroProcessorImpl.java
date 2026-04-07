@@ -107,12 +107,6 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
         return null;
       });
 
-      eventManager.on(ServerEvent.SESSION_OCCURRED_EXCEPTION, params -> {
-        eventManager.emit(ServerEvent.SERVER_EXCEPTION, params);
-
-        return null;
-      });
-
       eventManager.on(ServerEvent.SESSION_WILL_BE_CLOSED, params -> {
         var session = (Session) params[0];
         var playerDisconnectMode = (PlayerDisconnectMode) params[2];
@@ -301,12 +295,9 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByIdentity(session.getName());
       if (player == null) {
-        var illegalValueException = new IllegalArgumentException(
-            String.format("Unable to find player for the session: %s", session));
         if (isErrorEnabled()) {
-          error(illegalValueException);
+          error(new IllegalArgumentException(String.format("Unable to find player for the session: %s", session)));
         }
-        eventManager.emit(ServerEvent.SERVER_EXCEPTION, illegalValueException);
         return;
       }
       eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);

@@ -113,7 +113,6 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
         if (isErrorEnabled()) {
           error(exception, "Session closed with error: ", session.toString());
         }
-        eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
       }
     } else {
       // let the socket be closed
@@ -142,7 +141,13 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
 
   @Override
   public void sessionException(Session session, Exception exception) {
-    eventManager.emit(ServerEvent.SESSION_OCCURRED_EXCEPTION, session, exception);
+      try {
+          session.close();
+      } catch (IOException exception1) {
+        if (isErrorEnabled()) {
+          error(exception1, "Session closed with error: ", session.toString());
+        }
+      }
   }
 
   @Override

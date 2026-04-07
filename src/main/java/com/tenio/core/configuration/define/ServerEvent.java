@@ -46,7 +46,6 @@ import com.tenio.core.handler.event.EventRoomCreatedResult;
 import com.tenio.core.handler.event.EventRoomWillBeRemoved;
 import com.tenio.core.handler.event.EventBroadcastToChannel;
 import com.tenio.core.handler.event.EventSendMessageToPlayer;
-import com.tenio.core.handler.event.EventServerException;
 import com.tenio.core.handler.event.EventServerInitialization;
 import com.tenio.core.handler.event.EventServerTeardown;
 import com.tenio.core.handler.event.EventSocketConnectionRefused;
@@ -81,10 +80,6 @@ public enum ServerEvent {
    */
   @Asynchronous
   SESSION_REQUEST_CONNECTION,
-  /**
-   * When there is any issue occurs to a session.
-   */
-  SESSION_OCCURRED_EXCEPTION,
   /**
    * When a session is going to disconnect to the server.
    */
@@ -267,12 +262,6 @@ public enum ServerEvent {
    * @see EventSystemMonitoring
    */
   SYSTEM_MONITORING,
-  /**
-   * When there is any exception occurs on the server.
-   *
-   * @see EventServerException
-   */
-  SERVER_EXCEPTION,
   /**
    * When the server is going to shut down.
    *
