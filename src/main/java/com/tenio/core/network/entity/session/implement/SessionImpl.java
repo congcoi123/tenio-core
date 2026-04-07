@@ -503,6 +503,10 @@ public class SessionImpl extends AbstractLogger implements Session {
         try {
           DataCollection message = inboundQueue.take();
           sessionManager.emitEvent(ServerEvent.SESSION_READ_MESSAGE, this, message);
+        } catch (InterruptedException exception) {
+          // InterruptedException is not an error
+          // It’s a signal to stop the thread
+          Thread.currentThread().interrupt();
         } catch (Throwable cause) {
           if (isErrorEnabled()) {
             error(cause);

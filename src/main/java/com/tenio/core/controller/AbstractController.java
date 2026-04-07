@@ -164,6 +164,10 @@ public abstract class AbstractController extends AbstractManager implements Cont
         try {
           Request request = requestManager.getQueueByIndex(index).take();
           processRequest(request);
+        } catch (InterruptedException exception) {
+          // InterruptedException is not an error
+          // It’s a signal to stop the thread
+          Thread.currentThread().interrupt();
         } catch (Throwable cause) {
           if (isErrorEnabled()) {
             error(cause);
