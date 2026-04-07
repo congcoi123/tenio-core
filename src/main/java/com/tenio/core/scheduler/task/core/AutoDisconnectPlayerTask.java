@@ -69,7 +69,7 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
   @Override
   public void run() {
     executorService = Executors.newVirtualThreadPerTaskExecutor();
-    var threadFactoryTask = new ThreadFactoryBuilder().setNameFormat("auto-disconnect-player-task").build();
+    var threadFactoryTask = new ThreadFactoryBuilder().setNameFormat("task-auto-disconnect-player").build();
     scheduledService = Executors.newSingleThreadScheduledExecutor(threadFactoryTask);
     scheduler = scheduledService.scheduleAtFixedRate(
         () -> {

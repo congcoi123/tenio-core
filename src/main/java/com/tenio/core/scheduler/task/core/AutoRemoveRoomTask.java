@@ -67,7 +67,7 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
   @Override
   public void run() {
     executorService = Executors.newVirtualThreadPerTaskExecutor();
-    var threadFactoryTask = new ThreadFactoryBuilder().setNameFormat("auto-remove-room-task").build();
+    var threadFactoryTask = new ThreadFactoryBuilder().setNameFormat("task-auto-remove-room").build();
     scheduledService = Executors.newSingleThreadScheduledExecutor(threadFactoryTask);
     scheduler = scheduledService.scheduleAtFixedRate(
         () -> {

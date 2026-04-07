@@ -139,8 +139,8 @@ public final class CoreConstant {
   public static final int DELAY_BEFORE_SERVER_IS_READY_IN_MILLISECONDS = 100;
   /**
    * Use the virtual threads in executors.
-   * LIMITATION: The created virtual threads are now (2026-04-07) unable to be viewed in VisualVM tool.
-   * So it's hard to debug.
+   * LIMITATION: The created virtual threads are now (2026-04-07) unable to be viewed in the VisualVM tool.
+   * So it's harder to debug.
    *
    * @since 0.7.0
    */

@@ -69,7 +69,7 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
   @Override
   public void run() {
     executorService = Executors.newVirtualThreadPerTaskExecutor();
-    var threadFactoryTask = new ThreadFactoryBuilder().setNameFormat("auto-clean-orphan-session-task").build();
+    var threadFactoryTask = new ThreadFactoryBuilder().setNameFormat("task-auto-clean-orphan-session").build();
     scheduledService = Executors.newSingleThreadScheduledExecutor(threadFactoryTask);
     scheduler = scheduledService.scheduleAtFixedRate(
         () -> {
