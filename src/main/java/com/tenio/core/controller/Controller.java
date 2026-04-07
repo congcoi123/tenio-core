@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.controller;
 
-import com.tenio.core.exception.RequestQueueFullException;
 import com.tenio.core.network.entity.inbound.Request;
 import com.tenio.core.service.Service;
 import com.tenio.core.service.ServiceListener;
@@ -56,7 +55,6 @@ import com.tenio.core.service.ServiceListener;
  * @see Service
  * @see ServiceListener
  * @see Request
- * @see RequestQueueFullException
  * @since 0.3.0
  */
 public interface Controller extends Service, ServiceListener {
@@ -74,23 +72,8 @@ public interface Controller extends Service, ServiceListener {
    * Enqueue a request from a request queue for processing.
    *
    * @param request the processing {@link Request}
-   * @throws RequestQueueFullException when the request queue is full
    */
-  void enqueueRequest(Request request) throws RequestQueueFullException;
-
-  /**
-   * Retrieves the maximum size of a request queue.
-   *
-   * @return the maximum request queue size ({@code integer} value)
-   */
-  int getMaxRequestQueueSize();
-
-  /**
-   * Sets the maximum value size for the request queue.
-   *
-   * @param maxSize the maximum size of a request queue ({@code integer} value)
-   */
-  void setMaxRequestQueueSize(int maxSize);
+  void enqueueRequest(Request request);
 
   /**
    * Retrieves the thread pool size using for processes.

@@ -319,9 +319,15 @@ public final class ServerImpl extends SystemLogger implements Server {
     if (outboundQueuePolicy == null) {
       outboundQueuePolicy = new DefaultOutboundQueuePolicy();
     }
-    network.setOutboundQueuePolicy(outboundQueuePolicy);
-    network.setOutboundQueueSize(
-        configuration.getInt(CoreConfigurationType.PROP_MAX_RESPONSE_QUEUE_SIZE_PER_SESSION));
+    network.setSessionOutboundQueuePolicy(outboundQueuePolicy);
+    network.setSessionInboundQueueSize(
+            configuration.getInt(CoreConfigurationType.PROP_MAX_SESSION_REQUEST_QUEUE_SIZE));
+    network.setSessionOutboundQueueSize(
+        configuration.getInt(CoreConfigurationType.PROP_MAX_SESSION_RESPONSE_QUEUE_SIZE));
+    network.setSessionSlowConsumingInboundQueueWarningThreshold(
+        configuration.getInt(CoreConfigurationType.PROP_SLOW_CONSUMING_WARNING_SESSION_REQUEST_THRESHOLD));
+    network.setSessionSlowConsumingOutboundQueueWarningThreshold(
+        configuration.getInt(CoreConfigurationType.PROP_SLOW_CONSUMING_WARNING_SESSION_RESPONSE_THRESHOLD));
 
     DatagramPacketPolicy datagramPacketPolicy =
         bootstrapHandler.getBeanByClazz(DatagramPacketPolicy.class);
@@ -361,7 +367,6 @@ public final class ServerImpl extends SystemLogger implements Server {
         .setMaxNumberPlayers(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS));
     zeroProcessor.setSessionManager(network.getSessionManager());
     zeroProcessor.setPlayerManager(playerManager);
-    zeroProcessor.setMaxRequestQueueSize(configuration.getInt(CoreConfigurationType.PROP_MAX_REQUEST_QUEUE_SIZE));
     zeroProcessor
         .setThreadPoolSize(configuration.getInt(CoreConfigurationType.WORKER_INTERNAL_PROCESSOR));
     zeroProcessor.setKeepPlayerOnDisconnection(

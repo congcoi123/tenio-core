@@ -25,12 +25,14 @@ THE SOFTWARE.
 package com.tenio.core.exception;
 
 import com.tenio.core.controller.AbstractController;
+import com.tenio.core.network.entity.session.Session;
+
 import java.io.Serial;
 
 /**
- * When the coming requests queue is full.
+ * When the {@link Session} inbound queue is full.
  */
-public final class RequestQueueFullException extends RuntimeException {
+public final class InboundQueueFullException extends RuntimeException {
 
   @Serial
   private static final long serialVersionUID = 6981972099759381035L;
@@ -41,7 +43,7 @@ public final class RequestQueueFullException extends RuntimeException {
    * @param currentSize the current size of the queue ({@code integer} value)
    * @see AbstractController
    */
-  public RequestQueueFullException(int currentSize) {
+  public InboundQueueFullException(int currentSize) {
     super(String.format("Reached max queue size, the request was dropped. The current size: %d", currentSize));
   }
 }

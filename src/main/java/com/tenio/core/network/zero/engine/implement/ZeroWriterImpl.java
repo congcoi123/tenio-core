@@ -171,9 +171,9 @@ public final class ZeroWriterImpl extends AbstractZeroEngine implements ZeroWrit
     if (outboundQueue != null) {
       try {
         if (isWarnEnabled()) {
-          int outboundQueueSize = outboundQueue.getSize();
-          if (outboundQueueSize > 0) {
-            warn("[Slow Consuming Outbound Queue] Remaining: ", outboundQueueSize, " > ", session);
+          int remaining = session.getRemainingSlowConsumingOutboundQueue();
+          if (remaining > 0) {
+            warn("[Slow Consuming Outbound Queue] Remaining: ", remaining, " > ", session);
           }
         }
 

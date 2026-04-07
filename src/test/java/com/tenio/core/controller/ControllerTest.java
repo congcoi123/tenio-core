@@ -84,31 +84,10 @@ class ControllerTest {
   }
 
   @Test
-  @DisplayName("Test controller max request queue size setter")
-  void testMaxRequestQueueSize() {
-    controller.setMaxRequestQueueSize(2);
-    assertEquals(2, controller.getMaxRequestQueueSize());
-  }
-
-  @Test
   @DisplayName("Test controller thread pool size setter")
   void testThreadPoolSize() {
     controller.setThreadPoolSize(2);
     assertEquals(2, controller.getThreadPoolSize());
-  }
-
-  @Test
-  @DisplayName("Add a request into a full request queue should throw exception")
-  void testEnqueueRequestQueueFull() {
-    controller.setThreadPoolSize(1);
-    controller.setMaxRequestQueueSize(1);
-    controller.initialize();
-    Request req1 = mock(Request.class);
-    when(req1.getId()).thenReturn(0L);
-    Request req2 = mock(Request.class);
-    when(req2.getId()).thenReturn(0L);
-    controller.enqueueRequest(req1);
-    assertThrows(Exception.class, () -> controller.enqueueRequest(req2));
   }
 
   @Test

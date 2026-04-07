@@ -28,7 +28,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.common.utility.StringUtility;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exception.RequestQueueFullException;
 import com.tenio.core.manager.AbstractManager;
 import com.tenio.core.manager.BlockingQueueManager;
 import com.tenio.core.network.entity.inbound.Request;
@@ -71,7 +70,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @see Controller
  * @see Request
- * @see RequestQueueFullException
  * @see RequestComparator
  * @since 0.3.0
  */
@@ -83,7 +81,6 @@ public abstract class AbstractController extends AbstractManager implements Cont
   private ExecutorService executorService;
   private int executorSize;
   private BlockingQueueManager<Request> requestManager;
-  private int maxQueueSize;
   private volatile boolean initialized;
   private volatile boolean activated;
 
@@ -257,26 +254,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   @Override
   public void enqueueRequest(Request request) {
-    var requestQueue = requestManager.getQueueByElementId(request.getId());
-    int requestSize = requestQueue.size();
-    if (maxQueueSize > 0 && requestSize >= maxQueueSize) {
-      var exception = new RequestQueueFullException(requestSize);
-      if (isErrorEnabled()) {
-        error(exception, exception.getMessage());
-      }
-      throw exception;
-    }
-    requestManager.getQueueByElementId(request.getId()).add(request);
-  }
-
-  @Override
-  public int getMaxRequestQueueSize() {
-    return maxQueueSize;
-  }
-
-  @Override
-  public void setMaxRequestQueueSize(int maxSize) {
-    maxQueueSize = maxSize;
+      requestManager.getQueueByElementId(request.getId()).add(request);
   }
 
   @Override

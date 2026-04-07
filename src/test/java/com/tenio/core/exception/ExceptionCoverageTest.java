@@ -169,9 +169,9 @@ class ExceptionCoverageTest {
   }
 
   @Test
-  @DisplayName("Test RequestQueueFullException")
-  void testRequestQueueFullException() {
-    RequestQueueFullException ex = new RequestQueueFullException(10);
+  @DisplayName("Test InboundQueueFullException")
+  void testInboundQueueFullException() {
+    InboundQueueFullException ex = new InboundQueueFullException(10);
     assertTrue(ex.getMessage()
         .contains("Reached max queue size, the request was dropped. The current size: 10"));
   }

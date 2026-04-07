@@ -30,6 +30,7 @@ import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
+import com.tenio.core.exception.InboundQueueFullException;
 import com.tenio.core.network.codec.packet.PacketReadState;
 import com.tenio.core.network.codec.packet.PendingPacket;
 import com.tenio.core.network.codec.packet.ProcessedPacket;
@@ -74,6 +75,9 @@ public class SessionImpl extends AbstractLogger implements Session {
   private final Thread inboundProcess;
   private final BlockingQueue<DataCollection> inboundQueue;
 
+  private int maxInboundQueueSize;
+  private int slowConsumingInboundQueueWarningThreshold;
+  private int slowConsumingOutboundQueueWarningThreshold;
   private OutboundQueue outboundQueue;
   private ProcessedPacket processedPacket;
   private volatile PendingPacket pendingPacket;
@@ -168,13 +172,36 @@ public class SessionImpl extends AbstractLogger implements Session {
 
   @Override
   public void enqueueInboundMessage(DataCollection message) {
+    int remaining = inboundQueue.size();
     if (isWarnEnabled()) {
-      int inboundQueueSize = inboundQueue.size();
-      if (inboundQueueSize > 0) {
-        warn("[Slow Consuming Inbound Queue] Remaining: ", inboundQueueSize, " > ", this);
+      if (slowConsumingInboundQueueWarningThreshold > 0
+              && remaining > slowConsumingInboundQueueWarningThreshold) {
+        warn("[Slow Consuming Inbound Queue] Remaining: ", remaining, " > ", this);
       }
     }
+    if (maxInboundQueueSize > 0 && remaining >= maxInboundQueueSize) {
+      var exception = new InboundQueueFullException(remaining);
+      if (isErrorEnabled()) {
+        error(exception, exception.getMessage());
+      }
+      throw exception;
+    }
     inboundQueue.add(message);
+  }
+
+  @Override
+  public void configureMaxInboundQueueSize(int queueSize) {
+    maxInboundQueueSize = queueSize;
+  }
+
+  @Override
+  public void configureSlowConsumingInboundQueueWarningThreshold(int threshold) {
+    slowConsumingInboundQueueWarningThreshold = threshold;
+  }
+
+  @Override
+  public void configureSlowConsumingOutboundQueueWarningThreshold(int threshold) {
+    slowConsumingOutboundQueueWarningThreshold = threshold;
   }
 
   @Override
@@ -185,6 +212,15 @@ public class SessionImpl extends AbstractLogger implements Session {
   @Override
   public void configureOutboundQueue(OutboundQueue outboundQueue) {
     this.outboundQueue = outboundQueue;
+  }
+
+  @Override
+  public int getRemainingSlowConsumingOutboundQueue() {
+    if (slowConsumingOutboundQueueWarningThreshold <= 0) {
+      return 0;
+    }
+    int remaining = outboundQueue.getSize();
+    return remaining >= slowConsumingOutboundQueueWarningThreshold ? remaining : 0;
   }
 
   @Override
@@ -560,8 +596,8 @@ public class SessionImpl extends AbstractLogger implements Session {
         ", activated=" + activated +
         ", hasUdp=" + hasUdp +
         ", associatedState=" + associatedState +
-        ", inboundQueueSize=" + inboundQueue.size() +
-        ", outboundQueueSize=" + outboundQueue.getSize() +
+        ", remainingInboundQueue=" + inboundQueue.size() +
+        ", remainingOutboundQueue=" + outboundQueue.getSize() +
         '}';
   }
 }

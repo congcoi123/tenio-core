@@ -124,8 +124,6 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
       eventManager.on(ServerEvent.SESSION_READ_MESSAGE, params -> {
         var session = (Session) params[0];
         var message = (DataCollection) params[1];
-        session.setLastReadTime(TimeUtility.currentTimeMillis());
-        session.increaseReadMessages();
         processSessionReadMessage(session, message);
 
         return null;
@@ -297,6 +295,9 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
   // NOTE: Since version 0.7.0, this kind of request doesn't need to get in the processor queue as it's using
   // its independent session queue (thanks to virtual thread)
   private void processSessionReadMessage(Session session, DataCollection message) {
+    session.setLastReadTime(TimeUtility.currentTimeMillis());
+    session.increaseReadMessages();
+
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByIdentity(session.getName());
       if (player == null) {

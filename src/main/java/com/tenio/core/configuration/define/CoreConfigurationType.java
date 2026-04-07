@@ -166,10 +166,12 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   INTERVAL_SYSTEM_MONITORING("system-monitoring-interval"),
   /**
-   * Sets the maximum number of requesting packets in queue. In case there are more packets than
-   * expected, some of them should be removed.
+   * Sets the maximum size of an inbound queue (response queue). Notes that every {@link Session} has
+   * its own queue, and this setting applies for all of them.
+   *
+   * @since 0.7.0
    */
-  PROP_MAX_REQUEST_QUEUE_SIZE("max-request-queue-size"),
+  PROP_MAX_SESSION_REQUEST_QUEUE_SIZE("max-session-request-queue-size"),
   /**
    * Sets the maximum size of an outbound queue (response queue). Notes that every {@link Session} has
    * its own queue, and this setting applies for all of them.
@@ -177,7 +179,19 @@ public enum CoreConfigurationType implements ConfigurationType {
    * @see OutboundQueuePolicy
    * @see OutboundQueueFullException
    */
-  PROP_MAX_RESPONSE_QUEUE_SIZE_PER_SESSION("max-response-queue-size-per-session"),
+  PROP_MAX_SESSION_RESPONSE_QUEUE_SIZE("max-session-response-queue-size"),
+  /**
+   * Sets the threshold value to show warning when it slowly consumes the {@link Session} inbound queue.
+   *
+   * @since 0.7.0
+   */
+  PROP_SLOW_CONSUMING_WARNING_SESSION_REQUEST_THRESHOLD("slow-consuming-warning-session-request-threshold"),
+  /**
+   * Sets the threshold value to show warning when it slowly consumes the {@link Session} outbound queue.
+   *
+   * @since 0.7.0
+   */
+  PROP_SLOW_CONSUMING_WARNING_SESSION_RESPONSE_THRESHOLD("slow-consuming-warning-session-response-threshold"),
   /**
    * Determines whether a disconnected connection could be held for a while or be removed
    * immediately.

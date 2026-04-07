@@ -103,7 +103,7 @@ public class ZeroProcessorImplTest {
     processor.setNetworkReaderStatistic(networkReaderStatistic);
     processor.setNetworkWriterStatistic(networkWriterStatistic);
     processor.initialize();
-    processor.subscribe();
+    processor.subscribe(true, true);
 
     // Set up common session behavior
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
@@ -124,6 +124,15 @@ public class ZeroProcessorImplTest {
             Session.class, PlayerDisconnectMode.class);
     method.setAccessible(true);
     method.invoke(processor, session, PlayerDisconnectMode.CLIENT_REQUEST);
+  }
+
+  private void processSessionReadMessage(Session session, DataCollection message)
+          throws Exception {
+    Method method =
+            ZeroProcessorImpl.class.getDeclaredMethod("processSessionReadMessage",
+                    Session.class, DataCollection.class);
+    method.setAccessible(true);
+    method.invoke(processor, session, message);
   }
 
   // Connection Handling Tests
@@ -212,16 +221,15 @@ public class ZeroProcessorImplTest {
   }
 
   @Test
-  public void shouldProcessSessionReadMessage() {
+  public void shouldProcessSessionReadMessage() throws Exception {
     when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
     when(session.getName()).thenReturn(PLAYER_IDENTITY);
     when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(player);
-    Request request = SessionRequest.newInstance()
-        .setEvent(ServerEvent.SESSION_READ_MESSAGE)
-        .setSender(session)
-        .setMessage(message);
-    reset(eventManager); // Clear previous interactions
-    processor.processRequest(request);
+
+    processSessionReadMessage(session, message);
+
+    verify(session).setLastReadTime(any(Long.class));
+    verify(session).increaseReadMessages();
     verify(eventManager, atLeastOnce()).emit(eq(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER),
         eq(player), eq(message));
   }
@@ -300,4 +308,4 @@ public class ZeroProcessorImplTest {
     processSessionWillBeClosed(session);
     verify(playerManager, never()).removePlayerByIdentity(any());
   }
-} 
+}
