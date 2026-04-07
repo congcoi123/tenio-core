@@ -129,23 +129,22 @@ public final class CoreConstant {
    *
    * @since 0.6.7
    */
-  public static final int DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS = 100;
+  public static final int DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS = 0;
   /**
    * After everything was settled down, the server has a small delay before it announces
    * readiness to all.
    *
    * @since 0.6.7
    */
-  public static final int DELAY_BEFORE_SERVER_IS_READY_IN_MILLISECONDS = 1000;
+  public static final int DELAY_BEFORE_SERVER_IS_READY_IN_MILLISECONDS = 100;
   /**
-   * The temporary flag to turn on preview performance of virtual threads usages.
-   * - Ideally, there should be any packet left in session inbound or outbound queues.
-   * - Executors should work properly with virtual threads
-   * This should be removed in the next releases.
+   * Use the virtual threads in executors.
+   * LIMITATION: The created virtual threads are now (2026-04-07) unable to be viewed in VisualVM tool.
+   * So it's hard to debug.
    *
    * @since 0.7.0
    */
-  public static final boolean PREVIEW_VIRTUAL_THREADS_USAGES = true;
+  public static final boolean USE_VIRTUAL_EXECUTORS = true;
 
   /**
    * Private constructor to prevent instantiation.

@@ -76,7 +76,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   }
 
   private void initializeWorkers() {
-    if (CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
+    if (CoreConstant.USE_VIRTUAL_EXECUTORS) {
       executorService = Executors.newVirtualThreadPerTaskExecutor();
     } else {
       var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
@@ -199,7 +199,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
     }
     for (int count = 0; count < executorSize - getNumberOfExtraWorkers(); count++) {
       executorService.execute(this);
-      if (!CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
+      if (CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS > 0) {
         try {
           // noinspection BusyWait
           Thread.sleep(CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS); // wait between each submission
@@ -274,10 +274,6 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   }
 
   private void setThreadName(int id, String extra) {
-    if (CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
-      return;
-    }
-
     Thread currentThread = Thread.currentThread();
     currentThread.setName(extra == null ? StringUtility.strgen("zero-", getName(), "-", id) :
         StringUtility.strgen("zero-", getName(), "-", extra, "-", id));

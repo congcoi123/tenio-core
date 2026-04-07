@@ -107,7 +107,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
       requestManager = new BlockingQueueManager<>(getThreadPoolSize(), LinkedBlockingQueue::new);
     }
 
-    if (CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
+    if (CoreConstant.USE_VIRTUAL_EXECUTORS) {
       executorService = Executors.newVirtualThreadPerTaskExecutor();
     } else {
       var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
@@ -179,10 +179,6 @@ public abstract class AbstractController extends AbstractManager implements Cont
   }
 
   private void setThreadName(int currentId) {
-    if (CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
-      return;
-    }
-
     Thread currentThread = Thread.currentThread();
     currentThread.setName(StringUtility.strgen(getName(), "-", (currentId + 1)));
     currentThread.setUncaughtExceptionHandler((thread, cause) -> {
@@ -212,7 +208,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
   public void start() {
     for (int count = 0; count < executorSize; count++) {
       executorService.execute(this);
-      if (!CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
+      if (CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS > 0) {
         try {
           // noinspection BusyWait
           Thread.sleep(CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS); // wait between each submission

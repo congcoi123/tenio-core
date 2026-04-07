@@ -177,25 +177,23 @@ public final class ServerImpl extends SystemLogger implements Server {
     initializeServices();
     startServices();
 
-    // it should wait for a while to let everything settles down
-    if (!CoreConstant.PREVIEW_VIRTUAL_THREADS_USAGES) {
-      int servicesTakeTime = Math.max(Math.max(network.getMaximumStartingTimeInMilliseconds(),
-                      zeroProcessor.getMaximumStartingTimeInMilliseconds()),
-              scheduler.getMaximumStartingTimeInMilliseconds());
-      int totalWaitingTime = servicesTakeTime + CoreConstant.DELAY_BEFORE_SERVER_IS_READY_IN_MILLISECONDS;
-      Thread.sleep(totalWaitingTime);
+    // now it can be able to accept connections
+    network.activate();
+    zeroProcessor.activate();
 
-      if (isInfoEnabled()) {
-        info("SERVER", serverName, buildgen("Started after ", totalWaitingTime, " milliseconds"));
-      }
+    // it should wait for a while to let everything settles down
+    int servicesTakeTime = Math.max(Math.max(network.getMaximumStartingTimeInMilliseconds(),
+                    zeroProcessor.getMaximumStartingTimeInMilliseconds()),
+            scheduler.getMaximumStartingTimeInMilliseconds());
+    int totalWaitingTime = servicesTakeTime + CoreConstant.DELAY_BEFORE_SERVER_IS_READY_IN_MILLISECONDS;
+    Thread.sleep(totalWaitingTime);
+
+    if (isInfoEnabled()) {
+      info("SERVER", serverName, buildgen("Started after ", totalWaitingTime, " milliseconds"));
     }
 
     // emit "server initialization" event
     eventManager.emit(ServerEvent.SERVER_INITIALIZATION, serverName);
-
-    // now it can be able to accept connections
-    network.activate();
-    zeroProcessor.activate();
 
     if (configuration.getBoolean(CoreConfigurationType.ENABLE_TERMINAL_COMMAND)) {
       startConsole(bootstrapHandler.getSystemCommandManager());
