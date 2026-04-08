@@ -29,6 +29,7 @@ import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
+import com.tenio.core.exception.InboundQueueFullException;
 import com.tenio.core.network.codec.packet.PacketReadState;
 import com.tenio.core.network.codec.packet.PendingPacket;
 import com.tenio.core.network.codec.packet.ProcessedPacket;
@@ -149,9 +150,10 @@ public interface Session {
    * Enqueue a new message into the internal inbound queue.
    *
    * @param message an instance of {@link DataCollection}
+   * @throws InboundQueueFullException when the inbound queue is full
    * @since 0.7.0
    */
-  void enqueueInbound(DataCollection message);
+  void enqueueInbound(DataCollection message) throws InboundQueueFullException;
 
   /**
    * Sets the inbound queue size.

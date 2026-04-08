@@ -29,6 +29,7 @@ import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.exception.InboundQueueFullException;
 import com.tenio.core.exception.RefusedConnectionAddressException;
 import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.entity.session.Session;
@@ -86,7 +87,11 @@ public final class SocketIoHandlerImpl extends AbstractIoHandler
     if (session.isAssociatedToPlayer(Session.AssociatedState.NONE)) {
       eventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, message);
     } else if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
-      session.enqueueInbound(message);
+      try {
+        session.enqueueInbound(message);
+      } catch (InboundQueueFullException exception) {
+        networkReaderStatistic.updateReadDroppedPackets(1);
+      }
     }
   }
 

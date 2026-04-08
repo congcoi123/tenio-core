@@ -37,8 +37,8 @@ import com.tenio.core.handler.event.EventPlayerAfterLeftRoom;
 import com.tenio.core.handler.event.EventPlayerBeforeLeaveRoom;
 import com.tenio.core.handler.event.EventPlayerJoinedRoomResult;
 import com.tenio.core.handler.event.EventPlayerLogin;
-import com.tenio.core.handler.event.EventPlayerReconnectRequestHandling;
-import com.tenio.core.handler.event.EventPlayerReconnected;
+import com.tenio.core.handler.event.EventPlayerConnectionRetry;
+import com.tenio.core.handler.event.EventPlayerConnectionResumed;
 import com.tenio.core.handler.event.EventPlayerSubscribedChannel;
 import com.tenio.core.handler.event.EventPlayerUnsubscribedChannel;
 import com.tenio.core.handler.event.EventReceivedMessageFromPlayer;
@@ -128,15 +128,15 @@ public enum ServerEvent {
   /**
    * When the server handles a reconnection request.
    *
-   * @see EventPlayerReconnectRequestHandling
+   * @see EventPlayerConnectionRetry
    */
-  PLAYER_RECONNECT_REQUEST_HANDLING,
+  PLAYER_CONNECTION_RETRY,
   /**
    * When the server responds a player reconnected request.
    *
-   * @see EventPlayerReconnected
+   * @see EventPlayerConnectionResumed
    */
-  PLAYER_RECONNECTED,
+  PLAYER_CONNECTION_RESUMED,
   /**
    * When the server sends a message to client side on behalf of its player.
    *

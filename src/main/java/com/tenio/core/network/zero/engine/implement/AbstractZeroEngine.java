@@ -244,16 +244,17 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
    * equals to {@link #getNumberOfExtraWorkers()}.
    *
    * @param action the extra task
+   * @param postfix the postfix of the thread name
    * @since 0.6.6
    */
-  public void runningExtraWorking(Runnable action) {
+  public void runningExtraWorking(Runnable action, String postfix) {
     int count = countExtraWorkers.incrementAndGet();
     if (count > getNumberOfExtraWorkers()) {
       throw new IllegalArgumentException("It cannot excess the number of extra workers, the " +
           "current running times: " + count);
     }
     executorService.execute(() -> {
-      setThreadName(count, "extra");
+      setThreadName(count, postfix);
       action.run();
     });
   }

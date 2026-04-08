@@ -171,11 +171,11 @@ class EventHandlerInterfacesTest {
   }
 
   @Test
-  @DisplayName("Test EventPlayerReconnectRequestHandling")
-  void testEventPlayerReconnectRequestHandling() {
-    EventPlayerReconnectRequestHandling<Player, DataCollection> handler =
+  @DisplayName("Test EventPlayerConnectionRetry")
+  void testEventPlayerConnectionRetry() {
+    EventPlayerConnectionRetry<Player, DataCollection> handler =
         (session, message) -> Optional.empty();
-    handler.onPlayerReconnectRequestHandling(Mockito.mock(Session.class), Mockito.mock(DataCollection.class));
+    handler.onPlayerConnectionRetry(Mockito.mock(Session.class), Mockito.mock(DataCollection.class));
     assertTrue(true);
   }
 

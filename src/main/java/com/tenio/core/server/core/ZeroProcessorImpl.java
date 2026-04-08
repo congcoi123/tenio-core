@@ -177,7 +177,7 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
     // case, the player is remained on the server side, so we should always check this event
     Object reconnectedObject = null;
     try {
-      reconnectedObject = eventManager.emit(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLING, session, message);
+      reconnectedObject = eventManager.emit(ServerEvent.PLAYER_CONNECTION_RETRY, session, message);
     } catch (Exception exception) {
       if (isErrorEnabled()) {
         error(exception, request);
@@ -223,7 +223,7 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
         player.setSession(session);
         player.setLastReadTime(now());
         player.setLastWriteTime(now());
-        eventManager.emit(ServerEvent.PLAYER_RECONNECTED, player, session);
+        eventManager.emit(ServerEvent.PLAYER_CONNECTION_RESUMED, player, session);
       } else {
         establishNewPlayerConnection(session, message);
       }

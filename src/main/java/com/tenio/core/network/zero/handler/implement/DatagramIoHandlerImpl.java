@@ -27,6 +27,7 @@ package com.tenio.core.network.zero.handler.implement;
 import com.tenio.common.data.DataCollection;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.exception.InboundQueueFullException;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
 
@@ -62,7 +63,11 @@ public final class DatagramIoHandlerImpl extends AbstractIoHandler implements Da
 
   @Override
   public void sessionRead(Session session, DataCollection message) {
-    session.enqueueInbound(message);
+    try {
+      session.enqueueInbound(message);
+    } catch (InboundQueueFullException exception) {
+      networkReaderStatistic.updateReadDroppedPackets(1);
+    }
   }
 
   @Override

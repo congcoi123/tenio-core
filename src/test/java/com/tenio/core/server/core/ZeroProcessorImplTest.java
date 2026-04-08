@@ -181,7 +181,7 @@ public class ZeroProcessorImplTest {
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING))
         .thenReturn(true);
-    when(eventManager.emit(eq(ServerEvent.PLAYER_RECONNECT_REQUEST_HANDLING), eq(session),
+    when(eventManager.emit(eq(ServerEvent.PLAYER_CONNECTION_RETRY), eq(session),
         eq(message)))
         .thenReturn(Optional.of(player));
     when(player.getSession()).thenReturn(Optional.of(session));
@@ -196,7 +196,7 @@ public class ZeroProcessorImplTest {
     processor.processRequest(request);
 
     verify(player).setSession(session);
-    verify(eventManager).emit(eq(ServerEvent.PLAYER_RECONNECTED), eq(player), eq(session));
+    verify(eventManager).emit(eq(ServerEvent.PLAYER_CONNECTION_RESUMED), eq(player), eq(session));
   }
 
   // Session Management Tests

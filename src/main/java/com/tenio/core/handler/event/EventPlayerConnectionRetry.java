@@ -24,25 +24,27 @@ THE SOFTWARE.
 
 package com.tenio.core.handler.event;
 
-import com.tenio.core.configuration.define.CoreConfigurationType;
+import com.tenio.common.data.DataCollection;
 import com.tenio.core.entity.Player;
 import com.tenio.core.network.entity.session.Session;
+import java.util.Optional;
 
 /**
- * Returns the result when a player tried to reconnect to the server.
+ * When a player sends a request to reconnect to the server.
  */
 @FunctionalInterface
-public interface EventPlayerReconnected<P extends Player> {
+public interface EventPlayerConnectionRetry<P extends Player, D extends DataCollection> {
 
   /**
    * When a player tried to reconnect to the server. The situation happens if the player gets in
    * an IDLE state for long time enough to be disconnected from the server automatically.
    *
-   * @param player  the reconnecting {@link Player}
    * @param session a new {@link Session} which the player is using to reconnect to the server
-   * @see CoreConfigurationType#PROP_KEEP_PLAYER_ON_DISCONNECTION
-   * @see CoreConfigurationType#PROP_MAX_PLAYER_IDLE_TIME
-   * @see EventPlayerReconnectRequestHandling
+   * @param message a {@link D} message that the client side tries to send to the server to judge
+   *               if the corresponding player could reconnect
+   * @return an instance of {@link Player} if available
+   * @see EventPlayerConnectionResumed
+   * @since 0.5.0
    */
-  void onPlayerReconnected(P player, Session session);
+  Optional<P> onPlayerConnectionRetry(Session session, D message);
 }
