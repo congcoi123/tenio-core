@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.implement;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.common.utility.StringUtility;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.event.implement.EventManager;
@@ -76,12 +75,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   }
 
   private void initializeWorkers() {
-    if (CoreConstant.USE_VIRTUAL_EXECUTORS) {
-      executorService = Executors.newVirtualThreadPerTaskExecutor();
-    } else {
-      var threadFactory = new ThreadFactoryBuilder().setDaemon(true).build();
-      executorService = Executors.newFixedThreadPool(executorSize, threadFactory);
-    }
+    executorService = Executors.newVirtualThreadPerTaskExecutor();
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       if (executorService != null && !executorService.isShutdown()) {

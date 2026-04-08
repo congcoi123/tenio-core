@@ -161,6 +161,7 @@ public final class DatagramReaderHandler extends SystemLogger {
       throw new IllegalArgumentException("The cache size of datagram channels must be greater than 0");
     }
     try {
+      boolean reusePortSupported = true;
       for (int i = 0; i < cacheSize; i++) {
         var datagramChannel = DatagramChannel.open();
         datagramChannel.configureBlocking(false);
@@ -168,8 +169,8 @@ public final class DatagramReaderHandler extends SystemLogger {
         try {
           datagramChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
         } catch (UnsupportedOperationException exception) {
-          if (isDebugEnabled()) {
-            debug("DATAGRAM CHANNEL", "It doesn't support SO_REUSEPORT option");
+          if (reusePortSupported) {
+            reusePortSupported = false;
           }
         }
         datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
@@ -178,6 +179,11 @@ public final class DatagramReaderHandler extends SystemLogger {
         // bi-direction connection, that why it's not necessary to register it to
         // acceptable selector. Just leave it to the reader selector later
         datagramChannel.register(readableSelector, SelectionKey.OP_READ);
+      }
+      if (!reusePortSupported) {
+        if (isDebugEnabled()) {
+          debug("DATAGRAM CHANNEL", "It doesn't support SO_REUSEPORT option");
+        }
       }
       if (isInfoEnabled()) {
         info("UDP CHANNEL(S)", buildgen("Opened at address: ", serverAddress, ", port: ",
