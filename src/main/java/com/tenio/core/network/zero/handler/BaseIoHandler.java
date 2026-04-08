@@ -28,8 +28,6 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 
-import java.io.IOException;
-
 /**
  * Base interface for I/O handlers that manage network communication.
  * This interface defines the core functionality for handling network events,
