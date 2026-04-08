@@ -263,10 +263,8 @@ public final class ServerImpl extends SystemLogger implements Server {
     var servletMap = bootstrapHandler.getServletMap();
     var httpConfiguration = configuration.get(CoreConfigurationType.NETWORK_HTTP);
     network.setHttpConfiguration(
-        httpConfiguration != null ?
-            configuration.getInt(CoreConfigurationType.WORKER_HTTP_WORKER) : 0,
-        httpConfiguration != null ?
-            ((SocketConfiguration) httpConfiguration).port() : 0,
+        CoreConstant.DEFAULT_NUMBER_HTTP_WORKERS,
+        httpConfiguration != null ? ((SocketConfiguration) httpConfiguration).port() : 0,
         httpConfiguration != null ? servletMap : null);
 
     var serverAddress = configuration.getString(CoreConfigurationType.SERVER_ADDRESS);
@@ -367,8 +365,8 @@ public final class ServerImpl extends SystemLogger implements Server {
         .setMaxNumberPlayers(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS));
     zeroProcessor.setSessionManager(network.getSessionManager());
     zeroProcessor.setPlayerManager(playerManager);
-    zeroProcessor
-        .setThreadPoolSize(configuration.getInt(CoreConfigurationType.WORKER_INTERNAL_PROCESSOR));
+    // Since v0.7.0, set fixed value for the thread pool size
+    zeroProcessor.setThreadPoolSize(CoreConstant.DEFAULT_ZERO_PROCESSOR_THREAD_POOL_SIZE);
     zeroProcessor.setKeepPlayerOnDisconnection(
         configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION));
 

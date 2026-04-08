@@ -42,15 +42,11 @@ import com.tenio.core.entity.define.result.AccessDatagramChannelResult;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.network.entity.inbound.Request;
-import com.tenio.core.network.entity.inbound.implement.DatagramRequest;
-import com.tenio.core.network.entity.inbound.implement.SessionRequest;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -117,8 +113,24 @@ public class ZeroProcessorImplTest {
         .thenReturn(true);
   }
 
-  private void processSessionWillBeClosed(Session session)
-      throws Exception {
+  private void processSessionRequestsConnection(Session session, DataCollection message) throws Exception {
+    Method method =
+            ZeroProcessorImpl.class.getDeclaredMethod("processSessionRequestsConnection",
+                    Session.class, DataCollection.class);
+    method.setAccessible(true);
+    method.invoke(processor, session, message);
+  }
+
+  private void processDatagramChannelRequestsAccess(DatagramChannel datagramChannel, SocketAddress remoteAddress,
+                                                    DataCollection message) throws Exception {
+    Method method =
+            ZeroProcessorImpl.class.getDeclaredMethod("processDatagramChannelRequestsAccess",
+                    DatagramChannel.class, SocketAddress.class, DataCollection.class);
+    method.setAccessible(true);
+    method.invoke(processor, datagramChannel, remoteAddress, message);
+  }
+
+  private void processSessionWillBeClosed(Session session) throws Exception {
     Method method =
         ZeroProcessorImpl.class.getDeclaredMethod("processSessionWillBeClosed",
             Session.class, PlayerDisconnectMode.class);
@@ -126,8 +138,7 @@ public class ZeroProcessorImplTest {
     method.invoke(processor, session, PlayerDisconnectMode.CLIENT_REQUEST);
   }
 
-  private void processSessionReadMessage(Session session, DataCollection message)
-          throws Exception {
+  private void processSessionReadMessage(Session session, DataCollection message) throws Exception {
     Method method =
             ZeroProcessorImpl.class.getDeclaredMethod("processSessionReadMessage",
                     Session.class, DataCollection.class);
@@ -137,38 +148,28 @@ public class ZeroProcessorImplTest {
 
   // Connection Handling Tests
   @Test
-  public void shouldEstablishNewConnectionWhenBelowMax() {
+  public void shouldEstablishNewConnectionWhenBelowMax() throws Exception {
     when(playerManager.getPlayerCount()).thenReturn(MAX_PLAYERS - 1);
     when(session.isActivated()).thenReturn(true);
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING))
         .thenReturn(true);
 
-    Request request = SessionRequest.newInstance()
-        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
-        .setSender(session)
-        .setMessage(message);
-
-    processor.processRequest(request);
+    processSessionRequestsConnection(session, message);
 
     verify(eventManager).emit(eq(ServerEvent.CONNECTION_ESTABLISHED_RESULT),
         eq(session), eq(message), eq(ConnectionEstablishedResult.SUCCESS));
   }
 
   @Test
-  public void shouldRejectConnectionWhenReachedMax() throws IOException {
+  public void shouldRejectConnectionWhenReachedMax() throws Exception {
     when(playerManager.getPlayerCount()).thenReturn(MAX_PLAYERS);
     when(session.isActivated()).thenReturn(true);
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING))
         .thenReturn(true);
 
-    Request request = SessionRequest.newInstance()
-        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
-        .setSender(session)
-        .setMessage(message);
-
-    processor.processRequest(request);
+    processSessionRequestsConnection(session, message);
 
     verify(eventManager).emit(eq(ServerEvent.CONNECTION_ESTABLISHED_RESULT),
         eq(session), eq(message), eq(ConnectionEstablishedResult.REACHED_MAX_CONNECTION));
@@ -177,7 +178,7 @@ public class ZeroProcessorImplTest {
   }
 
   @Test
-  public void shouldHandlePlayerReconnectionSuccessfully() {
+  public void shouldHandlePlayerReconnectionSuccessfully() throws Exception {
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING))
         .thenReturn(true);
@@ -188,12 +189,7 @@ public class ZeroProcessorImplTest {
     when(session.isActivated()).thenReturn(true);
     when(player.isInRoom()).thenReturn(false);
 
-    Request request = SessionRequest.newInstance()
-        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
-        .setSender(session)
-        .setMessage(message);
-
-    processor.processRequest(request);
+    processSessionRequestsConnection(session, message);
 
     verify(player).setSession(session);
     verify(eventManager).emit(eq(ServerEvent.PLAYER_CONNECTION_RESUMED), eq(player), eq(session));
@@ -236,7 +232,7 @@ public class ZeroProcessorImplTest {
 
   // Datagram Channel Tests
   @Test
-  public void shouldHandleDatagramChannelAccessValidation() {
+  public void shouldHandleDatagramChannelAccessValidation() throws Exception {
     when(eventManager.emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION), eq(message)))
         .thenReturn(Optional.of(player));
     when(player.containsSession()).thenReturn(true);
@@ -244,13 +240,7 @@ public class ZeroProcessorImplTest {
     when(session.isTcp()).thenReturn(true);
     when(datagramChannelManager.getCurrentUdpConveyId()).thenReturn(1);
 
-    Request request = DatagramRequest.newInstance()
-        .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS)
-        .setSender(datagramChannel)
-        .setRemoteAddress(REMOTE_ADDRESS)
-        .setMessage(message);
-
-    processor.processRequest(request);
+    processDatagramChannelRequestsAccess(datagramChannel, REMOTE_ADDRESS, message);
 
     verify(session).setDatagramRemoteAddress(REMOTE_ADDRESS);
     verify(sessionManager).addDatagramForSession(datagramChannel, 1, session);
@@ -259,17 +249,11 @@ public class ZeroProcessorImplTest {
   }
 
   @Test
-  public void shouldRejectDatagramChannelAccessWhenPlayerNotFound() {
+  public void shouldRejectDatagramChannelAccessWhenPlayerNotFound() throws Exception {
     when(eventManager.emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION), eq(message)))
         .thenReturn(Optional.empty());
 
-    Request request = DatagramRequest.newInstance()
-        .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS)
-        .setSender(datagramChannel)
-        .setRemoteAddress(REMOTE_ADDRESS)
-        .setMessage(message);
-
-    processor.processRequest(request);
+    processDatagramChannelRequestsAccess(datagramChannel, REMOTE_ADDRESS, message);
 
     verify(eventManager).emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT),
         eq(null), eq(Session.EMPTY_DATAGRAM_CONVEY_ID),
@@ -278,7 +262,7 @@ public class ZeroProcessorImplTest {
 
   // Configuration Tests
   @Test
-  public void shouldSetAndGetMaxNumberPlayers() {
+  public void shouldSetAndGetMaxNumberPlayers() throws Exception {
     int newMaxPlayers = 200;
     processor.setMaxNumberPlayers(newMaxPlayers);
     when(playerManager.getPlayerCount()).thenReturn(newMaxPlayers);
@@ -287,12 +271,7 @@ public class ZeroProcessorImplTest {
         Session.AssociatedState.DOING))
         .thenReturn(true);
 
-    Request request = SessionRequest.newInstance()
-        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
-        .setSender(session)
-        .setMessage(message);
-
-    processor.processRequest(request);
+    processSessionRequestsConnection(session, message);
 
     verify(eventManager).emit(eq(ServerEvent.CONNECTION_ESTABLISHED_RESULT),
         eq(session), eq(message), eq(ConnectionEstablishedResult.REACHED_MAX_CONNECTION));

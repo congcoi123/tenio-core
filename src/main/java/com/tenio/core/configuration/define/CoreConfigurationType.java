@@ -115,16 +115,6 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   WORKER_WEBSOCKET_CONSUMER("websocket-consumer"),
   /**
-   * The thread pool size configured for Jetty server.
-   *
-   * @since 0.5.0
-   */
-  WORKER_HTTP_WORKER("http-worker"),
-  /**
-   * The number of threads using for handlers to manage internal processes on the server.
-   */
-  WORKER_INTERNAL_PROCESSOR("internal-processor"),
-  /**
    * Sets an interval to frequently check removable rooms for removing them.
    *
    * @see RoomRemoveMode

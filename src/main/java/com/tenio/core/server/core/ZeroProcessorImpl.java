@@ -38,8 +38,6 @@ import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.inbound.Request;
-import com.tenio.core.network.entity.inbound.implement.DatagramRequest;
-import com.tenio.core.network.entity.inbound.implement.SessionRequest;
 import com.tenio.core.network.entity.inbound.policy.RequestPolicy;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
@@ -62,7 +60,6 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
   private final DatagramChannelManager datagramChannelManager;
   private SessionManager sessionManager;
   private PlayerManager playerManager;
-  private RequestPolicy requestPolicy;
   private int maxNumberPlayers;
   private boolean keepPlayerOnDisconnection;
 
@@ -96,13 +93,9 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
   public void subscribe(boolean supportSocketConnection, boolean supportDatagramChannel) {
     if (supportSocketConnection) {
       eventManager.on(ServerEvent.SESSION_REQUEST_CONNECTION, params -> {
-        var request = SessionRequest.newInstance().setEvent(ServerEvent.SESSION_REQUEST_CONNECTION);
-        request.setSender(params[0]);
-        request.setMessage((DataCollection) params[1]);
-        if (requestPolicy != null) {
-          requestPolicy.applyPolicy(request);
-        }
-        enqueueRequest(request);
+        var session = (Session) params[0];
+        var message = (DataCollection) params[1];
+        execute(() -> processSessionRequestsConnection(session, message));
 
         return null;
       });
@@ -126,14 +119,10 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
 
     if (supportDatagramChannel) {
       eventManager.on(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS, params -> {
-        var request = DatagramRequest.newInstance().setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS);
-        request.setSender(params[0]);
-        request.setRemoteAddress((SocketAddress) params[1]);
-        request.setMessage((DataCollection) params[2]);
-        if (requestPolicy != null) {
-          requestPolicy.applyPolicy(request);
-        }
-        enqueueRequest(request);
+        var datagramChannel = (DatagramChannel) params[0];
+        var remoteAddress = (SocketAddress) params[1];
+        var message = (DataCollection) params[2];
+        execute(() -> processDatagramChannelRequestsAccess(datagramChannel, remoteAddress, message));
 
         return null;
       });
@@ -147,40 +136,29 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
 
   @Override
   public void setRequestPolicy(RequestPolicy requestPolicy) {
-    this.requestPolicy = requestPolicy;
+    // Do nothing
   }
 
   @Override
   public void processRequest(Request request) {
-    switch (request.getEvent()) {
-      case SESSION_REQUEST_CONNECTION -> processSessionRequestsConnection(request);
-      case DATAGRAM_CHANNEL_REQUEST_ACCESS -> processDatagramChannelRequestsAccess(request);
-      default -> {
-        // do nothing
-      }
-    }
+    // Do nothing
   }
 
-  private void processSessionRequestsConnection(Request request) {
-    // Check if it's a reconnection request first
-    var session = (Session) request.getSender();
-
+  private void processSessionRequestsConnection(Session session, DataCollection message) {
     // We only consider the fresh session
     if (!session.isActivated() || !session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING)) {
       return;
     }
 
-    var message = request.getMessage();
-
-    // When it gets disconnected from client side, the server may not recognise it. In this
+    // When it gets disconnected from client side, the server may not recognize it. In this
     // case, the player is remained on the server side, so we should always check this event
     Object reconnectedObject = null;
     try {
       reconnectedObject = eventManager.emit(ServerEvent.PLAYER_CONNECTION_RETRY, session, message);
     } catch (Exception exception) {
       if (isErrorEnabled()) {
-        error(exception, request);
+        error(exception, message);
       }
     }
 
@@ -252,8 +230,7 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
     }
   }
 
-  private void processSessionWillBeClosed(Session session,
-                                          PlayerDisconnectMode playerDisconnectMode) {
+  private void processSessionWillBeClosed(Session session, PlayerDisconnectMode playerDisconnectMode) {
     if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
       var player = playerManager.getPlayerByIdentity(session.getName());
       // the player maybe existed
@@ -304,16 +281,15 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
     }
   }
 
-  private void processDatagramChannelRequestsAccess(Request request) {
-    var message = request.getMessage();
-
+  private void processDatagramChannelRequestsAccess(DatagramChannel datagramChannel, SocketAddress remoteAddress,
+                                                    DataCollection message) {
     // verify the datagram channel accessing request
     Object checkingPlayer = null;
     try {
       checkingPlayer = eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION, message);
     } catch (Exception exception) {
       if (isErrorEnabled()) {
-        error(exception, request);
+        error(exception, message);
       }
     }
 
@@ -336,9 +312,8 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
               player, Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
         } else {
           var udpConvey = datagramChannelManager.getCurrentUdpConveyId();
-          var datagramChannel = (DatagramChannel) request.getSender();
 
-          session.setDatagramRemoteAddress(request.getRemoteAddress());
+          session.setDatagramRemoteAddress(remoteAddress);
           sessionManager.addDatagramForSession(datagramChannel, udpConvey, session);
 
           eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
@@ -359,7 +334,7 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
 
   @Override
   protected boolean isEnabledPriority() {
-    return requestPolicy != null;
+    return false;
   }
 
   @Override

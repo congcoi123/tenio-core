@@ -125,3 +125,4 @@
 - Supports Java 21 Features
 - Virtual Threads are being used in Session Inbound Process Queue and Schedulers
 - It should close sessions whenever exceptions occurred
+- Stopped supporting request queue in ZeroProcessor, so the RequestPolicy is unused

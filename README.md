@@ -82,7 +82,6 @@ packet-encryptor: BinaryPacketEncryptor
 packet-compressor: BinaryPacketCompressor
 connection-filter: ConnectionFilter
 outbound-queue-policy: OutboundQueuePolicy
-request-policy: RequestPolicy
 datagram-packet-policy: DatagramPacketPolicy
 ```
 

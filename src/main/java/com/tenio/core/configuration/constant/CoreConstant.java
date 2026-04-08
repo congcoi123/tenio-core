@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.configuration.constant;
 
+import com.tenio.core.server.core.ZeroProcessor;
+
 /**
  * Defines core constants used throughout the server application.
  * This class provides centralized access to commonly used constant values,
@@ -123,6 +125,7 @@ public final class CoreConstant {
    * Used to indicate an unassigned or invalid port number.
    */
   public static final int NULL_PORT_VALUE = -1;
+
   /**
    * It should have a small delay between starting a new worker in an executor service to prevent
    * any unexpected issue.
@@ -130,6 +133,7 @@ public final class CoreConstant {
    * @since 0.6.7
    */
   public static final int DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS = 0;
+
   /**
    * After everything was settled down, the server has a small delay before it announces
    * readiness to all.
@@ -137,6 +141,21 @@ public final class CoreConstant {
    * @since 0.6.7
    */
   public static final int DELAY_BEFORE_SERVER_IS_READY_IN_MILLISECONDS = 100;
+
+  /**
+   * The default thread pool size of {@link ZeroProcessor}.
+   *
+   * @since 0.7.0
+   */
+  public static final int DEFAULT_ZERO_PROCESSOR_THREAD_POOL_SIZE = 1;
+
+  /**
+   * The default number of HTTP workers.
+   * The minimum number of threads to keep alive in the thread pool is 8.
+   *
+   * @since 0.7.0
+   */
+  public static final int DEFAULT_NUMBER_HTTP_WORKERS = 8;
 
   /**
    * Private constructor to prevent instantiation.

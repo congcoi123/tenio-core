@@ -276,6 +276,9 @@ public abstract class AbstractController extends AbstractManager implements Cont
    * @since 0.7.0
    */
   public void execute(Runnable action) {
+    if (!activated) {
+      return;
+    }
     executorService.execute(action);
   }
 
