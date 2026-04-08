@@ -88,7 +88,7 @@ public final class SystemMonitoring {
    *
    * @return the number of running platform threads ({@code long} value
    */
-  public long countRunningThreads() {
+  public long countRunningPlatformThreads() {
     return Thread.getAllStackTraces().keySet().stream()
             .filter(thread -> thread.getState() == Thread.State.RUNNABLE)
             .count();
@@ -128,6 +128,6 @@ public final class SystemMonitoring {
         (float) getCpuUsage() * 100, ZeroUtility.convertBytesToMB(getTotalMemory()),
         ZeroUtility.convertBytesToMB(getUsedMemory()),
         ZeroUtility.convertBytesToMB(getFreeMemory()),
-        countRunningThreads());
+        countRunningPlatformThreads());
   }
 }
