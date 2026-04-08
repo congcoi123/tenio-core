@@ -110,7 +110,7 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
       eventManager.on(ServerEvent.SESSION_WILL_BE_CLOSED, params -> {
         var session = (Session) params[0];
         var playerDisconnectMode = (PlayerDisconnectMode) params[2];
-        processSessionWillBeClosed(session, playerDisconnectMode);
+        execute(() -> processSessionWillBeClosed(session, playerDisconnectMode));
 
         return null;
       });

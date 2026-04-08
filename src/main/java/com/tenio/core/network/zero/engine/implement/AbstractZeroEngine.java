@@ -114,17 +114,17 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
 
   private void destroyEngine() {
     if (isInfoEnabled()) {
-      info("STOPPED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+      info("STOPPED ENGINE", buildgen("zero-", getName(), " (", executorSize, ")"));
     }
     onDestroyed();
     if (isInfoEnabled()) {
-      info("DESTROYED SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+      info("DESTROYED ENGINE", buildgen("zero-", getName(), " (", executorSize, ")"));
     }
   }
 
   @Override
   public void run() {
-    setThreadName(id.incrementAndGet(), null);
+    configureThread(id.incrementAndGet(), null);
     onRunning();
   }
 
@@ -188,8 +188,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   public void start() {
     // check the number extra workers
     if (executorSize - getNumberOfExtraWorkers() <= 0) {
-      throw new IllegalArgumentException("The number of extra workers must be less than the " +
-          "executor size");
+      throw new IllegalArgumentException("The number of extra workers must be less than the executor size");
     }
     for (int count = 0; count < executorSize - getNumberOfExtraWorkers(); count++) {
       executorService.execute(this);
@@ -205,7 +204,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
     }
     onStarted();
     if (isInfoEnabled()) {
-      info("START SERVICE", buildgen("zero-", getName(), " (", executorSize, ")"));
+      info("START ENGINE", buildgen("zero-", getName(), " (", executorSize, ")"));
     }
   }
 
@@ -248,7 +247,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
           "current running times: " + count);
     }
     executorService.execute(() -> {
-      setThreadName(count, postfix);
+      configureThread(count, postfix);
       action.run();
     });
   }
@@ -268,7 +267,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
     return getThreadPoolSize() * CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS;
   }
 
-  private void setThreadName(int id, String extra) {
+  private void configureThread(int id, String extra) {
     Thread currentThread = Thread.currentThread();
     currentThread.setName(extra == null ? StringUtility.strgen("zero-", getName(), "-", id) :
         StringUtility.strgen("zero-", getName(), "-", extra, "-", id));

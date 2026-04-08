@@ -126,7 +126,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
     activated = false;
 
     if (isInfoEnabled()) {
-      info("STOPPING SERVICE", buildgen(getName(), " (", executorSize, ")"));
+      info("STOPPING CONTROLLER", buildgen(getName(), " (", executorSize, ")"));
     }
 
     executorService.shutdown();
@@ -145,7 +145,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
   @Override
   public void run() {
     int currentIndex = id.getAndIncrement();
-    setThreadName(currentIndex);
+    configureThread(currentIndex);
     processing(currentIndex);
   }
 
@@ -173,7 +173,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
     onDestroyed();
   }
 
-  private void setThreadName(int currentId) {
+  private void configureThread(int currentId) {
     Thread currentThread = Thread.currentThread();
     currentThread.setName(StringUtility.strgen(getName(), "-", (currentId + 1)));
     currentThread.setUncaughtExceptionHandler((thread, cause) -> {
@@ -185,11 +185,11 @@ public abstract class AbstractController extends AbstractManager implements Cont
 
   private void destroyController() {
     if (isInfoEnabled()) {
-      info("STOPPING SERVICE", buildgen(getName(), " (", executorSize, ")"));
+      info("STOPPING CONTROLLER", buildgen(getName(), " (", executorSize, ")"));
     }
     destroy();
     if (isInfoEnabled()) {
-      info("DESTROYED SERVICE", buildgen(getName(), " (", executorSize, ")"));
+      info("DESTROYED CONTROLLER", buildgen(getName(), " (", executorSize, ")"));
     }
   }
 
@@ -214,7 +214,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
       }
     }
     if (isInfoEnabled()) {
-      info("START SERVICE", buildgen(getName(), " (", executorSize, ")"));
+      info("START CONTROLLER", buildgen(getName(), " (", executorSize, ")"));
     }
   }
 
@@ -267,6 +267,16 @@ public abstract class AbstractController extends AbstractManager implements Cont
   @Override
   public int getMaximumStartingTimeInMilliseconds() {
     return getThreadPoolSize() * CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS;
+  }
+
+  /**
+   * Executes a task.
+   *
+   * @param action the task
+   * @since 0.7.0
+   */
+  public void execute(Runnable action) {
+    executorService.execute(action);
   }
 
   /**
