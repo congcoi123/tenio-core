@@ -101,7 +101,7 @@ public final class SchedulerImpl extends AbstractManager implements Scheduler {
   @Override
   public void start() {
     if (isInfoEnabled()) {
-      info("START SERVICE", buildgen(getName(), " (", 1, ")"));
+      info("START SCHEDULER", buildgen(getName(), " (", 1, ")"));
     }
 
     taskManager.create("auto-disconnect-player", autoDisconnectPlayerTask);
@@ -141,7 +141,7 @@ public final class SchedulerImpl extends AbstractManager implements Scheduler {
   private void attemptToShutdown() {
     taskManager.clear();
     if (isInfoEnabled()) {
-      info("STOPPED SERVICE", buildgen(getName(), " (", 1, ")"));
+      info("STOPPED SCHEDULER", buildgen(getName(), " (", 1, ")"));
     }
   }
 
