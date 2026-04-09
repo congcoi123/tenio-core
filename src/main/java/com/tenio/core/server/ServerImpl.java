@@ -152,7 +152,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     serverName = configuration.getString(CoreConfigurationType.SERVER_NAME);
 
     if (isInfoEnabled()) {
-      info("SERVER", serverName, "Starting ...");
+      info(serverName, "STATE", "STARTING");
     }
 
     // subscribing for processes and handlers
@@ -189,7 +189,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     Thread.sleep(totalWaitingTime);
 
     if (isInfoEnabled()) {
-      info("SERVER", serverName, buildgen("Started after ", totalWaitingTime, " milliseconds"));
+      info(serverName, "STATE", "RUNNING");
     }
 
     // emit "server initialization" event
@@ -420,13 +420,13 @@ public final class ServerImpl extends SystemLogger implements Server {
   @Override
   public void shutdown() {
     if (isInfoEnabled()) {
-      info("SERVER", serverName, "Stopping ...");
+      info(serverName, "STATE", "STOPPING");
     }
     // emit "server shutdown" event
     eventManager.emit(ServerEvent.SERVER_TEARDOWN, serverName);
     shutdownServices();
     if (isInfoEnabled()) {
-      info("SERVER", serverName, "Stopped");
+      info(serverName, "STATE", "STOPPED");
     }
     // real stop
     Runtime.getRuntime().halt(0);

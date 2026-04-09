@@ -28,6 +28,8 @@ import com.tenio.common.data.DataCollection;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.network.entity.inbound.implement.DatagramRequest;
+import com.tenio.core.network.entity.inbound.implement.SessionRequest;
 import com.tenio.core.processor.AbstractProcessor;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
@@ -60,6 +62,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
   private final DatagramChannelManager datagramChannelManager;
   private SessionManager sessionManager;
   private PlayerManager playerManager;
+  private RequestPolicy requestPolicy;
   private int maxNumberPlayers;
   private boolean keepPlayerOnDisconnection;
 
@@ -95,7 +98,13 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
       eventManager.on(ServerEvent.SESSION_REQUEST_CONNECTION, params -> {
         var session = (Session) params[0];
         var message = (DataCollection) params[1];
-        execute(() -> processSessionRequestsConnection(session, message));
+        var request = SessionRequest.newInstance().setEvent(ServerEvent.SESSION_REQUEST_CONNECTION);
+        request.setSender(session);
+        request.setMessage(message);
+        if (requestPolicy != null) {
+          requestPolicy.applyPolicy(request);
+        }
+        enqueueRequest(request);
 
         return null;
       });
@@ -103,7 +112,9 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
       eventManager.on(ServerEvent.SESSION_WILL_BE_CLOSED, params -> {
         var session = (Session) params[0];
         var playerDisconnectMode = (PlayerDisconnectMode) params[2];
-        execute(() -> processSessionWillBeClosed(session, playerDisconnectMode));
+        // The closing process should happen immediately on the caller thread
+        // That's why we DID NOT mark the event SESSION_WILL_BE_CLOSED as @Asynchronous
+        processSessionWillBeClosed(session, playerDisconnectMode);
 
         return null;
       });
@@ -122,7 +133,14 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
         var datagramChannel = (DatagramChannel) params[0];
         var remoteAddress = (SocketAddress) params[1];
         var message = (DataCollection) params[2];
-        execute(() -> processDatagramChannelRequestsAccess(datagramChannel, remoteAddress, message));
+        var request = DatagramRequest.newInstance().setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS);
+        request.setSender(datagramChannel);
+        request.setRemoteAddress(remoteAddress);
+        request.setMessage(message);
+        if (requestPolicy != null) {
+          requestPolicy.applyPolicy(request);
+        }
+        enqueueRequest(request);
 
         return null;
       });
@@ -136,20 +154,31 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
 
   @Override
   public void setRequestPolicy(RequestPolicy requestPolicy) {
-    // Stopped using from v0.7.0
+    this.requestPolicy = requestPolicy;
   }
 
   @Override
   public void processRequest(Request request) {
-    // Stopped using from v0.7.0
+    switch (request.getEvent()) {
+      case SESSION_REQUEST_CONNECTION -> processSessionRequestsConnection(request);
+      case DATAGRAM_CHANNEL_REQUEST_ACCESS -> processDatagramChannelRequestsAccess(request);
+      default -> {
+        // do nothing
+      }
+    }
   }
 
-  private void processSessionRequestsConnection(Session session, DataCollection message) {
+  private void processSessionRequestsConnection(Request request) {
+    // Check if it's a reconnection request first
+    var session = (Session) request.getSender();
+
     // We only consider the fresh session
     if (!session.isActivated() || !session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING)) {
       return;
     }
+
+    var message = request.getMessage();
 
     // When it gets disconnected from client side, the server may not recognize it. In this
     // case, the player is remained on the server side, so we should always check this event
@@ -158,7 +187,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
       reconnectedObject = eventManager.emit(ServerEvent.PLAYER_CONNECTION_RETRY, session, message);
     } catch (Exception exception) {
       if (isErrorEnabled()) {
-        error(exception, message);
+        error(exception, request);
       }
     }
 
@@ -281,8 +310,9 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
     }
   }
 
-  private void processDatagramChannelRequestsAccess(DatagramChannel datagramChannel, SocketAddress remoteAddress,
-                                                    DataCollection message) {
+  private void processDatagramChannelRequestsAccess(Request request) {
+    var message = request.getMessage();
+
     // verify the datagram channel accessing request
     Object checkingPlayer = null;
     try {
@@ -312,6 +342,8 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
               player, Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
         } else {
           var udpConvey = datagramChannelManager.getCurrentUdpConveyId();
+          var datagramChannel = (DatagramChannel) request.getSender();
+          var remoteAddress = request.getRemoteAddress();
 
           session.setDatagramRemoteAddress(remoteAddress);
           sessionManager.addDatagramForSession(datagramChannel, udpConvey, session);
@@ -334,8 +366,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
 
   @Override
   protected boolean isEnabledPriority() {
-    // Default sets to be false from v0.7.0
-    return false;
+    return requestPolicy != null;
   }
 
   @Override

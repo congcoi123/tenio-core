@@ -42,6 +42,9 @@ import com.tenio.core.entity.define.result.AccessDatagramChannelResult;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.network.entity.inbound.Request;
+import com.tenio.core.network.entity.inbound.implement.DatagramRequest;
+import com.tenio.core.network.entity.inbound.implement.SessionRequest;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
@@ -113,23 +116,6 @@ public class ZeroProcessorImplTest {
         .thenReturn(true);
   }
 
-  private void processSessionRequestsConnection(Session session, DataCollection message) throws Exception {
-    Method method =
-            ZeroProcessorImpl.class.getDeclaredMethod("processSessionRequestsConnection",
-                    Session.class, DataCollection.class);
-    method.setAccessible(true);
-    method.invoke(processor, session, message);
-  }
-
-  private void processDatagramChannelRequestsAccess(DatagramChannel datagramChannel, SocketAddress remoteAddress,
-                                                    DataCollection message) throws Exception {
-    Method method =
-            ZeroProcessorImpl.class.getDeclaredMethod("processDatagramChannelRequestsAccess",
-                    DatagramChannel.class, SocketAddress.class, DataCollection.class);
-    method.setAccessible(true);
-    method.invoke(processor, datagramChannel, remoteAddress, message);
-  }
-
   private void processSessionWillBeClosed(Session session) throws Exception {
     Method method =
         ZeroProcessorImpl.class.getDeclaredMethod("processSessionWillBeClosed",
@@ -155,7 +141,12 @@ public class ZeroProcessorImplTest {
         Session.AssociatedState.DOING))
         .thenReturn(true);
 
-    processSessionRequestsConnection(session, message);
+    Request request = SessionRequest.newInstance()
+            .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+            .setSender(session)
+            .setMessage(message);
+
+    processor.processRequest(request);
 
     verify(eventManager).emit(eq(ServerEvent.CONNECTION_ESTABLISHED_RESULT),
         eq(session), eq(message), eq(ConnectionEstablishedResult.SUCCESS));
@@ -169,7 +160,12 @@ public class ZeroProcessorImplTest {
         Session.AssociatedState.DOING))
         .thenReturn(true);
 
-    processSessionRequestsConnection(session, message);
+    Request request = SessionRequest.newInstance()
+            .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+            .setSender(session)
+            .setMessage(message);
+
+    processor.processRequest(request);
 
     verify(eventManager).emit(eq(ServerEvent.CONNECTION_ESTABLISHED_RESULT),
         eq(session), eq(message), eq(ConnectionEstablishedResult.REACHED_MAX_CONNECTION));
@@ -189,7 +185,12 @@ public class ZeroProcessorImplTest {
     when(session.isActivated()).thenReturn(true);
     when(player.isInRoom()).thenReturn(false);
 
-    processSessionRequestsConnection(session, message);
+    Request request = SessionRequest.newInstance()
+            .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+            .setSender(session)
+            .setMessage(message);
+
+    processor.processRequest(request);
 
     verify(player).setSession(session);
     verify(eventManager).emit(eq(ServerEvent.PLAYER_CONNECTION_RESUMED), eq(player), eq(session));
@@ -240,7 +241,13 @@ public class ZeroProcessorImplTest {
     when(session.isTcp()).thenReturn(true);
     when(datagramChannelManager.getCurrentUdpConveyId()).thenReturn(1);
 
-    processDatagramChannelRequestsAccess(datagramChannel, REMOTE_ADDRESS, message);
+    Request request = DatagramRequest.newInstance()
+            .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS)
+            .setSender(datagramChannel)
+            .setRemoteAddress(REMOTE_ADDRESS)
+            .setMessage(message);
+
+    processor.processRequest(request);
 
     verify(session).setDatagramRemoteAddress(REMOTE_ADDRESS);
     verify(sessionManager).addDatagramForSession(datagramChannel, 1, session);
@@ -253,7 +260,13 @@ public class ZeroProcessorImplTest {
     when(eventManager.emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION), eq(message)))
         .thenReturn(Optional.empty());
 
-    processDatagramChannelRequestsAccess(datagramChannel, REMOTE_ADDRESS, message);
+    Request request = DatagramRequest.newInstance()
+            .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS)
+            .setSender(datagramChannel)
+            .setRemoteAddress(REMOTE_ADDRESS)
+            .setMessage(message);
+
+    processor.processRequest(request);
 
     verify(eventManager).emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT),
         eq(null), eq(Session.EMPTY_DATAGRAM_CONVEY_ID),
@@ -271,7 +284,12 @@ public class ZeroProcessorImplTest {
         Session.AssociatedState.DOING))
         .thenReturn(true);
 
-    processSessionRequestsConnection(session, message);
+    Request request = SessionRequest.newInstance()
+            .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+            .setSender(session)
+            .setMessage(message);
+
+    processor.processRequest(request);
 
     verify(eventManager).emit(eq(ServerEvent.CONNECTION_ESTABLISHED_RESULT),
         eq(session), eq(message), eq(ConnectionEstablishedResult.REACHED_MAX_CONNECTION));

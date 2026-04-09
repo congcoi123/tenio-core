@@ -270,19 +270,6 @@ public abstract class AbstractProcessor extends AbstractManager implements Proce
   }
 
   /**
-   * Executes a task.
-   *
-   * @param action the task
-   * @since 0.7.0
-   */
-  public void execute(Runnable action) {
-    if (!activated) {
-      return;
-    }
-    executorService.execute(action);
-  }
-
-  /**
    * Determines whether the request priority should be applied.
    *
    * @return {@code true} if the request priority is considered, otherwise {@code false}
