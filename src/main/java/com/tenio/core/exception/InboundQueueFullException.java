@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.exception;
 
-import com.tenio.core.controller.AbstractController;
+import com.tenio.core.processor.AbstractProcessor;
 import com.tenio.core.network.entity.session.Session;
 
 import java.io.Serial;
@@ -41,7 +41,7 @@ public final class InboundQueueFullException extends RuntimeException {
    * Creates a new exception.
    *
    * @param currentSize the current size of the queue ({@code integer} value)
-   * @see AbstractController
+   * @see AbstractProcessor
    */
   public InboundQueueFullException(int currentSize) {
     super(String.format("Reached max queue size, the request was dropped. The current size: %d", currentSize));

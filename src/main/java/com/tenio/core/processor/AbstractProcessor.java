@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.controller;
+package com.tenio.core.processor;
 
 import com.tenio.common.utility.StringUtility;
 import com.tenio.core.configuration.constant.CoreConstant;
@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * An abstract base class for implementing request controllers in the application.
+ * An abstract base class for implementing request processors in the application.
  * This class provides a foundation for handling and processing requests with
  * configurable thread pools and queue management.
  *
@@ -67,12 +67,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   <li>Error handling should not block the processing queue</li>
  * </ul>
  *
- * @see Controller
+ * @see Processor
  * @see Request
  * @see RequestComparator
  * @since 0.3.0
  */
-public abstract class AbstractController extends AbstractManager implements Controller, Runnable {
+public abstract class AbstractProcessor extends AbstractManager implements Processor, Runnable {
 
   private final AtomicInteger id;
   private final AtomicBoolean stopping;
@@ -88,7 +88,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
    *
    * @param eventManager the {@link EventManager}
    */
-  protected AbstractController(EventManager eventManager) {
+  protected AbstractProcessor(EventManager eventManager) {
     super(eventManager);
     id = new AtomicInteger(0);
     stopping = new AtomicBoolean(false);
@@ -126,7 +126,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
     activated = false;
 
     if (isInfoEnabled()) {
-      info("STOPPING CONTROLLER", buildgen(getName(), " (", executorSize, ")"));
+      info("STOPPING PROCESSOR", buildgen(getName(), " (", executorSize, ")"));
     }
 
     executorService.shutdown();
@@ -134,11 +134,11 @@ public abstract class AbstractController extends AbstractManager implements Cont
     try {
       if (executorService.awaitTermination(10, TimeUnit.SECONDS)) {
         executorService.shutdownNow();
-        destroyController();
+        destroyProcessor();
       }
     } catch (InterruptedException exception) {
       executorService.shutdownNow();
-      destroyController();
+      destroyProcessor();
     }
   }
 
@@ -183,13 +183,13 @@ public abstract class AbstractController extends AbstractManager implements Cont
     });
   }
 
-  private void destroyController() {
+  private void destroyProcessor() {
     if (isInfoEnabled()) {
-      info("STOPPING CONTROLLER", buildgen(getName(), " (", executorSize, ")"));
+      info("STOPPING PROCESSOR", buildgen(getName(), " (", executorSize, ")"));
     }
     destroy();
     if (isInfoEnabled()) {
-      info("DESTROYED CONTROLLER", buildgen(getName(), " (", executorSize, ")"));
+      info("DESTROYED PROCESSOR", buildgen(getName(), " (", executorSize, ")"));
     }
   }
 
@@ -214,7 +214,7 @@ public abstract class AbstractController extends AbstractManager implements Cont
       }
     }
     if (isInfoEnabled()) {
-      info("START CONTROLLER", buildgen(getName(), " (", executorSize, ")"));
+      info("START PROCESSOR", buildgen(getName(), " (", executorSize, ")"));
     }
   }
 

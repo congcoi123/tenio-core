@@ -38,7 +38,6 @@ import org.junit.runner.RunWith;
     "com.tenio.core.bootstrap",
     "com.tenio.core.command",
     "com.tenio.core.configuration",
-    "com.tenio.core.controller",
     "com.tenio.core.entity",
     "com.tenio.core.event",
     "com.tenio.core.exception",
@@ -46,6 +45,7 @@ import org.junit.runner.RunWith;
     "com.tenio.core.manager",
     "com.tenio.core.monitoring",
     "com.tenio.core.network",
+    "com.tenio.core.processor",
     "com.tenio.core.scheduler",
     "com.tenio.core.server",
     "com.tenio.core.utility"

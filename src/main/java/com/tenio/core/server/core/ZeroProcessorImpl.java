@@ -28,7 +28,7 @@ import com.tenio.common.data.DataCollection;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.configuration.define.ServerEvent;
-import com.tenio.core.controller.AbstractController;
+import com.tenio.core.processor.AbstractProcessor;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
@@ -54,7 +54,7 @@ import java.util.Optional;
  *
  * @see ZeroProcessor
  */
-public final class ZeroProcessorImpl extends AbstractController implements ZeroProcessor {
+public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroProcessor {
 
   private final ServerApi serverApi;
   private final DatagramChannelManager datagramChannelManager;
@@ -136,12 +136,12 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
 
   @Override
   public void setRequestPolicy(RequestPolicy requestPolicy) {
-    // Do nothing
+    // Stopped using from v0.7.0
   }
 
   @Override
   public void processRequest(Request request) {
-    // Do nothing
+    // Stopped using from v0.7.0
   }
 
   private void processSessionRequestsConnection(Session session, DataCollection message) {
@@ -334,6 +334,7 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
 
   @Override
   protected boolean isEnabledPriority() {
+    // Default sets to be false from v0.7.0
     return false;
   }
 
@@ -359,35 +360,36 @@ public final class ZeroProcessorImpl extends AbstractController implements ZeroP
 
   @Override
   public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
-    // do nothing
+    // Do nothing
   }
 
   @Override
   public void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic) {
+    // Do nothing
   }
 
   @Override
   public void onInitialized() {
-    // do nothing
+    // Do nothing
   }
 
   @Override
   public void onStarted() {
-    // do nothing
+    // Do nothing
   }
 
   @Override
   public void onRunning() {
-    // do nothing
+    // Do nothing
   }
 
   @Override
   public void onShutdown() {
-    // do nothing
+    // Do nothing
   }
 
   @Override
   public void onDestroyed() {
-    // do nothing
+    // Do nothing
   }
 }

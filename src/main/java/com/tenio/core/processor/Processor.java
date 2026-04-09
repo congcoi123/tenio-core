@@ -22,14 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.controller;
+package com.tenio.core.processor;
 
 import com.tenio.core.network.entity.inbound.Request;
 import com.tenio.core.service.Service;
 import com.tenio.core.service.ServiceListener;
 
 /**
- * Represents a controller that manages request processing in the application.
+ * Represents a processor that manages request processing in the application.
  * This interface extends both {@link Service} and {@link ServiceListener} to provide
  * request handling capabilities with service lifecycle management.
  *
@@ -57,7 +57,7 @@ import com.tenio.core.service.ServiceListener;
  * @see Request
  * @since 0.3.0
  */
-public interface Controller extends Service, ServiceListener {
+public interface Processor extends Service, ServiceListener {
 
   /**
    * The default initial queue size.
