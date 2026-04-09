@@ -83,7 +83,8 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
             Iterator<Session> iterator = sessionManager.getReadonlySessionsList().listIterator();
             while (iterator.hasNext()) {
               Session session = iterator.next();
-              if (session.isActivated() && session.isOrphan()) {
+              // From v0.7.0, it doesn't need to check whether the session is activated
+              if (session.isOrphan()) {
                 try {
                   if (isDebugEnabled()) {
                     debug("AUTO CLEAN ORPHAN SESSION",
