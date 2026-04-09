@@ -273,8 +273,7 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     network.setSocketAcceptorBufferSize(
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE));
-    network.setSocketAcceptorWorkers(
-        configuration.getInt(CoreConfigurationType.WORKER_SOCKET_ACCEPTOR));
+    network.setSocketAcceptorWorkers(CoreConstant.DEFAULT_ENGINE_THREAD_POOL_SIZE);
 
     var tcpSocketConfiguration = configuration.get(CoreConfigurationType.NETWORK_TCP) != null ?
             (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_TCP) : null;
@@ -366,7 +365,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     zeroProcessor.setSessionManager(network.getSessionManager());
     zeroProcessor.setPlayerManager(playerManager);
     // Since v0.7.0, set fixed value for the thread pool size
-    zeroProcessor.setThreadPoolSize(CoreConstant.DEFAULT_ZERO_PROCESSOR_THREAD_POOL_SIZE);
+    zeroProcessor.setThreadPoolSize(CoreConstant.DEFAULT_PROCESSOR_THREAD_POOL_SIZE);
     zeroProcessor.setKeepPlayerOnDisconnection(
         configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION));
 

@@ -216,7 +216,7 @@ public final class ZeroWriterImpl extends AbstractZeroEngine implements ZeroWrit
 
   @Override
   public void onStarted() {
-    // do nothing
+    // Do nothing
   }
 
   @Override
@@ -239,5 +239,6 @@ public final class ZeroWriterImpl extends AbstractZeroEngine implements ZeroWrit
 
   @Override
   public void onDestroyed() {
+    // Do nothing
   }
 }

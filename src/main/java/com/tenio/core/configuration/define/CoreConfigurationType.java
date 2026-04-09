@@ -94,10 +94,6 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   ENABLE_TERMINAL_COMMAND("enable-terminal-command"),
   /**
-   * The number of threads using for handlers to accept new incoming client socket on the server.
-   */
-  WORKER_SOCKET_ACCEPTOR("socket-acceptor"),
-  /**
    * The number of threads using for handlers to read new messages from client sockets on the
    * server.
    */
