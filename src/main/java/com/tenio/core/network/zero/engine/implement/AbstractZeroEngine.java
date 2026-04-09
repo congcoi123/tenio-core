@@ -267,10 +267,10 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
     return getThreadPoolSize() * CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS;
   }
 
-  private void configureThread(int id, String extra) {
+  private void configureThread(int id, String postfix) {
     Thread currentThread = Thread.currentThread();
-    currentThread.setName(extra == null ? StringUtility.strgen("zero-", getName(), "-", id) :
-        StringUtility.strgen("zero-", getName(), "-", extra, "-", id));
+    currentThread.setName(postfix == null ? StringUtility.strgen("zero-", getName(), "-", id) :
+        StringUtility.strgen("zero-", getName(), "-", postfix, "-", id));
     currentThread.setUncaughtExceptionHandler((thread, cause) -> {
       if (isErrorEnabled()) {
         error(cause, thread.getName());

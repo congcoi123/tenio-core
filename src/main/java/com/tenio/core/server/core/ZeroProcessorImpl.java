@@ -319,7 +319,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
       checkingPlayer = eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION, message);
     } catch (Exception exception) {
       if (isErrorEnabled()) {
-        error(exception, message);
+        error(exception, request);
       }
     }
 
