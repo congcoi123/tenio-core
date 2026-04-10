@@ -22,47 +22,52 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network;
+package com.tenio.core.event.implement;
 
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.configuration.define.ServerEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("Unit Test Cases For Network")
-class NetworkTest {
+@DisplayName("Unit Test Cases For EventProducer")
+class EventProducerTest {
 
-  private Network network;
+  private EventProducer producer;
 
   @BeforeEach
   void setUp() {
-    network = NetworkImpl.newInstance(EventManager.newInstance());
+    producer = new EventProducer();
   }
 
   @Test
-  @DisplayName("newInstance returns a Network implementation")
-  void testNewInstanceIsNetwork() {
-    assertInstanceOf(Network.class, network);
+  @DisplayName("getEventHandler returns non-null handler")
+  void testGetEventHandlerIsNotNull() {
+    assertNotNull(producer.getEventHandler());
   }
 
   @Test
-  @DisplayName("getNetworkReaderStatistic returns non-null")
-  void testGetNetworkReaderStatistic() {
-    assertNotNull(network.getNetworkReaderStatistic());
+  @DisplayName("emit returns null when no subscriber is registered")
+  void testEmitWithNoSubscriberReturnsNull() {
+    assertNull(producer.emit(ServerEvent.SERVER_TEARDOWN));
   }
 
   @Test
-  @DisplayName("getNetworkWriterStatistic returns non-null")
-  void testGetNetworkWriterStatistic() {
-    assertNotNull(network.getNetworkWriterStatistic());
+  @DisplayName("emit returns subscriber result when subscriber is registered")
+  void testEmitReturnsSubscriberResult() {
+    producer.getEventHandler().subscribe(ServerEvent.FETCHED_CCU_INFO, params -> 42);
+    Object result = producer.emit(ServerEvent.FETCHED_CCU_INFO, 1);
+    assertEquals(42, result);
   }
 
   @Test
-  @DisplayName("getSessionManager returns non-null")
-  void testGetSessionManager() {
-    assertNotNull(network.getSessionManager());
+  @DisplayName("clear removes all subscribers so subsequent emit returns null")
+  void testClearRemovesSubscribers() {
+    producer.getEventHandler().subscribe(ServerEvent.FETCHED_CCU_INFO, params -> 99);
+    producer.clear();
+    assertNull(producer.emit(ServerEvent.FETCHED_CCU_INFO, 1));
   }
 }

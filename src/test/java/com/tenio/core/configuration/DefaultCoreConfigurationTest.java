@@ -22,47 +22,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network;
+package com.tenio.core.configuration;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.tenio.core.event.implement.EventManager;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("Unit Test Cases For Network")
-class NetworkTest {
+@DisplayName("Unit Test Cases For DefaultCoreConfiguration")
+class DefaultCoreConfigurationTest {
 
-  private Network network;
-
-  @BeforeEach
-  void setUp() {
-    network = NetworkImpl.newInstance(EventManager.newInstance());
+  @Test
+  @DisplayName("DefaultCoreConfiguration is a CoreConfiguration")
+  void testIsACoreConfiguration() {
+    assertInstanceOf(CoreConfiguration.class, new DefaultCoreConfiguration());
   }
 
   @Test
-  @DisplayName("newInstance returns a Network implementation")
-  void testNewInstanceIsNetwork() {
-    assertInstanceOf(Network.class, network);
+  @DisplayName("load with null file path does not throw")
+  void testLoadWithNullFileDoesNotThrow() {
+    DefaultCoreConfiguration config = new DefaultCoreConfiguration();
+    assertDoesNotThrow(() -> config.load(null));
   }
 
   @Test
-  @DisplayName("getNetworkReaderStatistic returns non-null")
-  void testGetNetworkReaderStatistic() {
-    assertNotNull(network.getNetworkReaderStatistic());
-  }
-
-  @Test
-  @DisplayName("getNetworkWriterStatistic returns non-null")
-  void testGetNetworkWriterStatistic() {
-    assertNotNull(network.getNetworkWriterStatistic());
-  }
-
-  @Test
-  @DisplayName("getSessionManager returns non-null")
-  void testGetSessionManager() {
-    assertNotNull(network.getSessionManager());
+  @DisplayName("Two instances are independent objects")
+  void testTwoInstancesAreIndependent() {
+    DefaultCoreConfiguration a = new DefaultCoreConfiguration();
+    DefaultCoreConfiguration b = new DefaultCoreConfiguration();
+    assertInstanceOf(DefaultCoreConfiguration.class, a);
+    assertInstanceOf(DefaultCoreConfiguration.class, b);
   }
 }

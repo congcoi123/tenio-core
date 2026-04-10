@@ -57,10 +57,12 @@ import java.nio.channels.DatagramChannel;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+@DisplayName("Unit Test Cases For ZeroProcessorImpl")
 @RunWith(MockitoJUnitRunner.class)
 public class ZeroProcessorImplTest {
 
@@ -93,8 +95,7 @@ public class ZeroProcessorImplTest {
 
   @Before
   public void setUp() {
-    processor =
-        ZeroProcessorImpl.newInstance(eventManager, serverApi, datagramChannelManager);
+    processor = ZeroProcessorImpl.newInstance(eventManager, serverApi, datagramChannelManager);
     processor.setSessionManager(sessionManager);
     processor.setPlayerManager(playerManager);
     processor.setMaxNumberPlayers(MAX_PLAYERS);
@@ -134,7 +135,7 @@ public class ZeroProcessorImplTest {
 
   // Connection Handling Tests
   @Test
-  public void shouldEstablishNewConnectionWhenBelowMax() throws Exception {
+  public void shouldEstablishNewConnectionWhenBelowMax() {
     when(playerManager.getPlayerCount()).thenReturn(MAX_PLAYERS - 1);
     when(session.isActivated()).thenReturn(true);
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
@@ -174,7 +175,7 @@ public class ZeroProcessorImplTest {
   }
 
   @Test
-  public void shouldHandlePlayerReconnectionSuccessfully() throws Exception {
+  public void shouldHandlePlayerReconnectionSuccessfully() {
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING))
         .thenReturn(true);
@@ -233,7 +234,7 @@ public class ZeroProcessorImplTest {
 
   // Datagram Channel Tests
   @Test
-  public void shouldHandleDatagramChannelAccessValidation() throws Exception {
+  public void shouldHandleDatagramChannelAccessValidation() {
     when(eventManager.emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION), eq(message)))
         .thenReturn(Optional.of(player));
     when(player.containsSession()).thenReturn(true);
@@ -256,7 +257,7 @@ public class ZeroProcessorImplTest {
   }
 
   @Test
-  public void shouldRejectDatagramChannelAccessWhenPlayerNotFound() throws Exception {
+  public void shouldRejectDatagramChannelAccessWhenPlayerNotFound() {
     when(eventManager.emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION), eq(message)))
         .thenReturn(Optional.empty());
 
@@ -275,7 +276,7 @@ public class ZeroProcessorImplTest {
 
   // Configuration Tests
   @Test
-  public void shouldSetAndGetMaxNumberPlayers() throws Exception {
+  public void shouldSetAndGetMaxNumberPlayers() {
     int newMaxPlayers = 200;
     processor.setMaxNumberPlayers(newMaxPlayers);
     when(playerManager.getPlayerCount()).thenReturn(newMaxPlayers);

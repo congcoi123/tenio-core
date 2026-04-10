@@ -175,8 +175,9 @@ class EventHandlerInterfacesTest {
   void testEventPlayerConnectionRetry() {
     EventPlayerConnectionRetry<Player, DataCollection> handler =
         (session, message) -> Optional.empty();
-    handler.onPlayerConnectionRetry(Mockito.mock(Session.class), Mockito.mock(DataCollection.class));
-    assertTrue(true);
+    var result = handler.onPlayerConnectionRetry(Mockito.mock(Session.class),
+        Mockito.mock(DataCollection.class));
+    assertTrue(result.isEmpty());
   }
 
   @Test
