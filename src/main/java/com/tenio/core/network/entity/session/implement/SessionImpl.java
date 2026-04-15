@@ -522,6 +522,7 @@ public class SessionImpl extends AbstractLogger implements Session {
     }
   }
 
+  // NOTE: This method is not thread-safety
   private void setState(State state) {
     this.state = state;
     atomicState.set(state);
