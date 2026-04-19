@@ -26,6 +26,7 @@ package com.tenio.core.network.netty.websocket;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -36,7 +37,9 @@ import com.tenio.common.data.DataCollection;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.exception.InboundQueueFullException;
+import com.tenio.core.exception.RefusedConnectionAddressException;
 import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
@@ -45,6 +48,7 @@ import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelFuture;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -270,6 +274,68 @@ class NettyWsHandlerTest {
     assertDoesNotThrow(() -> handler.channelRead(ctx, frame));
 
     verify(eventManager, never()).emit(any(), any());
+  }
+
+  @Test
+  @DisplayName("channelInactive with activated session that throws IOException on close does not propagate")
+  void testChannelInactiveWithSessionCloseIOExceptionDoesNotPropagate() throws IOException {
+    ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+    Channel channel = mock(Channel.class);
+    Session session = mock(Session.class);
+    when(ctx.channel()).thenReturn(channel);
+    when(sessionManager.getSessionByWebSocket(channel)).thenReturn(session);
+    when(session.isActivated()).thenReturn(true);
+    doThrow(new IOException("close failed")).when(session).close(any(), any());
+
+    assertDoesNotThrow(() -> handler.channelInactive(ctx));
+  }
+
+  @Test
+  @DisplayName("exceptionCaught with session that throws IOException on close does not propagate")
+  void testExceptionCaughtWithSessionCloseIOExceptionDoesNotPropagate() throws IOException {
+    ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+    Channel channel = mock(Channel.class);
+    Session session = mock(Session.class);
+    when(ctx.channel()).thenReturn(channel);
+    when(channel.toString()).thenReturn("MockChannel");
+    when(sessionManager.getSessionByWebSocket(channel)).thenReturn(session);
+    doThrow(new IOException("close failed")).when(session).close();
+
+    assertDoesNotThrow(() -> handler.exceptionCaught(ctx, new RuntimeException("err")));
+  }
+
+  @Test
+  @DisplayName("channelRead with null session and refused connection emits WEBSOCKET_CONNECTION_REFUSED and closes channel")
+  void testChannelReadWithRefusedConnectionEmitsEventAndClosesChannel() throws Exception {
+    ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+    Channel channel = mock(Channel.class);
+    ChannelFuture future = mock(ChannelFuture.class);
+    BinaryWebSocketFrame frame = mock(BinaryWebSocketFrame.class);
+    ByteBuf byteBuf = mock(ByteBuf.class);
+    ConnectionFilter filter = mock(ConnectionFilter.class);
+    Session newSession = mock(Session.class);
+
+    NettyWsHandler localHandler = NettyWsHandler.newInstance(
+        eventManager, sessionManager, filter, binaryPacketDecoder, networkReaderStatistic);
+
+    when(ctx.channel()).thenReturn(channel);
+    when(channel.remoteAddress()).thenReturn(new InetSocketAddress("127.0.0.1", 9999));
+    when(channel.close()).thenReturn(future);
+    when(frame.content()).thenReturn(byteBuf);
+    when(byteBuf.readableBytes()).thenReturn(3);
+    when(byteBuf.readerIndex()).thenReturn(0);
+    when(sessionManager.getSessionByWebSocket(channel)).thenReturn(null);
+    // After refused connection, code falls through and creates a session - return inactive session
+    when(sessionManager.createWebSocketSession(channel)).thenReturn(newSession);
+    when(newSession.isActivated()).thenReturn(false);
+    doThrow(new RefusedConnectionAddressException("refused", "127.0.0.1"))
+        .when(filter).validateAndAddAddress(any());
+
+    assertDoesNotThrow(() -> localHandler.channelRead(ctx, frame));
+
+    verify(eventManager).emit(eq(ServerEvent.WEBSOCKET_CONNECTION_REFUSED), eq(channel),
+        any(RefusedConnectionAddressException.class));
+    verify(channel).close();
   }
 
   @Test

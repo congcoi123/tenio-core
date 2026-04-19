@@ -38,7 +38,9 @@ import static org.mockito.Mockito.mock;
 import com.tenio.core.bootstrap.bean.TestBeanClass;
 import com.tenio.core.bootstrap.command.TestClientCommandHandler;
 import com.tenio.core.bootstrap.command.TestSystemCommandHandler;
+import com.tenio.core.bootstrap.eventhandler.TestEventHandlerClass;
 import com.tenio.core.bootstrap.injector.Injector;
+import com.tenio.core.bootstrap.setting.TestSettingClass;
 import com.tenio.core.bootstrap.test.BootstrapComponent;
 import com.tenio.core.bootstrap.test.impl.TestClassA;
 import com.tenio.core.bootstrap.test.impl.TestClassAlone;
@@ -275,5 +277,41 @@ class InjectorTest {
     boolean found = injector.getClassBeansMap().entrySet().stream()
         .anyMatch(e -> e.getValue().getClass().getSimpleName().equals("PingController"));
     assertTrue(found);
+  }
+
+  @Test
+  @DisplayName("scanPackages with @EventHandler class creates bean and stores it in classBeansMap")
+  void scanPackageWithEventHandlerClassCreatesBean() throws Exception {
+    injector.scanPackages(null, "com.tenio.core.bootstrap.eventhandler");
+    boolean found = injector.getClassBeansMap().entrySet().stream()
+        .anyMatch(e -> e.getValue() instanceof TestEventHandlerClass);
+    assertTrue(found);
+  }
+
+  @Test
+  @DisplayName("scanPackages with @Setting class creates bean and stores it in classBeansMap")
+  void scanPackageWithSettingClassCreatesBean() throws Exception {
+    injector.scanPackages(null, "com.tenio.core.bootstrap.setting");
+    boolean found = injector.getClassBeansMap().entrySet().stream()
+        .anyMatch(e -> e.getValue() instanceof TestSettingClass);
+    assertTrue(found);
+  }
+
+  @Test
+  @DisplayName("getBean retrieves @EventHandler annotated class by its own class")
+  void getBeanReturnsEventHandlerClass() throws Exception {
+    injector.scanPackages(null, "com.tenio.core.bootstrap.eventhandler");
+    Object bean = injector.getBean(TestEventHandlerClass.class);
+    assertNotNull(bean);
+    assertInstanceOf(TestEventHandlerClass.class, bean);
+  }
+
+  @Test
+  @DisplayName("getBean retrieves @Setting annotated class by its own class")
+  void getBeanReturnsSettingClass() throws Exception {
+    injector.scanPackages(null, "com.tenio.core.bootstrap.setting");
+    Object bean = injector.getBean(TestSettingClass.class);
+    assertNotNull(bean);
+    assertInstanceOf(TestSettingClass.class, bean);
   }
 }

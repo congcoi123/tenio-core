@@ -29,6 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -317,6 +319,64 @@ class SocketWriterHandlerTest {
   }
 
   @Test
+  @DisplayName("send removes OP_WRITE from interest ops when buffer is fully consumed")
+  void testSendRemovesOpWriteWhenBufferFullyConsumed() throws Exception {
+    SocketChannel channel = mock(SocketChannel.class);
+    SelectionKey selectionKey = mock(SelectionKey.class);
+    BinaryPacketEncoder encoder = mock(BinaryPacketEncoder.class);
+    Session session = mock(Session.class);
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+
+    handler.setPacketEncoder(encoder);
+    when(session.fetchSocketChannel()).thenReturn(channel);
+    when(channel.isOpen()).thenReturn(true);
+    when(channel.isConnected()).thenReturn(true);
+    when(encoder.encode(packet)).thenReturn(packet);
+    when(packet.isFragmented()).thenReturn(false);
+    when(packet.getData()).thenReturn(new byte[]{1, 2, 3});
+    // Consume entire buffer so hasRemaining() returns false
+    when(channel.write(any(ByteBuffer.class))).thenAnswer(inv -> {
+      ByteBuffer buf = inv.getArgument(0);
+      int remaining = buf.remaining();
+      buf.position(buf.limit());
+      return remaining;
+    });
+    when(session.fectchSocketSelectionKey()).thenReturn(selectionKey);
+    // Return OP_READ | OP_WRITE so the "remove OP_WRITE" branch is taken
+    when(selectionKey.interestOps()).thenReturn(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+    when(packet.isMarkedAsLast()).thenReturn(false);
+    when(session.isActivated()).thenReturn(false);
+
+    assertDoesNotThrow(() -> handler.send(outboundQueue, session, packet));
+    verify(selectionKey).interestOps(SelectionKey.OP_READ); // OP_WRITE removed
+  }
+
+  @Test
+  @DisplayName("send with IOException on write and session.close() also throws does not propagate")
+  void testSendWithIOExceptionOnWriteAndSessionCloseAlsoThrows() throws Exception {
+    SocketChannel channel = mock(SocketChannel.class);
+    BinaryPacketEncoder encoder = mock(BinaryPacketEncoder.class);
+    Session session = mock(Session.class);
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+
+    handler.setPacketEncoder(encoder);
+    when(session.fetchSocketChannel()).thenReturn(channel);
+    when(channel.isOpen()).thenReturn(true);
+    when(channel.isConnected()).thenReturn(true);
+    when(encoder.encode(packet)).thenReturn(packet);
+    when(packet.isFragmented()).thenReturn(false);
+    when(packet.getData()).thenReturn(new byte[]{1, 2, 3});
+    when(channel.write(any(ByteBuffer.class))).thenThrow(new java.io.IOException("write error"));
+    when(session.isActivated()).thenReturn(true);
+    doThrow(new java.io.IOException("close error")).when(session)
+        .close(ConnectionDisconnectMode.LOST_IN_WRITTEN, PlayerDisconnectMode.CONNECTION_LOST);
+
+    assertDoesNotThrow(() -> handler.send(outboundQueue, session, packet));
+  }
+
+  @Test
   @DisplayName("send adds session back to tickets queue when queue is not empty")
   void testSendAddsSessionBackToTicketsQueue() throws Exception {
     SocketChannel channel = mock(SocketChannel.class);
@@ -348,5 +408,86 @@ class SocketWriterHandlerTest {
     handler.send(outboundQueue, session, packet);
 
     assertTrue(sessionQueue.contains(session));
+  }
+
+  @Test
+  @DisplayName("send with null channel, active session, and IOException on close does not throw")
+  void testSendWithNullChannelActiveSessionCloseIOExceptionDoesNotThrow() throws Exception {
+    Session session = mock(Session.class);
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+
+    when(session.fetchSocketChannel()).thenReturn(null);
+    when(session.isActivated()).thenReturn(true);
+    doThrow(new java.io.IOException("close failed")).when(session)
+        .close(ConnectionDisconnectMode.LOST_IN_WRITTEN, PlayerDisconnectMode.CONNECTION_LOST);
+
+    assertDoesNotThrow(() -> handler.send(outboundQueue, session, packet));
+  }
+
+  @Test
+  @DisplayName("send with last packet and IOException on session.close does not throw")
+  void testSendWithLastPacketAndSessionCloseIOExceptionDoesNotThrow() throws Exception {
+    SocketChannel channel = mock(SocketChannel.class);
+    SelectionKey selectionKey = mock(SelectionKey.class);
+    BinaryPacketEncoder encoder = mock(BinaryPacketEncoder.class);
+    Session session = mock(Session.class);
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+
+    handler.setPacketEncoder(encoder);
+    when(session.fetchSocketChannel()).thenReturn(channel);
+    when(channel.isOpen()).thenReturn(true);
+    when(channel.isConnected()).thenReturn(true);
+    when(encoder.encode(packet)).thenReturn(packet);
+    when(packet.isFragmented()).thenReturn(false);
+    when(packet.getData()).thenReturn(new byte[]{1, 2, 3});
+    when(channel.write(any(ByteBuffer.class))).thenAnswer(inv -> {
+      ByteBuffer buf = inv.getArgument(0);
+      int remaining = buf.remaining();
+      buf.position(buf.limit());
+      return remaining;
+    });
+    when(session.fectchSocketSelectionKey()).thenReturn(selectionKey);
+    when(selectionKey.interestOps()).thenReturn(SelectionKey.OP_READ);
+    when(packet.isMarkedAsLast()).thenReturn(true);
+    when(session.isActivated()).thenReturn(true);
+    doThrow(new java.io.IOException("close failed")).when(session)
+        .close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+
+    assertDoesNotThrow(() -> handler.send(outboundQueue, session, packet));
+  }
+
+  @Test
+  @DisplayName("send with data larger than buffer reallocates buffer and writes successfully")
+  void testSendWithLargeDataReallocatesBuffer() throws Exception {
+    SocketChannel channel = mock(SocketChannel.class);
+    SelectionKey selectionKey = mock(SelectionKey.class);
+    BinaryPacketEncoder encoder = mock(BinaryPacketEncoder.class);
+    Session session = mock(Session.class);
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+
+    handler.setPacketEncoder(encoder);
+    when(session.fetchSocketChannel()).thenReturn(channel);
+    when(channel.isOpen()).thenReturn(true);
+    when(channel.isConnected()).thenReturn(true);
+    when(encoder.encode(packet)).thenReturn(packet);
+    when(packet.isFragmented()).thenReturn(false);
+    when(packet.getData()).thenReturn(new byte[600]); // 600 > 512 (default buffer)
+    when(channel.write(any(ByteBuffer.class))).thenAnswer(inv -> {
+      ByteBuffer buf = inv.getArgument(0);
+      int remaining = buf.remaining();
+      buf.position(buf.limit());
+      return remaining;
+    });
+    when(session.fectchSocketSelectionKey()).thenReturn(selectionKey);
+    when(selectionKey.interestOps()).thenReturn(SelectionKey.OP_READ);
+    when(packet.isMarkedAsLast()).thenReturn(false);
+    when(session.isActivated()).thenReturn(false);
+
+    assertDoesNotThrow(() -> handler.send(outboundQueue, session, packet));
+    verify(outboundQueue).take();
+    verify(writerStatistic).updateWrittenPackets(1);
   }
 }

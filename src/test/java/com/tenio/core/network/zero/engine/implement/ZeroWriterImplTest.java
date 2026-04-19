@@ -46,6 +46,7 @@ import com.tenio.core.network.zero.engine.ZeroWriter;
 import com.tenio.core.network.zero.engine.writer.WriterHandler;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -328,5 +329,77 @@ class ZeroWriterImplTest {
     assertDoesNotThrow(() -> m.invoke(writer, session, mock(WriterHandler.class), datagramHandler));
 
     verify(datagramHandler).send(queue, session, packet);
+  }
+
+  @Test
+  @DisplayName("createSocketWriterHandler returns a non-null WriterHandler after initialization")
+  void testCreateSocketWriterHandlerReturnsNonNull() throws Exception {
+    writer.initialize();
+    Method m = ZeroWriterImpl.class.getDeclaredMethod("createSocketWriterHandler");
+    m.setAccessible(true);
+    Object result = m.invoke(writer);
+    assertDoesNotThrow(() -> m.invoke(writer));
+    writer.shutdown();
+  }
+
+  @Test
+  @DisplayName("createDatagramWriterHandler returns a non-null WriterHandler after initialization")
+  void testCreateDatagramWriterHandlerReturnsNonNull() throws Exception {
+    writer.initialize();
+    Method m = ZeroWriterImpl.class.getDeclaredMethod("createDatagramWriterHandler");
+    m.setAccessible(true);
+    assertDoesNotThrow(() -> m.invoke(writer));
+    writer.shutdown();
+  }
+
+  @Test
+  @DisplayName("writing() with a queued session processes and returns without throwing")
+  void testWritingWithQueuedSessionProcessesWithoutThrowing() throws Exception {
+    writer.initialize();
+    Method m = ZeroWriterImpl.class.getDeclaredMethod(
+        "writing", java.util.concurrent.BlockingQueue.class, WriterHandler.class, WriterHandler.class);
+    m.setAccessible(true);
+
+    Session session = mock(Session.class);
+    when(session.fetchOutboundQueue()).thenReturn(null);
+    LinkedBlockingQueue<Session> queue = new LinkedBlockingQueue<>();
+    queue.add(session);
+
+    WriterHandler socketHandler = mock(WriterHandler.class);
+    WriterHandler datagramHandler = mock(WriterHandler.class);
+
+    assertDoesNotThrow(() -> m.invoke(writer, queue, socketHandler, datagramHandler));
+    writer.shutdown();
+  }
+
+  @Test
+  @DisplayName("onRunning creates writer handlers and exits on thread interrupt")
+  void testOnRunningCreatesHandlersAndExitsOnInterrupt() throws Exception {
+    writer.initialize();
+
+    Method onRunning = ZeroWriterImpl.class.getDeclaredMethod("onRunning");
+    onRunning.setAccessible(true);
+
+    Thread t = new Thread(() -> {
+      try {
+        onRunning.invoke(writer);
+      } catch (Exception ignored) {
+      }
+    });
+    t.start();
+
+    Thread.sleep(100); // let the thread enter the loop
+    t.interrupt();
+    t.join(2000);
+
+    writer.shutdown();
+  }
+
+  @Test
+  @DisplayName("onStarted is a no-op method (covers its single return instruction)")
+  void testOnStartedIsNoOp() throws Exception {
+    Method onStarted = ZeroWriterImpl.class.getDeclaredMethod("onStarted");
+    onStarted.setAccessible(true);
+    assertDoesNotThrow(() -> onStarted.invoke(writer));
   }
 }

@@ -34,6 +34,12 @@ import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.engine.ZeroAcceptor;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
+import com.tenio.core.network.zero.handler.SocketIoHandler;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.channels.Selector;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -94,5 +100,57 @@ class ZeroAcceptorImplTest {
       acceptor.initialize();
       acceptor.shutdown();
     });
+  }
+
+  @Test
+  @DisplayName("onRunning creates AcceptorHandler and loops; onShutdown iterates non-empty handler list")
+  void testOnRunningLoopsAndOnShutdownClosesHandlers() throws Exception {
+    acceptor.setConnectionFilter(mock(ConnectionFilter.class));
+    acceptor.setServerAddress("127.0.0.1");
+    acceptor.setSocketConfiguration(new SocketConfiguration("tcp", TransportType.TCP, 0, 1));
+    acceptor.setZeroReaderListener(mock(ZeroReaderListener.class));
+    acceptor.setSocketIoHandler(mock(SocketIoHandler.class));
+    acceptor.activate();
+
+    // Manually set the acceptorHandlers list without creating the executor
+    Field handlersField = ZeroAcceptorImpl.class.getDeclaredField("acceptorHandlers");
+    handlersField.setAccessible(true);
+    List<Object> handlers = new ArrayList<>();
+    handlersField.set(acceptor, handlers);
+
+    Method onRunning = ZeroAcceptorImpl.class.getDeclaredMethod("onRunning");
+    onRunning.setAccessible(true);
+
+    Thread t = new Thread(() -> {
+      try {
+        onRunning.invoke(acceptor);
+      } catch (Exception ignored) {
+      }
+    });
+    t.start();
+
+    // Wait for AcceptorHandler to be created and added to the list
+    long deadline = System.currentTimeMillis() + 2000;
+    while (handlers.isEmpty() && System.currentTimeMillis() < deadline) {
+      Thread.sleep(10);
+    }
+
+    // Interrupt the thread (causes select() to return on most JVMs)
+    t.interrupt();
+
+    // Also wakeup the selector for robustness
+    if (!handlers.isEmpty()) {
+      Field selectorField = handlers.get(0).getClass().getDeclaredField("acceptableSelector");
+      selectorField.setAccessible(true);
+      Selector selector = (Selector) selectorField.get(handlers.get(0));
+      selector.wakeup();
+    }
+
+    t.join(3000);
+
+    // onShutdown with non-empty list closes each handler
+    Method onShutdown = ZeroAcceptorImpl.class.getDeclaredMethod("onShutdown");
+    onShutdown.setAccessible(true);
+    assertDoesNotThrow(() -> onShutdown.invoke(acceptor));
   }
 }

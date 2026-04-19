@@ -28,9 +28,11 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import java.util.function.Consumer;
 
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.exception.RefusedConnectionAddressException;
@@ -163,6 +165,49 @@ class AcceptorHandlerTest {
       client.connect(new InetSocketAddress("127.0.0.1", port));
       assertDoesNotThrow(() -> handler.running());
       verify(ioHandler).channelInactive(any(), any(), eq(ConnectionDisconnectMode.EXCEPTION));
+    } finally {
+      client.close();
+    }
+  }
+
+  @Test
+  @DisplayName("running invokes onSuccess callback which triggers channelActive on ioHandler")
+  void testRunningInvokesOnSuccessCallbackTriggeringChannelActive() throws Exception {
+    doAnswer(inv -> {
+      Consumer<SelectionKey> onSuccess = inv.getArgument(1);
+      onSuccess.accept(mock(SelectionKey.class));
+      return null;
+    }).when(readerListener).acceptClientSocketChannel(any(), any(), any());
+
+    Selector selector = getSelector(handler);
+    int port = getBoundPort(selector);
+
+    SocketChannel client = SocketChannel.open();
+    try {
+      client.connect(new InetSocketAddress("127.0.0.1", port));
+      assertDoesNotThrow(() -> handler.running());
+      verify(ioHandler).channelActive(any(), any());
+    } finally {
+      client.close();
+    }
+  }
+
+  @Test
+  @DisplayName("running invokes onFailed callback which closes the socket channel")
+  void testRunningInvokesOnFailedCallbackClosingChannel() throws Exception {
+    doAnswer(inv -> {
+      Runnable onFailed = inv.getArgument(2);
+      onFailed.run();
+      return null;
+    }).when(readerListener).acceptClientSocketChannel(any(), any(), any());
+
+    Selector selector = getSelector(handler);
+    int port = getBoundPort(selector);
+
+    SocketChannel client = SocketChannel.open();
+    try {
+      client.connect(new InetSocketAddress("127.0.0.1", port));
+      assertDoesNotThrow(() -> handler.running());
     } finally {
       client.close();
     }

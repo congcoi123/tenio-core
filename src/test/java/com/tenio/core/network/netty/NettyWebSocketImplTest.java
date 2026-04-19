@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -263,5 +264,36 @@ class NettyWebSocketImplTest {
     verify(session).addWrittenBytes(3L);
     verify(writerStatistic).updateWrittenBytes(3L);
     verify(writerStatistic).updateWrittenPackets(1);
+  }
+
+  @Test
+  @DisplayName("initialize then start then activate then shutdown covers full lifecycle including close")
+  void testInitializeThenStartThenActivateThenShutdown() {
+    SocketConfiguration config =
+        new SocketConfiguration("websocket", TransportType.WEB_SOCKET, 0, 4);
+    webSocket.setWebSocketConfiguration(config);
+    webSocket.setSessionManager(mock(SessionManager.class));
+    webSocket.setPacketDecoder(mock(BinaryPacketDecoder.class));
+    webSocket.setConnectionFilter(mock(ConnectionFilter.class));
+    webSocket.initialize();
+    assertDoesNotThrow(() -> webSocket.start());
+    assertDoesNotThrow(() -> webSocket.activate());
+    assertDoesNotThrow(() -> webSocket.shutdown());
+  }
+
+  @Test
+  @DisplayName("write with last packet and IOException on session.close does not propagate")
+  void testWriteWithLastPacketAndIOExceptionOnCloseDoesNotPropagate() throws IOException {
+    Session session = mock(Session.class);
+    Packet packet = mock(Packet.class);
+    when(packet.getRecipients()).thenReturn(List.of(session));
+    when(packet.isMarkedAsLast()).thenReturn(true);
+    when(session.isActivated()).thenReturn(true);
+    doThrow(new IOException("close failed")).when(session)
+        .close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+
+    webSocket.setNetworkWriterStatistic(mock(NetworkWriterStatistic.class));
+
+    assertDoesNotThrow(() -> webSocket.write(packet));
   }
 }
