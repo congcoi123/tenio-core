@@ -24,12 +24,14 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.session.implement;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,6 +48,9 @@ import com.tenio.core.network.entity.session.Session.AssociatedState;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import java.net.InetSocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -625,6 +630,95 @@ class SessionImplTest {
     verify(channel).close();
     verify(manager).emitEvent(ServerEvent.SESSION_WILL_BE_CLOSED, session,
         ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+  }
+
+  @Test
+  @DisplayName("configureSocketChannel with real channel sets TCP transport and remote address")
+  void testConfigureSocketChannelSetsTransportTypeTcp() throws Exception {
+    ServerSocketChannel server = ServerSocketChannel.open();
+    server.bind(new InetSocketAddress("127.0.0.1", 0));
+    int port = ((InetSocketAddress) server.getLocalAddress()).getPort();
+    SocketChannel client = SocketChannel.open(new InetSocketAddress("127.0.0.1", port));
+    SocketChannel serverSide = server.accept();
+    server.close();
+
+    Session session = SessionImpl.newInstance();
+    SelectionKey selectionKey = mock(SelectionKey.class);
+
+    assertDoesNotThrow(() -> session.configureSocketChannel(serverSide, selectionKey));
+
+    assertEquals(TransportType.TCP, session.getTransportType());
+    assertTrue(session.isTcp());
+    assertNotNull(session.getSocketRemoteAddress());
+    assertNotNull(session.getPacketReadState());
+
+    client.close();
+    serverSide.close();
+  }
+
+  @Test
+  @DisplayName("close via TCP path closes the socket and notifies session manager")
+  void testCloseViaTcpPathNotifiesSessionManager() throws Exception {
+    ServerSocketChannel server = ServerSocketChannel.open();
+    server.bind(new InetSocketAddress("127.0.0.1", 0));
+    int port = ((InetSocketAddress) server.getLocalAddress()).getPort();
+    SocketChannel client = SocketChannel.open(new InetSocketAddress("127.0.0.1", port));
+    SocketChannel serverSide = server.accept();
+    server.close();
+
+    Session session = SessionImpl.newInstance();
+    SelectionKey selectionKey = mock(SelectionKey.class);
+    session.configureSocketChannel(serverSide, selectionKey);
+
+    ConnectionFilter filter = mock(ConnectionFilter.class);
+    session.configureConnectionFilter(filter);
+    SessionManager manager = mock(SessionManager.class);
+    session.configureSessionManager(manager);
+
+    OutboundQueue queue = mock(OutboundQueue.class);
+    session.configureOutboundQueue(queue);
+
+    assertDoesNotThrow(() ->
+        session.close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST));
+
+    verify(filter).removeAddress(anyString());
+    verify(queue).clear();
+    verify(manager).emitEvent(ServerEvent.SESSION_WILL_BE_CLOSED, session,
+        ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+
+    client.close();
+  }
+
+  @Test
+  @DisplayName("configureSocketChannel throws IllegalCallerException if transport already set")
+  void testConfigureSocketChannelThrowsIfTransportAlreadySet() throws Exception {
+    Session session = SessionImpl.newInstance();
+    io.netty.channel.Channel wsChannel = mock(io.netty.channel.Channel.class);
+    when(wsChannel.remoteAddress()).thenReturn(new InetSocketAddress("127.0.0.1", 9090));
+    session.configureWebSocketChannel(wsChannel);
+
+    assertThrows(IllegalCallerException.class,
+        () -> session.configureSocketChannel(mock(SocketChannel.class), null));
+  }
+
+  @Test
+  @DisplayName("configureWebSocketChannel throws IllegalCallerException if transport already set")
+  void testConfigureWebSocketChannelThrowsIfTransportAlreadySet() throws Exception {
+    ServerSocketChannel server = ServerSocketChannel.open();
+    server.bind(new InetSocketAddress("127.0.0.1", 0));
+    int port = ((InetSocketAddress) server.getLocalAddress()).getPort();
+    SocketChannel client = SocketChannel.open(new InetSocketAddress("127.0.0.1", port));
+    SocketChannel serverSide = server.accept();
+    server.close();
+
+    Session session = SessionImpl.newInstance();
+    session.configureSocketChannel(serverSide, null);
+
+    assertThrows(IllegalCallerException.class,
+        () -> session.configureWebSocketChannel(mock(io.netty.channel.Channel.class)));
+
+    client.close();
+    serverSide.close();
   }
 
   @Test

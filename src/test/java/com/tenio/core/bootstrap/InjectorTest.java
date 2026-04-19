@@ -26,6 +26,7 @@ package com.tenio.core.bootstrap;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -35,6 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import com.tenio.core.bootstrap.bean.TestBeanClass;
+import com.tenio.core.bootstrap.command.TestClientCommandHandler;
+import com.tenio.core.bootstrap.command.TestSystemCommandHandler;
 import com.tenio.core.bootstrap.injector.Injector;
 import com.tenio.core.bootstrap.test.BootstrapComponent;
 import com.tenio.core.bootstrap.test.impl.TestClassA;
@@ -224,5 +227,53 @@ class InjectorTest {
   @DisplayName("Attempt fetching null bean should return null")
   void getNullBeanShouldReturnNull() {
     assertNull(Injector.newInstance().getBean(null));
+  }
+
+  @Test
+  @DisplayName("scanPackages with @SystemCommand class registers it in system command manager")
+  void scanPackageWithSystemCommandRegistersCommand() throws Exception {
+    injector.scanPackages(null, "com.tenio.core.bootstrap.command");
+    assertNotNull(injector.getSystemCommandManager().getHandler("test-sys"));
+  }
+
+  @Test
+  @DisplayName("scanPackages with @ClientCommand class registers it in client command manager")
+  void scanPackageWithClientCommandRegistersCommand() throws Exception {
+    injector.scanPackages(null, "com.tenio.core.bootstrap.command");
+    assertNotNull(injector.getClientCommandManager().getHandler((short) 42));
+  }
+
+  @Test
+  @DisplayName("scanPackages with @SystemCommand class stores it in class beans map")
+  void scanPackageWithSystemCommandAddsToBeansMap() throws Exception {
+    injector.scanPackages(null, "com.tenio.core.bootstrap.command");
+    boolean found = injector.getClassBeansMap().entrySet().stream()
+        .anyMatch(e -> e.getValue() instanceof TestSystemCommandHandler);
+    assertTrue(found);
+  }
+
+  @Test
+  @DisplayName("scanPackages with @ClientCommand class stores it in class beans map")
+  void scanPackageWithClientCommandAddsToBeansMap() throws Exception {
+    injector.scanPackages(null, "com.tenio.core.bootstrap.command");
+    boolean found = injector.getClassBeansMap().entrySet().stream()
+        .anyMatch(e -> e.getValue() instanceof TestClientCommandHandler);
+    assertTrue(found);
+  }
+
+  @Test
+  @DisplayName("scanPackages with @RestController class registers its @RestMapping methods in servletBeansMap")
+  void scanPackageWithRestControllerRegistersServlets() throws Exception {
+    injector.scanPackages(null, "com.tenio.core.network.jetty.controller");
+    assertFalse(injector.getServletBeansMap().isEmpty());
+  }
+
+  @Test
+  @DisplayName("scanPackages with @RestController adds the controller to classBeansMap")
+  void scanPackageWithRestControllerAddsToClassBeansMap() throws Exception {
+    injector.scanPackages(null, "com.tenio.core.network.jetty.controller");
+    boolean found = injector.getClassBeansMap().entrySet().stream()
+        .anyMatch(e -> e.getValue().getClass().getSimpleName().equals("PingController"));
+    assertTrue(found);
   }
 }

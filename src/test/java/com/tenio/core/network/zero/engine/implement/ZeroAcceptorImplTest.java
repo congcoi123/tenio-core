@@ -86,4 +86,13 @@ class ZeroAcceptorImplTest {
   void testGetNumberOfExtraWorkersReturnsZero() {
     assertEquals(0, ((AbstractZeroEngine) acceptor).getNumberOfExtraWorkers());
   }
+
+  @Test
+  @DisplayName("initialize() then shutdown() covers onInitialized and onShutdown")
+  void testInitializeAndShutdown() {
+    assertDoesNotThrow(() -> {
+      acceptor.initialize();
+      acceptor.shutdown();
+    });
+  }
 }

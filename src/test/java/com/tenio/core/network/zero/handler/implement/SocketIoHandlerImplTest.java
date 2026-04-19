@@ -26,6 +26,7 @@ package com.tenio.core.network.zero.handler.implement;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -248,5 +249,29 @@ class SocketIoHandlerImplTest {
         com.tenio.core.network.codec.packet.PacketReadState.WAIT_NEW_PACKET);
 
     assertDoesNotThrow(() -> handler.sessionRead(session, new byte[]{(byte) 0x80, 0x00, 0x00}));
+  }
+
+  @Test
+  @DisplayName("channelInactive with active session that throws IOException on close does not propagate")
+  void testChannelInactiveWithActiveSessionIOExceptionDoesNotPropagate() throws Exception {
+    SocketChannel socketChannel = mock(SocketChannel.class);
+    SelectionKey selectionKey = mock(SelectionKey.class);
+    Session session = mock(Session.class);
+    when(sessionManager.getSessionBySocket(socketChannel)).thenReturn(session);
+    when(session.isActivated()).thenReturn(true);
+    doThrow(new java.io.IOException("close failed")).when(session).close(any(), any());
+
+    assertDoesNotThrow(() ->
+        handler.channelInactive(socketChannel, selectionKey,
+            ConnectionDisconnectMode.SERVER_DOWN));
+  }
+
+  @Test
+  @DisplayName("sessionException when session.close() throws IOException does not propagate")
+  void testSessionExceptionWithIOExceptionDoesNotPropagate() throws Exception {
+    Session session = mock(Session.class);
+    doThrow(new java.io.IOException("close error")).when(session).close();
+
+    assertDoesNotThrow(() -> handler.sessionException(session, new RuntimeException("err")));
   }
 }

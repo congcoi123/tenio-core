@@ -26,6 +26,7 @@ package com.tenio.core.network.netty.websocket;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -35,6 +36,7 @@ import com.tenio.common.data.DataCollection;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.exception.InboundQueueFullException;
 import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
@@ -44,11 +46,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
 
 @DisplayName("Unit Test Cases For NettyWsHandler")
 class NettyWsHandlerTest {
@@ -221,5 +223,79 @@ class NettyWsHandlerTest {
     assertDoesNotThrow(() -> handler.channelRead(ctx, frame));
 
     verify(eventManager, never()).emit(any(), any());
+  }
+
+  @Test
+  @DisplayName("channelRead with no existing session creates a new session")
+  void testChannelReadWithNoExistingSessionCreatesNewSession() {
+    ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+    Channel channel = mock(Channel.class);
+    BinaryWebSocketFrame frame = mock(BinaryWebSocketFrame.class);
+    ByteBuf byteBuf = mock(ByteBuf.class);
+    Session session = mock(Session.class);
+
+    when(ctx.channel()).thenReturn(channel);
+    when(channel.remoteAddress()).thenReturn(new InetSocketAddress("127.0.0.1", 1234));
+    when(frame.content()).thenReturn(byteBuf);
+    when(byteBuf.readableBytes()).thenReturn(3);
+    when(byteBuf.readerIndex()).thenReturn(0);
+    when(sessionManager.getSessionByWebSocket(channel)).thenReturn(null);
+    when(sessionManager.createWebSocketSession(channel)).thenReturn(session);
+    when(session.isActivated()).thenReturn(true);
+    when(session.isAssociatedToPlayer(Session.AssociatedState.DOING)).thenReturn(false);
+    when(session.isAssociatedToPlayer(Session.AssociatedState.NONE)).thenReturn(true);
+
+    assertDoesNotThrow(() -> handler.channelRead(ctx, frame));
+
+    verify(sessionManager).createWebSocketSession(channel);
+  }
+
+  @Test
+  @DisplayName("channelRead with session in DOING state returns early without emitting events")
+  void testChannelReadWithDOINGSessionReturnsEarly() {
+    ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+    Channel channel = mock(Channel.class);
+    BinaryWebSocketFrame frame = mock(BinaryWebSocketFrame.class);
+    ByteBuf byteBuf = mock(ByteBuf.class);
+    Session session = mock(Session.class);
+
+    when(ctx.channel()).thenReturn(channel);
+    when(frame.content()).thenReturn(byteBuf);
+    when(byteBuf.readableBytes()).thenReturn(3);
+    when(byteBuf.readerIndex()).thenReturn(0);
+    when(sessionManager.getSessionByWebSocket(channel)).thenReturn(session);
+    when(session.isActivated()).thenReturn(true);
+    when(session.isAssociatedToPlayer(Session.AssociatedState.DOING)).thenReturn(true);
+
+    assertDoesNotThrow(() -> handler.channelRead(ctx, frame));
+
+    verify(eventManager, never()).emit(any(), any());
+  }
+
+  @Test
+  @DisplayName("channelRead with InboundQueueFullException increments dropped packets statistic")
+  void testChannelReadWithInboundQueueFullExceptionUpdatesDroppedStats() throws Exception {
+    ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+    Channel channel = mock(Channel.class);
+    BinaryWebSocketFrame frame = mock(BinaryWebSocketFrame.class);
+    ByteBuf byteBuf = mock(ByteBuf.class);
+    Session session = mock(Session.class);
+    DataCollection message = mock(DataCollection.class);
+
+    when(ctx.channel()).thenReturn(channel);
+    when(frame.content()).thenReturn(byteBuf);
+    when(byteBuf.readableBytes()).thenReturn(3);
+    when(byteBuf.readerIndex()).thenReturn(0);
+    when(sessionManager.getSessionByWebSocket(channel)).thenReturn(session);
+    when(session.isActivated()).thenReturn(true);
+    when(session.isAssociatedToPlayer(Session.AssociatedState.DOING)).thenReturn(false);
+    when(session.isAssociatedToPlayer(Session.AssociatedState.NONE)).thenReturn(false);
+    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
+    when(binaryPacketDecoder.decode(any(byte[].class))).thenReturn(message);
+    doThrow(new InboundQueueFullException(100)).when(session).enqueueInbound(message);
+
+    assertDoesNotThrow(() -> handler.channelRead(ctx, frame));
+
+    verify(networkReaderStatistic).updateReadDroppedPackets(1);
   }
 }

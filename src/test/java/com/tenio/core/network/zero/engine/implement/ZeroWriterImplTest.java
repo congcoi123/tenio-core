@@ -27,6 +27,7 @@ package com.tenio.core.network.zero.engine.implement;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -34,6 +35,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.exception.OutboundQueueFullException;
+import com.tenio.core.exception.OutboundQueuePolicyViolationException;
 import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.Packet;
@@ -155,6 +158,56 @@ class ZeroWriterImplTest {
 
     // deepCopy() is called once per session in the multi-recipient path (2 sessions = 2 calls)
     verify(packet, times(2)).deepCopy();
+  }
+
+  @Test
+  @DisplayName("enqueuePacket with OutboundQueuePolicyViolationException increments dropped packets by policy")
+  void testEnqueuePacketWithPolicyViolationException() {
+    Session session = mock(Session.class);
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+    NetworkWriterStatistic statistic = mock(NetworkWriterStatistic.class);
+    writer.setNetworkWriterStatistic(statistic);
+
+    when(packet.getRecipients()).thenReturn(List.of(session));
+    when(session.isActivated()).thenReturn(true);
+    when(session.fetchOutboundQueue()).thenReturn(outboundQueue);
+    doThrow(new OutboundQueuePolicyViolationException(packet, 0.9f))
+        .when(outboundQueue).put(packet);
+
+    assertDoesNotThrow(() -> writer.enqueuePacket(packet));
+
+    verify(session).addDroppedPackets(1);
+    verify(statistic).updateWrittenDroppedPacketsByPolicy(1);
+  }
+
+  @Test
+  @DisplayName("enqueuePacket with OutboundQueueFullException increments dropped packets by full")
+  void testEnqueuePacketWithQueueFullException() {
+    Session session = mock(Session.class);
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+    NetworkWriterStatistic statistic = mock(NetworkWriterStatistic.class);
+    writer.setNetworkWriterStatistic(statistic);
+
+    when(packet.getRecipients()).thenReturn(List.of(session));
+    when(session.isActivated()).thenReturn(true);
+    when(session.fetchOutboundQueue()).thenReturn(outboundQueue);
+    doThrow(new OutboundQueueFullException(100)).when(outboundQueue).put(packet);
+
+    assertDoesNotThrow(() -> writer.enqueuePacket(packet));
+
+    verify(session).addDroppedPackets(1);
+    verify(statistic).updateWrittenDroppedPacketsByFull(1);
+  }
+
+  @Test
+  @DisplayName("initialize() then shutdown() covers onInitialized and onShutdown")
+  void testInitializeAndShutdown() {
+    assertDoesNotThrow(() -> {
+      writer.initialize();
+      writer.shutdown();
+    });
   }
 
   private Method getProcessSessionQueueMethod() throws NoSuchMethodException {
