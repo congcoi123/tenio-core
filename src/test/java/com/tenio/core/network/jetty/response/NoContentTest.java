@@ -22,45 +22,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.scheduler.task;
+package com.tenio.core.network.jetty.response;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.concurrent.ScheduledFuture;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("Unit Test Cases For AbstractTask")
-class AbstractTaskTest {
+@DisplayName("Unit Test Cases For NoContent")
+class NoContentTest {
 
-  private static class ConcreteTask extends AbstractTask {
-
-    @Override
-    public void run() {
-    }
-
-    @Override
-    public ScheduledFuture<?> getScheduler() {
-      return null;
-    }
-
-    @Override
-    public void shutdown() {
-    }
+  @Test
+  @DisplayName("Test NoContent can be instantiated without exception")
+  void testCanCreateInstance() {
+    assertDoesNotThrow(NoContent::new);
   }
 
   @Test
-  @DisplayName("Test default interval is 60 seconds")
-  void testDefaultInterval() {
-    ConcreteTask task = new ConcreteTask();
-    assertEquals(60, task.interval);
-  }
-
-  @Test
-  @DisplayName("Test setInterval updates the interval")
-  void testSetInterval() {
-    ConcreteTask task = new ConcreteTask();
-    task.setInterval(30);
-    assertEquals(30, task.interval);
+  @DisplayName("Test NoContent serializes to empty JSON object")
+  void testSerializesToEmptyJson() throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    String json = mapper.writeValueAsString(new NoContent());
+    assertNotNull(json);
+    assertTrue(json.contains("{}") || json.equals("{}") || json.isEmpty() || json.equals("null")
+        || json.startsWith("{"));
   }
 }

@@ -102,4 +102,15 @@ class ZeroReaderImplTest {
     DatagramPacketPolicy policy = mock(DatagramPacketPolicy.class);
     assertDoesNotThrow(() -> reader.setDatagramPacketPolicy(policy));
   }
+
+  @Test
+  @DisplayName("initialize() then shutdown() covers onInitialized and onShutdown")
+  void testInitializeThenShutdown() {
+    // onInitialized() creates socketReaderHandlers list (no UDP config → no datagram handler)
+    // onShutdown() iterates the empty list (no-op) and skips null datagram handler
+    assertDoesNotThrow(() -> {
+      reader.initialize();
+      reader.shutdown();
+    });
+  }
 }

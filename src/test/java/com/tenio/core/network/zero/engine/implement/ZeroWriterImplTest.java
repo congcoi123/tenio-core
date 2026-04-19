@@ -26,6 +26,7 @@ package com.tenio.core.network.zero.engine.implement;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -39,6 +40,8 @@ import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.engine.ZeroWriter;
+import com.tenio.core.network.zero.engine.writer.WriterHandler;
+import java.lang.reflect.Method;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -152,5 +155,125 @@ class ZeroWriterImplTest {
 
     // deepCopy() is called once per session in the multi-recipient path (2 sessions = 2 calls)
     verify(packet, times(2)).deepCopy();
+  }
+
+  private Method getProcessSessionQueueMethod() throws NoSuchMethodException {
+    Method m = ZeroWriterImpl.class.getDeclaredMethod(
+        "processSessionQueue", Session.class, WriterHandler.class, WriterHandler.class);
+    m.setAccessible(true);
+    return m;
+  }
+
+  @Test
+  @DisplayName("processSessionQueue with null session returns immediately without side effects")
+  void testProcessSessionQueueNullSessionReturnsImmediately() throws Exception {
+    Method m = getProcessSessionQueueMethod();
+    WriterHandler socketHandler = mock(WriterHandler.class);
+    WriterHandler datagramHandler = mock(WriterHandler.class);
+
+    assertDoesNotThrow(() -> m.invoke(writer, null, socketHandler, datagramHandler));
+
+    verify(socketHandler, never()).send(any(), any(), any());
+    verify(datagramHandler, never()).send(any(), any(), any());
+  }
+
+  @Test
+  @DisplayName("processSessionQueue with null outbound queue returns immediately")
+  void testProcessSessionQueueNullOutboundQueueReturnsImmediately() throws Exception {
+    Method m = getProcessSessionQueueMethod();
+    Session session = mock(Session.class);
+    WriterHandler socketHandler = mock(WriterHandler.class);
+    when(session.fetchOutboundQueue()).thenReturn(null);
+
+    assertDoesNotThrow(() -> m.invoke(writer, session, socketHandler, mock(WriterHandler.class)));
+
+    verify(socketHandler, never()).send(any(), any(), any());
+  }
+
+  @Test
+  @DisplayName("processSessionQueue with empty outbound queue returns immediately")
+  void testProcessSessionQueueEmptyOutboundQueueReturnsImmediately() throws Exception {
+    Method m = getProcessSessionQueueMethod();
+    Session session = mock(Session.class);
+    OutboundQueue queue = mock(OutboundQueue.class);
+    WriterHandler socketHandler = mock(WriterHandler.class);
+    when(session.fetchOutboundQueue()).thenReturn(queue);
+    when(queue.isEmpty()).thenReturn(true);
+
+    assertDoesNotThrow(() -> m.invoke(writer, session, socketHandler, mock(WriterHandler.class)));
+
+    verify(socketHandler, never()).send(any(), any(), any());
+  }
+
+  @Test
+  @DisplayName("processSessionQueue with inactive session takes one packet from queue and returns")
+  void testProcessSessionQueueInactiveSessionTakesFromQueue() throws Exception {
+    Method m = getProcessSessionQueueMethod();
+    Session session = mock(Session.class);
+    OutboundQueue queue = mock(OutboundQueue.class);
+    when(session.fetchOutboundQueue()).thenReturn(queue);
+    when(queue.isEmpty()).thenReturn(false);
+    when(session.isActivated()).thenReturn(false);
+
+    assertDoesNotThrow(() -> m.invoke(writer, session, mock(WriterHandler.class),
+        mock(WriterHandler.class)));
+
+    verify(queue).take();
+  }
+
+  @Test
+  @DisplayName("processSessionQueue with null packet takes from queue and returns")
+  void testProcessSessionQueueNullPacketTakesFromQueue() throws Exception {
+    Method m = getProcessSessionQueueMethod();
+    Session session = mock(Session.class);
+    OutboundQueue queue = mock(OutboundQueue.class);
+    when(session.fetchOutboundQueue()).thenReturn(queue);
+    when(queue.isEmpty()).thenReturn(false);
+    when(session.isActivated()).thenReturn(true);
+    when(queue.peek()).thenReturn(null);
+
+    assertDoesNotThrow(() -> m.invoke(writer, session, mock(WriterHandler.class),
+        mock(WriterHandler.class)));
+
+    verify(queue).take();
+  }
+
+  @Test
+  @DisplayName("processSessionQueue with TCP packet delegates to socketWriterHandler.send")
+  void testProcessSessionQueueTcpPacketDelegatesToSocketHandler() throws Exception {
+    Method m = getProcessSessionQueueMethod();
+    Session session = mock(Session.class);
+    OutboundQueue queue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+    WriterHandler socketHandler = mock(WriterHandler.class);
+    when(session.fetchOutboundQueue()).thenReturn(queue);
+    when(queue.isEmpty()).thenReturn(false);
+    when(session.isActivated()).thenReturn(true);
+    when(queue.peek()).thenReturn(packet);
+    when(packet.isTcp()).thenReturn(true);
+
+    assertDoesNotThrow(() -> m.invoke(writer, session, socketHandler, mock(WriterHandler.class)));
+
+    verify(socketHandler).send(queue, session, packet);
+  }
+
+  @Test
+  @DisplayName("processSessionQueue with UDP packet delegates to datagramWriterHandler.send")
+  void testProcessSessionQueueUdpPacketDelegatesToDatagramHandler() throws Exception {
+    Method m = getProcessSessionQueueMethod();
+    Session session = mock(Session.class);
+    OutboundQueue queue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+    WriterHandler datagramHandler = mock(WriterHandler.class);
+    when(session.fetchOutboundQueue()).thenReturn(queue);
+    when(queue.isEmpty()).thenReturn(false);
+    when(session.isActivated()).thenReturn(true);
+    when(queue.peek()).thenReturn(packet);
+    when(packet.isTcp()).thenReturn(false);
+    when(packet.isUdp()).thenReturn(true);
+
+    assertDoesNotThrow(() -> m.invoke(writer, session, mock(WriterHandler.class), datagramHandler));
+
+    verify(datagramHandler).send(queue, session, packet);
   }
 }

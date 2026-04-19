@@ -27,6 +27,7 @@ package com.tenio.core.network.netty;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -217,5 +218,50 @@ class NettyWebSocketImplTest {
 
     verify(session).close(ConnectionDisconnectMode.CLIENT_REQUEST,
         PlayerDisconnectMode.CLIENT_REQUEST);
+  }
+
+  @Test
+  @DisplayName("initialize then start then shutdown covers attemptToStart and attemptToShutdown")
+  void testInitializeThenStartThenShutdown() {
+    SocketConfiguration config =
+        new SocketConfiguration("websocket", TransportType.WEB_SOCKET, 8080, 4);
+    webSocket.setWebSocketConfiguration(config);
+    webSocket.setSessionManager(mock(SessionManager.class));
+    webSocket.setPacketDecoder(mock(BinaryPacketDecoder.class));
+    webSocket.initialize();
+    assertDoesNotThrow(() -> webSocket.start());
+    webSocket.shutdown();
+  }
+
+  @Test
+  @DisplayName("write with active non-last packet encodes and writes to websocket channel")
+  void testWriteWithActiveNonLastPacketEncodesAndWrites() {
+    Session session = mock(Session.class);
+    Packet packet = mock(Packet.class);
+    Packet encodedPacket = mock(Packet.class);
+    BinaryPacketEncoder encoder = mock(BinaryPacketEncoder.class);
+    NetworkWriterStatistic writerStatistic = mock(NetworkWriterStatistic.class);
+    io.netty.channel.Channel nettyChannel = mock(io.netty.channel.Channel.class);
+
+    when(packet.getRecipients()).thenReturn(List.of(session));
+    when(packet.isMarkedAsLast()).thenReturn(false);
+    when(session.isActivated()).thenReturn(true);
+    when(encoder.encode(packet)).thenReturn(encodedPacket);
+    when(encodedPacket.getData()).thenReturn(new byte[]{1, 2, 3});
+    when(encodedPacket.getOriginalSize()).thenReturn(3);
+    when(session.fetchWebSocketChannel()).thenReturn(nettyChannel);
+    when(nettyChannel.writeAndFlush(any())).thenReturn(
+        mock(io.netty.channel.ChannelFuture.class));
+
+    webSocket.setPacketEncoder(encoder);
+    webSocket.setNetworkWriterStatistic(writerStatistic);
+
+    assertDoesNotThrow(() -> webSocket.write(packet));
+
+    verify(encoder).encode(packet);
+    verify(nettyChannel).writeAndFlush(any());
+    verify(session).addWrittenBytes(3L);
+    verify(writerStatistic).updateWrittenBytes(3L);
+    verify(writerStatistic).updateWrittenPackets(1);
   }
 }

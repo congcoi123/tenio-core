@@ -30,6 +30,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.tenio.common.data.DataType;
+import com.tenio.core.network.codec.compression.BinaryPacketCompressor;
+import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.implement.PacketImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,5 +64,63 @@ class BinaryPacketEncoderImplTest {
     when(packet.getDataType()).thenReturn(DataType.ZERO);
     when(packet.getData()).thenReturn(new byte[] {1, 2, 3});
     assertNotNull(encoder.encode(packet));
+  }
+
+  @Test
+  @DisplayName("Test encoding a packet with length prefix short header")
+  void testEncodePacketWithLengthPrefixShortHeader() {
+    Packet packet = mock(Packet.class);
+    when(packet.getDataType()).thenReturn(DataType.ZERO);
+    when(packet.getData()).thenReturn(new byte[] {1, 2, 3});
+    when(packet.hasLengthPrefixed()).thenReturn(true);
+    assertNotNull(encoder.encode(packet));
+  }
+
+  @Test
+  @DisplayName("Test encoding a packet with length prefix and large data uses int header")
+  void testEncodePacketWithLengthPrefixLargeData() {
+    int largeSize = Short.MAX_VALUE * 2 + 2; // > MAX_BYTES_FOR_NORMAL_SIZE
+    byte[] largeData = new byte[largeSize];
+    Packet packet = mock(Packet.class);
+    when(packet.getDataType()).thenReturn(DataType.ZERO);
+    when(packet.getData()).thenReturn(largeData);
+    when(packet.hasLengthPrefixed()).thenReturn(true);
+    assertNotNull(encoder.encode(packet));
+  }
+
+  @Test
+  @DisplayName("Test encoding a packet requiring encryption without encryptor throws")
+  void testEncodeEncryptedPacketNoEncryptorThrows() {
+    Packet packet = mock(Packet.class);
+    when(packet.getDataType()).thenReturn(DataType.ZERO);
+    when(packet.getData()).thenReturn(new byte[] {1, 2, 3});
+    when(packet.needsEncrypted()).thenReturn(true);
+    assertThrows(IllegalStateException.class, () -> encoder.encode(packet));
+  }
+
+  @Test
+  @DisplayName("Test encoding a packet with compression threshold below data size without compressor throws")
+  void testEncodeCompressedPacketNoCompressorThrows() {
+    encoder.setCompressionThresholdBytes(2);
+    Packet packet = mock(Packet.class);
+    when(packet.getDataType()).thenReturn(DataType.ZERO);
+    when(packet.getData()).thenReturn(new byte[] {1, 2, 3});
+    when(packet.needsEncrypted()).thenReturn(false);
+    assertThrows(IllegalStateException.class, () -> encoder.encode(packet));
+  }
+
+  @Test
+  @DisplayName("Test setCompressor and setEncryptor do not throw")
+  void testSetCompressorAndEncryptor() {
+    encoder.setCompressor(mock(BinaryPacketCompressor.class));
+    encoder.setEncryptor(mock(BinaryPacketEncryptor.class));
+    // no exception expected
+  }
+
+  @Test
+  @DisplayName("Test setCompressionThresholdBytes does not throw")
+  void testSetCompressionThresholdBytes() {
+    encoder.setCompressionThresholdBytes(1024);
+    // no exception expected
   }
 }

@@ -33,11 +33,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.engine.manager.SessionTicketsQueueManager;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,11 +52,13 @@ import org.junit.jupiter.api.Test;
 class SocketWriterHandlerTest {
 
   private SocketWriterHandler handler;
+  private NetworkWriterStatistic writerStatistic;
 
   @BeforeEach
   void setUp() {
     handler = SocketWriterHandler.newInstance();
-    handler.setNetworkWriterStatistic(mock(NetworkWriterStatistic.class));
+    writerStatistic = mock(NetworkWriterStatistic.class);
+    handler.setNetworkWriterStatistic(writerStatistic);
     handler.setSessionTicketsQueueManager(mock(SessionTicketsQueueManager.class));
     handler.allocateBuffer(512);
   }
@@ -108,7 +116,105 @@ class SocketWriterHandlerTest {
     when(session.fetchSocketChannel()).thenReturn(null);
     when(session.isActivated()).thenReturn(false);
 
-    // No encoder set — still should not throw since we bail out at null channel
     assertDoesNotThrow(() -> handler.send(outboundQueue, session, packet));
+  }
+
+  @Test
+  @DisplayName("send with empty packet data removes packet from queue")
+  void testSendWithEmptyDataRemovesPacketFromQueue() {
+    SocketChannel channel = mock(SocketChannel.class);
+    BinaryPacketEncoder encoder = mock(BinaryPacketEncoder.class);
+    Session session = mock(Session.class);
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+
+    handler.setPacketEncoder(encoder);
+    when(session.fetchSocketChannel()).thenReturn(channel);
+    when(channel.isOpen()).thenReturn(true);
+    when(channel.isConnected()).thenReturn(true);
+    when(encoder.encode(packet)).thenReturn(packet);
+    when(packet.isFragmented()).thenReturn(false);
+    when(packet.getData()).thenReturn(new byte[0]);
+
+    assertDoesNotThrow(() -> handler.send(outboundQueue, session, packet));
+    verify(outboundQueue).take();
+  }
+
+  @Test
+  @DisplayName("send successfully writes all data, updates statistics and removes packet from queue")
+  void testSendSuccessfullyWritesAllData() throws Exception {
+    SocketChannel channel = mock(SocketChannel.class);
+    SelectionKey selectionKey = mock(SelectionKey.class);
+    BinaryPacketEncoder encoder = mock(BinaryPacketEncoder.class);
+    Session session = mock(Session.class);
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+
+    handler.setPacketEncoder(encoder);
+    when(session.fetchSocketChannel()).thenReturn(channel);
+    when(channel.isOpen()).thenReturn(true);
+    when(channel.isConnected()).thenReturn(true);
+    when(encoder.encode(packet)).thenReturn(packet);
+    when(packet.isFragmented()).thenReturn(false);
+    when(packet.getData()).thenReturn(new byte[]{1, 2, 3});
+    when(channel.write(any(ByteBuffer.class))).thenReturn(3);
+    when(session.fectchSocketSelectionKey()).thenReturn(selectionKey);
+    when(selectionKey.interestOps()).thenReturn(SelectionKey.OP_READ);
+    when(packet.isMarkedAsLast()).thenReturn(false);
+    when(session.isActivated()).thenReturn(false);
+
+    assertDoesNotThrow(() -> handler.send(outboundQueue, session, packet));
+    verify(outboundQueue).take();
+    verify(writerStatistic).updateWrittenPackets(1);
+  }
+
+  @Test
+  @DisplayName("send with last packet closes session after writing")
+  void testSendWithLastPacketClosesSession() throws Exception {
+    SocketChannel channel = mock(SocketChannel.class);
+    SelectionKey selectionKey = mock(SelectionKey.class);
+    BinaryPacketEncoder encoder = mock(BinaryPacketEncoder.class);
+    Session session = mock(Session.class);
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+
+    handler.setPacketEncoder(encoder);
+    when(session.fetchSocketChannel()).thenReturn(channel);
+    when(channel.isOpen()).thenReturn(true);
+    when(channel.isConnected()).thenReturn(true);
+    when(encoder.encode(packet)).thenReturn(packet);
+    when(packet.isFragmented()).thenReturn(false);
+    when(packet.getData()).thenReturn(new byte[]{1, 2, 3});
+    when(channel.write(any(ByteBuffer.class))).thenReturn(3);
+    when(session.fectchSocketSelectionKey()).thenReturn(selectionKey);
+    when(selectionKey.interestOps()).thenReturn(SelectionKey.OP_READ);
+    when(packet.isMarkedAsLast()).thenReturn(true);
+    when(session.isActivated()).thenReturn(true);
+
+    assertDoesNotThrow(() -> handler.send(outboundQueue, session, packet));
+    verify(session).close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+  }
+
+  @Test
+  @DisplayName("send with IOException clears queue and closes session if activated")
+  void testSendWithIOExceptionClearsQueueAndClosesSession() throws Exception {
+    SocketChannel channel = mock(SocketChannel.class);
+    BinaryPacketEncoder encoder = mock(BinaryPacketEncoder.class);
+    Session session = mock(Session.class);
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+
+    handler.setPacketEncoder(encoder);
+    when(session.fetchSocketChannel()).thenReturn(channel);
+    when(channel.isOpen()).thenReturn(true);
+    when(channel.isConnected()).thenReturn(true);
+    when(encoder.encode(packet)).thenReturn(packet);
+    when(packet.isFragmented()).thenReturn(false);
+    when(packet.getData()).thenReturn(new byte[]{1, 2, 3});
+    when(channel.write(any(ByteBuffer.class))).thenThrow(new java.io.IOException("write error"));
+    when(session.isActivated()).thenReturn(false);
+
+    assertDoesNotThrow(() -> handler.send(outboundQueue, session, packet));
+    verify(outboundQueue).clear();
   }
 }

@@ -27,6 +27,7 @@ package com.tenio.core.server.core;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -38,6 +39,7 @@ import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
 import com.tenio.core.entity.define.result.AccessDatagramChannelResult;
 import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.entity.manager.PlayerManager;
@@ -305,5 +307,245 @@ public class ZeroProcessorImplTest {
     reset(eventManager); // Clear previous interactions
     processSessionWillBeClosed(session);
     verify(playerManager, never()).removePlayerByIdentity(any());
+  }
+
+  @Test
+  public void shouldReturnEarlyWhenSessionNotActivated() {
+    // session.isActivated() returns false by default in Mockito
+    Request request = SessionRequest.newInstance()
+        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+        .setSender(session)
+        .setMessage(message);
+    processor.processRequest(request);
+    verify(eventManager, never()).emit(eq(ServerEvent.PLAYER_CONNECTION_RETRY), any(), any());
+    verify(eventManager, never()).emit(eq(ServerEvent.CONNECTION_ESTABLISHED_RESULT),
+        any(), any(), any());
+  }
+
+  @Test
+  public void shouldReturnEarlyWhenTransitionStateFails() {
+    when(session.isActivated()).thenReturn(true);
+    when(session.transitionAssociatedState(Session.AssociatedState.NONE,
+        Session.AssociatedState.DOING)).thenReturn(false);
+    Request request = SessionRequest.newInstance()
+        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+        .setSender(session)
+        .setMessage(message);
+    processor.processRequest(request);
+    verify(eventManager, never()).emit(eq(ServerEvent.CONNECTION_ESTABLISHED_RESULT),
+        any(), any(), any());
+  }
+
+  @Test
+  public void shouldHandleSessionWillBeClosedWhenNotAssociatedToDone() throws Exception {
+    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(false);
+    processSessionWillBeClosed(session);
+    verify(playerManager, never()).getPlayerByIdentity(any());
+    verify(session).setName(null);
+    verify(session).setAssociatedToPlayer(Session.AssociatedState.NONE);
+    verify(session).remove();
+  }
+
+  @Test
+  public void shouldHandleSessionWillBeClosedWhenPlayerIsInRoom() throws Exception {
+    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
+    when(session.getName()).thenReturn(PLAYER_IDENTITY);
+    when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(player);
+    when(player.isInRoom()).thenReturn(true);
+    when(player.getIdentity()).thenReturn(PLAYER_IDENTITY);
+    processSessionWillBeClosed(session);
+    verify(serverApi).leaveRoom(eq(player), any());
+  }
+
+  @Test
+  public void shouldHandleSessionWillBeClosedWhenPlayerIsNull() throws Exception {
+    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
+    when(session.getName()).thenReturn(PLAYER_IDENTITY);
+    when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(null);
+    processSessionWillBeClosed(session);
+    verify(eventManager, never()).emit(eq(ServerEvent.DISCONNECT_PLAYER), any(), any());
+    verify(session).setName(null);
+    verify(session).remove();
+  }
+
+  @Test
+  public void shouldHandleSessionReadMessageWhenNotAssociated() throws Exception {
+    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(false);
+    processSessionReadMessage(session, message);
+    verify(session).setLastReadTime(any(Long.class));
+    verify(session).increaseReadMessages();
+    verify(eventManager, never()).emit(eq(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER), any(), any());
+  }
+
+  @Test
+  public void shouldHandleSessionReadMessageWhenPlayerIsNull() throws Exception {
+    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
+    when(session.getName()).thenReturn(PLAYER_IDENTITY);
+    when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(null);
+    processSessionReadMessage(session, message);
+    verify(session).setLastReadTime(any(Long.class));
+    verify(session).increaseReadMessages();
+    verify(eventManager, never()).emit(eq(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER), any(), any());
+  }
+
+  @Test
+  public void shouldReturnWhenDatagramResultIsNotOptional() {
+    when(eventManager.emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION), eq(message)))
+        .thenReturn("not-an-optional");
+    Request request = DatagramRequest.newInstance()
+        .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS)
+        .setSender(datagramChannel)
+        .setRemoteAddress(REMOTE_ADDRESS)
+        .setMessage(message);
+    processor.processRequest(request);
+    verify(eventManager, never()).emit(
+        eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT), any(), any(), any());
+  }
+
+  @Test
+  public void shouldHandleDatagramAccessWhenPlayerHasNoSession() {
+    when(eventManager.emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION), eq(message)))
+        .thenReturn(Optional.of(player));
+    when(player.containsSession()).thenReturn(false);
+    Request request = DatagramRequest.newInstance()
+        .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS)
+        .setSender(datagramChannel)
+        .setRemoteAddress(REMOTE_ADDRESS)
+        .setMessage(message);
+    processor.processRequest(request);
+    verify(eventManager).emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT),
+        eq(player), eq(Session.EMPTY_DATAGRAM_CONVEY_ID),
+        eq(AccessDatagramChannelResult.SESSION_NOT_FOUND));
+  }
+
+  @Test
+  public void shouldHandleDatagramAccessWhenSessionIsNotTcp() {
+    when(eventManager.emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION), eq(message)))
+        .thenReturn(Optional.of(player));
+    when(player.containsSession()).thenReturn(true);
+    when(player.getSession()).thenReturn(Optional.of(session));
+    when(session.isTcp()).thenReturn(false);
+    Request request = DatagramRequest.newInstance()
+        .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS)
+        .setSender(datagramChannel)
+        .setRemoteAddress(REMOTE_ADDRESS)
+        .setMessage(message);
+    processor.processRequest(request);
+    verify(eventManager).emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT),
+        eq(player), eq(Session.EMPTY_DATAGRAM_CONVEY_ID),
+        eq(AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL));
+  }
+
+  @Test
+  public void shouldCloseOldSessionOnReconnectionWhenCurrentSessionIsActivated() throws Exception {
+    Session currentSession = mock(Session.class);
+    when(currentSession.isActivated()).thenReturn(true);
+    when(currentSession.getName()).thenReturn("old-name");
+    when(session.isActivated()).thenReturn(true);
+    when(session.transitionAssociatedState(Session.AssociatedState.NONE,
+        Session.AssociatedState.DOING)).thenReturn(true);
+    when(eventManager.emit(eq(ServerEvent.PLAYER_CONNECTION_RETRY), eq(session), eq(message)))
+        .thenReturn(Optional.of(player));
+    when(player.getSession()).thenReturn(Optional.of(currentSession));
+    when(player.isInRoom()).thenReturn(false);
+    Request request = SessionRequest.newInstance()
+        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+        .setSender(session)
+        .setMessage(message);
+    processor.processRequest(request);
+    verify(currentSession).close(
+        eq(ConnectionDisconnectMode.RECONNECTION), eq(PlayerDisconnectMode.RECONNECTION));
+  }
+
+  @Test
+  public void shouldLeaveRoomOnReconnectionWhenPlayerIsInRoom() {
+    when(session.isActivated()).thenReturn(true);
+    when(session.transitionAssociatedState(Session.AssociatedState.NONE,
+        Session.AssociatedState.DOING)).thenReturn(true);
+    when(eventManager.emit(eq(ServerEvent.PLAYER_CONNECTION_RETRY), eq(session), eq(message)))
+        .thenReturn(Optional.of(player));
+    when(player.getSession()).thenReturn(Optional.empty());
+    when(player.isInRoom()).thenReturn(true);
+    Request request = SessionRequest.newInstance()
+        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+        .setSender(session)
+        .setMessage(message);
+    processor.processRequest(request);
+    verify(serverApi).leaveRoom(eq(player), eq(PlayerLeaveRoomMode.RECONNECTION));
+  }
+
+  @Test
+  public void shouldCoverSubscribeLambdaForSessionRequestConnection() {
+    var realEventManager = EventManager.newInstance();
+    var realProcessor = ZeroProcessorImpl.newInstance(
+        realEventManager, serverApi, datagramChannelManager);
+    realProcessor.setSessionManager(sessionManager);
+    realProcessor.setPlayerManager(playerManager);
+    realProcessor.setMaxNumberPlayers(MAX_PLAYERS);
+    realProcessor.setKeepPlayerOnDisconnection(false);
+    realProcessor.setNetworkReaderStatistic(networkReaderStatistic);
+    realProcessor.setNetworkWriterStatistic(networkWriterStatistic);
+    realProcessor.initialize();
+    realProcessor.subscribe(true, true);
+    realEventManager.subscribe();
+    realEventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, message);
+    realProcessor.shutdown();
+  }
+
+  @Test
+  public void shouldCoverSubscribeLambdaForSessionWillBeClosed() {
+    var realEventManager = EventManager.newInstance();
+    var realProcessor = ZeroProcessorImpl.newInstance(
+        realEventManager, serverApi, datagramChannelManager);
+    realProcessor.setSessionManager(sessionManager);
+    realProcessor.setPlayerManager(playerManager);
+    realProcessor.setMaxNumberPlayers(MAX_PLAYERS);
+    realProcessor.setKeepPlayerOnDisconnection(false);
+    realProcessor.setNetworkReaderStatistic(networkReaderStatistic);
+    realProcessor.setNetworkWriterStatistic(networkWriterStatistic);
+    realProcessor.initialize();
+    realProcessor.subscribe(true, true);
+    realEventManager.subscribe();
+    // SESSION_WILL_BE_CLOSED lambda calls processSessionWillBeClosed synchronously
+    realEventManager.emit(ServerEvent.SESSION_WILL_BE_CLOSED, session,
+        null, PlayerDisconnectMode.CLIENT_REQUEST);
+    realProcessor.shutdown();
+  }
+
+  @Test
+  public void shouldCoverSubscribeLambdaForSessionReadMessage() {
+    var realEventManager = EventManager.newInstance();
+    var realProcessor = ZeroProcessorImpl.newInstance(
+        realEventManager, serverApi, datagramChannelManager);
+    realProcessor.setSessionManager(sessionManager);
+    realProcessor.setPlayerManager(playerManager);
+    realProcessor.setMaxNumberPlayers(MAX_PLAYERS);
+    realProcessor.setKeepPlayerOnDisconnection(false);
+    realProcessor.setNetworkReaderStatistic(networkReaderStatistic);
+    realProcessor.setNetworkWriterStatistic(networkWriterStatistic);
+    realProcessor.initialize();
+    realProcessor.subscribe(true, true);
+    realEventManager.subscribe();
+    realEventManager.emit(ServerEvent.SESSION_READ_MESSAGE, session, message);
+    realProcessor.shutdown();
+  }
+
+  @Test
+  public void shouldCoverSubscribeLambdaForDatagramChannelRequest() {
+    var realEventManager = EventManager.newInstance();
+    var realProcessor = ZeroProcessorImpl.newInstance(
+        realEventManager, serverApi, datagramChannelManager);
+    realProcessor.setSessionManager(sessionManager);
+    realProcessor.setPlayerManager(playerManager);
+    realProcessor.setMaxNumberPlayers(MAX_PLAYERS);
+    realProcessor.setKeepPlayerOnDisconnection(false);
+    realProcessor.setNetworkReaderStatistic(networkReaderStatistic);
+    realProcessor.setNetworkWriterStatistic(networkWriterStatistic);
+    realProcessor.initialize();
+    realProcessor.subscribe(true, true);
+    realEventManager.subscribe();
+    realEventManager.emit(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS,
+        datagramChannel, REMOTE_ADDRESS, message);
+    realProcessor.shutdown();
   }
 }

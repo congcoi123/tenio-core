@@ -24,8 +24,16 @@ THE SOFTWARE.
 
 package com.tenio.core.network.codec.decoder;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.tenio.common.data.DataType;
+import com.tenio.core.network.codec.compression.BinaryPacketCompressor;
+import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
+import com.tenio.core.network.codec.packet.PacketHeader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,5 +60,63 @@ class BinaryPacketDecoderImplTest {
   void testDecodeInvalidData() {
     byte[] binaries = new byte[] {1, 2, 3};
     assertThrows(MessageTypeException.class, () -> decoder.decode(binaries));
+  }
+
+  @Test
+  @DisplayName("decode(PacketHeader, null) returns null")
+  void testDecodeWithPacketHeaderAndNullBinariesReturnsNull() {
+    PacketHeader header = PacketHeader.newInstance(true, false, false, false, DataType.ZERO);
+    assertNull(decoder.decode(header, null));
+  }
+
+  @Test
+  @DisplayName("decode(PacketHeader, empty array) returns null")
+  void testDecodeWithPacketHeaderAndEmptyBinariesReturnsNull() {
+    PacketHeader header = PacketHeader.newInstance(true, false, false, false, DataType.ZERO);
+    assertNull(decoder.decode(header, new byte[0]));
+  }
+
+  @Test
+  @DisplayName("decode with compressed=true and no compressor throws IllegalStateException")
+  void testDecodeCompressedWithoutCompressorThrows() {
+    PacketHeader header = PacketHeader.newInstance(true, true, false, false, DataType.ZERO);
+    assertThrows(IllegalStateException.class, () -> decoder.decode(header, new byte[]{1, 2, 3}));
+  }
+
+  @Test
+  @DisplayName("decode with encrypted=true and no encryptor throws IllegalStateException")
+  void testDecodeEncryptedWithoutEncryptorThrows() {
+    PacketHeader header = PacketHeader.newInstance(true, false, false, true, DataType.ZERO);
+    assertThrows(IllegalStateException.class, () -> decoder.decode(header, new byte[]{1, 2, 3}));
+  }
+
+  @Test
+  @DisplayName("setCompressor stores the compressor for use in decode")
+  void testSetCompressorIsUsedDuringDecode() {
+    BinaryPacketCompressor compressor = mock(BinaryPacketCompressor.class);
+    when(compressor.uncompress(new byte[]{1, 2, 3})).thenReturn(new byte[]{1, 2, 3});
+
+    decoder.setCompressor(compressor);
+    PacketHeader header = PacketHeader.newInstance(true, true, false, false, DataType.ZERO);
+
+    // The uncompressed bytes go to DataUtility, which may throw - we just verify the compressor
+    // is invoked; the downstream exception is expected
+    assertThrows(Exception.class, () -> decoder.decode(header, new byte[]{1, 2, 3}));
+    verify(compressor).uncompress(new byte[]{1, 2, 3});
+  }
+
+  @Test
+  @DisplayName("setEncryptor stores the encryptor for use in decode")
+  void testSetEncryptorIsUsedDuringDecode() {
+    BinaryPacketEncryptor encryptor = mock(BinaryPacketEncryptor.class);
+    when(encryptor.decrypt(new byte[]{1, 2, 3})).thenReturn(new byte[]{1, 2, 3});
+
+    decoder.setEncryptor(encryptor);
+    PacketHeader header = PacketHeader.newInstance(true, false, false, true, DataType.ZERO);
+
+    // The decrypted bytes go to DataUtility, which may throw - we just verify the encryptor
+    // is invoked; the downstream exception is expected
+    assertThrows(Exception.class, () -> decoder.decode(header, new byte[]{1, 2, 3}));
+    verify(encryptor).decrypt(new byte[]{1, 2, 3});
   }
 }

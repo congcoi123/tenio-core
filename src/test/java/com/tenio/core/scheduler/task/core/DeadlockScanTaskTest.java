@@ -24,13 +24,74 @@ THE SOFTWARE.
 
 package com.tenio.core.scheduler.task.core;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import com.tenio.core.event.implement.EventManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 @DisplayName("Unit Test Cases For DeadlockScanTask")
 class DeadlockScanTaskTest {
 
+  private EventManager eventManager;
+  private DeadlockScanTask task;
+
+  @BeforeEach
+  void setUp() {
+    eventManager = Mockito.mock(EventManager.class);
+    task = DeadlockScanTask.newInstance(eventManager);
+  }
+
   @Test
-  void placeholder() {
+  @DisplayName("Test creating a new instance")
+  void testNewInstance() {
+    assertNotNull(DeadlockScanTask.newInstance(eventManager));
+  }
+
+  @Test
+  @DisplayName("Test scheduler is null before run")
+  void testGetSchedulerBeforeRunIsNull() {
+    assertNull(task.getScheduler());
+  }
+
+  @Test
+  @DisplayName("Test run initializes the scheduler")
+  void testRunInitializesScheduler() {
+    task.run();
+    assertNotNull(task.getScheduler());
+    task.shutdown();
+  }
+
+  @Test
+  @DisplayName("Test shutdown after run completes without exception")
+  void testShutdownAfterRun() {
+    task.run();
+    task.shutdown(); // should not throw
+  }
+
+  @Test
+  @DisplayName("Test shutdown before run completes without exception")
+  void testShutdownBeforeRun() {
+    task.shutdown(); // scheduledService is null, should not throw
+  }
+
+  @Test
+  @DisplayName("Test setInterval updates interval without exception")
+  void testSetInterval() {
+    task.setInterval(30);
+    // no exception expected
+  }
+
+  @Test
+  @DisplayName("Test checkForDeadlockedThreads via reflection does not throw when no deadlock")
+  void testCheckForDeadlockedThreadsViaReflection() throws Exception {
+    java.lang.reflect.Method method =
+        DeadlockScanTask.class.getDeclaredMethod("checkForDeadlockedThreads");
+    method.setAccessible(true);
+    // In a normal test environment there are no deadlocks, so threadIds should be null/empty
+    method.invoke(task);
   }
 }

@@ -38,7 +38,10 @@ import com.tenio.core.entity.Player;
 import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.entity.session.Session;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -180,5 +183,50 @@ class ResponseImplTest {
   void testToStringIsNotNull() {
     assertNotNull(response.toString());
     assertTrue(response.toString().contains("Response"));
+  }
+
+  @Test
+  void testSetRecipientPlayersSecondCallUsesAddAll() {
+    Player p1 = mock(Player.class);
+    Player p2 = mock(Player.class);
+    response.setRecipientPlayers(new ArrayList<>(List.of(p1)));
+    response.setRecipientPlayers(List.of(p2));
+    assertEquals(2, response.getRecipientPlayers().size());
+    assertTrue(response.getRecipientPlayers().contains(p1));
+    assertTrue(response.getRecipientPlayers().contains(p2));
+  }
+
+  @Test
+  void testConstructRecipientPlayersWithSessionPlayerViaReflection() throws Exception {
+    Player player = mock(Player.class);
+    Session session = mock(Session.class);
+    when(player.containsSession()).thenReturn(true);
+    when(player.getSession()).thenReturn(Optional.of(session));
+    when(session.isTcp()).thenReturn(true);
+    when(session.containsUdp()).thenReturn(false);
+
+    response.setRecipientPlayer(player);
+
+    Method method = ResponseImpl.class.getDeclaredMethod("constructRecipientPlayers");
+    method.setAccessible(true);
+    method.invoke(response);
+
+    assertNotNull(response.getRecipientSocketSessions());
+    assertTrue(response.getRecipientSocketSessions().contains(session));
+  }
+
+  @Test
+  void testConstructRecipientPlayersWithNonSessionPlayerViaReflection() throws Exception {
+    Player player = mock(Player.class);
+    when(player.containsSession()).thenReturn(false);
+
+    response.setRecipientPlayer(player);
+
+    Method method = ResponseImpl.class.getDeclaredMethod("constructRecipientPlayers");
+    method.setAccessible(true);
+    method.invoke(response);
+
+    assertNotNull(response.getNonSessionRecipientPlayers());
+    assertTrue(response.getNonSessionRecipientPlayers().contains(player));
   }
 }

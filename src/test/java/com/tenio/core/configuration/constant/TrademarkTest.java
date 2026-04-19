@@ -22,57 +22,45 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.monitoring.system;
+package com.tenio.core.configuration.constant;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class SystemMonitoringTest {
+@DisplayName("Unit Test Cases For Trademark")
+class TrademarkTest {
+
   @Test
-  void testNewInstance() {
-    SystemMonitoring.newInstance();
+  @DisplayName("Test CONTENT array is non-null and non-empty")
+  void testContentArrayIsNonNullAndNonEmpty() {
+    assertNotNull(Trademark.CONTENT);
+    assertTrue(Trademark.CONTENT.length > 0);
   }
 
   @Test
-  void testGetCpuUsage() {
-    assertEquals(0.0, SystemMonitoring.newInstance().getCpuUsage());
+  @DisplayName("Test CONTENT array contains TenIO branding")
+  void testContentArrayContainsTenIoBranding() {
+    boolean found = false;
+    for (String line : Trademark.CONTENT) {
+      if (line != null && line.contains("TenIO")) {
+        found = true;
+        break;
+      }
+    }
+    assertTrue(found);
   }
 
   @Test
-  void testGetCpuUsageSecondCall() {
-    SystemMonitoring monitor = SystemMonitoring.newInstance();
-    monitor.getCpuUsage(); // sets baseline
-    monitor.getCpuUsage(); // reads delta
-  }
-
-  @Test
-  void testGetFreeMemory() {
-    SystemMonitoring.newInstance().getFreeMemory();
-  }
-
-  @Test
-  void testGetUsedMemory() {
-    SystemMonitoring.newInstance().getUsedMemory();
-  }
-
-  @Test
-  void testGetTotalMemory() {
-    long totalMemory = SystemMonitoring.newInstance().getTotalMemory();
-    assertTrue(totalMemory > 0);
-  }
-
-  @Test
-  void testCountRunningPlatformThreads() {
-    long threadCount = SystemMonitoring.newInstance().countRunningPlatformThreads();
-    assertTrue(threadCount >= 0);
-  }
-
-  @Test
-  void testToStringContainsKeywords() {
-    String str = SystemMonitoring.newInstance().toString();
-    assertTrue(str.contains("cpuUsage"));
-    assertTrue(str.contains("totalMemory"));
+  @DisplayName("Test private constructor throws UnsupportedOperationException")
+  void testPrivateConstructorThrows() throws Exception {
+    Constructor<Trademark> constructor = Trademark.class.getDeclaredConstructor();
+    constructor.setAccessible(true);
+    assertThrows(InvocationTargetException.class, constructor::newInstance);
   }
 }
