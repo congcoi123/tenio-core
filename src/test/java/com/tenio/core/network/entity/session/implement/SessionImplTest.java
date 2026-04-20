@@ -738,4 +738,47 @@ class SessionImplTest {
 
     verify(manager).emitEvent(ServerEvent.SESSION_READ_MESSAGE, session, message);
   }
+
+  @Test
+  @DisplayName("toString with non-null socketRemoteAddress and datagramRemoteAddress covers non-null branches")
+  void testToStringWithNonNullAddresses() throws Exception {
+    ServerSocketChannel server = ServerSocketChannel.open();
+    server.bind(new InetSocketAddress("127.0.0.1", 0));
+    int port = ((InetSocketAddress) server.getLocalAddress()).getPort();
+    SocketChannel client = SocketChannel.open(new InetSocketAddress("127.0.0.1", port));
+    SocketChannel serverSide = server.accept();
+    server.close();
+
+    Session session = SessionImpl.newInstance();
+    session.configureSocketChannel(serverSide, mock(SelectionKey.class));
+    session.setDatagramRemoteAddress(new InetSocketAddress("127.0.0.1", 9999));
+    OutboundQueue queue = mock(OutboundQueue.class);
+    when(queue.getSize()).thenReturn(0);
+    session.configureOutboundQueue(queue);
+
+    String str = session.toString();
+    assertNotNull(str);
+    assertTrue(str.contains("127.0.0.1"));
+
+    client.close();
+    serverSide.close();
+  }
+
+  @Test
+  @DisplayName("processInboundQueue handles InterruptedException by setting interrupt flag and exiting")
+  void testProcessInboundQueueHandlesInterruptedException() throws Exception {
+    Session session = SessionImpl.newInstance();
+    session.configureMaxInboundQueueSize(0);
+    session.activate();
+
+    // Interrupt the inbound virtual thread to trigger InterruptedException in take()
+    java.lang.reflect.Field inboundField = SessionImpl.class.getDeclaredField("inboundProcess");
+    inboundField.setAccessible(true);
+    Thread inboundProcess = (Thread) inboundField.get(session);
+    inboundProcess.interrupt();
+
+    // Wait for the thread to exit after handling InterruptedException
+    inboundProcess.join(1000);
+    assertFalse(inboundProcess.isAlive());
+  }
 }

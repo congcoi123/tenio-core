@@ -27,11 +27,16 @@ package com.tenio.core.scheduler.task.core;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 @DisplayName("Unit Test Cases For CcuReportTask")
@@ -97,5 +102,39 @@ class CcuReportTaskTest {
   void testSetInterval() {
     task.setInterval(15);
     // no exception expected
+  }
+
+  @Test
+  @DisplayName("lambda body emits FETCHED_CCU_INFO event with player count")
+  @SuppressWarnings("unchecked")
+  void testLambdaBodyEmitsCcuEvent() {
+    Mockito.when(playerManager.getPlayerCount()).thenReturn(5);
+    ScheduledExecutorService mockService = Mockito.mock(ScheduledExecutorService.class);
+    Mockito.when(mockService.scheduleAtFixedRate(
+            Mockito.any(Runnable.class), Mockito.anyLong(), Mockito.anyLong(), Mockito.any()))
+        .thenAnswer(inv -> {
+          ((Runnable) inv.getArgument(0)).run();
+          return Mockito.mock(ScheduledFuture.class);
+        });
+
+    try (MockedStatic<Executors> execMock = Mockito.mockStatic(Executors.class)) {
+      execMock.when(() -> Executors.newSingleThreadScheduledExecutor(Mockito.any()))
+          .thenReturn(mockService);
+      task.run();
+    }
+
+    Mockito.verify(eventManager).emit(ServerEvent.FETCHED_CCU_INFO, 5);
+  }
+
+  @Test
+  @DisplayName("shutdown handles InterruptedException from awaitTermination")
+  void testShutdownHandlesInterruptedException() {
+    task.run();
+    Thread.currentThread().interrupt();
+    try {
+      task.shutdown();
+    } finally {
+      Thread.interrupted();
+    }
   }
 }

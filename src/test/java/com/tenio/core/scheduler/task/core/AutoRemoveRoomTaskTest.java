@@ -186,4 +186,16 @@ class AutoRemoveRoomTaskTest {
 
     runWithImmediateExecution(task::run);
   }
+
+  @Test
+  @DisplayName("shutdown handles InterruptedException from awaitTermination")
+  void testShutdownHandlesInterruptedException() {
+    task.run();
+    Thread.currentThread().interrupt();
+    try {
+      task.shutdown();
+    } finally {
+      Thread.interrupted();
+    }
+  }
 }

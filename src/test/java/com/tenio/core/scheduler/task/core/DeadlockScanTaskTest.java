@@ -24,10 +24,17 @@ THE SOFTWARE.
 
 package com.tenio.core.scheduler.task.core;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.when;
 
 import com.tenio.core.event.implement.EventManager;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -93,5 +100,48 @@ class DeadlockScanTaskTest {
     method.setAccessible(true);
     // In a normal test environment there are no deadlocks, so threadIds should be null/empty
     method.invoke(task);
+  }
+
+  @Test
+  @DisplayName("findMatchingThread finds the current thread by its ThreadInfo")
+  void testFindMatchingThreadFindsCurrentThread() throws Exception {
+    Method m = DeadlockScanTask.class.getDeclaredMethod("findMatchingThread", ThreadInfo.class);
+    m.setAccessible(true);
+
+    long threadId = Thread.currentThread().getId();
+    ThreadInfo threadInfo = ManagementFactory.getThreadMXBean().getThreadInfo(threadId);
+
+    Object result = m.invoke(task, threadInfo);
+    assertNotNull(result);
+    assertInstanceOf(Thread.class, result);
+    assertEquals(threadId, ((Thread) result).getId());
+  }
+
+  @Test
+  @DisplayName("findMatchingThread throws IllegalStateException when thread ID not found")
+  void testFindMatchingThreadThrowsWhenNotFound() throws Exception {
+    Method m = DeadlockScanTask.class.getDeclaredMethod("findMatchingThread", ThreadInfo.class);
+    m.setAccessible(true);
+
+    ThreadInfo mockInfo = Mockito.mock(ThreadInfo.class);
+    when(mockInfo.getThreadId()).thenReturn(-999L);
+
+    try {
+      m.invoke(task, mockInfo);
+    } catch (InvocationTargetException e) {
+      assertInstanceOf(IllegalStateException.class, e.getCause());
+    }
+  }
+
+  @Test
+  @DisplayName("shutdown handles InterruptedException from awaitTermination")
+  void testShutdownHandlesInterruptedException() {
+    task.run();
+    Thread.currentThread().interrupt();
+    try {
+      task.shutdown();
+    } finally {
+      Thread.interrupted();
+    }
   }
 }

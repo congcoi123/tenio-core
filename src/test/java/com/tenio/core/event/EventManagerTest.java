@@ -93,4 +93,21 @@ class EventManagerTest {
 
     Assertions.assertFalse(eventManager.hasSubscriber(ServerEvent.FETCHED_CCU_INFO));
   }
+
+  @Test
+  public void emitTracingEventCoversBranch() {
+    // SESSION_READ_MESSAGE is a tracing event — hits the isEventForTracing(true) branch
+    eventManager.on(ServerEvent.SESSION_READ_MESSAGE, params -> null);
+    eventManager.subscribe();
+    Assertions.assertDoesNotThrow(
+        () -> eventManager.emit(ServerEvent.SESSION_READ_MESSAGE, new Object()));
+  }
+
+  @Test
+  public void subscribeDuplicatedEventCoversHasSubscriberBranch() {
+    // Subscribing to the same event twice triggers the hasSubscriber(true) branch
+    eventManager.on(ServerEvent.FETCHED_CCU_INFO, params -> null);
+    Assertions.assertDoesNotThrow(
+        () -> eventManager.on(ServerEvent.FETCHED_CCU_INFO, params -> null));
+  }
 }

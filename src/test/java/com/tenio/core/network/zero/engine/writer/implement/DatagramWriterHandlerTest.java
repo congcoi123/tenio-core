@@ -28,10 +28,13 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.io.IOException;
 
 import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.entity.outbound.packet.Packet;
@@ -197,5 +200,26 @@ class DatagramWriterHandlerTest {
     assertDoesNotThrow(() -> handler.send(outboundQueue, session, packet));
     verify(outboundQueue).take();
     assertNotNull(ticketsQueue.peek());
+  }
+
+  @Test
+  @DisplayName("send with IOException from datagramChannel.send does not propagate and skips take")
+  void testSendWithIOExceptionFromChannelDoesNotPropagate() throws Exception {
+    DatagramChannel datagramChannel = mock(DatagramChannel.class);
+    InetSocketAddress remoteAddress = new InetSocketAddress("127.0.0.1", 8080);
+    BinaryPacketEncoder encoder = mock(BinaryPacketEncoder.class);
+    Session session = mock(Session.class);
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    Packet packet = mock(Packet.class);
+
+    handler.setPacketEncoder(encoder);
+    when(session.fetchDatagramChannel()).thenReturn(datagramChannel);
+    when(session.getDatagramRemoteAddress()).thenReturn(remoteAddress);
+    when(encoder.encode(packet)).thenReturn(packet);
+    when(packet.getData()).thenReturn(new byte[]{1, 2, 3});
+    doThrow(new IOException("send failed")).when(datagramChannel).send(any(), any());
+
+    assertDoesNotThrow(() -> handler.send(outboundQueue, session, packet));
+    verify(outboundQueue, never()).take();
   }
 }

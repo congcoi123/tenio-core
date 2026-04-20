@@ -34,6 +34,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.concurrent.BlockingQueue;
+
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.OutboundQueueFullException;
 import com.tenio.core.exception.OutboundQueuePolicyViolationException;
@@ -401,5 +403,21 @@ class ZeroWriterImplTest {
     Method onStarted = ZeroWriterImpl.class.getDeclaredMethod("onStarted");
     onStarted.setAccessible(true);
     assertDoesNotThrow(() -> onStarted.invoke(writer));
+  }
+
+  @Test
+  @DisplayName("writing() catches Throwable thrown by take() without propagating")
+  void testWritingCatchesThrowableFromTake() throws Exception {
+    writer.initialize();
+    Method m = ZeroWriterImpl.class.getDeclaredMethod(
+        "writing", BlockingQueue.class, WriterHandler.class, WriterHandler.class);
+    m.setAccessible(true);
+
+    @SuppressWarnings("unchecked")
+    BlockingQueue<Session> mockQueue = mock(BlockingQueue.class);
+    when(mockQueue.take()).thenThrow(new RuntimeException("test error"));
+
+    assertDoesNotThrow(() -> m.invoke(writer, mockQueue, mock(WriterHandler.class), mock(WriterHandler.class)));
+    writer.shutdown();
   }
 }

@@ -49,6 +49,7 @@ import com.tenio.core.network.entity.inbound.implement.DatagramRequest;
 import com.tenio.core.network.entity.inbound.implement.SessionRequest;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
+import com.tenio.core.network.entity.inbound.policy.RequestPolicy;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
@@ -544,6 +545,54 @@ public class ZeroProcessorImplTest {
     realProcessor.initialize();
     realProcessor.subscribe(true, true);
     realEventManager.subscribe();
+    realEventManager.emit(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS,
+        datagramChannel, REMOTE_ADDRESS, message);
+    realProcessor.shutdown();
+  }
+
+  @Test
+  public void shouldCoverNoArgSubscribeMethod() {
+    processor.subscribe();
+  }
+
+  @Test
+  public void shouldCoverLifecycleNoOpMethods() throws Exception {
+    Method onInit = ZeroProcessorImpl.class.getDeclaredMethod("onInitialized");
+    onInit.setAccessible(true);
+    onInit.invoke(processor);
+
+    Method onStarted = ZeroProcessorImpl.class.getDeclaredMethod("onStarted");
+    onStarted.setAccessible(true);
+    onStarted.invoke(processor);
+
+    Method onRunning = ZeroProcessorImpl.class.getDeclaredMethod("onRunning");
+    onRunning.setAccessible(true);
+    onRunning.invoke(processor);
+
+    Method onShutdown = ZeroProcessorImpl.class.getDeclaredMethod("onShutdown");
+    onShutdown.setAccessible(true);
+    onShutdown.invoke(processor);
+  }
+
+  @Test
+  public void shouldCoverSetRequestPolicyAndLambdaPolicyPath() {
+    RequestPolicy requestPolicy = mock(RequestPolicy.class);
+    processor.setRequestPolicy(requestPolicy);
+
+    var realEventManager = EventManager.newInstance();
+    var realProcessor = ZeroProcessorImpl.newInstance(
+        realEventManager, serverApi, datagramChannelManager);
+    realProcessor.setSessionManager(sessionManager);
+    realProcessor.setPlayerManager(playerManager);
+    realProcessor.setMaxNumberPlayers(MAX_PLAYERS);
+    realProcessor.setKeepPlayerOnDisconnection(false);
+    realProcessor.setNetworkReaderStatistic(networkReaderStatistic);
+    realProcessor.setNetworkWriterStatistic(networkWriterStatistic);
+    realProcessor.setRequestPolicy(requestPolicy);
+    realProcessor.initialize();
+    realProcessor.subscribe(true, true);
+    realEventManager.subscribe();
+    realEventManager.emit(ServerEvent.SESSION_REQUEST_CONNECTION, session, message);
     realEventManager.emit(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS,
         datagramChannel, REMOTE_ADDRESS, message);
     realProcessor.shutdown();

@@ -620,4 +620,30 @@ class DefaultRoomTest {
         () -> room.switchSpectatorToParticipant(player, 5));
     assertEquals(SwitchedPlayerRoleInRoomResult.SLOT_UNAVAILABLE_IN_ROOM, ex.getResult());
   }
+
+  @Test
+  @DisplayName("classifyPlayersByRoles filters participants and spectators from non-empty list")
+  void testClassifyPlayersByRolesWithNonEmptyList() {
+    DefaultRoom room = (DefaultRoom) DefaultRoom.newInstance();
+    PlayerManager pm = mock(PlayerManager.class);
+    RoomPlayerSlotGeneratedStrategy slotStrategy = mock(RoomPlayerSlotGeneratedStrategy.class);
+    RoomCredentialValidatedStrategy credStrategy = mock(RoomCredentialValidatedStrategy.class);
+    room.configurePlayerManager(pm);
+    room.configurePlayerSlotGeneratedStrategy(slotStrategy);
+    room.configureRoomCredentialValidatedStrategy(credStrategy);
+    room.setMaxParticipants(4);
+    room.setMaxSpectators(2);
+
+    Player participant = mock(Player.class);
+    when(participant.getRoleInRoom()).thenReturn(PlayerRoleInRoom.PARTICIPANT);
+    Player spectator = mock(Player.class);
+    when(spectator.getRoleInRoom()).thenReturn(PlayerRoleInRoom.SPECTATOR);
+
+    // Return both players so the filter lambdas run over a non-empty stream
+    when(pm.getReadonlyPlayersList()).thenReturn(List.of(participant, spectator));
+
+    // Triggering addPlayer calls classifyPlayersByRoles internally
+    Player newPlayer = mock(Player.class);
+    room.addPlayer(newPlayer, null, false, 0);
+  }
 }

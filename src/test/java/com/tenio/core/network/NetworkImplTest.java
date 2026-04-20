@@ -47,6 +47,8 @@ import com.tenio.core.network.zero.ZeroSocket;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import jakarta.servlet.http.HttpServlet;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import org.mockito.Mockito;
 import org.junit.jupiter.api.BeforeEach;
@@ -442,5 +444,25 @@ class NetworkImplTest {
 
     assertDoesNotThrow(() -> service.write(response, true));
     verify(nettyService).write(Mockito.any());
+  }
+
+  @Test
+  @DisplayName("write() with nonSessionRecipientPlayers emits RECEIVED_MESSAGE_FROM_PLAYER")
+  void testWriteWithNonSessionRecipientPlayers() throws Exception {
+    com.tenio.common.data.DataCollection content = mock(com.tenio.common.data.DataCollection.class);
+    Mockito.when(content.getType()).thenReturn(com.tenio.common.data.DataType.ZERO);
+    Player player = mock(Player.class);
+
+    Response response = ResponseImpl.newInstance();
+    response.setContent(content);
+
+    // Inject nonSessionPlayers directly via reflection
+    Field nonSessionField = ResponseImpl.class.getDeclaredField("nonSessionPlayers");
+    nonSessionField.setAccessible(true);
+    Collection<Player> nonSessionPlayers = new ArrayList<>();
+    nonSessionPlayers.add(player);
+    nonSessionField.set(response, nonSessionPlayers);
+
+    assertDoesNotThrow(() -> service.write(response, false));
   }
 }

@@ -27,7 +27,9 @@ package com.tenio.core.network.zero.engine.implement;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tenio.core.event.implement.EventManager;
@@ -38,6 +40,7 @@ import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.zero.engine.ZeroReader;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
+import com.tenio.core.network.zero.engine.reader.DatagramReaderHandler;
 import com.tenio.core.network.zero.engine.reader.SocketReaderHandler;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.network.zero.handler.DatagramIoHandler;
@@ -49,6 +52,8 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -197,6 +202,64 @@ class ZeroReaderImplTest {
       ((Selector) selectorField.get(handlers.get(0))).wakeup();
     }
     t.join(3000);
+  }
+
+  @Test
+  @DisplayName("onStarted with datagramReaderHandler runs lambda until thread is interrupted")
+  void testOnStartedWithDatagramHandlerRunsLambdaUntilInterrupted() throws Exception {
+    // Inject executor service so run() can submit the lambda without calling initialize()
+    Field executorField = AbstractZeroEngine.class.getDeclaredField("executorService");
+    executorField.setAccessible(true);
+    ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor();
+    executorField.set(reader, exec);
+
+    // Pre-set socketReaderHandlers to avoid NPE
+    Field socketReadersField = ZeroReaderImpl.class.getDeclaredField("socketReaderHandlers");
+    socketReadersField.setAccessible(true);
+    socketReadersField.set(reader, new ArrayList<>());
+
+    // Set UDP config so getNumberOfExtraWorkers() = 1 (required by run())
+    reader.setUdpChannelConfiguration(new SocketConfiguration("udp", TransportType.UDP, 0, 1));
+
+    // Inject mock DatagramReaderHandler that interrupts the thread when running() is called
+    DatagramReaderHandler mockDatagram = mock(DatagramReaderHandler.class);
+    doAnswer(inv -> {
+      Thread.currentThread().interrupt();
+      return null;
+    }).when(mockDatagram).running();
+
+    Field datagramField = ZeroReaderImpl.class.getDeclaredField("datagramReaderHandler");
+    datagramField.setAccessible(true);
+    datagramField.set(reader, mockDatagram);
+
+    reader.activate();
+
+    Method onStarted = ZeroReaderImpl.class.getDeclaredMethod("onStarted");
+    onStarted.setAccessible(true);
+    assertDoesNotThrow(() -> onStarted.invoke(reader));
+
+    // Wait for the lambda thread to run and exit
+    Thread.sleep(500);
+    exec.shutdownNow();
+
+    verify(mockDatagram).running();
+  }
+
+  @Test
+  @DisplayName("onShutdown with non-empty socketReaderHandlers calls shutdown on each handler")
+  void testOnShutdownWithNonEmptySocketReaderHandlers() throws Exception {
+    reader.initialize();
+
+    Field socketReadersField = ZeroReaderImpl.class.getDeclaredField("socketReaderHandlers");
+    socketReadersField.setAccessible(true);
+    List<SocketReaderHandler> handlers = (List<SocketReaderHandler>) socketReadersField.get(reader);
+
+    SocketReaderHandler mockHandler = mock(SocketReaderHandler.class);
+    handlers.add(mockHandler);
+
+    reader.shutdown();
+
+    verify(mockHandler).shutdown();
   }
 
   @Test
