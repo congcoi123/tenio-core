@@ -41,6 +41,8 @@ import com.tenio.core.network.security.ssl.WebSocketSslContext;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -100,5 +102,35 @@ class NettyWsInitializerTest {
     assertDoesNotThrow(() -> initializer.initChannel(channel));
 
     verify(pipeline, atLeast(2)).addLast(anyString(), any(ChannelHandler.class));
+  }
+
+  @Test
+  @DisplayName("initChannel with SSL adds ssl handler plus httpServerCodec and handshake handlers")
+  void testInitChannelWithSslAddsSslHandler() {
+    SSLEngine sslEngine = mock(SSLEngine.class);
+    SSLContext sslCtx = mock(SSLContext.class);
+    WebSocketSslContext wsSslContext = mock(WebSocketSslContext.class);
+    when(wsSslContext.getServerContext()).thenReturn(sslCtx);
+    when(sslCtx.createSSLEngine()).thenReturn(sslEngine);
+
+    NettyWsInitializer initializer = NettyWsInitializer.newInstance(
+        mock(EventManager.class),
+        mock(SessionManager.class),
+        mock(ConnectionFilter.class),
+        mock(BinaryPacketDecoder.class),
+        mock(NetworkReaderStatistic.class),
+        wsSslContext,
+        true);
+
+    io.netty.channel.socket.SocketChannel channel =
+        mock(io.netty.channel.socket.SocketChannel.class);
+    ChannelPipeline pipeline = mock(ChannelPipeline.class);
+    when(channel.pipeline()).thenReturn(pipeline);
+    when(pipeline.addLast(anyString(), any(ChannelHandler.class))).thenReturn(pipeline);
+
+    assertDoesNotThrow(() -> initializer.initChannel(channel));
+
+    verify(wsSslContext).getServerContext();
+    verify(pipeline, atLeast(3)).addLast(anyString(), any(ChannelHandler.class));
   }
 }

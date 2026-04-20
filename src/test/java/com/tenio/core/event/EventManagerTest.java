@@ -110,4 +110,18 @@ class EventManagerTest {
     Assertions.assertDoesNotThrow(
         () -> eventManager.on(ServerEvent.FETCHED_CCU_INFO, params -> null));
   }
+
+  @Test
+  public void subscribeWithNoEventsCoversEmptyBranch() {
+    // subscribe() on a fresh EventManager with no subscribers → events.isEmpty() = true
+    EventManager emptyManager = EventManager.newInstance();
+    Assertions.assertDoesNotThrow(emptyManager::subscribe);
+  }
+
+  @Test
+  public void emitNonTracingEventCoversDebugBranch() {
+    // FETCHED_CCU_INFO is a non-tracing event → hits the else branch in emit()
+    Assertions.assertDoesNotThrow(
+        () -> eventManager.emit(ServerEvent.FETCHED_CCU_INFO, 0));
+  }
 }

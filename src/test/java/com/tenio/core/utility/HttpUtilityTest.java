@@ -26,11 +26,16 @@ package com.tenio.core.utility;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -188,5 +193,41 @@ class HttpUtilityTest {
     Mockito.when(response.getWriter()).thenThrow(new java.io.IOException("write error"));
     // Should not throw - exception is caught internally
     HttpUtility.INSTANCE.sendResponseJson(response, 200, "payload");
+  }
+
+  @Test
+  @DisplayName("getBodyText when reader.read() throws covers finally close branch")
+  void testGetBodyTextReadThrowsIOExceptionClosesReader() throws Exception {
+    HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+    Mockito.when(request.getMethod()).thenReturn("POST");
+    BufferedReader reader = Mockito.mock(BufferedReader.class);
+    Mockito.when(request.getReader()).thenReturn(reader);
+    Mockito.when(reader.read(any(char[].class))).thenThrow(new IOException("read error"));
+    String result = HttpUtility.INSTANCE.getBodyText(request);
+    verify(reader).close();
+    assertEquals("", result);
+  }
+
+  @Test
+  @DisplayName("getBodyText when close() throws IOException covers inner catch branch")
+  void testGetBodyTextCloseThrowsIOException() throws Exception {
+    HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+    Mockito.when(request.getMethod()).thenReturn("POST");
+    BufferedReader reader = Mockito.mock(BufferedReader.class);
+    Mockito.when(request.getReader()).thenReturn(reader);
+    Mockito.when(reader.read(any(char[].class))).thenThrow(new IOException("read error"));
+    doThrow(new IOException("close error")).when(reader).close();
+    // should not propagate the close exception
+    String result = HttpUtility.INSTANCE.getBodyText(request);
+    assertEquals("", result);
+  }
+
+  @Test
+  @DisplayName("getBodyJson when getReader() throws IOException covers outer catch branch")
+  void testGetBodyJsonReaderThrowsIOException() throws Exception {
+    HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+    Mockito.when(request.getMethod()).thenReturn("POST");
+    Mockito.when(request.getReader()).thenThrow(new IOException("read error"));
+    assertThrows(Exception.class, () -> HttpUtility.INSTANCE.getBodyJson(request));
   }
 }

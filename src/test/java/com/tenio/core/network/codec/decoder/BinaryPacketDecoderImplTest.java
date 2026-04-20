@@ -119,4 +119,22 @@ class BinaryPacketDecoderImplTest {
     assertThrows(Exception.class, () -> decoder.decode(header, new byte[]{1, 2, 3}));
     verify(encryptor).decrypt(new byte[]{1, 2, 3});
   }
+
+  @Test
+  @DisplayName("decode with both compressed and encrypted set invokes compressor then encryptor")
+  void testDecodeCompressedAndEncryptedBothSet() {
+    BinaryPacketCompressor compressor = mock(BinaryPacketCompressor.class);
+    BinaryPacketEncryptor encryptor = mock(BinaryPacketEncryptor.class);
+    byte[] input = new byte[]{1, 2, 3};
+    when(compressor.uncompress(input)).thenReturn(input);
+    when(encryptor.decrypt(input)).thenReturn(input);
+
+    decoder.setCompressor(compressor);
+    decoder.setEncryptor(encryptor);
+
+    PacketHeader header = PacketHeader.newInstance(true, true, false, true, DataType.ZERO);
+    assertThrows(Exception.class, () -> decoder.decode(header, input));
+    verify(compressor).uncompress(input);
+    verify(encryptor).decrypt(input);
+  }
 }

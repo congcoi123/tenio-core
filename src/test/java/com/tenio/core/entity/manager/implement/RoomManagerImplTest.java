@@ -339,4 +339,10 @@ class RoomManagerImplTest {
     assertNotNull(room);
     assertEquals("propVal", room.getProperty("propKey"));
   }
+
+  @Test
+  @DisplayName("clear() default method throws UnsupportedOperationException")
+  void testClearDefaultMethodThrowsUnsupportedOperation() {
+    assertThrows(UnsupportedOperationException.class, roomManager::clear);
+  }
 }

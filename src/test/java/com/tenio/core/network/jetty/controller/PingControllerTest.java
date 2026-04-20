@@ -30,10 +30,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
@@ -101,5 +101,33 @@ class PingControllerTest {
 
     verify(response).setContentType("application/json");
     verify(response).setStatus(HttpServletResponse.SC_OK);
+  }
+
+  @Test
+  @DisplayName("doPing doGet covers IOException catch when getWriter throws")
+  void testDoPingServletDoGetWriterThrowsIOException() throws Exception {
+    HttpServlet servlet = controller.doPing();
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    HttpServletResponse response = mock(HttpServletResponse.class);
+    when(response.getWriter()).thenThrow(new IOException("write error"));
+
+    Method doGet = HttpServlet.class.getDeclaredMethod("doGet",
+        HttpServletRequest.class, HttpServletResponse.class);
+    doGet.setAccessible(true);
+    assertDoesNotThrow(() -> doGet.invoke(servlet, request, response));
+  }
+
+  @Test
+  @DisplayName("doAnotherPing doPost covers IOException catch when getWriter throws")
+  void testDoAnotherPingServletDoPostWriterThrowsIOException() throws Exception {
+    HttpServlet servlet = controller.doAnotherPing();
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    HttpServletResponse response = mock(HttpServletResponse.class);
+    when(response.getWriter()).thenThrow(new IOException("write error"));
+
+    Method doPost = HttpServlet.class.getDeclaredMethod("doPost",
+        HttpServletRequest.class, HttpServletResponse.class);
+    doPost.setAccessible(true);
+    assertDoesNotThrow(() -> doPost.invoke(servlet, request, response));
   }
 }

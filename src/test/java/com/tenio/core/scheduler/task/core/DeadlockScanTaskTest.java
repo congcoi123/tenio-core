@@ -33,6 +33,8 @@ import static org.mockito.Mockito.when;
 import com.tenio.core.event.implement.EventManager;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.BeforeEach;
@@ -143,5 +145,51 @@ class DeadlockScanTaskTest {
     } finally {
       Thread.interrupted();
     }
+  }
+
+  @Test
+  @DisplayName("findDeadlockedThreads uses findMonitorDeadlockedThreads when synchronizer not supported")
+  void testFindDeadlockedThreadsMonitorOnly() throws Exception {
+    ThreadMXBean mockBean = Mockito.mock(ThreadMXBean.class);
+    when(mockBean.isSynchronizerUsageSupported()).thenReturn(false);
+    when(mockBean.findMonitorDeadlockedThreads()).thenReturn(null);
+
+    Field beanField = DeadlockScanTask.class.getDeclaredField("threadMxBean");
+    beanField.setAccessible(true);
+    beanField.set(task, mockBean);
+
+    Method method = DeadlockScanTask.class.getDeclaredMethod("findDeadlockedThreads");
+    method.setAccessible(true);
+    method.invoke(task);
+
+    Mockito.verify(mockBean).findMonitorDeadlockedThreads();
+  }
+
+  @Test
+  @DisplayName("checkForDeadlockedThreads logs info when a deadlocked thread is found")
+  void testCheckForDeadlockedThreadsWithDeadlockedThread() throws Exception {
+    long currentThreadId = Thread.currentThread().getId();
+    ThreadInfo mockThreadInfo = Mockito.mock(ThreadInfo.class);
+    when(mockThreadInfo.getThreadId()).thenReturn(currentThreadId);
+    when(mockThreadInfo.getThreadName()).thenReturn("test-thread");
+    when(mockThreadInfo.getLockName()).thenReturn("lock");
+    when(mockThreadInfo.getLockOwnerId()).thenReturn(-1L);
+    when(mockThreadInfo.getLockOwnerName()).thenReturn(null);
+
+    ThreadMXBean mockBean = Mockito.mock(ThreadMXBean.class);
+    when(mockBean.isSynchronizerUsageSupported()).thenReturn(true);
+    when(mockBean.findDeadlockedThreads()).thenReturn(new long[]{currentThreadId});
+    when(mockBean.getThreadInfo(currentThreadId)).thenReturn(mockThreadInfo);
+
+    Field beanField = DeadlockScanTask.class.getDeclaredField("threadMxBean");
+    beanField.setAccessible(true);
+    beanField.set(task, mockBean);
+
+    Method method = DeadlockScanTask.class.getDeclaredMethod("checkForDeadlockedThreads");
+    method.setAccessible(true);
+    method.invoke(task);
+
+    Mockito.verify(mockBean).findDeadlockedThreads();
+    Mockito.verify(mockBean).getThreadInfo(currentThreadId);
   }
 }

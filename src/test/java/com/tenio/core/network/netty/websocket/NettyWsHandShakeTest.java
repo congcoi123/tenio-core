@@ -125,4 +125,5 @@ class NettyWsHandShakeTest {
     verify(pipeline).replace(any(io.netty.channel.ChannelHandler.class), eq("handler"),
         any(io.netty.channel.ChannelHandler.class));
   }
+
 }
