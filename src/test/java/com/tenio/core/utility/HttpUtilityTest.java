@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.utility;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -228,6 +229,19 @@ class HttpUtilityTest {
     HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
     Mockito.when(request.getMethod()).thenReturn("POST");
     Mockito.when(request.getReader()).thenThrow(new IOException("read error"));
+    assertThrows(Exception.class, () -> HttpUtility.INSTANCE.getBodyJson(request));
+  }
+
+  @Test
+  @DisplayName("getBodyJson when read() throws and close() also throws covers inner catch")
+  void testGetBodyJsonReadAndCloseBothThrow() throws Exception {
+    HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+    Mockito.when(request.getMethod()).thenReturn("POST");
+    BufferedReader reader = Mockito.mock(BufferedReader.class);
+    Mockito.when(request.getReader()).thenReturn(reader);
+    Mockito.when(reader.read(any(char[].class))).thenThrow(new IOException("read fail"));
+    doThrow(new IOException("close fail")).when(reader).close();
+    // body remains "" after read() throws; new JSONObject("") throws JSONException
     assertThrows(Exception.class, () -> HttpUtility.INSTANCE.getBodyJson(request));
   }
 }

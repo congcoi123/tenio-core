@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.event.implement.EventManager;
@@ -444,6 +445,20 @@ class NetworkImplTest {
 
     assertDoesNotThrow(() -> service.write(response, true));
     verify(nettyService).write(Mockito.any());
+  }
+
+  @Test
+  @DisplayName("initialize() calls httpService.initialize() when httpServiceInitialized=true")
+  void testInitializeCallsServicesWhenInitialized() {
+    SocketConfiguration tcpConfig = mock(SocketConfiguration.class);
+    SocketConfiguration wsConfig = mock(SocketConfiguration.class);
+    service.setHttpConfiguration(1, 8080, java.util.Map.of("ping", mock(HttpServlet.class)));
+    service.setSocketConfigurations(tcpConfig, null, null);
+    service.setSocketConfigurations(null, null, wsConfig);
+    assertDoesNotThrow(() -> service.initialize());
+    verify(jettyService).initialize();
+    verify(nettyService).initialize();
+    verify(zeroService).initialize();
   }
 
   @Test

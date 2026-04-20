@@ -842,4 +842,20 @@ class SessionImplTest {
       // expected when no channel is set up
     }
   }
+
+  @Test
+  @DisplayName("enqueueInbound logs slow-consuming warning when queue exceeds threshold")
+  void testEnqueueInboundLogsSlowConsumingWarning() {
+    Session session = SessionImpl.newInstance();
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    when(outboundQueue.getSize()).thenReturn(0);
+    session.configureOutboundQueue(outboundQueue);
+    session.configureSlowConsumingInboundQueueWarningThreshold(1);
+    session.configureMaxInboundQueueSize(0);
+    DataCollection msg = mock(DataCollection.class);
+    // Add 3 items so that on the 3rd call remaining=2 > threshold=1, triggering the warn
+    session.enqueueInbound(msg);
+    session.enqueueInbound(msg);
+    assertDoesNotThrow(() -> session.enqueueInbound(msg));
+  }
 }

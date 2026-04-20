@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.codec.decoder;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tenio.common.data.DataType;
+import com.tenio.common.data.zero.utility.ZeroUtility;
 import com.tenio.core.network.codec.compression.BinaryPacketCompressor;
 import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
 import com.tenio.core.network.codec.packet.PacketHeader;
@@ -118,6 +120,26 @@ class BinaryPacketDecoderImplTest {
     // is invoked; the downstream exception is expected
     assertThrows(Exception.class, () -> decoder.decode(header, new byte[]{1, 2, 3}));
     verify(encryptor).decrypt(new byte[]{1, 2, 3});
+  }
+
+  @Test
+  @DisplayName("decode(PacketHeader, validZeroBytes) succeeds and returns non-null (covers line 79)")
+  void testDecodeWithValidZeroBytesReturnsNonNull() {
+    byte[] validBytes = ZeroUtility.newZeroMap().putBoolean("ok", true).toBinaries();
+    PacketHeader header = PacketHeader.newInstance(true, false, false, false, DataType.ZERO);
+    assertNotNull(decoder.decode(header, validBytes));
+  }
+
+  @Test
+  @DisplayName("decode(byte[]) with valid zero-encoded bytes succeeds (covers line 48)")
+  void testDecodeBytesArrayWithValidZeroEncodedData() {
+    PacketHeader header = PacketHeader.newInstance(true, false, false, false, DataType.ZERO);
+    byte headerByte = com.tenio.core.network.codec.CodecUtility.encodeFirstHeaderByte(header);
+    byte[] zeroBytes = ZeroUtility.newZeroMap().putBoolean("x", true).toBinaries();
+    byte[] encoded = new byte[1 + zeroBytes.length];
+    encoded[0] = headerByte;
+    System.arraycopy(zeroBytes, 0, encoded, 1, zeroBytes.length);
+    assertNotNull(decoder.decode(encoded));
   }
 
   @Test
