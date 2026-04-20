@@ -292,4 +292,57 @@ class DefaultPlayerTest {
     assertFalse(player.getSession().isPresent());
     assertFalse(player.containsProperty("a"));
   }
+
+  @Test
+  @DisplayName("containsSession returns false when no session is set")
+  void testContainsSessionReturnsFalseWhenNoSession() {
+    Player player = DefaultPlayer.newInstance("Test");
+    assertFalse(player.containsSession());
+  }
+
+  @Test
+  @DisplayName("containsSession returns true after session is set")
+  void testContainsSessionReturnsTrueAfterSessionSet() {
+    Player player = DefaultPlayer.newInstance("Test");
+    player.setSession(mock(com.tenio.core.network.entity.session.Session.class));
+    assertTrue(player.containsSession());
+  }
+
+  @Test
+  @DisplayName("isIdle returns true when maxIdleTime is exceeded")
+  void testIsIdleReturnsTrueWhenIdleTimeExceeded() throws Exception {
+    Player player = DefaultPlayer.newInstance("Test");
+    player.configureMaxIdleTimeInSeconds(1);
+    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("lastActivityTime");
+    field.setAccessible(true);
+    field.set(player, System.currentTimeMillis() - 5000L);
+    assertTrue(player.isIdle());
+  }
+
+  @Test
+  @DisplayName("isIdle returns false when maxIdleTime is set but not yet exceeded")
+  void testIsIdleReturnsFalseWhenNotYetIdle() {
+    Player player = DefaultPlayer.newInstance("Test");
+    player.configureMaxIdleTimeInSeconds(3600);
+    assertFalse(player.isIdle());
+  }
+
+  @Test
+  @DisplayName("isIdleNeverDeported returns true when never deported and idle")
+  void testIsIdleNeverDeportedReturnsTrueWhenConditionsMet() throws Exception {
+    Player player = DefaultPlayer.newInstance("Test");
+    player.setNeverDeported(true);
+    player.configureMaxIdleTimeNeverDeportedInSeconds(1);
+    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("lastActivityTime");
+    field.setAccessible(true);
+    field.set(player, System.currentTimeMillis() - 5000L);
+    assertTrue(player.isIdleNeverDeported());
+  }
+
+  @Test
+  @DisplayName("hashCode returns 0 when identity is null")
+  void testHashCodeWithNullIdentity() throws Exception {
+    DefaultPlayer player = new DefaultPlayer(null);
+    assertEquals(0, player.hashCode());
+  }
 }

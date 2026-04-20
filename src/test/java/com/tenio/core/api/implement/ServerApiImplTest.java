@@ -620,4 +620,31 @@ class ServerApiImplTest {
     when(server.getUptime()).thenReturn(99L);
     assertEquals(99L, api.getUptime());
   }
+
+  @Test
+  @DisplayName("logout catches IOException from session.close without propagating")
+  void testLogoutHandlesIOExceptionFromSessionClose() throws IOException {
+    Player player = mock(Player.class);
+    Session session = mock(Session.class);
+    when(player.containsSession()).thenReturn(true);
+    when(player.getSession()).thenReturn(Optional.of(session));
+    doThrow(new IOException("close failed")).when(session).close(
+        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    org.junit.jupiter.api.Assertions.assertDoesNotThrow(
+        () -> api.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST,
+            PlayerDisconnectMode.CLIENT_REQUEST));
+  }
+
+  @Test
+  @DisplayName("logout without session emits DISCONNECT_PLAYER and removes player")
+  void testLogoutWithoutSessionEmitsDisconnectAndRemovesPlayer() {
+    Player player = mock(Player.class);
+    when(player.containsSession()).thenReturn(false);
+    when(player.getSession()).thenReturn(Optional.empty());
+    when(player.isInRoom()).thenReturn(false);
+    when(player.getIdentity()).thenReturn("test-player");
+    api.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+    verify(eventManager).emit(ServerEvent.DISCONNECT_PLAYER, player, PlayerDisconnectMode.CLIENT_REQUEST);
+    verify(playerManager).removePlayerByIdentity("test-player");
+  }
 }

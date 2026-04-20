@@ -771,14 +771,62 @@ class SessionImplTest {
     session.configureMaxInboundQueueSize(0);
     session.activate();
 
-    // Interrupt the inbound virtual thread to trigger InterruptedException in take()
     java.lang.reflect.Field inboundField = SessionImpl.class.getDeclaredField("inboundProcess");
     inboundField.setAccessible(true);
     Thread inboundProcess = (Thread) inboundField.get(session);
     inboundProcess.interrupt();
 
-    // Wait for the thread to exit after handling InterruptedException
     inboundProcess.join(1000);
     assertFalse(inboundProcess.isAlive());
+  }
+
+  @Test
+  @DisplayName("enqueueInbound throws InboundQueueFullException when queue is at capacity")
+  void testEnqueueInboundThrowsWhenQueueFull() {
+    Session session = SessionImpl.newInstance();
+    session.configureMaxInboundQueueSize(1);
+    DataCollection msg = mock(DataCollection.class);
+    session.enqueueInbound(msg);
+    assertThrows(InboundQueueFullException.class, () -> session.enqueueInbound(msg));
+  }
+
+  @Test
+  @DisplayName("isOrphan returns true when session is old and not associated to player")
+  void testIsOrphanReturnsTrueWhenOldAndUnassociated() throws Exception {
+    Session session = SessionImpl.newInstance();
+    java.lang.reflect.Field createdTimeField = SessionImpl.class.getDeclaredField("createdTime");
+    createdTimeField.setAccessible(true);
+    createdTimeField.set(session, System.currentTimeMillis() - 5000L);
+    assertTrue(session.isOrphan());
+  }
+
+  @Test
+  @DisplayName("isIdle returns true when idle time exceeds configured maximum")
+  void testIsIdleReturnsTrueWhenExceedsMaxIdleTime() throws Exception {
+    Session session = SessionImpl.newInstance();
+    session.configureMaxIdleTimeInSeconds(1);
+    java.lang.reflect.Field lastActivityField = SessionImpl.class.getDeclaredField("lastActivityTime");
+    lastActivityField.setAccessible(true);
+    lastActivityField.set(session, System.currentTimeMillis() - 3000L);
+    assertTrue(session.isIdle());
+  }
+
+  @Test
+  @DisplayName("processInboundQueue catches Throwable from emitEvent without crashing thread")
+  void testProcessInboundQueueCatchesThrowableFromEmitEvent() throws Exception {
+    SessionImpl session = (SessionImpl) SessionImpl.newInstance();
+    SessionManager manager = mock(SessionManager.class);
+    session.configureSessionManager(manager);
+    session.configureMaxInboundQueueSize(0);
+
+    org.mockito.Mockito.doThrow(new RuntimeException("emit failed"))
+        .when(manager).emitEvent(org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+
+    session.activate();
+    session.enqueueInbound(mock(DataCollection.class));
+
+    Thread.sleep(200);
+    assertTrue(session.isActivated());
   }
 }

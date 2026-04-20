@@ -274,4 +274,19 @@ class SocketIoHandlerImplTest {
 
     assertDoesNotThrow(() -> handler.sessionException(session, new RuntimeException("err")));
   }
+
+  @Test
+  @DisplayName("channelInactive with no session and closeSocket IOException is caught without propagating")
+  void testChannelInactiveWithNoSessionCloseSocketIOException() throws Exception {
+    SocketChannel socketChannel = mock(SocketChannel.class);
+    SelectionKey selectionKey = mock(SelectionKey.class);
+    java.net.Socket mockSocket = mock(java.net.Socket.class);
+    when(sessionManager.getSessionBySocket(socketChannel)).thenReturn(null);
+    when(socketChannel.isOpen()).thenReturn(true);
+    when(socketChannel.socket()).thenReturn(mockSocket);
+    doThrow(new IOException("shutdown failed")).when(mockSocket).shutdownInput();
+
+    assertDoesNotThrow(() ->
+        handler.channelInactive(socketChannel, selectionKey, ConnectionDisconnectMode.SERVER_DOWN));
+  }
 }

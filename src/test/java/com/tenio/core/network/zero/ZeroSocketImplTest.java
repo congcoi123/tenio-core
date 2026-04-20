@@ -29,7 +29,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import com.tenio.core.network.zero.engine.ZeroAcceptor;
+import com.tenio.core.network.zero.engine.ZeroReader;
+import com.tenio.core.network.zero.engine.ZeroWriter;
+import java.lang.reflect.Field;
 
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
@@ -144,6 +149,36 @@ class ZeroSocketImplTest {
     Packet packet = mock(Packet.class);
     when(packet.getRecipients()).thenReturn(null);
     assertDoesNotThrow(() -> socket.write(packet));
+    socket.shutdown();
+  }
+
+  @Test
+  @DisplayName("start after initialize calls reader, writer and acceptor start")
+  void testStartAfterInitializeCallsSubComponentStarts() throws Exception {
+    socket.initialize();
+
+    ZeroReader mockReader = mock(ZeroReader.class);
+    ZeroWriter mockWriter = mock(ZeroWriter.class);
+    ZeroAcceptor mockAcceptor = mock(ZeroAcceptor.class);
+
+    Field readerField = ZeroSocketImpl.class.getDeclaredField("reader");
+    readerField.setAccessible(true);
+    readerField.set(socket, mockReader);
+
+    Field writerField = ZeroSocketImpl.class.getDeclaredField("writer");
+    writerField.setAccessible(true);
+    writerField.set(socket, mockWriter);
+
+    Field acceptorField = ZeroSocketImpl.class.getDeclaredField("acceptor");
+    acceptorField.setAccessible(true);
+    acceptorField.set(socket, mockAcceptor);
+
+    socket.start();
+
+    verify(mockReader).start();
+    verify(mockWriter).start();
+    verify(mockAcceptor).start();
+
     socket.shutdown();
   }
 }

@@ -35,6 +35,7 @@ import static org.mockito.Mockito.when;
 
 import com.tenio.common.data.DataCollection;
 import com.tenio.core.api.ServerApi;
+import com.tenio.core.processor.AbstractProcessor;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
@@ -53,6 +54,7 @@ import com.tenio.core.network.entity.inbound.policy.RequestPolicy;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -596,5 +598,205 @@ public class ZeroProcessorImplTest {
     realEventManager.emit(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS,
         datagramChannel, REMOTE_ADDRESS, message);
     realProcessor.shutdown();
+  }
+
+  @Test
+  public void shouldHandleExceptionThrownByPlayerConnectionRetryEmit() {
+    when(session.isActivated()).thenReturn(true);
+    when(session.transitionAssociatedState(Session.AssociatedState.NONE,
+        Session.AssociatedState.DOING)).thenReturn(true);
+    when(eventManager.emit(eq(ServerEvent.PLAYER_CONNECTION_RETRY), any(), any()))
+        .thenThrow(new RuntimeException("retry failed"));
+    when(playerManager.getPlayerCount()).thenReturn(0);
+
+    Request request = SessionRequest.newInstance()
+        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+        .setSender(session)
+        .setMessage(message);
+
+    processor.processRequest(request);
+
+    verify(eventManager).emit(eq(ServerEvent.CONNECTION_ESTABLISHED_RESULT),
+        eq(session), eq(message), any());
+  }
+
+  @Test
+  public void shouldHandleIOExceptionFromCurrentSessionCloseOnReconnection() throws Exception {
+    Session currentSession = mock(Session.class);
+    when(currentSession.isActivated()).thenReturn(true);
+    when(currentSession.getName()).thenReturn("old-session");
+    when(session.isActivated()).thenReturn(true);
+    when(session.transitionAssociatedState(Session.AssociatedState.NONE,
+        Session.AssociatedState.DOING)).thenReturn(true);
+    when(eventManager.emit(eq(ServerEvent.PLAYER_CONNECTION_RETRY), eq(session), eq(message)))
+        .thenReturn(Optional.of(player));
+    when(player.getSession()).thenReturn(Optional.of(currentSession));
+    when(player.isInRoom()).thenReturn(false);
+    org.mockito.Mockito.doThrow(new IOException("close error"))
+        .when(currentSession).close(any(), any());
+
+    Request request = SessionRequest.newInstance()
+        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+        .setSender(session)
+        .setMessage(message);
+
+    processor.processRequest(request);
+    verify(player).setSession(session);
+  }
+
+  @Test
+  public void shouldHandleIOExceptionFromSessionCloseAtMaxCapacity() throws Exception {
+    when(playerManager.getPlayerCount()).thenReturn(MAX_PLAYERS);
+    when(session.isActivated()).thenReturn(true);
+    when(session.transitionAssociatedState(Session.AssociatedState.NONE,
+        Session.AssociatedState.DOING)).thenReturn(true);
+    org.mockito.Mockito.doThrow(new IOException("close error")).when(session).close(any(), any());
+
+    Request request = SessionRequest.newInstance()
+        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+        .setSender(session)
+        .setMessage(message);
+
+    processor.processRequest(request);
+    verify(eventManager).emit(eq(ServerEvent.CONNECTION_ESTABLISHED_RESULT),
+        eq(session), eq(message), eq(com.tenio.core.entity.define.result.ConnectionEstablishedResult.REACHED_MAX_CONNECTION));
+  }
+
+  @Test
+  public void shouldHandleExceptionThrownByDatagramValidationEmit() {
+    when(eventManager.emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION), eq(message)))
+        .thenThrow(new RuntimeException("validation failed"));
+
+    Request request = DatagramRequest.newInstance()
+        .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS)
+        .setSender(datagramChannel)
+        .setRemoteAddress(REMOTE_ADDRESS)
+        .setMessage(message);
+
+    processor.processRequest(request);
+    verify(eventManager, org.mockito.Mockito.never()).emit(
+        eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT), any(), any(), any());
+  }
+
+  @Test
+  public void shouldHandleDatagramAccessWhenPlayerContainsSessionButSessionIsEmpty() {
+    when(eventManager.emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION), eq(message)))
+        .thenReturn(Optional.of(player));
+    when(player.containsSession()).thenReturn(true);
+    when(player.getSession()).thenReturn(Optional.empty());
+
+    Request request = DatagramRequest.newInstance()
+        .setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS)
+        .setSender(datagramChannel)
+        .setRemoteAddress(REMOTE_ADDRESS)
+        .setMessage(message);
+
+    processor.processRequest(request);
+    verify(eventManager).emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT),
+        eq(player), eq(Session.EMPTY_DATAGRAM_CONVEY_ID),
+        eq(AccessDatagramChannelResult.SESSION_NOT_FOUND));
+  }
+
+  @Test
+  public void shouldCoverProcessingLoopWithRequestAndInterrupt() throws Exception {
+    var freshProcessor = ZeroProcessorImpl.newInstance(eventManager, serverApi, datagramChannelManager);
+    freshProcessor.setSessionManager(sessionManager);
+    freshProcessor.setPlayerManager(playerManager);
+    freshProcessor.setMaxNumberPlayers(MAX_PLAYERS);
+    freshProcessor.setNetworkReaderStatistic(networkReaderStatistic);
+    freshProcessor.setNetworkWriterStatistic(networkWriterStatistic);
+    freshProcessor.setThreadPoolSize(1);
+    freshProcessor.initialize();
+    freshProcessor.activate();
+
+    when(session.isActivated()).thenReturn(false);
+    Request request = SessionRequest.newInstance()
+        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+        .setSender(session)
+        .setMessage(message);
+    freshProcessor.enqueueRequest(request);
+
+    java.lang.reflect.Method processingMethod =
+        AbstractProcessor.class.getDeclaredMethod("processing", int.class);
+    processingMethod.setAccessible(true);
+
+    Thread t = new Thread(() -> {
+      try {
+        processingMethod.invoke(freshProcessor, 0);
+      } catch (Exception ignored) {}
+    });
+    t.start();
+    Thread.sleep(200);
+    t.interrupt();
+    t.join(1000);
+  }
+
+  @Test
+  public void shouldCoverProcessingThrowableCatch() throws Exception {
+    var freshProcessor = ZeroProcessorImpl.newInstance(eventManager, serverApi, datagramChannelManager);
+    freshProcessor.setSessionManager(sessionManager);
+    freshProcessor.setPlayerManager(playerManager);
+    freshProcessor.setMaxNumberPlayers(MAX_PLAYERS);
+    freshProcessor.setNetworkReaderStatistic(networkReaderStatistic);
+    freshProcessor.setNetworkWriterStatistic(networkWriterStatistic);
+    freshProcessor.setThreadPoolSize(1);
+    freshProcessor.initialize();
+    freshProcessor.activate();
+
+    when(session.isActivated()).thenThrow(new RuntimeException("unexpected error"));
+    Request request = SessionRequest.newInstance()
+        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+        .setSender(session)
+        .setMessage(message);
+    freshProcessor.enqueueRequest(request);
+
+    java.lang.reflect.Method processingMethod =
+        AbstractProcessor.class.getDeclaredMethod("processing", int.class);
+    processingMethod.setAccessible(true);
+
+    Thread t = new Thread(() -> {
+      try {
+        processingMethod.invoke(freshProcessor, 0);
+      } catch (Exception ignored) {}
+    });
+    t.start();
+    Thread.sleep(200);
+    t.interrupt();
+    t.join(1000);
+  }
+
+  @Test
+  public void shouldCoverAttemptToShutdownInterruptedExceptionPath() {
+    Thread.currentThread().interrupt();
+    try {
+      processor.shutdown();
+    } finally {
+      Thread.interrupted();
+    }
+  }
+
+  @Test
+  public void shouldCoverProcessingWithDeactivatedState() throws Exception {
+    var freshProcessor = ZeroProcessorImpl.newInstance(eventManager, serverApi, datagramChannelManager);
+    freshProcessor.setSessionManager(sessionManager);
+    freshProcessor.setPlayerManager(playerManager);
+    freshProcessor.setMaxNumberPlayers(MAX_PLAYERS);
+    freshProcessor.setNetworkReaderStatistic(networkReaderStatistic);
+    freshProcessor.setNetworkWriterStatistic(networkWriterStatistic);
+    freshProcessor.setThreadPoolSize(1);
+    freshProcessor.initialize();
+    // NOT calling activate() -> activated = false -> covers if(activated) false branch
+
+    java.lang.reflect.Method processingMethod =
+        AbstractProcessor.class.getDeclaredMethod("processing", int.class);
+    processingMethod.setAccessible(true);
+
+    Thread t = new Thread(() -> {
+      try { processingMethod.invoke(freshProcessor, 0); } catch (Exception ignored) {}
+    });
+    t.start();
+    Thread.sleep(50);
+    t.interrupt();
+    t.join(1000);
   }
 }

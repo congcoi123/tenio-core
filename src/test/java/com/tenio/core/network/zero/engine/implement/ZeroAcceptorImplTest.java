@@ -26,7 +26,11 @@ package com.tenio.core.network.zero.engine.implement;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
+import com.tenio.core.network.zero.engine.acceptor.AcceptorHandler;
+import org.mockito.MockedConstruction;
 
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.configuration.SocketConfiguration;
@@ -100,6 +104,46 @@ class ZeroAcceptorImplTest {
       acceptor.initialize();
       acceptor.shutdown();
     });
+  }
+
+  @Test
+  @DisplayName("onStarted is a no-op method (covers its single return instruction)")
+  void testOnStartedIsNoOp() throws Exception {
+    Method onStarted = ZeroAcceptorImpl.class.getDeclaredMethod("onStarted");
+    onStarted.setAccessible(true);
+    assertDoesNotThrow(() -> onStarted.invoke(acceptor));
+  }
+
+  @Test
+  @DisplayName("onRunning catches Throwable thrown by acceptorHandler.running()")
+  void testOnRunningCatchesThrowableFromRunning() throws Exception {
+    acceptor.setConnectionFilter(mock(ConnectionFilter.class));
+    acceptor.setServerAddress("127.0.0.1");
+    acceptor.setSocketConfiguration(new SocketConfiguration("tcp", TransportType.TCP, 0, 1));
+    acceptor.setZeroReaderListener(mock(ZeroReaderListener.class));
+    acceptor.setSocketIoHandler(mock(SocketIoHandler.class));
+    acceptor.activate();
+
+    Field handlersField = ZeroAcceptorImpl.class.getDeclaredField("acceptorHandlers");
+    handlersField.setAccessible(true);
+    List<Object> handlers = new ArrayList<>();
+    handlersField.set(acceptor, handlers);
+
+    Method onRunning = ZeroAcceptorImpl.class.getDeclaredMethod("onRunning");
+    onRunning.setAccessible(true);
+
+    try (MockedConstruction<AcceptorHandler> mockConstruction =
+        mockConstruction(AcceptorHandler.class, (mock, ctx) ->
+            doThrow(new RuntimeException("acceptor error")).when(mock).running())) {
+
+      Thread t = new Thread(() -> {
+        try { onRunning.invoke(acceptor); } catch (Exception ignored) {}
+      });
+      t.start();
+      Thread.sleep(150);
+      t.interrupt();
+      t.join(2000);
+    }
   }
 
   @Test

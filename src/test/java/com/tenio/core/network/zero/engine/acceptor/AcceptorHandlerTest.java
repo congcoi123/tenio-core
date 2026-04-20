@@ -31,8 +31,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
+import com.tenio.core.network.utility.SocketUtility;
+import java.io.IOException;
 import java.util.function.Consumer;
+import org.mockito.MockedStatic;
 
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.exception.RefusedConnectionAddressException;
@@ -198,6 +202,41 @@ class AcceptorHandlerTest {
     doAnswer(inv -> {
       Runnable onFailed = inv.getArgument(2);
       onFailed.run();
+      return null;
+    }).when(readerListener).acceptClientSocketChannel(any(), any(), any());
+
+    Selector selector = getSelector(handler);
+    int port = getBoundPort(selector);
+
+    SocketChannel client = SocketChannel.open();
+    try {
+      client.connect(new InetSocketAddress("127.0.0.1", port));
+      assertDoesNotThrow(() -> handler.running());
+    } finally {
+      client.close();
+    }
+  }
+
+  @Test
+  @DisplayName("shutdown catches IOException from SocketUtility.shutdownSelector")
+  void testShutdownCatchesIOExceptionFromShutdownSelector() {
+    try (MockedStatic<SocketUtility> socketUtilMock = mockStatic(SocketUtility.class)) {
+      socketUtilMock.when(() -> SocketUtility.shutdownSelector(any()))
+          .thenThrow(new IOException("selector close failed"));
+      assertDoesNotThrow(() -> handler.shutdown());
+    }
+  }
+
+  @Test
+  @DisplayName("running onFailed callback catches IOException from closeSocket")
+  void testRunningOnFailedCallbackCatchesIOException() throws Exception {
+    doAnswer(inv -> {
+      Runnable onFailed = inv.getArgument(2);
+      try (MockedStatic<SocketUtility> socketUtilMock = mockStatic(SocketUtility.class)) {
+        socketUtilMock.when(() -> SocketUtility.closeSocket(any(), any()))
+            .thenThrow(new IOException("close failed"));
+        onFailed.run();
+      }
       return null;
     }).when(readerListener).acceptClientSocketChannel(any(), any(), any());
 

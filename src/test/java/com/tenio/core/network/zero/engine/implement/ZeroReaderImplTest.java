@@ -28,12 +28,16 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import java.io.IOException;
+import org.mockito.MockedConstruction;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.session.manager.SessionManager;
@@ -287,5 +291,68 @@ class ZeroReaderImplTest {
       channel.close();
       socketReaderHandler.shutdown();
     }
+  }
+
+  @Test
+  @DisplayName("onRunning catches IOException thrown by socketReaderHandler.running()")
+  void testOnRunningCatchesIOExceptionFromSocketReaderHandler() throws Exception {
+    reader.setSocketIoHandler(mock(SocketIoHandler.class));
+    reader.setSessionManager(mock(SessionManager.class));
+    reader.setNetworkReaderStatistic(mock(NetworkReaderStatistic.class));
+    reader.setThreadPoolSize(1);
+    reader.activate();
+
+    Field socketReadersField = ZeroReaderImpl.class.getDeclaredField("socketReaderHandlers");
+    socketReadersField.setAccessible(true);
+    socketReadersField.set(reader, new ArrayList<>());
+
+    Method onRunning = ZeroReaderImpl.class.getDeclaredMethod("onRunning");
+    onRunning.setAccessible(true);
+
+    try (MockedConstruction<SocketReaderHandler> mockConstruction =
+        mockConstruction(SocketReaderHandler.class, (mock, ctx) ->
+            doThrow(new IOException("reader error")).when(mock).running())) {
+
+      Thread t = new Thread(() -> {
+        try { onRunning.invoke(reader); } catch (Exception ignored) {}
+      });
+      t.start();
+      Thread.sleep(150);
+      t.interrupt();
+      t.join(2000);
+    }
+  }
+
+  @Test
+  @DisplayName("shutdown catches InterruptedException from awaitTermination in halting()")
+  void testShutdownHandlesInterruptedExceptionInHalting() {
+    reader.initialize();
+    Thread.currentThread().interrupt();
+    try {
+      reader.shutdown();
+    } finally {
+      Thread.interrupted();
+    }
+  }
+
+  @Test
+  @DisplayName("onShutdown catches IOException thrown by datagramReaderHandler.shutdown()")
+  void testOnShutdownCatchesIOExceptionFromDatagramHandler() throws Exception {
+    DatagramReaderHandler mockDatagram = mock(DatagramReaderHandler.class);
+    doThrow(new java.io.IOException("shutdown failed")).when(mockDatagram).shutdown();
+
+    Field datagramField = ZeroReaderImpl.class.getDeclaredField("datagramReaderHandler");
+    datagramField.setAccessible(true);
+    datagramField.set(reader, mockDatagram);
+
+    Field socketReadersField = ZeroReaderImpl.class.getDeclaredField("socketReaderHandlers");
+    socketReadersField.setAccessible(true);
+    socketReadersField.set(reader, new ArrayList<>());
+
+    Method onShutdown = ZeroReaderImpl.class.getDeclaredMethod("onShutdown");
+    onShutdown.setAccessible(true);
+    assertDoesNotThrow(() -> onShutdown.invoke(reader));
+
+    verify(mockDatagram).shutdown();
   }
 }

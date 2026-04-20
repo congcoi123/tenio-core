@@ -306,6 +306,62 @@ class BinaryPacketFramerTest {
   }
 
   @Test
+  @DisplayName("big-sized fragment completes size field using getInt and transitions to WAIT_DATA")
+  void testFramingDataSizeFragmentBigSizedCompletesTransitionsToWaitData() {
+    BinaryPacketDecoder decoder = mock(BinaryPacketDecoder.class);
+    PacketFramingListener listener = mock(PacketFramingListener.class);
+    framer.setBinaryPacketDecoder(decoder);
+    framer.setPacketFramingResult(listener);
+
+    Session session = mock(Session.class);
+    PendingPacket pendingPacket = PendingPacket.newInstance();
+    pendingPacket.setPacketHeader(
+        PacketHeader.newInstance(true, false, true, false, DataType.ZERO));
+    ByteBuffer headerBuffer = ByteBuffer.allocate(Integer.BYTES);
+    headerBuffer.put((byte) 0x00); // 1 byte already received
+    pendingPacket.setBuffer(headerBuffer);
+
+    ProcessedPacket processedPacket = ProcessedPacket.newInstance();
+    when(session.getPacketReadState()).thenReturn(PacketReadState.WAIT_DATA_SIZE_FRAGMENT);
+    when(session.getPendingPacket()).thenReturn(pendingPacket);
+    when(session.getProcessedPacket()).thenReturn(processedPacket);
+
+    // Exactly 3 more bytes to complete 4-byte int size field (value = 5)
+    framer.framing(session, new byte[]{0x00, 0x00, 0x05});
+
+    verify(session).setPacketReadState(PacketReadState.WAIT_DATA);
+    verify(listener, never()).onFramedResult(any(), any());
+  }
+
+  @Test
+  @DisplayName("handlePacketData throws IllegalStateException when expectedLength != buffer capacity")
+  void testHandlePacketDataThrowsWhenExpectedLengthMismatch() {
+    BinaryPacketDecoder decoder = mock(BinaryPacketDecoder.class);
+    PacketFramingListener listener = mock(PacketFramingListener.class);
+    framer.setBinaryPacketDecoder(decoder);
+    framer.setPacketFramingResult(listener);
+
+    Session session = mock(Session.class);
+    PendingPacket pendingPacket = PendingPacket.newInstance();
+    pendingPacket.setPacketHeader(
+        PacketHeader.newInstance(true, false, false, false, DataType.ZERO));
+    // Mismatch: expectedLength=5 but buffer capacity=3
+    pendingPacket.setExpectedLength(5);
+    pendingPacket.setBuffer(ByteBuffer.allocate(3));
+
+    ProcessedPacket processedPacket = ProcessedPacket.newInstance();
+    when(session.getPacketReadState()).thenReturn(PacketReadState.WAIT_DATA);
+    when(session.getPendingPacket()).thenReturn(pendingPacket);
+    when(session.getProcessedPacket()).thenReturn(processedPacket);
+
+    // framing() swallows the IllegalStateException and resets state to WAIT_NEW_PACKET
+    framer.framing(session, new byte[]{0x01, 0x02, 0x03});
+
+    verify(session).setPacketReadState(PacketReadState.WAIT_NEW_PACKET);
+    verify(listener, never()).onFramedResult(any(), any());
+  }
+
+  @Test
   @DisplayName("framing a packet with only partial size bytes transitions to WAIT_DATA_SIZE_FRAGMENT")
   void testFramingWithPartialSizeBytesTransitionsToWaitDataSizeFragment() {
     BinaryPacketDecoder decoder = mock(BinaryPacketDecoder.class);

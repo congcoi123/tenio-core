@@ -101,4 +101,16 @@ class SystemMonitoringTaskTest {
         Mockito.eq(com.tenio.core.configuration.define.ServerEvent.SYSTEM_MONITORING),
         Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
   }
+
+  @org.junit.jupiter.api.Test
+  @org.junit.jupiter.api.DisplayName("shutdown handles InterruptedException from awaitTermination")
+  void testShutdownHandlesInterruptedException() {
+    task.run();
+    Thread.currentThread().interrupt();
+    try {
+      task.shutdown();
+    } finally {
+      Thread.interrupted();
+    }
+  }
 }
