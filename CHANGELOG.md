@@ -131,4 +131,7 @@
 - It should force to close sessions and disconnect players in some scenarios
 
 ## 0.7.2 2026-04-25 Feature release
-- Fixed issues which caused theGame Server takes time to shut down
+- Fixed issues which caused the Game Server takes time to shut down
+
+## 0.7.3 2026-05-02 Feature release
+- Fixed several issues in ServerApi

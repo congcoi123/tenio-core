@@ -229,17 +229,18 @@ class ServerApiTest {
     var player = Mockito.mock(Player.class);
     var session = Mockito.mock(Session.class);
     Mockito.when(player.getSession()).thenReturn(Optional.of(session));
+    Mockito.when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
     Mockito.when(player.containsSession()).thenReturn(true);
     serverApi.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
   }
 
   @Test
-  @DisplayName("When it tries to logout a player which has session, and the closed session has IO" +
-      " exception")
+  @DisplayName("When it tries to logout a player which has session, and the closed session has IO exception")
   void itLogoutPlayerHasSessionShouldHaveClosedSessionIoException() {
     var player = Mockito.mock(Player.class);
     var session = Mockito.mock(Session.class);
     Mockito.when(player.getSession()).thenReturn(Optional.of(session));
+    Mockito.when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
     Mockito.when(player.containsSession()).thenReturn(true);
     serverApi.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
   }

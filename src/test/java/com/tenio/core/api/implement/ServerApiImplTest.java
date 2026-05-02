@@ -67,6 +67,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 @DisplayName("Unit Test Cases For ServerApiImpl (extended)")
 class ServerApiImplTest {
@@ -313,13 +314,12 @@ class ServerApiImplTest {
     var session = mock(Session.class);
     when(player.containsSession()).thenReturn(true);
     when(player.getSession()).thenReturn(Optional.of(session));
+    Mockito.when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
     when(session.isActivated()).thenReturn(false);
 
-    api.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST,
-        PlayerDisconnectMode.CLIENT_REQUEST);
+    api.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
 
-    verify(session).close(ConnectionDisconnectMode.CLIENT_REQUEST,
-        PlayerDisconnectMode.CLIENT_REQUEST);
+    verify(session).close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
   }
 
   @Test
@@ -329,13 +329,12 @@ class ServerApiImplTest {
     var session = mock(Session.class);
     when(player.containsSession()).thenReturn(true);
     when(player.getSession()).thenReturn(Optional.of(session));
+    Mockito.when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
     when(session.isActivated()).thenReturn(true);
 
-    api.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST,
-        PlayerDisconnectMode.CLIENT_REQUEST);
+    api.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
 
-    verify(session).close(ConnectionDisconnectMode.CLIENT_REQUEST,
-        PlayerDisconnectMode.CLIENT_REQUEST);
+    verify(session).close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
   }
 
   @Test
