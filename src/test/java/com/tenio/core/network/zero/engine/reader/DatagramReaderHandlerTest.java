@@ -73,7 +73,7 @@ class DatagramReaderHandlerTest {
 
   @Test
   @DisplayName("Constructor creates a non-null handler")
-  void testConstructorCreatesHandler() throws IOException {
+  void testConstructorCreatesHandler() throws Exception {
     assertNotNull(handler);
     handler.shutdown();
   }
@@ -86,7 +86,7 @@ class DatagramReaderHandlerTest {
 
   @Test
   @DisplayName("openDatagramChannels with cacheSize zero throws IllegalArgumentException")
-  void testOpenDatagramChannelsWithZeroCacheSizeThrows() throws IOException {
+  void testOpenDatagramChannelsWithZeroCacheSizeThrows() throws Exception {
     assertThrows(IllegalArgumentException.class,
         () -> handler.openDatagramChannels("127.0.0.1", 19999, 0));
     handler.shutdown();
@@ -94,7 +94,7 @@ class DatagramReaderHandlerTest {
 
   @Test
   @DisplayName("openDatagramChannels with negative cacheSize throws IllegalArgumentException")
-  void testOpenDatagramChannelsWithNegativeCacheSizeThrows() throws IOException {
+  void testOpenDatagramChannelsWithNegativeCacheSizeThrows() throws Exception {
     assertThrows(IllegalArgumentException.class,
         () -> handler.openDatagramChannels("127.0.0.1", 19999, -1));
     handler.shutdown();
@@ -102,7 +102,7 @@ class DatagramReaderHandlerTest {
 
   @Test
   @DisplayName("openDatagramChannels with valid cacheSize binds and registers channels without throwing")
-  void testOpenDatagramChannelsWithValidCacheSizeDoesNotThrow() throws IOException {
+  void testOpenDatagramChannelsWithValidCacheSizeDoesNotThrow() throws Exception {
     assertDoesNotThrow(() -> handler.openDatagramChannels("127.0.0.1", 0, 1));
     handler.shutdown();
   }

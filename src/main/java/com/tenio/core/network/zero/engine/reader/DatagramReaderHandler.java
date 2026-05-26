@@ -42,6 +42,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Handles read/write events on datagram channels using a {@link Selector}.
@@ -66,6 +69,11 @@ import java.nio.channels.Selector;
 
 public final class DatagramReaderHandler extends SystemLogger {
 
+  private static final AtomicInteger ID_GENERATOR = new AtomicInteger();
+
+  private static final int DEFAULT_RCV_BUF = 1024 * 1024; // 1 MB
+  private static final int DEFAULT_SND_BUF = 1024 * 1024; // 1 MB
+
   /**
    * This selector manages {@link DatagramChannel} instances.
    */
@@ -76,6 +84,8 @@ public final class DatagramReaderHandler extends SystemLogger {
   private final NetworkReaderStatistic networkReaderStatistic;
   private final DatagramIoHandler datagramIoHandler;
   private final DatagramPacketPolicy datagramPacketPolicy;
+  private final Thread internalProcess;
+  private final BlockingQueue<Info> internalQueue;
 
   /**
    * Constructor.
@@ -102,14 +112,18 @@ public final class DatagramReaderHandler extends SystemLogger {
     this.datagramPacketPolicy = datagramPacketPolicy;
 
     readableSelector = Selector.open();
+    internalQueue = new LinkedBlockingQueue<>();
+    internalProcess = Thread.ofVirtual().name("datagram-reader-" + ID_GENERATOR.incrementAndGet()).start(this::processInternalQueue);
   }
 
   /**
    * Shutdown processing.
    *
-   * @throws IOException whenever IO exceptions thrown
+   * @throws Exception whenever any exceptions thrown
    */
-  public void shutdown() throws IOException {
+  public void shutdown() throws Exception {
+    internalProcess.interrupt();
+    internalQueue.clear();
     readableSelector.wakeup();
     SocketUtility.shutdownSelector(readableSelector);
   }
@@ -142,7 +156,14 @@ public final class DatagramReaderHandler extends SystemLogger {
       if (selectionKey.isValid()) {
         var selectableChannel = selectionKey.channel();
         var datagramChannel = (DatagramChannel) selectableChannel;
-        readUpdData(datagramChannel, selectionKey, readerBuffer);
+        try {
+          readUpdData(datagramChannel, selectionKey, readerBuffer);
+        } catch (Exception exception) {
+          if (isErrorEnabled()) {
+            error(exception, "An exception was occurred on channel: ", datagramChannel.toString());
+          }
+          datagramIoHandler.channelException(datagramChannel, exception);
+        }
       }
     }
   }
@@ -174,6 +195,8 @@ public final class DatagramReaderHandler extends SystemLogger {
           }
         }
         datagramChannel.setOption(StandardSocketOptions.SO_BROADCAST, true);
+        datagramChannel.setOption(StandardSocketOptions.SO_RCVBUF, DEFAULT_RCV_BUF);
+        datagramChannel.setOption(StandardSocketOptions.SO_SNDBUF, DEFAULT_SND_BUF);
         datagramChannel.bind(new InetSocketAddress(serverAddress, port));
         // udp datagram is a connectionless protocol, we don't need to create
         // bi-direction connection, that why it's not necessary to register it to
@@ -195,84 +218,86 @@ public final class DatagramReaderHandler extends SystemLogger {
   }
 
   private void readUpdData(DatagramChannel datagramChannel, SelectionKey selectionKey,
-                           ByteBuffer readerBuffer) {
-    Session session;
-
+                           ByteBuffer readerBuffer) throws Exception {
     if (selectionKey.isValid() && selectionKey.isReadable()) {
       // prepares the buffer first
       readerBuffer.clear();
       // reads data from socket and write them to buffer
       SocketAddress remoteAddress;
+      while ((remoteAddress = datagramChannel.receive(readerBuffer)) != null) {
+        int byteCount = readerBuffer.position();
+
+        // update statistic data
+        networkReaderStatistic.updateReadBytes(byteCount);
+        networkReaderStatistic.updateReadPackets(1);
+        // ready to read data from buffer
+        readerBuffer.flip();
+        // reads data from buffer and transfers them to the next process
+        byte[] binaries = new byte[readerBuffer.limit()];
+        readerBuffer.get(binaries);
+
+        // offload process
+        internalQueue.add(new Info(datagramChannel, remoteAddress, binaries, byteCount));
+
+        readerBuffer.clear();
+      }
+    }
+  }
+
+  private void processInternalQueue() {
+    while (!Thread.currentThread().isInterrupted()) {
       try {
-        remoteAddress = datagramChannel.receive(readerBuffer);
-      } catch (IOException exception) {
-        if (isErrorEnabled()) {
-          error(exception, "An exception was occurred on channel: ", datagramChannel.toString());
-        }
-        datagramIoHandler.channelException(datagramChannel, exception);
-        return;
-      }
+        Info info = internalQueue.take();
 
-      if (remoteAddress == null) {
-        var addressNotFoundException =
-            new RuntimeException("Remove address for the datagram channel");
-        if (isErrorEnabled()) {
-          error(addressNotFoundException, "An exception was occurred on channel: ",
-              datagramChannel.toString());
-        }
-        datagramIoHandler.channelException(datagramChannel, addressNotFoundException);
-        return;
-      }
+        // convert binary to dataCollection object
+        var dataCollection = binaryPacketDecoder.decode(info.binaries);
 
-      int byteCount = readerBuffer.position();
+        // retrieves session by its datagram channel, hence we are using only one
+        // datagram channel for all sessions, we use incoming request convey ID to
+        // distinguish them
+        var processedDataCollection = datagramPacketPolicy.applyPolicy(dataCollection);
+        int udpConvey = processedDataCollection.getLeft();
+        DataCollection message = processedDataCollection.getRight();
 
-      // update statistic data
-      networkReaderStatistic.updateReadBytes(byteCount);
-      networkReaderStatistic.updateReadPackets(1);
-      // ready to read data from buffer
-      readerBuffer.flip();
-      // reads data from buffer and transfers them to the next process
-      byte[] binaries = new byte[readerBuffer.limit()];
-      readerBuffer.get(binaries);
+        Session session = sessionManager.getSessionByDatagram(udpConvey);
 
-      // convert binary to dataCollection object
-      var dataCollection = binaryPacketDecoder.decode(binaries);
-
-      // retrieves session by its datagram channel, hence we are using only one
-      // datagram channel for all sessions, we use incoming request convey ID to
-      // distinguish them
-      var processedDataCollection = datagramPacketPolicy.applyPolicy(dataCollection);
-      int udpConvey = processedDataCollection.getLeft();
-      DataCollection message = processedDataCollection.getRight();
-
-      session = sessionManager.getSessionByDatagram(udpConvey);
-
-      if (session == null) {
-        datagramIoHandler.channelRead(datagramChannel, remoteAddress, message);
-      } else {
-        if (session.isActivated()) {
-          // When a client (like A or B) is behind a NAT (Network Address Translation), its
-          // private/internal IP and port are not directly visible to your server.
-          // Instead, the NAT device assigns a temporary public IP + port mapping like:
-          // Private client (B): 192.168.1.5:54321
-          // → NAT mapping →
-          // Public IP: 203.0.113.42:61724
-          // But these mappings are temporary and will expire after some idle time (often 30
-          // seconds to a few minutes) if there's no traffic.
-          // Solution:
-          // Every 10 to 30 seconds, the client sends this to the server.
-          // The effects:
-          // - Keeps the NAT mapping alive (prevents expiry).
-          // - Server can update the client’s SocketAddress if the NAT changes the port dynamically.
-          session.setDatagramRemoteAddress(remoteAddress);
-          session.addReadBytes(byteCount);
-          datagramIoHandler.sessionRead(session, message);
+        if (session == null) {
+          datagramIoHandler.channelRead(info.datagramChannel, info.remoteAddress, message);
         } else {
-          if (isDebugEnabled()) {
-            debug("READ UDP CHANNEL", "Session is inactivated: ", session.toString());
+          if (session.isActivated()) {
+            // When a client (like A or B) is behind a NAT (Network Address Translation), its
+            // private/internal IP and port are not directly visible to your server.
+            // Instead, the NAT device assigns a temporary public IP + port mapping like:
+            // Private client (B): 192.168.1.5:54321
+            // → NAT mapping →
+            // Public IP: 203.0.113.42:61724
+            // But these mappings are temporary and will expire after some idle time (often 30
+            // seconds to a few minutes) if there's no traffic.
+            // Solution:
+            // Every 10 to 30 seconds, the client sends this to the server.
+            // The effects:
+            // - Keeps the NAT mapping alive (prevents expiry).
+            // - Server can update the client’s SocketAddress if the NAT changes the port dynamically.
+            session.setDatagramRemoteAddress(info.remoteAddress);
+            session.addReadBytes(info.byteCount);
+            datagramIoHandler.sessionRead(session, message);
+          } else {
+            if (isDebugEnabled()) {
+              debug("READ UDP CHANNEL", "Session is inactivated: ", session.toString());
+            }
           }
+        }
+      } catch (InterruptedException exception) {
+        // InterruptedException is not an error
+        // It’s a signal to stop the thread
+        Thread.currentThread().interrupt();
+      } catch (Throwable cause) {
+        if (isErrorEnabled()) {
+          error(cause);
         }
       }
     }
   }
+
+  private record Info(DatagramChannel datagramChannel, SocketAddress remoteAddress, byte[] binaries, int byteCount) {};
 }

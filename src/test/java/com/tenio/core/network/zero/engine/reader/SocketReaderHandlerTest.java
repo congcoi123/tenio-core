@@ -69,14 +69,14 @@ class SocketReaderHandlerTest {
 
   @Test
   @DisplayName("Constructor creates a non-null handler")
-  void testConstructorCreatesHandler() throws IOException {
+  void testConstructorCreatesHandler() throws Exception {
     assertNotNull(handler);
     handler.shutdown();
   }
 
   @Test
   @DisplayName("registerClientSocketChannel queues the channel and invokes onFailed when channel is already closed")
-  void testRegisterClientSocketChannelQueuesClosed() throws IOException {
+  void testRegisterClientSocketChannelQueuesClosed() throws Exception {
     AtomicBoolean failedCalled = new AtomicBoolean(false);
     SocketChannel closedChannel = mock(SocketChannel.class);
     Consumer<SelectionKey> onSuccess = key -> {};

@@ -66,6 +66,9 @@ import java.nio.channels.SocketChannel;
  */
 public final class AcceptorHandler extends SystemLogger {
 
+  private static final int DEFAULT_RCV_BUF = 256 * 1024; // 256 KB
+  private static final int DEFAULT_SND_BUF = 256 * 1024; // 256 KB
+
   private final String serverAddress;
   /**
    * This selector manages {@link ServerSocketChannel} instances.
@@ -130,14 +133,14 @@ public final class AcceptorHandler extends SystemLogger {
     }
   }
 
-  private void registerClientChannel(SocketChannel socketChannel,
+  private void registerClientChannel(SocketChannel clientSocketChannel,
                                      SelectionKey acceptorSelectionKey) {
-    if (socketChannel == null) {
+    if (clientSocketChannel == null) {
       if (isDebugEnabled()) {
         debug("ACCEPTABLE CHANNEL", "Acceptor handles a null socket channel");
       }
     } else {
-      var socket = socketChannel.socket();
+      var socket = clientSocketChannel.socket();
 
       if (socket == null) {
         if (isDebugEnabled()) {
@@ -148,13 +151,15 @@ public final class AcceptorHandler extends SystemLogger {
         if (inetAddress != null) {
           try {
             connectionFilter.validateAndAddAddress(inetAddress.getHostAddress());
-            socketChannel.configureBlocking(false);
-            socketChannel.socket().setTcpNoDelay(true);
-            zeroReaderListener.acceptClientSocketChannel(socketChannel,
-                readerSelectionKey -> socketIoHandler.channelActive(socketChannel,
+            clientSocketChannel.configureBlocking(false);
+            clientSocketChannel.socket().setTcpNoDelay(true);
+            clientSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, DEFAULT_RCV_BUF);
+            clientSocketChannel.setOption(StandardSocketOptions.SO_SNDBUF, DEFAULT_SND_BUF);
+            zeroReaderListener.acceptClientSocketChannel(clientSocketChannel,
+                readerSelectionKey -> socketIoHandler.channelActive(clientSocketChannel,
                     readerSelectionKey), () -> {
                   try {
-                    SocketUtility.closeSocket(socketChannel, acceptorSelectionKey);
+                    SocketUtility.closeSocket(clientSocketChannel, acceptorSelectionKey);
                   } catch (IOException exception) {
                     error(exception, "It was unable to close this accepted channel: ",
                         exception.getMessage());
@@ -165,19 +170,19 @@ public final class AcceptorHandler extends SystemLogger {
             if (isErrorEnabled()) {
               error(exception1, "Refused connection with address: ", exception1.getMessage());
             }
-            socketIoHandler.channelException(socketChannel, exception1);
-            socketIoHandler.channelInactive(socketChannel,
+            socketIoHandler.channelException(clientSocketChannel, exception1);
+            socketIoHandler.channelInactive(clientSocketChannel,
                 acceptorSelectionKey, ConnectionDisconnectMode.REFUSED_CONNECTION);
           } catch (IOException exception2) {
             if (isErrorEnabled()) {
               var logger = buildgen("Failed accepting connection: ");
-              if (socketChannel.socket() != null) {
-                logger.append(socketChannel.socket().getInetAddress().getHostAddress());
+              if (clientSocketChannel.socket() != null) {
+                logger.append(clientSocketChannel.socket().getInetAddress().getHostAddress());
               }
               error(exception2, logger);
             }
-            socketIoHandler.channelException(socketChannel, exception2);
-            socketIoHandler.channelInactive(socketChannel, acceptorSelectionKey, ConnectionDisconnectMode.EXCEPTION);
+            socketIoHandler.channelException(clientSocketChannel, exception2);
+            socketIoHandler.channelInactive(clientSocketChannel, acceptorSelectionKey, ConnectionDisconnectMode.EXCEPTION);
           }
         }
       }
