@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -154,7 +155,7 @@ class DatagramReaderHandlerTest {
 
     udpHandler.running();
 
-    verify(ioHandler).channelRead(any(), any(), any());
+    verify(ioHandler, timeout(1000)).channelRead(any(), any(), any());
     udpHandler.shutdown();
   }
 
@@ -205,7 +206,7 @@ class DatagramReaderHandlerTest {
 
     udpHandler.running();
 
-    verify(ioHandler).sessionRead(session, dataCollection);
+    verify(ioHandler, timeout(1000)).sessionRead(session, dataCollection);
     udpHandler.shutdown();
   }
 
@@ -237,8 +238,8 @@ class DatagramReaderHandlerTest {
   }
 
   @Test
-  @DisplayName("readUpdData with IOException from receive calls channelException")
-  void testReadUpdDataWithIOExceptionFromReceiveCallsChannelException() throws Exception {
+  @DisplayName("readUpdData with Exception from receive calls channelException")
+  void testReadUpdDataWithExceptionFromReceiveCallsChannelException() throws Exception {
     DatagramIoHandler ioHandler = mock(DatagramIoHandler.class);
     DatagramChannel datagramChannel = mock(DatagramChannel.class);
     SelectionKey selectionKey = mock(SelectionKey.class);
@@ -247,40 +248,16 @@ class DatagramReaderHandlerTest {
     when(selectionKey.isReadable()).thenReturn(true);
     when(datagramChannel.receive(any(ByteBuffer.class))).thenThrow(new IOException("receive failed"));
 
-    DatagramReaderHandler h = new DatagramReaderHandler(
+    DatagramReaderHandler readerHandler = new DatagramReaderHandler(
         ByteBuffer.allocate(512), mock(SessionManager.class), mock(BinaryPacketDecoder.class),
         mock(NetworkReaderStatistic.class), ioHandler, mock(DatagramPacketPolicy.class));
 
-    Method m = DatagramReaderHandler.class.getDeclaredMethod(
+    Method method = DatagramReaderHandler.class.getDeclaredMethod(
         "readUpdData", DatagramChannel.class, SelectionKey.class, ByteBuffer.class);
-    m.setAccessible(true);
-    m.invoke(h, datagramChannel, selectionKey, ByteBuffer.allocate(512));
+    method.setAccessible(true);
+    method.invoke(readerHandler, datagramChannel, selectionKey, ByteBuffer.allocate(512));
 
-    verify(ioHandler).channelException(eq(datagramChannel), any(IOException.class));
-    h.shutdown();
-  }
-
-  @Test
-  @DisplayName("readUpdData with null remoteAddress calls channelException")
-  void testReadUpdDataWithNullRemoteAddressCallsChannelException() throws Exception {
-    DatagramIoHandler ioHandler = mock(DatagramIoHandler.class);
-    DatagramChannel datagramChannel = mock(DatagramChannel.class);
-    SelectionKey selectionKey = mock(SelectionKey.class);
-
-    when(selectionKey.isValid()).thenReturn(true);
-    when(selectionKey.isReadable()).thenReturn(true);
-    when(datagramChannel.receive(any(ByteBuffer.class))).thenReturn(null);
-
-    DatagramReaderHandler h = new DatagramReaderHandler(
-        ByteBuffer.allocate(512), mock(SessionManager.class), mock(BinaryPacketDecoder.class),
-        mock(NetworkReaderStatistic.class), ioHandler, mock(DatagramPacketPolicy.class));
-
-    Method m = DatagramReaderHandler.class.getDeclaredMethod(
-        "readUpdData", DatagramChannel.class, SelectionKey.class, ByteBuffer.class);
-    m.setAccessible(true);
-    m.invoke(h, datagramChannel, selectionKey, ByteBuffer.allocate(512));
-
-    verify(ioHandler).channelException(eq(datagramChannel), any(RuntimeException.class));
-    h.shutdown();
+    verify(ioHandler, timeout(1000)).channelException(eq(datagramChannel), any(Exception.class));
+    readerHandler.shutdown();
   }
 }

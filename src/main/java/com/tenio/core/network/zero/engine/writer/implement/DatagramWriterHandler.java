@@ -96,7 +96,7 @@ public final class DatagramWriterHandler extends AbstractWriterHandler {
       allocateBuffer(sendingData.length);
     }
 
-    // put data to buffer
+    // copy data to buffer
     getBuffer().put(sendingData);
 
     // ready to send

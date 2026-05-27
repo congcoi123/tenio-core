@@ -101,7 +101,7 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
     // clear the buffer first
     getBuffer().clear();
 
-    // start to read data to buffer
+    // copy data to the buffer
     getBuffer().put(sendingData);
 
     // ready to write on socket

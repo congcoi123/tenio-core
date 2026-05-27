@@ -71,6 +71,8 @@ public final class DatagramReaderHandler extends SystemLogger {
 
   private static final AtomicInteger ID_GENERATOR = new AtomicInteger();
 
+  private static final int MAX_PACKETS_PER_CYCLE = 256;
+
   private static final int DEFAULT_RCV_BUF = 1024 * 1024; // 1 MB
   private static final int DEFAULT_SND_BUF = 1024 * 1024; // 1 MB
 
@@ -156,14 +158,7 @@ public final class DatagramReaderHandler extends SystemLogger {
       if (selectionKey.isValid()) {
         var selectableChannel = selectionKey.channel();
         var datagramChannel = (DatagramChannel) selectableChannel;
-        try {
-          readUpdData(datagramChannel, selectionKey, readerBuffer);
-        } catch (Exception exception) {
-          if (isErrorEnabled()) {
-            error(exception, "An exception was occurred on channel: ", datagramChannel.toString());
-          }
-          datagramIoHandler.channelException(datagramChannel, exception);
-        }
+        readUpdData(datagramChannel, selectionKey, readerBuffer);
       }
     }
   }
@@ -217,29 +212,40 @@ public final class DatagramReaderHandler extends SystemLogger {
     }
   }
 
-  private void readUpdData(DatagramChannel datagramChannel, SelectionKey selectionKey,
-                           ByteBuffer readerBuffer) throws Exception {
+  private void readUpdData(DatagramChannel datagramChannel, SelectionKey selectionKey, ByteBuffer readerBuffer) {
     if (selectionKey.isValid() && selectionKey.isReadable()) {
       // prepares the buffer first
       readerBuffer.clear();
       // reads data from socket and write them to buffer
-      SocketAddress remoteAddress;
-      while ((remoteAddress = datagramChannel.receive(readerBuffer)) != null) {
-        int byteCount = readerBuffer.position();
+      try {
+        SocketAddress remoteAddress;
+        int packetCount = 0;
 
-        // update statistic data
-        networkReaderStatistic.updateReadBytes(byteCount);
-        networkReaderStatistic.updateReadPackets(1);
-        // ready to read data from buffer
-        readerBuffer.flip();
-        // reads data from buffer and transfers them to the next process
-        byte[] binaries = new byte[readerBuffer.limit()];
-        readerBuffer.get(binaries);
+        // The selector will make the channel ready again on the next running() call if packets remain,
+        // so nothing is lost, just fairly distributed.
+        while (packetCount < MAX_PACKETS_PER_CYCLE && (remoteAddress = datagramChannel.receive(readerBuffer)) != null) {
+          int byteCount = readerBuffer.position();
 
-        // offload process
-        internalQueue.add(new Info(datagramChannel, remoteAddress, binaries, byteCount));
+          // update statistic data
+          networkReaderStatistic.updateReadBytes(byteCount);
+          networkReaderStatistic.updateReadPackets(1);
+          // ready to read data from buffer
+          readerBuffer.flip();
+          // reads data from buffer and transfers them to the next process
+          byte[] binaries = new byte[readerBuffer.limit()];
+          readerBuffer.get(binaries);
 
-        readerBuffer.clear();
+          // offload process
+          internalQueue.add(new Info(datagramChannel, remoteAddress, binaries, byteCount));
+
+          readerBuffer.clear();
+          packetCount++;
+        }
+      } catch (IOException exception) {
+        if (isErrorEnabled()) {
+          error(exception, "An exception was occurred on channel: ", datagramChannel.toString());
+        }
+        datagramIoHandler.channelException(datagramChannel, exception);
       }
     }
   }
