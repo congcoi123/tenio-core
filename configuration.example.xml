@@ -49,6 +49,8 @@
 
     <Configuration>
         <Workers>
+            <!-- The processor handle socket and datagram connection requests -->
+            <Worker name="processor">1</Worker>
             <!-- In case udp channel is in use, half of the socket-reader workers will be used for them -->
             <Worker name="socket-reader">4</Worker>
             <Worker name="socket-writer">2</Worker>

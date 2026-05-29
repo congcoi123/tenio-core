@@ -34,12 +34,16 @@ import com.tenio.core.network.utility.SocketUtility;
 import com.tenio.core.network.zero.engine.listener.ZeroReaderListener;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Handles incoming TCP/UDP connections using Java NIO's {@link Selector}.
@@ -66,6 +70,8 @@ import java.nio.channels.SocketChannel;
  */
 public final class AcceptorHandler extends SystemLogger {
 
+  private static final AtomicInteger ID_GENERATOR = new AtomicInteger();
+
   private static final int DEFAULT_RCV_BUF = 256 * 1024; // 256 KB
   private static final int DEFAULT_SND_BUF = 256 * 1024; // 256 KB
 
@@ -77,6 +83,8 @@ public final class AcceptorHandler extends SystemLogger {
   private final ConnectionFilter connectionFilter;
   private final ZeroReaderListener zeroReaderListener;
   private final SocketIoHandler socketIoHandler;
+  private final Thread internalProcess;
+  private final BlockingQueue<Info> internalQueue;
 
   /**
    * Constructor.
@@ -96,6 +104,9 @@ public final class AcceptorHandler extends SystemLogger {
     this.connectionFilter = connectionFilter;
     this.zeroReaderListener = zeroReaderListener;
     this.socketIoHandler = socketIoHandler;
+
+    internalQueue = new LinkedBlockingQueue<>();
+    internalProcess = Thread.ofVirtual().name("acceptor-" + ID_GENERATOR.incrementAndGet()).start(this::processInternalQueue);
 
     // opens a selector to handle server socket and accept all incoming client sockets
     try {
@@ -149,41 +160,8 @@ public final class AcceptorHandler extends SystemLogger {
       } else {
         var inetAddress = socket.getInetAddress();
         if (inetAddress != null) {
-          try {
-            connectionFilter.validateAndAddAddress(inetAddress.getHostAddress());
-            clientSocketChannel.configureBlocking(false);
-            clientSocketChannel.socket().setTcpNoDelay(true);
-            clientSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, DEFAULT_RCV_BUF);
-            clientSocketChannel.setOption(StandardSocketOptions.SO_SNDBUF, DEFAULT_SND_BUF);
-            zeroReaderListener.acceptClientSocketChannel(clientSocketChannel,
-                readerSelectionKey -> socketIoHandler.channelActive(clientSocketChannel,
-                    readerSelectionKey), () -> {
-                  try {
-                    SocketUtility.closeSocket(clientSocketChannel, acceptorSelectionKey);
-                  } catch (IOException exception) {
-                    error(exception, "It was unable to close this accepted channel: ",
-                        exception.getMessage());
-                  }
-                }
-            );
-          } catch (RefusedConnectionAddressException exception1) {
-            if (isErrorEnabled()) {
-              error(exception1, "Refused connection with address: ", exception1.getMessage());
-            }
-            socketIoHandler.channelException(clientSocketChannel, exception1);
-            socketIoHandler.channelInactive(clientSocketChannel,
-                acceptorSelectionKey, ConnectionDisconnectMode.REFUSED_CONNECTION);
-          } catch (IOException exception2) {
-            if (isErrorEnabled()) {
-              var logger = buildgen("Failed accepting connection: ");
-              if (clientSocketChannel.socket() != null) {
-                logger.append(clientSocketChannel.socket().getInetAddress().getHostAddress());
-              }
-              error(exception2, logger);
-            }
-            socketIoHandler.channelException(clientSocketChannel, exception2);
-            socketIoHandler.channelInactive(clientSocketChannel, acceptorSelectionKey, ConnectionDisconnectMode.EXCEPTION);
-          }
+          // offload process
+          internalQueue.add(new Info(inetAddress, clientSocketChannel, acceptorSelectionKey));
         }
       }
     }
@@ -240,6 +218,8 @@ public final class AcceptorHandler extends SystemLogger {
    */
   public void shutdown() {
     try {
+      internalProcess.interrupt();
+      internalQueue.clear();
       SocketUtility.shutdownSelector(acceptableSelector);
     } catch (IOException exception) {
       if (isErrorEnabled()) {
@@ -247,4 +227,57 @@ public final class AcceptorHandler extends SystemLogger {
       }
     }
   }
+
+  private void processInternalQueue() {
+    while (!Thread.currentThread().isInterrupted()) {
+      try {
+        Info info = internalQueue.take();
+
+        try {
+          connectionFilter.validateAndAddAddress(info.inetAddress.getHostAddress());
+          info.clientSocketChannel.configureBlocking(false);
+          info.clientSocketChannel.socket().setTcpNoDelay(true);
+          info.clientSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, DEFAULT_RCV_BUF);
+          info.clientSocketChannel.setOption(StandardSocketOptions.SO_SNDBUF, DEFAULT_SND_BUF);
+          zeroReaderListener.acceptClientSocketChannel(info.clientSocketChannel,
+                  readerSelectionKey -> socketIoHandler.channelActive(info.clientSocketChannel,
+                          readerSelectionKey), () -> {
+                    try {
+                      SocketUtility.closeSocket(info.clientSocketChannel, info.acceptorSelectionKey);
+                    } catch (IOException exception) {
+                      error(exception, "It was unable to close this accepted channel: ", exception.getMessage());
+                    }
+                  }
+          );
+        } catch (RefusedConnectionAddressException exception1) {
+          if (isErrorEnabled()) {
+            error(exception1, "Refused connection with address: ", exception1.getMessage());
+          }
+          socketIoHandler.channelException(info.clientSocketChannel, exception1);
+          socketIoHandler.channelInactive(info.clientSocketChannel,
+                  info.acceptorSelectionKey, ConnectionDisconnectMode.REFUSED_CONNECTION);
+        } catch (IOException exception2) {
+          if (isErrorEnabled()) {
+            var logger = buildgen("Failed accepting connection: ");
+            if (info.clientSocketChannel.socket() != null) {
+              logger.append(info.clientSocketChannel.socket().getInetAddress().getHostAddress());
+            }
+            error(exception2, logger);
+          }
+          socketIoHandler.channelException(info.clientSocketChannel, exception2);
+          socketIoHandler.channelInactive(info.clientSocketChannel, info.acceptorSelectionKey, ConnectionDisconnectMode.EXCEPTION);
+        }
+      } catch (InterruptedException exception) {
+        // InterruptedException is not an error
+        // It’s a signal to stop the thread
+        Thread.currentThread().interrupt();
+      } catch (Throwable cause) {
+        if (isErrorEnabled()) {
+          error(cause);
+        }
+      }
+    }
+  }
+
+  private record Info(InetAddress inetAddress, SocketChannel clientSocketChannel, SelectionKey acceptorSelectionKey) {}
 }
