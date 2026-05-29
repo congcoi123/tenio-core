@@ -106,7 +106,7 @@ public final class AcceptorHandler extends SystemLogger {
     this.socketIoHandler = socketIoHandler;
 
     internalQueue = new LinkedBlockingQueue<>();
-    internalProcess = Thread.ofVirtual().name("acceptor-" + ID_GENERATOR.incrementAndGet()).start(this::processInternalQueue);
+    internalProcess = Thread.ofVirtual().name("socket-acceptor-" + ID_GENERATOR.incrementAndGet()).start(this::processInternalQueue);
 
     // opens a selector to handle server socket and accept all incoming client sockets
     try {
