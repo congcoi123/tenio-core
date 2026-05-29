@@ -133,5 +133,7 @@
 ## 0.7.2 2026-04-25 Feature release
 - Fixed issues which caused the Game Server takes time to shut down
 
-## 0.7.3 2026-05-02 Feature release
+## 0.7.3 2026-05-29 Feature release
 - Fixed several issues in ServerApi
+- Improved the performance by offloading tasks from IO bound workers
+- Supported multi UDP channels
