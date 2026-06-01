@@ -88,7 +88,7 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
                   if (isDebugEnabled()) {
                     debug("AUTO DISCONNECT PLAYER",
                         player.getIdentity(),
-                        " (never deported) is going to be forced to remove by the cleaning task");
+                        " (never deported) is going to be forced to remove by the cleaning task > ", player);
                   }
                   ServerImpl.getInstance().getApi().logout(player, ConnectionDisconnectMode.IDLE,
                       PlayerDisconnectMode.IDLE);
@@ -97,7 +97,7 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
                 if (player.isIdle()) {
                   if (isDebugEnabled()) {
                     debug("AUTO DISCONNECT PLAYER",
-                        player.getIdentity(), " is going to be forced to remove by the cleaning task");
+                        player.getIdentity(), " is going to be forced to remove by the cleaning task > ", player);
                   }
                   ServerImpl.getInstance().getApi().logout(player, ConnectionDisconnectMode.IDLE,
                       PlayerDisconnectMode.IDLE);
