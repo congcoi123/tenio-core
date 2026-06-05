@@ -308,21 +308,6 @@ class ServerApiImplTest {
   // --- logout ---
 
   @Test
-  @DisplayName("logout calls session.close() even when session is not activated")
-  void testLogoutCallsCloseOnUnactivatedSession() throws IOException {
-    var player = mock(Player.class);
-    var session = mock(Session.class);
-    when(player.containsSession()).thenReturn(true);
-    when(player.getSession()).thenReturn(Optional.of(session));
-    Mockito.when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
-    when(session.isActivated()).thenReturn(false);
-
-    api.logout(player, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
-
-    verify(session).close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
-  }
-
-  @Test
   @DisplayName("logout calls session.close() when session is activated")
   void testLogoutCallsCloseOnActivatedSession() throws IOException {
     var player = mock(Player.class);

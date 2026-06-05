@@ -187,7 +187,7 @@ public class SessionImpl extends AbstractLogger implements Session {
     if (maxInboundQueueSize > 0 && remaining >= maxInboundQueueSize) {
       var exception = new InboundQueueFullException(remaining);
       if (isErrorEnabled()) {
-        error(exception, exception.getMessage());
+        error(exception, exception.getMessage(), " > ", this);
       }
       throw exception;
     }

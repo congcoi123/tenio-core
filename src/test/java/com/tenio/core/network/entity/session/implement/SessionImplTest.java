@@ -43,6 +43,7 @@ import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.exception.InboundQueueFullException;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
+import com.tenio.core.network.entity.outbound.packet.implement.OutboundQueueImpl;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.Session.AssociatedState;
 import com.tenio.core.network.entity.session.manager.SessionManager;
@@ -348,6 +349,7 @@ class SessionImplTest {
   void testConfigureMaxInboundQueueSizeLimitsQueue() {
     Session session = SessionImpl.newInstance();
     session.configureMaxInboundQueueSize(1);
+    session.configureOutboundQueue(OutboundQueueImpl.newInstance());
     DataCollection msg1 = mock(DataCollection.class);
     DataCollection msg2 = mock(DataCollection.class);
     session.enqueueInbound(msg1);
@@ -785,6 +787,7 @@ class SessionImplTest {
   void testEnqueueInboundThrowsWhenQueueFull() {
     Session session = SessionImpl.newInstance();
     session.configureMaxInboundQueueSize(1);
+    session.configureOutboundQueue(OutboundQueueImpl.newInstance());
     DataCollection msg = mock(DataCollection.class);
     session.enqueueInbound(msg);
     assertThrows(InboundQueueFullException.class, () -> session.enqueueInbound(msg));
