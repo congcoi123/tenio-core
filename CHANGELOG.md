@@ -136,4 +136,5 @@
 ## 0.7.3 2026-05-29 Feature release
 - Fixed several issues in ServerApi
 - Improved the performance by offloading tasks from IO bound workers
+- Used EnumMap in EventHandler to increase lookup speed
 - Supported multi UDP channels
