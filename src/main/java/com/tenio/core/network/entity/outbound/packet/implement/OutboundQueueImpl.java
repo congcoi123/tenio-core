@@ -62,23 +62,17 @@ public final class OutboundQueueImpl implements OutboundQueue {
   @Override
   public Packet peek() {
     synchronized (queue) {
-      if (!isAlmostEmpty()) {
-        return queue.peek();
-      }
+      return queue.peek();
     }
-    return null;
   }
 
   @Override
   public Packet take() {
     synchronized (queue) {
-      if (!isAlmostEmpty()) {
-        Packet packet = queue.poll();
-        snapshotSize = queue.size();
-        return packet;
-      }
+      Packet packet = queue.poll();
+      snapshotSize = queue.size();
+      return packet;
     }
-    return null;
   }
 
   @Override
