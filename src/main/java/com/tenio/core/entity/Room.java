@@ -442,21 +442,21 @@ public interface Room {
   }
 
   /**
-   * Determines whether the room is almost empty.
+   * Determines whether the room is empty (approximately correct).
    *
-   * @return {@code true} if there is almost no entity in the room, otherwise returns {@code false}
+   * @return {@code true} if there is approximately no entity in the room, otherwise returns {@code false}
    * @since 0.7.3
    */
-  boolean isAlmostEmpty();
+  boolean isSnapshotEmpty();
 
   /**
-   * Determines whether the room is almost full.
+   * Determines whether the room is full (approximately correct).
    *
-   * @return {@code true} if the number of entities almost reached the limitation in the room,
+   * @return {@code true} if the number of entities approximately reached the limitation in the room,
    * otherwise returns {@code false}
    * @since 0.7.3
    */
-  boolean isAlmostFull();
+  boolean isSnapshotFull();
 
   /**
    * Retrieves the maximum number of participants allowing in the room.

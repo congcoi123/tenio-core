@@ -400,7 +400,7 @@ class SocketWriterHandlerTest {
     when(packet.isMarkedAsLast()).thenReturn(false);
     when(session.isActivated()).thenReturn(true);
     when(session.getId()).thenReturn(1L);
-    when(outboundQueue.isAlmostEmpty()).thenReturn(false);
+    when(outboundQueue.isSnapshotEmpty()).thenReturn(false);
     when(queueManager.getQueueByElementId(1L)).thenReturn(sessionQueue);
 
     handler.send(outboundQueue, session, packet);

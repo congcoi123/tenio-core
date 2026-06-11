@@ -42,7 +42,7 @@ public class DefaultOutboundQueuePolicy implements OutboundQueuePolicy {
 
   @Override
   public void applyPolicy(OutboundQueue outboundQueue, Packet packet) {
-    if (outboundQueue.isAlmostFull()) {
+    if (outboundQueue.isSnapshotFull()) {
       throw new OutboundQueueFullException(outboundQueue.getSnapshotSize());
     }
 

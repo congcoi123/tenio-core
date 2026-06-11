@@ -76,7 +76,7 @@ public interface OutboundQueue {
    * @return {@code true} if the queue is approximated to be empty, otherwise returns {@code false}
    * @since 0.7.3
    */
-  boolean isAlmostEmpty();
+  boolean isSnapshotEmpty();
 
   /**
    * Determines whether the queue is empty.
@@ -93,7 +93,7 @@ public interface OutboundQueue {
    * @return {@code true} if the queue is approximated to be full, otherwise returns {@code false}
    * @since 0.7.3
    */
-  boolean isAlmostFull();
+  boolean isSnapshotFull();
 
   /**
    * Determines whether the queue is full.

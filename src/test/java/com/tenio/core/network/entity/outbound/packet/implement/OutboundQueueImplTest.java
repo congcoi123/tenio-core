@@ -74,12 +74,12 @@ class OutboundQueueImplTest {
     OutboundQueueImpl newInstanceResult = OutboundQueueImpl.newInstance();
     newInstanceResult.clear();
     assertEquals("OutboundQueue{queue=[], outboundQueuePolicy=null, maxSize=0, snapshotSize=0}", newInstanceResult.toString());
-    assertTrue(newInstanceResult.isAlmostEmpty());
+    assertTrue(newInstanceResult.isSnapshotEmpty());
   }
 
   @Test
-  void testIsAlmostEmptyOnNewQueue() {
-    assertTrue(queue.isAlmostEmpty());
+  void testIsSnapshotEmptyOnNewQueue() {
+    assertTrue(queue.isSnapshotEmpty());
   }
 
   @Test
@@ -107,22 +107,22 @@ class OutboundQueueImplTest {
     queue.put(packet);
     assertEquals(packet, queue.take());
     // take removes from queue
-    assertTrue(queue.isAlmostEmpty());
+    assertTrue(queue.isSnapshotEmpty());
   }
 
   @Test
-  void testIsAlmostEmptyFalseAfterPut() {
+  void testIsSnapshotEmptyFalseAfterPut() {
     queue.put(mock(Packet.class));
-    assertFalse(queue.isAlmostEmpty());
+    assertFalse(queue.isSnapshotEmpty());
   }
 
   @Test
-  void testIsAlmostFullWhenSizeEqualsMaxSize() {
+  void testIsSnapshotFullWhenSizeEqualsMaxSize() {
     OutboundQueueImpl q = OutboundQueueImpl.newInstance();
     q.configureMaxSize(1);
     q.configureOutboundQueuePolicy(mock(OutboundQueuePolicy.class));
     q.put(mock(Packet.class));
-    assertTrue(q.isAlmostFull());
+    assertTrue(q.isSnapshotFull());
   }
 
   @Test
@@ -137,7 +137,7 @@ class OutboundQueueImplTest {
     queue.put(mock(Packet.class));
     queue.put(mock(Packet.class));
     queue.clear();
-    assertTrue(queue.isAlmostEmpty());
+    assertTrue(queue.isSnapshotEmpty());
     assertEquals(0, queue.getSnapshotSize());
   }
 

@@ -80,7 +80,7 @@ public final class AutoRemoveRoomTask extends AbstractSystemTask {
             Iterator<Room> iterator = roomManager.getSnapshotRoomsList().listIterator();
             while (iterator.hasNext()) {
               Room room = iterator.next();
-              if (room.getRoomRemoveMode() == RoomRemoveMode.WHEN_EMPTY && room.isAlmostEmpty()
+              if (room.getRoomRemoveMode() == RoomRemoveMode.WHEN_EMPTY && room.isSnapshotEmpty()
                       && room.getState() != null && room.getState().isIdle()) {
                 if (isDebugEnabled()) {
                   debug("AUTO REMOVE ROOM", "Room ", room.getId(),

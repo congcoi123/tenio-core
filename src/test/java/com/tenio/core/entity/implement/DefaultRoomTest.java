@@ -187,11 +187,11 @@ class DefaultRoomTest {
     room.setMaxSpectators(1);
     room.setCapacity(2, 1);
     org.mockito.Mockito.when(pm.getSnapshotPlayerCount()).thenReturn(0);
-    assertFalse(room.isAlmostFull());
+    assertFalse(room.isSnapshotFull());
     org.mockito.Mockito.when(pm.getSnapshotPlayerCount()).thenReturn(3);
-    assertTrue(room.isAlmostFull());
+    assertTrue(room.isSnapshotFull());
     org.mockito.Mockito.when(pm.getSnapshotPlayerCount()).thenReturn(0);
-    assertTrue(room.isAlmostEmpty());
+    assertTrue(room.isSnapshotEmpty());
   }
 
   @Test

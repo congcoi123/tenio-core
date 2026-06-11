@@ -76,7 +76,7 @@ public final class OutboundQueueImpl implements OutboundQueue {
   }
 
   @Override
-  public boolean isAlmostEmpty() {
+  public boolean isSnapshotEmpty() {
     return snapshotSize == 0;
   }
 
@@ -84,12 +84,12 @@ public final class OutboundQueueImpl implements OutboundQueue {
   public boolean isEmpty() {
     synchronized (queue) {
       snapshotSize = queue.size();
-      return isAlmostEmpty();
+      return isSnapshotEmpty();
     }
   }
 
   @Override
-  public boolean isAlmostFull() {
+  public boolean isSnapshotFull() {
     return snapshotSize >= maxSize;
   }
 
@@ -97,7 +97,7 @@ public final class OutboundQueueImpl implements OutboundQueue {
   public boolean isFull() {
     synchronized (queue) {
       snapshotSize = queue.size();
-      return isAlmostFull();
+      return isSnapshotFull();
     }
   }
 

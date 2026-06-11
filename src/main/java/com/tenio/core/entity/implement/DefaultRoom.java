@@ -373,12 +373,12 @@ public class DefaultRoom implements Room {
   }
 
   @Override
-  public boolean isAlmostEmpty() {
+  public boolean isSnapshotEmpty() {
     return playerManager.getSnapshotPlayerCount() == 0;
   }
 
   @Override
-  public boolean isAlmostFull() {
+  public boolean isSnapshotFull() {
     return playerManager.getSnapshotPlayerCount() == getCapacity();
   }
 
