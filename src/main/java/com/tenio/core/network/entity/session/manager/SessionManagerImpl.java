@@ -104,7 +104,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
       sessionByIds.put(session.getId(), session);
       sessionBySockets.put(session.fetchSocketChannel(), session);
       snapshotSessionsList = sessionByIds.values().stream().toList();
-      snapshotSessionCount = snapshotSessionsList.size();
+      snapshotSessionCount = sessionByIds.size();
       session.activate();
     }
     return session;
@@ -156,7 +156,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
       sessionByIds.put(session.getId(), session);
       sessionByWebSockets.put(webSocketChannel, session);
       snapshotSessionsList = sessionByIds.values().stream().toList();
-      snapshotSessionCount = snapshotSessionsList.size();
+      snapshotSessionCount = sessionByIds.size();
       session.activate();
     }
     return session;
@@ -217,7 +217,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
       }
       sessionByIds.remove(session.getId());
       snapshotSessionsList = sessionByIds.values().stream().toList();
-      snapshotSessionCount = snapshotSessionsList.size();
+      snapshotSessionCount = sessionByIds.size();
     }
   }
 
@@ -242,7 +242,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   @Override
   public int getSessionCount() {
     synchronized (this) {
-      snapshotSessionCount = snapshotSessionsList.size();
+      snapshotSessionCount = sessionByIds.size();
       return getSnapshotSessionCount();
     }
   }

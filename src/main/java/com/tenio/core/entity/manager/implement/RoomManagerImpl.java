@@ -79,7 +79,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     synchronized (this) {
       rooms.put(room.getId(), room);
       snapshotRoomsList = rooms.values().stream().toList();
-      snapshotRoomCount = snapshotRoomsList.size();
+      snapshotRoomCount = rooms.size();
     }
   }
 
@@ -183,7 +183,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
     synchronized (this) {
       rooms.remove(roomId);
       snapshotRoomsList = rooms.values().stream().toList();
-      snapshotRoomCount = snapshotRoomsList.size();
+      snapshotRoomCount = rooms.size();
     }
   }
 

@@ -236,7 +236,6 @@ public interface SessionManager extends Manager {
    */
   int getSessionCount();
 
-
   /**
    * Sets the maximum time in seconds which allows the session to get in IDLE state (Do not
    * perform any action, such as reading or writing data).

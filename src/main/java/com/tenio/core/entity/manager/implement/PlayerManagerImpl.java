@@ -81,7 +81,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     synchronized (this) {
       players.put(player.getIdentity(), player);
       snapshotPlayersList = players.values().stream().toList();
-      snapshotPlayerCount = snapshotPlayersList.size();
+      snapshotPlayerCount = players.size();
     }
   }
 
@@ -137,7 +137,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     synchronized (this) {
       players.remove(playerIdentity);
       snapshotPlayersList = players.values().stream().toList();
-      snapshotPlayerCount = snapshotPlayersList.size();
+      snapshotPlayerCount = players.size();
     }
   }
 
