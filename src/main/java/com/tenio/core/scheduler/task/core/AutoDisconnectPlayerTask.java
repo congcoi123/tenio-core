@@ -77,10 +77,10 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
         () -> {
           if (isDebugEnabled()) {
             debug("AUTO DISCONNECT PLAYER",
-                "Checking IDLE players in ", playerManager.getPlayerCount(), " entities");
+                "Checking IDLE players in ", playerManager.getSnapshotPlayerCount(), " entities");
           }
           executorService.execute(() -> {
-            Iterator<Player> iterator = playerManager.getReadonlyPlayersList().listIterator();
+            Iterator<Player> iterator = playerManager.getSnapshotPlayersList().listIterator();
             while (iterator.hasNext()) {
               Player player = iterator.next();
               if (player.isNeverDeported()) {

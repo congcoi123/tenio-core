@@ -344,31 +344,29 @@ class ServerApiTest {
 
     var playerName = "test";
     var player = Mockito.mock(Player.class);
-    Iterator<Player> playerIterator = Mockito.mock(Iterator.class);
     List<Player> playerList = Mockito.mock(List.class);
     var room = Mockito.mock(Room.class);
-    var roomIterator = Mockito.mock(Iterator.class);
     var roomList = Mockito.mock(List.class);
 
     // getPlayerByIdentity(String playerName)
     Mockito.when(playerManager.getPlayerByIdentity(playerName)).thenReturn(player);
     Assertions.assertEquals(Optional.ofNullable(player), serverApi.getPlayerByIdentity(playerName));
 
-    // getPlayerCount()
-    Mockito.when(playerManager.getPlayerCount()).thenReturn(10);
-    Assertions.assertEquals(10, serverApi.getPlayerCount());
+    // getSnapshotPlayerCount()
+    Mockito.when(playerManager.getSnapshotPlayerCount()).thenReturn(10);
+    Assertions.assertEquals(10, serverApi.getSnapshotPlayerCount());
 
-    // getReadonlyPlayersList()
-    Mockito.when(playerManager.getReadonlyPlayersList()).thenReturn(playerList);
-    Assertions.assertEquals(playerList, serverApi.getReadonlyPlayersList());
+    // getSnapshotPlayersList()
+    Mockito.when(playerManager.getSnapshotPlayersList()).thenReturn(playerList);
+    Assertions.assertEquals(playerList, serverApi.getSnapshotPlayersList());
 
     // getRoomById(long roomId)
     Mockito.when(roomManager.getRoomById(10L)).thenReturn(room);
     Assertions.assertEquals(Optional.ofNullable(room), serverApi.getRoomById(10L));
 
-    // getReadonlyRoomsList()
-    Mockito.when(roomManager.getReadonlyRoomsList()).thenReturn(roomList);
-    Assertions.assertEquals(roomList, serverApi.getReadonlyRoomsList());
+    // getSnapshotRoomsList()
+    Mockito.when(roomManager.getSnapshotRoomsList()).thenReturn(roomList);
+    Assertions.assertEquals(roomList, serverApi.getSnapshotRoomsList());
 
     // getUdpPort()
     Mockito.when(datagramChannelManager.getUdpPort()).thenReturn(8048);
@@ -653,11 +651,11 @@ class ServerApiTest {
   }
 
   @Test
-  @DisplayName("getRoomCount delegates to roomManager")
-  void getRoomCountDelegatesToRoomManager() {
+  @DisplayName("getSnapshotRoomCount delegates to roomManager")
+  void getRoomCountDelegatesToSnapshotRoomManager() {
     Mockito.when(server.getRoomManager()).thenReturn(roomManager);
-    Mockito.when(roomManager.getRoomCount()).thenReturn(7);
-    Assertions.assertEquals(7, serverApi.getRoomCount());
+    Mockito.when(roomManager.getSnapshotRoomCount()).thenReturn(7);
+    Assertions.assertEquals(7, serverApi.getSnapshotRoomCount());
   }
 
   @Test

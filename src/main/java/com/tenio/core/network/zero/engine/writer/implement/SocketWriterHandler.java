@@ -186,7 +186,7 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
 
       // if the outbound queue still contains more packets, session is activated, and its channel
       // is alive, then put the session back to the tickets queue
-      if (session.isActivated() && channel.isOpen() && channel.isConnected() && !outboundQueue.isEmpty()) {
+      if (session.isActivated() && channel.isOpen() && channel.isConnected() && !outboundQueue.isAlmostEmpty()) {
         getSessionTicketsQueue(session.getId()).add(session);
       }
     }

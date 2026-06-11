@@ -175,8 +175,8 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
-  public int getPlayerCount() {
-    return getPlayerManager().getPlayerCount();
+  public int getSnapshotPlayerCount() {
+    return getPlayerManager().getSnapshotPlayerCount();
   }
 
   @Override
@@ -185,8 +185,8 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
-  public List<Player> getReadonlyPlayersList() {
-    return getPlayerManager().getReadonlyPlayersList();
+  public List<Player> getSnapshotPlayersList() {
+    return getPlayerManager().getSnapshotPlayersList();
   }
 
   @Override
@@ -200,13 +200,13 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
-  public List<Room> getReadonlyRoomsList() {
-    return getRoomManager().getReadonlyRoomsList();
+  public List<Room> getSnapshotRoomsList() {
+    return getRoomManager().getSnapshotRoomsList();
   }
 
   @Override
-  public int getRoomCount() {
-    return getRoomManager().getRoomCount();
+  public int getSnapshotRoomCount() {
+    return getRoomManager().getSnapshotRoomCount();
   }
 
   @Override

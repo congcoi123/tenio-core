@@ -157,13 +157,13 @@ class ServerApiImplTest {
     verify(roomManager).computeRooms(consumer);
   }
 
-  // --- getRoomCount ---
+  // --- getSnapshotRoomCount ---
 
   @Test
-  @DisplayName("getRoomCount delegates to roomManager")
-  void testGetRoomCount() {
-    when(roomManager.getRoomCount()).thenReturn(7);
-    assertEquals(7, api.getRoomCount());
+  @DisplayName("getSnapshotRoomCount delegates to roomManager")
+  void testGetSnapshotRoomCount() {
+    when(roomManager.getSnapshotRoomCount()).thenReturn(7);
+    assertEquals(7, api.getSnapshotRoomCount());
   }
 
   // --- getPlayerByIdentity when not found ---
@@ -295,14 +295,14 @@ class ServerApiImplTest {
         PlayerLeaveRoomMode.LOG_OUT, PlayerLeftRoomResult.SUCCESS);
   }
 
-  // --- getReadonlyRoomsList ---
+  // --- getSnapshotRoomsList ---
 
   @Test
-  @DisplayName("getReadonlyRoomsList delegates to roomManager")
-  void testGetReadonlyRoomsList() {
+  @DisplayName("getSnapshotRoomsList delegates to roomManager")
+  void testGetSnapshotRoomsList() {
     List<Room> rooms = Collections.emptyList();
-    when(roomManager.getReadonlyRoomsList()).thenReturn(rooms);
-    assertEquals(rooms, api.getReadonlyRoomsList());
+    when(roomManager.getSnapshotRoomsList()).thenReturn(rooms);
+    assertEquals(rooms, api.getSnapshotRoomsList());
   }
 
   // --- logout ---
@@ -545,18 +545,18 @@ class ServerApiImplTest {
   // --- additional simple delegates ---
 
   @Test
-  @DisplayName("getPlayerCount delegates to playerManager")
-  void testGetPlayerCount() {
-    when(playerManager.getPlayerCount()).thenReturn(5);
-    assertEquals(5, api.getPlayerCount());
+  @DisplayName("getSnapshotPlayerCount delegates to playerManager")
+  void testGetSnapshotPlayerCount() {
+    when(playerManager.getSnapshotPlayerCount()).thenReturn(5);
+    assertEquals(5, api.getSnapshotPlayerCount());
   }
 
   @Test
-  @DisplayName("getReadonlyPlayersList delegates to playerManager")
-  void testGetReadonlyPlayersList() {
+  @DisplayName("getSnapshotPlayersList delegates to playerManager")
+  void testGetSnapshotPlayersList() {
     List<Player> list = Collections.emptyList();
-    when(playerManager.getReadonlyPlayersList()).thenReturn(list);
-    assertEquals(list, api.getReadonlyPlayersList());
+    when(playerManager.getSnapshotPlayersList()).thenReturn(list);
+    assertEquals(list, api.getSnapshotPlayersList());
   }
 
   @Test

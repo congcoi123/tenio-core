@@ -119,7 +119,7 @@ public final class SocketReaderHandler extends SystemLogger {
   public void registerClientSocketChannel(SocketChannel socketChannel,
                                           Consumer<SelectionKey> onSuccess,
                                           Runnable onFailed) {
-    pendingClientSocketChannels.offer(new Triple<>(socketChannel, onSuccess, onFailed));
+    pendingClientSocketChannels.add(new Triple<>(socketChannel, onSuccess, onFailed));
     readableSelector.wakeup(); // this helps unblock the instruction select() in the method running()
   }
 

@@ -191,9 +191,8 @@ public class SessionImpl extends AbstractLogger implements Session {
       }
       throw exception;
     }
-    if (inboundQueue.offer(message)) {
-      inboundQueueCount.incrementAndGet();
-    }
+    inboundQueue.add(message);
+    inboundQueueCount.incrementAndGet();
   }
 
   @Override
@@ -226,7 +225,7 @@ public class SessionImpl extends AbstractLogger implements Session {
     if (slowConsumingOutboundQueueWarningThreshold <= 0) {
       return 0;
     }
-    int remaining = outboundQueue.getSize();
+    int remaining = outboundQueue.getSnapshotSize();
     return remaining >= slowConsumingOutboundQueueWarningThreshold ? remaining : 0;
   }
 
@@ -622,7 +621,7 @@ public class SessionImpl extends AbstractLogger implements Session {
         ", hasUdp=" + hasUdp +
         ", associatedState=" + associatedState +
         ", remainingInboundQueue=" + inboundQueueCount.intValue() +
-        ", remainingOutboundQueue=" + outboundQueue.getSize() +
+        ", remainingOutboundQueue=" + outboundQueue.getSnapshotSize() +
         '}';
   }
 }

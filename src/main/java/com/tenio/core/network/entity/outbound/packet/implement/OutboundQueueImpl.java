@@ -39,7 +39,7 @@ import java.util.Queue;
 public final class OutboundQueueImpl implements OutboundQueue {
 
   private final Queue<Packet> queue;
-  private volatile int size;
+  private volatile int snapshotSize;
   private OutboundQueuePolicy outboundQueuePolicy;
   private int maxSize;
 
@@ -62,7 +62,7 @@ public final class OutboundQueueImpl implements OutboundQueue {
   @Override
   public Packet peek() {
     synchronized (queue) {
-      if (!isEmpty()) {
+      if (!isAlmostEmpty()) {
         return queue.peek();
       }
     }
@@ -72,9 +72,9 @@ public final class OutboundQueueImpl implements OutboundQueue {
   @Override
   public Packet take() {
     synchronized (queue) {
-      if (!isEmpty()) {
+      if (!isAlmostEmpty()) {
         Packet packet = queue.poll();
-        size = queue.size();
+        snapshotSize = queue.size();
         return packet;
       }
     }
@@ -82,18 +82,42 @@ public final class OutboundQueueImpl implements OutboundQueue {
   }
 
   @Override
+  public boolean isAlmostEmpty() {
+    return snapshotSize == 0;
+  }
+
+  @Override
   public boolean isEmpty() {
-    return size == 0;
+    synchronized (queue) {
+      snapshotSize = queue.size();
+      return isAlmostEmpty();
+    }
+  }
+
+  @Override
+  public boolean isAlmostFull() {
+    return snapshotSize >= maxSize;
   }
 
   @Override
   public boolean isFull() {
-    return size >= maxSize;
+    synchronized (queue) {
+      snapshotSize = queue.size();
+      return isAlmostFull();
+    }
+  }
+
+  @Override
+  public int getSnapshotSize() {
+    return snapshotSize;
   }
 
   @Override
   public int getSize() {
-    return size;
+    synchronized (queue) {
+      snapshotSize = queue.size();
+      return getSnapshotSize();
+    }
   }
 
   @Override
@@ -111,15 +135,15 @@ public final class OutboundQueueImpl implements OutboundQueue {
 
   @Override
   public float getPercentageUsed() {
-    return maxSize == 0 ? 0.0f : (((float) size * 100) / maxSize);
+    return maxSize == 0 ? 0.0f : (((float) snapshotSize * 100) / maxSize);
   }
 
   @Override
   public void put(Packet packet) {
     outboundQueuePolicy.applyPolicy(this, packet);
     synchronized (queue) {
-      queue.offer(packet);
-      size = queue.size();
+      queue.add(packet);
+      snapshotSize = queue.size();
     }
   }
 
@@ -127,7 +151,7 @@ public final class OutboundQueueImpl implements OutboundQueue {
   public void clear() {
     synchronized (queue) {
       queue.clear();
-      size = 0;
+      snapshotSize = 0;
     }
   }
 
@@ -137,7 +161,7 @@ public final class OutboundQueueImpl implements OutboundQueue {
         "queue=" + queue +
         ", outboundQueuePolicy=" + outboundQueuePolicy +
         ", maxSize=" + maxSize +
-        ", size=" + size +
+        ", snapshotSize=" + snapshotSize +
         '}';
   }
 }

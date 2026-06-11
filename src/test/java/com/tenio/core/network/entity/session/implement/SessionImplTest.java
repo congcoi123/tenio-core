@@ -483,7 +483,7 @@ class SessionImplTest {
   void testGetRemainingSlowConsumingOutboundQueueAboveThreshold() {
     Session session = SessionImpl.newInstance();
     OutboundQueue queue = mock(OutboundQueue.class);
-    when(queue.getSize()).thenReturn(200);
+    when(queue.getSnapshotSize()).thenReturn(200);
     session.configureOutboundQueue(queue);
     session.configureSlowConsumingOutboundQueueWarningThreshold(100);
     assertEquals(200, session.getRemainingSlowConsumingOutboundQueue());
@@ -494,7 +494,7 @@ class SessionImplTest {
   void testGetRemainingSlowConsumingOutboundQueueBelowThreshold() {
     Session session = SessionImpl.newInstance();
     OutboundQueue queue = mock(OutboundQueue.class);
-    when(queue.getSize()).thenReturn(50);
+    when(queue.getSnapshotSize()).thenReturn(50);
     session.configureOutboundQueue(queue);
     session.configureSlowConsumingOutboundQueueWarningThreshold(100);
     assertEquals(0, session.getRemainingSlowConsumingOutboundQueue());
@@ -591,7 +591,7 @@ class SessionImplTest {
   void testToStringWithOutboundQueue() {
     Session session = SessionImpl.newInstance();
     OutboundQueue queue = mock(OutboundQueue.class);
-    when(queue.getSize()).thenReturn(0);
+    when(queue.getSnapshotSize()).thenReturn(0);
     session.configureOutboundQueue(queue);
     assertNotNull(session.toString());
   }
@@ -755,7 +755,7 @@ class SessionImplTest {
     session.configureSocketChannel(serverSide, mock(SelectionKey.class));
     session.setDatagramRemoteAddress(new InetSocketAddress("127.0.0.1", 9999));
     OutboundQueue queue = mock(OutboundQueue.class);
-    when(queue.getSize()).thenReturn(0);
+    when(queue.getSnapshotSize()).thenReturn(0);
     session.configureOutboundQueue(queue);
 
     String str = session.toString();
@@ -851,7 +851,7 @@ class SessionImplTest {
   void testEnqueueInboundLogsSlowConsumingWarning() {
     Session session = SessionImpl.newInstance();
     OutboundQueue outboundQueue = mock(OutboundQueue.class);
-    when(outboundQueue.getSize()).thenReturn(0);
+    when(outboundQueue.getSnapshotSize()).thenReturn(0);
     session.configureOutboundQueue(outboundQueue);
     session.configureSlowConsumingInboundQueueWarningThreshold(1);
     session.configureMaxInboundQueueSize(0);

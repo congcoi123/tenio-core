@@ -138,3 +138,4 @@
 - Improved the performance by offloading tasks from IO bound workers
 - Used EnumMap in EventHandler to increase lookup speed
 - Supported multi UDP channels
+- Renamed and added new APIs
