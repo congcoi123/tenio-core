@@ -352,7 +352,7 @@ public class DefaultRoom implements Room {
     classifyPlayersByRoles();
   }
 
-  private synchronized void classifyPlayersByRoles() {
+  private void classifyPlayersByRoles() {
     snapshotParticipants = getSnapshotPlayersList().stream()
         .filter(player -> player.getRoleInRoom() == PlayerRoleInRoom.PARTICIPANT)
         .toList();

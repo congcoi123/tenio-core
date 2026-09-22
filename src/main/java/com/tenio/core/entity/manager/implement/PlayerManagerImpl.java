@@ -67,7 +67,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public synchronized void addPlayer(Player player) {
+  public void addPlayer(Player player) {
     if (player == null) {
       throw new NullPointerException("Unable to process an unavailable player");
     }
@@ -78,15 +78,16 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
     configureInitialPlayer(player);
 
-    players.put(player.getIdentity(), player);
-    snapshotPlayersList = players.values().stream().toList();
-    snapshotPlayerCount = players.size();
+    synchronized (this) {
+      players.put(player.getIdentity(), player);
+      snapshotPlayersList = players.values().stream().toList();
+      snapshotPlayerCount = players.size();
+    }
   }
 
   @Override
   public Player createPlayer(String playerName) {
     Player player = DefaultPlayer.newInstance(playerName);
-    configureInitialPlayer(player);
     addPlayer(player);
     return player;
   }
@@ -98,7 +99,6 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     }
 
     Player player = DefaultPlayer.newInstance(playerName, session);
-    configureInitialPlayer(player);
     addPlayer(player);
     return player;
   }
@@ -127,14 +127,16 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public synchronized void removePlayerByIdentity(String playerIdentity) {
+  public void removePlayerByIdentity(String playerIdentity) {
     if (!containsPlayerIdentity(playerIdentity)) {
       throw new RemovedNonExistentPlayerException(playerIdentity);
     }
 
-    players.remove(playerIdentity);
-    snapshotPlayersList = players.values().stream().toList();
-    snapshotPlayerCount = players.size();
+    synchronized (this) {
+      players.remove(playerIdentity);
+      snapshotPlayersList = players.values().stream().toList();
+      snapshotPlayerCount = players.size();
+    }
   }
 
   @Override

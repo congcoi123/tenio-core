@@ -63,14 +63,4 @@ public final class PacketEncryptorException extends RuntimeException {
   public PacketEncryptorException(String message) {
     super(message);
   }
-
-  /**
-   * Creates an exception while preserving the encryption failure cause.
-   *
-   * @param message a warning message
-   * @param cause the underlying failure
-   */
-  public PacketEncryptorException(String message, Throwable cause) {
-    super(message, cause);
-  }
 }

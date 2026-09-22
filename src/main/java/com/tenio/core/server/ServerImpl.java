@@ -85,6 +85,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   private static final class InstanceHolder {
     private static final Server INSTANCE = new ServerImpl();
   }
+
   private final EventManager eventManager;
   private final RoomManager roomManager;
   private final PlayerManager playerManager;
