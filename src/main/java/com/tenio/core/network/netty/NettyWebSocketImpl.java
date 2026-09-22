@@ -29,6 +29,8 @@ import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.ServiceRuntimeException;
 import com.tenio.core.manager.AbstractManager;
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.session.manager.SessionManager;
@@ -37,8 +39,6 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.ssl.WebSocketSslContext;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
-import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -139,16 +139,20 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
   }
 
   private void attemptToShutdown() {
-    for (var socket : serverWebSockets) {
-      close(socket);
+    if (serverWebSockets != null) {
+      for (var socket : serverWebSockets) {
+        close(socket);
+      }
+      serverWebSockets.clear();
     }
-    serverWebSockets.clear();
 
     if (webSocketAcceptors != null) {
-      webSocketAcceptors.shutdownGracefully();
+      webSocketAcceptors.shutdownGracefully(0, 10, java.util.concurrent.TimeUnit.SECONDS)
+          .awaitUninterruptibly(10, java.util.concurrent.TimeUnit.SECONDS);
     }
     if (webSocketWorkers != null) {
-      webSocketWorkers.shutdownGracefully();
+      webSocketWorkers.shutdownGracefully(0, 10, java.util.concurrent.TimeUnit.SECONDS)
+          .awaitUninterruptibly(10, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     if (isInfoEnabled()) {
@@ -312,29 +316,41 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
 
   @Override
   public void write(Packet packet) {
+    int originalSize = packet.getOriginalSize();
+    byte[] encodedData = null;
     var iterator = packet.getRecipients().iterator();
     while (iterator.hasNext()) {
       var session = iterator.next();
-      if (packet.isMarkedAsLast()) {
-        try {
-          if (session.isActivated()) {
-            session.close(ConnectionDisconnectMode.CLIENT_REQUEST,
-                PlayerDisconnectMode.CLIENT_REQUEST);
-          }
-        } catch (IOException exception) {
-          if (isErrorEnabled()) {
-            error(exception, session.toString());
-          }
-        }
-        return;
-      }
       if (session.isActivated()) {
-        packet = binaryPacketEncoder.encode(packet);
-        session.fetchWebSocketChannel()
-            .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(packet.getData())));
-        session.addWrittenBytes(packet.getOriginalSize());
-        networkWriterStatistic.updateWrittenBytes(packet.getOriginalSize());
+        Channel channel = session.fetchWebSocketChannel();
+        if (!channel.isWritable()) {
+          session.addDroppedPackets(1);
+          networkWriterStatistic.updateWrittenDroppedPacketsByFull(1);
+          continue;
+        }
+        if (encodedData == null) {
+          Packet encodedPacket = binaryPacketEncoder.encode(packet.deepCopy());
+          encodedData = encodedPacket.getData();
+        }
+        ChannelFuture writeFuture = channel
+            .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(encodedData)));
+        session.addWrittenBytes(originalSize);
+        networkWriterStatistic.updateWrittenBytes(originalSize);
         networkWriterStatistic.updateWrittenPackets(1);
+        if (packet.isMarkedAsLast()) {
+          writeFuture.addListener(future -> {
+            try {
+              if (session.isActivated()) {
+                session.close(ConnectionDisconnectMode.CLIENT_REQUEST,
+                    PlayerDisconnectMode.CLIENT_REQUEST);
+              }
+            } catch (IOException exception) {
+              if (isErrorEnabled()) {
+                error(exception, session.toString());
+              }
+            }
+          });
+        }
       } else {
         if (isDebugEnabled()) {
           debug("WRITE WEBSOCKET CHANNEL", "Session is inactivated: ", session.toString());

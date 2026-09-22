@@ -77,17 +77,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
   private void initializeWorkers() {
     executorService = Executors.newVirtualThreadPerTaskExecutor();
 
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      if (executorService != null && !executorService.isShutdown()) {
-        try {
-          halting();
-        } catch (Exception exception) {
-          if (isErrorEnabled()) {
-            error(exception);
-          }
-        }
-      }
-    }));
+
   }
 
   private void halting() throws ServiceRuntimeException {
@@ -102,13 +92,14 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
     executorService.shutdown();
 
     try {
-      if (executorService.awaitTermination(10, TimeUnit.SECONDS)) {
+      if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
         executorService.shutdownNow();
-        destroyEngine();
       }
+      destroyEngine();
     } catch (InterruptedException exception) {
       executorService.shutdownNow();
       destroyEngine();
+      Thread.currentThread().interrupt();
     }
   }
 
@@ -223,6 +214,15 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
 
   public boolean isActivated() {
     return activated;
+  }
+
+  /**
+   * Determines whether this engine is stopping.
+   *
+   * @return {@code true} when shutdown has started
+   */
+  protected boolean isStopping() {
+    return stopping.get();
   }
 
   /**

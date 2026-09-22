@@ -43,6 +43,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * The implementation for session manager.
@@ -55,6 +56,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private final Map<SocketChannel, Session> sessionBySockets;
   private final Map<Channel, Session> sessionByWebSockets;
   private final Map<Integer, Session> sessionByDatagrams;
+  private final ReentrantReadWriteLock lock;
   private volatile List<Session> snapshotSessionsList;
   private volatile int snapshotSessionCount;
   private OutboundQueuePolicy outboundQueuePolicy;
@@ -71,6 +73,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     sessionBySockets = new HashMap<>();
     sessionByWebSockets = new HashMap<>();
     sessionByDatagrams = new HashMap<>();
+    lock = new ReentrantReadWriteLock();
     snapshotSessionsList = new ArrayList<>();
     inboundQueueSize = DEFAULT_MAX_INBOUND_QUEUE_SIZE;
     outboundQueueSize = DEFAULT_MAX_OUTBOUND_QUEUE_SIZE;
@@ -90,9 +93,14 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public void computeSessions(Consumer<Iterator<Session>> onComputed) {
-    synchronized (this) {
-      onComputed.accept(sessionByIds.values().iterator());
+    List<Session> sessions;
+    lock.readLock().lock();
+    try {
+      sessions = new ArrayList<>(sessionByIds.values());
+    } finally {
+      lock.readLock().unlock();
     }
+    onComputed.accept(sessions.iterator());
   }
 
   @Override
@@ -100,12 +108,14 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     Session session = SessionImpl.newInstance();
     session.configureSocketChannel(socketChannel, selectionKey);
     configureSession(session);
-    synchronized (this) {
+    lock.writeLock().lock();
+    try {
       sessionByIds.put(session.getId(), session);
       sessionBySockets.put(session.fetchSocketChannel(), session);
-      snapshotSessionsList = sessionByIds.values().stream().toList();
-      snapshotSessionCount = sessionByIds.size();
+      updateSnapshot();
       session.activate();
+    } finally {
+      lock.writeLock().unlock();
     }
     return session;
   }
@@ -118,8 +128,11 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public Session getSessionBySocket(SocketChannel socketChannel) {
-    synchronized (sessionBySockets) {
+    lock.readLock().lock();
+    try {
       return sessionBySockets.get(socketChannel);
+    } finally {
+      lock.readLock().unlock();
     }
   }
 
@@ -129,16 +142,22 @@ public final class SessionManagerImpl extends AbstractManager implements Session
       throw new IllegalArgumentException(
           String.format("Unable to add UDP channel into a non-TCP session: %s", session));
     }
-    synchronized (sessionByDatagrams) {
+    lock.writeLock().lock();
+    try {
       session.configureDatagramChannel(datagramChannel, udpConvey);
       sessionByDatagrams.put(udpConvey, session);
+    } finally {
+      lock.writeLock().unlock();
     }
   }
 
   @Override
   public Session getSessionByDatagram(int udpConvey) {
-    synchronized (sessionByDatagrams) {
+    lock.readLock().lock();
+    try {
       return sessionByDatagrams.get(udpConvey);
+    } finally {
+      lock.readLock().unlock();
     }
   }
 
@@ -152,12 +171,14 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     Session session = SessionImpl.newInstance();
     session.configureWebSocketChannel(webSocketChannel);
     configureSession(session);
-    synchronized (this) {
+    lock.writeLock().lock();
+    try {
       sessionByIds.put(session.getId(), session);
       sessionByWebSockets.put(webSocketChannel, session);
-      snapshotSessionsList = sessionByIds.values().stream().toList();
-      snapshotSessionCount = sessionByIds.size();
+      updateSnapshot();
       session.activate();
+    } finally {
+      lock.writeLock().unlock();
     }
     return session;
   }
@@ -170,8 +191,11 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public Session getSessionByWebSocket(Channel webSocketChannel) {
-    synchronized (sessionByWebSockets) {
+    lock.readLock().lock();
+    try {
       return sessionByWebSockets.get(webSocketChannel);
+    } finally {
+      lock.readLock().unlock();
     }
   }
 
@@ -202,7 +226,11 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public void removeSession(Session session) {
-    synchronized (this) {
+    if (session == null) {
+      return;
+    }
+    lock.writeLock().lock();
+    try {
       switch (session.getTransportType()) {
         case TCP -> {
           if (session.containsUdp()) {
@@ -216,8 +244,9 @@ public final class SessionManagerImpl extends AbstractManager implements Session
         }
       }
       sessionByIds.remove(session.getId());
-      snapshotSessionsList = sessionByIds.values().stream().toList();
-      snapshotSessionCount = sessionByIds.size();
+      updateSnapshot();
+    } finally {
+      lock.writeLock().unlock();
     }
   }
 
@@ -228,9 +257,11 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public List<Session> getSessionsList() {
-    synchronized (this) {
-      snapshotSessionsList = sessionByIds.values().stream().toList();
-      return getSnapshotSessionsList();
+    lock.readLock().lock();
+    try {
+      return new ArrayList<>(sessionByIds.values());
+    } finally {
+      lock.readLock().unlock();
     }
   }
 
@@ -241,9 +272,11 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   @Override
   public int getSessionCount() {
-    synchronized (this) {
-      snapshotSessionCount = sessionByIds.size();
-      return getSnapshotSessionCount();
+    lock.readLock().lock();
+    try {
+      return sessionByIds.size();
+    } finally {
+      lock.readLock().unlock();
     }
   }
 
@@ -255,6 +288,11 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   @Override
   public void emitEvent(ServerEvent event, Object... params) {
     eventManager.emit(event, params);
+  }
+
+  private void updateSnapshot() {
+    snapshotSessionsList = List.copyOf(sessionByIds.values());
+    snapshotSessionCount = snapshotSessionsList.size();
   }
 
   private OutboundQueue configureNewOutboundQueue() {

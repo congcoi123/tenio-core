@@ -71,20 +71,23 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   }
 
   @Override
-  public void addRoom(Room room) {
+  public synchronized void addRoom(Room room) {
     if (containsRoomId(room.getId())) {
       throw new AddedDuplicatedRoomException(room);
     }
 
-    synchronized (this) {
-      rooms.put(room.getId(), room);
-      snapshotRoomsList = rooms.values().stream().toList();
-      snapshotRoomCount = rooms.size();
+    if (rooms.size() >= maxRooms) {
+      throw new CreatedRoomException(
+          String.format("Unable to create new room, reached limited the maximum room number: %d",
+              rooms.size()), RoomCreatedResult.REACHED_MAX_ROOMS);
     }
+    rooms.put(room.getId(), room);
+    snapshotRoomsList = rooms.values().stream().toList();
+    snapshotRoomCount = rooms.size();
   }
 
   @Override
-  public void addRoomWithOwner(Room room, InitialRoomSetting roomSetting, Player player)
+  public synchronized void addRoomWithOwner(Room room, InitialRoomSetting roomSetting, Player player)
       throws AddedDuplicatedRoomException {
     int roomCount = getRoomCount();
     if (roomCount >= maxRooms) {
@@ -110,7 +113,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   }
 
   @Override
-  public Room createRoomWithOwner(InitialRoomSetting roomSetting, Player player) {
+  public synchronized Room createRoomWithOwner(InitialRoomSetting roomSetting, Player player) {
     int roomCount = getRoomCount();
     if (roomCount >= maxRooms) {
       throw new CreatedRoomException(

@@ -67,7 +67,7 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public void addPlayer(Player player) {
+  public synchronized void addPlayer(Player player) {
     if (player == null) {
       throw new NullPointerException("Unable to process an unavailable player");
     }
@@ -78,11 +78,9 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
 
     configureInitialPlayer(player);
 
-    synchronized (this) {
-      players.put(player.getIdentity(), player);
-      snapshotPlayersList = players.values().stream().toList();
-      snapshotPlayerCount = players.size();
-    }
+    players.put(player.getIdentity(), player);
+    snapshotPlayersList = players.values().stream().toList();
+    snapshotPlayerCount = players.size();
   }
 
   @Override
@@ -129,16 +127,14 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public void removePlayerByIdentity(String playerIdentity) {
+  public synchronized void removePlayerByIdentity(String playerIdentity) {
     if (!containsPlayerIdentity(playerIdentity)) {
       throw new RemovedNonExistentPlayerException(playerIdentity);
     }
 
-    synchronized (this) {
-      players.remove(playerIdentity);
-      snapshotPlayersList = players.values().stream().toList();
-      snapshotPlayerCount = players.size();
-    }
+    players.remove(playerIdentity);
+    snapshotPlayersList = players.values().stream().toList();
+    snapshotPlayerCount = players.size();
   }
 
   @Override

@@ -134,8 +134,9 @@ public final class OutboundQueueImpl implements OutboundQueue {
 
   @Override
   public void put(Packet packet) {
-    outboundQueuePolicy.applyPolicy(this, packet);
     synchronized (queue) {
+      snapshotSize = queue.size();
+      outboundQueuePolicy.applyPolicy(this, packet);
       queue.add(packet);
       snapshotSize = queue.size();
     }

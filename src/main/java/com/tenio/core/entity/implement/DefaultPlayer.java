@@ -283,7 +283,9 @@ public class DefaultPlayer implements Player {
   @Override
   public void setCurrentRoom(Room room) {
     currentRoom = room;
-    setPlayerSlotInCurrentRoom(room == null ? Room.NIL_SLOT : Room.DEFAULT_SLOT);
+    if (room == null) {
+      setPlayerSlotInCurrentRoom(Room.NIL_SLOT);
+    }
     setLastJoinedRoomTime();
   }
 

@@ -130,7 +130,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine implements ZeroRead
                     udpChannelConfiguration.cacheSize());
             datagramReaderHandlers.add(datagramReaderHandler);
 
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted() && !isStopping()) {
               if (isActivated()) {
                 try {
                   datagramReaderHandler.running();
@@ -156,7 +156,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine implements ZeroRead
               getSessionManager(), getNetworkReaderStatistic(), getSocketIoHandler());
       socketReaderHandlers.add(socketReaderHandler);
 
-      while (!Thread.currentThread().isInterrupted()) {
+      while (!Thread.currentThread().isInterrupted() && !isStopping()) {
         if (isActivated()) {
           try {
             socketReaderHandler.running();

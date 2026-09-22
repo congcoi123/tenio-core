@@ -68,6 +68,7 @@ import com.tenio.core.server.core.ZeroProcessorImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
 import com.tenio.core.utility.CommandUtility;
 import java.io.IOError;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
@@ -81,7 +82,9 @@ import org.jline.terminal.TerminalBuilder;
  */
 public final class ServerImpl extends SystemLogger implements Server {
 
-  private static Server instance;
+  private static final class InstanceHolder {
+    private static final Server INSTANCE = new ServerImpl();
+  }
   private final EventManager eventManager;
   private final RoomManager roomManager;
   private final PlayerManager playerManager;
@@ -91,7 +94,9 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final Scheduler scheduler;
   private final Network network;
   private final ServerApi serverApi;
+  private final AtomicBoolean stopping;
   private ClientCommandManager clientCommandManager;
+  private SystemCommandManager systemCommandManager;
   private Configuration configuration;
   private long startedTime;
   private String serverName;
@@ -106,6 +111,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     serverApi = ServerApiImpl.newInstance(this);
     zeroProcessor = ZeroProcessorImpl.newInstance(eventManager, serverApi, datagramChannelManager);
     scheduler = SchedulerImpl.newInstance(eventManager);
+    stopping = new AtomicBoolean(false);
   } // prevent creation manually
 
   /**
@@ -115,10 +121,7 @@ public final class ServerImpl extends SystemLogger implements Server {
    * @return a new instance
    */
   public static Server getInstance() {
-    if (instance == null) {
-      instance = new ServerImpl();
-    }
-    return instance;
+    return InstanceHolder.INSTANCE;
   }
 
   @Override
@@ -168,7 +171,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     var assessment = ConfigurationAssessment.newInstance(eventManager, configuration);
     assessment.assess();
 
-    setupClientCommands(bootstrapHandler.getClientCommandManager());
+    setupCommands(bootstrapHandler.getClientCommandManager(), bootstrapHandler.getSystemCommandManager());
     setupEntitiesManagementService(configuration);
     setupNetworkService(configuration, bootstrapHandler);
     setupInternalProcessorService(configuration, bootstrapHandler);
@@ -212,8 +215,10 @@ public final class ServerImpl extends SystemLogger implements Server {
     scheduler.start();
   }
 
-  private void setupClientCommands(ClientCommandManager clientCommandManager) {
+  private void setupCommands(ClientCommandManager clientCommandManager,
+                             SystemCommandManager systemCommandManager) {
     this.clientCommandManager = clientCommandManager;
+    this.systemCommandManager = systemCommandManager;
   }
 
   private void setupEntitiesManagementService(Configuration configuration) {
@@ -418,6 +423,10 @@ public final class ServerImpl extends SystemLogger implements Server {
 
   @Override
   public void shutdown() {
+    if (!stopping.compareAndSet(false, true)) {
+      return;
+    }
+
     if (isInfoEnabled()) {
       info(serverName, "STATE", "STOPPING");
     }
@@ -427,14 +436,15 @@ public final class ServerImpl extends SystemLogger implements Server {
     if (isInfoEnabled()) {
       info(serverName, "STATE", "STOPPED");
     }
-    // real stop
-    Runtime.getRuntime().halt(0);
   }
 
   private void shutdownServices() {
-    zeroProcessor.shutdown();
     network.shutdown();
+    zeroProcessor.shutdown();
     scheduler.shutdown();
+    if (systemCommandManager != null) {
+      systemCommandManager.shutdown();
+    }
   }
 
   @Override

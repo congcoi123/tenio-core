@@ -170,7 +170,7 @@ public final class NetworkImpl extends AbstractManager implements Network {
   @Override
   public int getMaximumStartingTimeInMilliseconds() {
     int httpServiceStartingTime = httpService.getMaximumStartingTimeInMilliseconds();
-    int webSocketServiceStartingTime = httpService.getMaximumStartingTimeInMilliseconds();
+    int webSocketServiceStartingTime = webSocketService.getMaximumStartingTimeInMilliseconds();
     int socketServiceStartingTime = socketService.getMaximumStartingTimeInMilliseconds();
 
     return Math.max(Math.max(httpServiceStartingTime, webSocketServiceStartingTime), socketServiceStartingTime);
