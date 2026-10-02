@@ -181,6 +181,7 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
     if (executorSize - getNumberOfExtraWorkers() <= 0) {
       throw new IllegalArgumentException("The number of extra workers must be less than the executor size");
     }
+    onStarting();
     for (int count = 0; count < executorSize - getNumberOfExtraWorkers(); count++) {
       executorService.execute(this);
       if (CoreConstant.DELAY_BETWEEN_STARTING_WORKER_IN_MILLISECONDS > 0) {
@@ -200,6 +201,17 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
                       ( "M:" + (executorSize - getNumberOfExtraWorkers()) + "|E:" + getNumberOfExtraWorkers())
                       : executorSize, ")"));
     }
+  }
+
+  /**
+   * Prepares resources required by worker threads.
+   *
+   * <p>This hook runs synchronously after the worker configuration has been validated and before
+   * any worker is submitted. Implementations must use it for resources that workers share, so a
+   * worker can never observe a partially populated collection.
+   */
+  protected void onStarting() {
+    // Do nothing by default.
   }
 
   @Override
