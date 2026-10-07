@@ -210,7 +210,6 @@ public class ZeroProcessorImplTest {
   // Session Management Tests
   @Test
   public void shouldHandleSessionWillBeClosed() throws Exception {
-    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
     when(session.getName()).thenReturn(PLAYER_IDENTITY);
     when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(player);
     when(player.isInRoom()).thenReturn(false);
@@ -230,7 +229,6 @@ public class ZeroProcessorImplTest {
   @Test
   public void shouldNotDisconnectPlayerWhenClosingStaleSession() throws Exception {
     Session newerSession = mock(Session.class);
-    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
     when(session.getName()).thenReturn(PLAYER_IDENTITY);
     when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(player);
     when(player.getSession()).thenReturn(Optional.of(newerSession));
@@ -247,7 +245,6 @@ public class ZeroProcessorImplTest {
 
   @Test
   public void shouldProcessSessionReadMessage() throws Exception {
-    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
     when(session.getName()).thenReturn(PLAYER_IDENTITY);
     when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(player);
 
@@ -326,7 +323,6 @@ public class ZeroProcessorImplTest {
   @Test
   public void shouldSetKeepPlayerOnDisconnection() throws Exception {
     processor.setKeepPlayerOnDisconnection(true);
-    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
     when(session.getName()).thenReturn(PLAYER_IDENTITY);
     when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(player);
     reset(eventManager); // Clear previous interactions
@@ -363,7 +359,6 @@ public class ZeroProcessorImplTest {
 
   @Test
   public void shouldHandleSessionWillBeClosedWhenNotAssociatedToDone() throws Exception {
-    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(false);
     when(session.beginPlayerAssociationClose()).thenReturn(false);
     processSessionWillBeClosed(session);
     verify(playerManager, never()).getPlayerByIdentity(any());
@@ -374,7 +369,6 @@ public class ZeroProcessorImplTest {
 
   @Test
   public void shouldHandleSessionWillBeClosedWhenPlayerIsInRoom() throws Exception {
-    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
     when(session.getName()).thenReturn(PLAYER_IDENTITY);
     when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(player);
     when(player.isInRoom()).thenReturn(true);
@@ -385,7 +379,6 @@ public class ZeroProcessorImplTest {
 
   @Test
   public void shouldHandleSessionWillBeClosedWhenPlayerIsNull() throws Exception {
-    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
     when(session.getName()).thenReturn(PLAYER_IDENTITY);
     when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(null);
     processSessionWillBeClosed(session);
