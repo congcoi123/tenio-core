@@ -204,8 +204,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
           if (currentSession.isActivated() && !currentSession.equals(session)) {
             try {
               // Detach the current session from its player
-              currentSession.setName("STALE-" + currentSession.getName());
-              currentSession.setAssociatedToPlayer(Session.AssociatedState.NONE);
+              markSessionClosingForReconnection(currentSession);
               currentSession.close(ConnectionDisconnectMode.RECONNECTION, PlayerDisconnectMode.RECONNECTION);
             } catch (IOException exception) {
               if (isErrorEnabled()) {
@@ -226,8 +225,11 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
           }
         }
 
-        // connect the player to a new session
-        player.setSession(session);
+        // Connect the player to the new session only while this session still owns the
+        // DOING state. A concurrent close changes it to NONE and makes this fail.
+        if (!attachPlayerToSession(player, session)) {
+          return;
+        }
         player.setLastReadTime(now());
         player.setLastWriteTime(now());
         eventManager.emit(ServerEvent.PLAYER_CONNECTION_RESUMED, player, session);
@@ -261,23 +263,29 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
 
   // This should be finished quickly because it's processed on the caller thread
   private void processSessionWillBeClosed(Session session, PlayerDisconnectMode playerDisconnectMode) {
-    if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
+    if (releaseSessionAssociation(session)) {
       var player = playerManager.getPlayerByIdentity(session.getName());
       // the player maybe existed
       if (player != null) {
-        // unsubscribe it from all channels
-        serverApi.unsubscribeFromAllChannels(player);
-        // player should leave room (if applicable) first
-        if (player.isInRoom()) {
-          serverApi.leaveRoom(player, PlayerLeaveRoomMode.SESSION_CLOSED);
-        }
-        eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
-        player.setSession(null);
-        // When it gets disconnected from client side, the server may not recognize it. In this
-        // case, the player is remained on the server side
-        if (!keepPlayerOnDisconnection) {
-          playerManager.removePlayerByIdentity(player.getIdentity());
-          player.clean();
+        synchronized (player) {
+          // A reconnect may have bound a newer session already. A stale close must not
+          // unsubscribe, remove, or clear that player.
+          if (player.getSession().filter(current -> current == session).isPresent()) {
+            // Keep the ownership lock until the disconnect cleanup has completed so another
+            // connection cannot bind the player halfway through this cleanup.
+            serverApi.unsubscribeFromAllChannels(player);
+            if (player.isInRoom()) {
+              serverApi.leaveRoom(player, PlayerLeaveRoomMode.SESSION_CLOSED);
+            }
+            eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
+            player.setSession(null);
+            // When it gets disconnected from client side, the server may not recognize it. In this
+            // case, the player is remained on the server side
+            if (!keepPlayerOnDisconnection) {
+              playerManager.removePlayerByIdentity(player.getIdentity());
+              player.clean();
+            }
+          }
         }
       } else {
         if (isDebugEnabled()) {
@@ -287,8 +295,28 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
       }
     }
     session.setName(null);
-    session.setAssociatedToPlayer(Session.AssociatedState.NONE);
     session.remove();
+  }
+
+  /**
+   * Atomically claims a fresh session for this player. The session owns the association lock, so
+   * DONE is never handled before the player-side session reference is available.
+   */
+  private boolean attachPlayerToSession(Player player, Session session) {
+    return session.associatePlayer(player);
+  }
+
+  /**
+   * Invalidates a session that is either being associated or already associated. CLOSING is a
+   * terminal association state, so an attach cannot resurrect a session once close has started.
+   */
+  private boolean releaseSessionAssociation(Session session) {
+    return session.beginPlayerAssociationClose();
+  }
+
+  private void markSessionClosingForReconnection(Session session) {
+    session.setName("STALE-" + session.getName());
+    session.markPlayerAssociationClosing();
   }
 
   // In this phase, the session must be bound with a player, a free session can only be accepted

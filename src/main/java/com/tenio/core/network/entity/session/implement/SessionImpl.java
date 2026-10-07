@@ -28,6 +28,7 @@ import com.tenio.common.data.DataCollection;
 import com.tenio.common.logger.AbstractLogger;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.exception.InboundQueueFullException;
@@ -61,6 +62,7 @@ public class SessionImpl extends AbstractLogger implements Session {
 
   private final long id;
   private final long createdTime;
+  private final Object playerAssociationLock;
   private final AtomicReference<AssociatedState> atomicAssociatedState;
   private final AtomicReference<State> atomicState;
   private volatile String name;
@@ -105,6 +107,7 @@ public class SessionImpl extends AbstractLogger implements Session {
     transportType = TransportType.UNKNOWN;
     udpConvey = Session.EMPTY_DATAGRAM_CONVEY_ID;
     atomicState = new AtomicReference<>(State.INITIALIZED);
+    playerAssociationLock = new Object();
     atomicAssociatedState = new AtomicReference<>(AssociatedState.NONE);
     long currentTime = now();
     createdTime = currentTime;
@@ -153,6 +156,46 @@ public class SessionImpl extends AbstractLogger implements Session {
   @Override
   public boolean transitionAssociatedState(AssociatedState expectedState, AssociatedState newState) {
     return atomicAssociatedState.compareAndSet(expectedState, newState);
+  }
+
+  @Override
+  public boolean associatePlayer(Player player) {
+    if (player == null) {
+      throw new NullPointerException("Unable to associate an unavailable player");
+    }
+    synchronized (playerAssociationLock) {
+      if (isAssociatedToPlayer(AssociatedState.NONE)
+          && !transitionAssociatedState(AssociatedState.NONE, AssociatedState.DOING)) {
+        return false;
+      }
+      if (!transitionAssociatedState(AssociatedState.DOING, AssociatedState.DONE)) {
+        return false;
+      }
+      // Player.setSession owns the player-side monitor. The session lock keeps the association
+      // state stable until that assignment has completed.
+      player.setSession(this);
+      return true;
+    }
+  }
+
+  @Override
+  public boolean beginPlayerAssociationClose() {
+    synchronized (playerAssociationLock) {
+      if (transitionAssociatedState(AssociatedState.DONE, AssociatedState.CLOSING)) {
+        return true;
+      }
+      transitionAssociatedState(AssociatedState.DOING, AssociatedState.CLOSING);
+      return false;
+    }
+  }
+
+  @Override
+  public void markPlayerAssociationClosing() {
+    synchronized (playerAssociationLock) {
+      if (!transitionAssociatedState(AssociatedState.DONE, AssociatedState.CLOSING)) {
+        transitionAssociatedState(AssociatedState.DOING, AssociatedState.CLOSING);
+      }
+    }
   }
 
   @Override

@@ -30,6 +30,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.implement.DefaultPlayer;
@@ -37,6 +40,7 @@ import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.AddedDuplicatedPlayerException;
 import com.tenio.core.exception.RemovedNonExistentPlayerException;
+import com.tenio.core.network.entity.session.Session;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -102,6 +106,18 @@ class PlayerManagerImplTest {
   void testCreatePlayerWithSessionNullThrows() {
     assertThrows(NullPointerException.class,
         () -> playerManager.createPlayerWithSession("dave", null));
+  }
+
+  @Test
+  @DisplayName("Test createPlayerWithSession binds an active fresh session after registering player")
+  void testCreatePlayerWithSession() {
+    Session session = mock(Session.class);
+    when(session.associatePlayer(org.mockito.ArgumentMatchers.any(Player.class))).thenReturn(true);
+
+    Player player = playerManager.createPlayerWithSession("dave", session);
+
+    assertEquals(player, playerManager.getPlayerByIdentity("dave"));
+    verify(session).associatePlayer(player);
   }
 
   @Test

@@ -98,8 +98,15 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
       throw new NullPointerException("Unable to assign a null session to the player");
     }
 
-    Player player = DefaultPlayer.newInstance(playerName, session);
+    // Register the player before publishing the session association. The close handler can then
+    // always find the player after it observes DONE.
+    Player player = DefaultPlayer.newInstance(playerName);
     addPlayer(player);
+    if (!associateSession(player, session)) {
+      removePlayerByIdentity(playerName);
+      throw new IllegalStateException("Unable to associate a closing session with player: "
+          + playerName);
+    }
     return player;
   }
 
@@ -183,5 +190,13 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
     player.configureMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeportedInSecond);
     player.setActivated(true);
     player.setLoggedIn(true);
+  }
+
+  /**
+   * The session owns the synchronization for association publication, so close cannot change the
+   * association to CLOSING between the state transition and the player-side reference update.
+   */
+  private boolean associateSession(Player player, Session session) {
+    return session.associatePlayer(player);
   }
 }

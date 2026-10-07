@@ -116,10 +116,15 @@ public class ZeroProcessorImplTest {
         .thenReturn(true);
     when(session.isAssociatedToPlayer(Session.AssociatedState.DONE))
         .thenReturn(true);
+    when(session.beginPlayerAssociationClose()).thenReturn(true);
+    when(session.associatePlayer(player))
+        .thenReturn(true);
     when(session.getName())
         .thenReturn(PLAYER_IDENTITY);
     when(session.isTcp())
         .thenReturn(true);
+    when(player.getSession())
+        .thenReturn(Optional.of(session));
   }
 
   private void processSessionWillBeClosed(Session session) throws Exception {
@@ -217,10 +222,27 @@ public class ZeroProcessorImplTest {
     verify(playerManager).removePlayerByIdentity(PLAYER_IDENTITY);
     verify(player).clean();
     verify(session).setName(null);
-    verify(session).setAssociatedToPlayer(Session.AssociatedState.NONE);
     verify(session).remove();
     verify(eventManager).emit(eq(ServerEvent.DISCONNECT_PLAYER), eq(player),
         eq(PlayerDisconnectMode.CLIENT_REQUEST));
+  }
+
+  @Test
+  public void shouldNotDisconnectPlayerWhenClosingStaleSession() throws Exception {
+    Session newerSession = mock(Session.class);
+    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
+    when(session.getName()).thenReturn(PLAYER_IDENTITY);
+    when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(player);
+    when(player.getSession()).thenReturn(Optional.of(newerSession));
+
+    processSessionWillBeClosed(session);
+
+    verify(serverApi, never()).unsubscribeFromAllChannels(player);
+    verify(serverApi, never()).leaveRoom(eq(player), any());
+    verify(eventManager, never()).emit(eq(ServerEvent.DISCONNECT_PLAYER), any(), any());
+    verify(player, never()).setSession(null);
+    verify(playerManager, never()).removePlayerByIdentity(any());
+    verify(session).remove();
   }
 
   @Test
@@ -342,10 +364,11 @@ public class ZeroProcessorImplTest {
   @Test
   public void shouldHandleSessionWillBeClosedWhenNotAssociatedToDone() throws Exception {
     when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(false);
+    when(session.beginPlayerAssociationClose()).thenReturn(false);
     processSessionWillBeClosed(session);
     verify(playerManager, never()).getPlayerByIdentity(any());
     verify(session).setName(null);
-    verify(session).setAssociatedToPlayer(Session.AssociatedState.NONE);
+    verify(session, never()).setAssociatedToPlayer(any());
     verify(session).remove();
   }
 

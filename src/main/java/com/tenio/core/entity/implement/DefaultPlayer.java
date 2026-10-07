@@ -242,12 +242,15 @@ public class DefaultPlayer implements Player {
   }
 
   @Override
-  public void setSession(Session session) {
+  public synchronized void setSession(Session session) {
+    // Session.associatePlayer owns the association lock before calling this method. Assign the
+    // player-side reference before publishing DONE so that state is never visible without the
+    // matching reference.
+    this.session = session;
     if (session != null) {
       session.setName(identity);
       session.setAssociatedToPlayer(Session.AssociatedState.DONE);
     }
-    this.session = session;
   }
 
   @Override

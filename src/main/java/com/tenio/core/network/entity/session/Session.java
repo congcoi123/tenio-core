@@ -136,6 +136,30 @@ public interface Session {
   boolean transitionAssociatedState(AssociatedState expectedState, AssociatedState newState);
 
   /**
+   * Atomically binds this session to a player. The session implementation owns the lock that
+   * protects the association state and the player-side session reference.
+   *
+   * @param player the player to associate with this session
+   * @return {@code true} when the association was completed, otherwise {@code false}
+   */
+  boolean associatePlayer(Player player);
+
+  /**
+   * Starts closing this session's player association. A session that starts closing cannot be
+   * associated with a player again.
+   *
+   * @return {@code true} when the session had a completed association that requires player
+   *     cleanup, otherwise {@code false}
+   */
+  boolean beginPlayerAssociationClose();
+
+  /**
+   * Marks the current player association as closing without performing player cleanup. This is
+   * used when a reconnect deliberately replaces an older session.
+   */
+  void markPlayerAssociationClosing();
+
+  /**
    * In allowance period of time, if the session can not be associated to any player, it is
    * considered as an orphan session and will be removed.
    *
@@ -589,5 +613,9 @@ public interface Session {
      * The session is associated with a {@link Player}.
      */
     DONE,
+    /**
+     * The session is closing and must not be associated with a player again.
+     */
+    CLOSING,
   }
 }
