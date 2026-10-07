@@ -420,6 +420,26 @@ public class DefaultRoom implements Room {
   }
 
   @Override
+  public synchronized void changeCapacity(int maxParticipants, int maxSpectators) {
+    int participantCount = getSnapshotParticipantCount();
+    if (maxParticipants <= participantCount) {
+      throw new IllegalArgumentException(String.format(
+          "Unable to assign the new max participants number: %d, "
+              + "because it's less than the current number of participants: %d",
+          maxParticipants, participantCount));
+    }
+    int spectatorCount = getSnapshotSpectatorCount();
+    if (maxSpectators <= spectatorCount) {
+      throw new IllegalArgumentException(String.format(
+          "Unable to assign the new max spectator number: %d, "
+              + "because it's less than the current number of spectator: %d",
+          maxSpectators, spectatorCount));
+    }
+    this.maxParticipants = maxParticipants;
+    this.maxSpectators = maxSpectators;
+  }
+
+  @Override
   public void configurePlayerManager(PlayerManager playerManager) {
     this.playerManager = playerManager;
   }

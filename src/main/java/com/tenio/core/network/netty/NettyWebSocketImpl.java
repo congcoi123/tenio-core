@@ -65,6 +65,7 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
   private static final int DEFAULT_PRODUCER_WORKER_SIZE = 2;
   private static final int DEFAULT_CONSUMER_WORKER_SIZE = Runtime.getRuntime().availableProcessors() * 2;
 
+  private final Object lifecycleLock;
   private ServerBootstrap bootstrap;
   private EventLoopGroup webSocketAcceptors;
   private EventLoopGroup webSocketWorkers;
@@ -85,6 +86,7 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
   private boolean usingSsl;
 
   private boolean initialized;
+  private boolean started;
 
   private NettyWebSocketImpl(EventManager eventManager) {
     super(eventManager);
@@ -94,7 +96,9 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
     producerWorkerSize = DEFAULT_PRODUCER_WORKER_SIZE;
     consumerWorkerSize = DEFAULT_CONSUMER_WORKER_SIZE;
 
+    lifecycleLock = new Object();
     initialized = false;
+    started = false;
   }
 
   /**
@@ -187,51 +191,63 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
 
   @Override
   public void initialize() {
-    initialized = true;
+    synchronized (lifecycleLock) {
+      initialized = true;
+    }
   }
 
   @Override
   public void start() {
-    if (!initialized) {
-      return;
-    }
-
-    try {
-      attemptToStart();
-    } catch (InterruptedException exception) {
-      throw new ServiceRuntimeException(exception.getMessage());
+    synchronized (lifecycleLock) {
+      if (!initialized || started) {
+        return;
+      }
+      try {
+        attemptToStart();
+        started = true;
+      } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+        throw new ServiceRuntimeException(exception.getMessage());
+      }
     }
   }
 
   @Override
   public void shutdown() {
-    if (!initialized) {
-      return;
+    synchronized (lifecycleLock) {
+      if (!initialized) {
+        return;
+      }
+      attemptToShutdown();
+      started = false;
+      initialized = false;
     }
-    attemptToShutdown();
   }
 
   @Override
   public void activate() {
-    if (!initialized) {
-      return;
-    }
+    synchronized (lifecycleLock) {
+      if (!initialized || !started) {
+        return;
+      }
 
-    ChannelFuture channelFuture;
-    try {
-      channelFuture = bootstrap.bind(socketConfiguration.port()).sync()
-          .addListener(future -> {
-            if (!future.isSuccess()) {
-              if (isErrorEnabled()) {
-                error(future.cause());
+      ChannelFuture channelFuture;
+      try {
+        channelFuture = bootstrap.bind(socketConfiguration.port()).sync()
+            .addListener(future -> {
+              if (!future.isSuccess()) {
+                if (isErrorEnabled()) {
+                  error(future.cause());
+                }
+                throw new IOException(String.valueOf(socketConfiguration.port()));
               }
-              throw new IOException(String.valueOf(socketConfiguration.port()));
-            }
-          });
-    } catch (InterruptedException exception) {
-      throw new RuntimeException(exception);
+            });
+      } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+        throw new RuntimeException(exception);
+      }
+      serverWebSockets.add(channelFuture.channel());
     }
-    serverWebSockets.add(channelFuture.channel());
   }
 
   @Override

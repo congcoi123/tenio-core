@@ -175,6 +175,21 @@ class PlayerManagerImplTest {
   }
 
   @Test
+  @DisplayName("computePlayers allows the callback to remove a player")
+  void testComputePlayersAllowsCallbackMutation() {
+    Player player = DefaultPlayer.newInstance("snapshot-player");
+    playerManager.addPlayer(player);
+
+    playerManager.computePlayers(iterator -> {
+      while (iterator.hasNext()) {
+        playerManager.removePlayerByIdentity(iterator.next().getIdentity());
+      }
+    });
+
+    assertEquals(0, playerManager.getSnapshotPlayerCount());
+  }
+
+  @Test
   @DisplayName("Test removePlayerByIdentity decreases player count")
   void testRemovePlayerByIdentityDecreasesCount() {
     Player player = DefaultPlayer.newInstance("jack");
