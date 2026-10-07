@@ -271,17 +271,20 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
           // A reconnect may have bound a newer session already. A stale close must not
           // unsubscribe, remove, or clear that player.
           if (player.getSession().filter(current -> current == session).isPresent()) {
-            // Keep the ownership lock until the disconnect cleanup has completed so another
-            // connection cannot bind the player halfway through this cleanup.
-            serverApi.unsubscribeFromAllChannels(player);
-            if (player.isInRoom()) {
-              serverApi.leaveRoom(player, PlayerLeaveRoomMode.SESSION_CLOSED);
-            }
-            eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
-            player.setSession(null);
-            // When it gets disconnected from client side, the server may not recognize it. In this
-            // case, the player is remained on the server side
-            if (!keepPlayerOnDisconnection) {
+            if (keepPlayerOnDisconnection) {
+              // Retain the player's complete server-side state for a later reconnection. The
+              // closed session must still be detached, but disconnect cleanup would remove the
+              // player's room/channel membership and defeat the keep-player option.
+              player.setSession(null);
+            } else {
+              // Keep the ownership lock until the disconnect cleanup has completed so another
+              // connection cannot bind the player halfway through this cleanup.
+              serverApi.unsubscribeFromAllChannels(player);
+              if (player.isInRoom()) {
+                serverApi.leaveRoom(player, PlayerLeaveRoomMode.SESSION_CLOSED);
+              }
+              eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
+              player.setSession(null);
               playerManager.removePlayerByIdentity(player.getIdentity());
               player.clean();
             }

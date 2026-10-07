@@ -321,13 +321,20 @@ public class ZeroProcessorImplTest {
   }
 
   @Test
-  public void shouldSetKeepPlayerOnDisconnection() throws Exception {
+  public void shouldKeepPlayerOnDisconnection() throws Exception {
     processor.setKeepPlayerOnDisconnection(true);
     when(session.getName()).thenReturn(PLAYER_IDENTITY);
     when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(player);
     reset(eventManager); // Clear previous interactions
+
     processSessionWillBeClosed(session);
+
+    verify(player).setSession(null);
+    verify(serverApi, never()).unsubscribeFromAllChannels(player);
+    verify(serverApi, never()).leaveRoom(eq(player), any());
+    verify(eventManager, never()).emit(eq(ServerEvent.DISCONNECT_PLAYER), eq(player), any());
     verify(playerManager, never()).removePlayerByIdentity(any());
+    verify(player, never()).clean();
   }
 
   @Test
