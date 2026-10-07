@@ -203,7 +203,7 @@ public class ZeroProcessorImplTest {
 
     processor.processRequest(request);
 
-    verify(player).setSession(session);
+    verify(session).associatePlayer(player);
     verify(eventManager).emit(eq(ServerEvent.PLAYER_CONNECTION_RESUMED), eq(player), eq(session));
   }
 
@@ -664,7 +664,7 @@ public class ZeroProcessorImplTest {
         .setMessage(message);
 
     processor.processRequest(request);
-    verify(player).setSession(session);
+    verify(session).associatePlayer(player);
   }
 
   @Test
