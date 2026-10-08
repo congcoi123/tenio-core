@@ -224,6 +224,8 @@ public class ZeroProcessorImplTest {
     verify(session).remove();
     verify(eventManager).emit(eq(ServerEvent.DISCONNECT_PLAYER), eq(player),
         eq(PlayerDisconnectMode.CLIENT_REQUEST));
+    verify(eventManager).emit(eq(ServerEvent.CONNECTION_WILL_BE_CLOSED), eq(session),
+        eq(PlayerDisconnectMode.CLIENT_REQUEST));
   }
 
   @Test

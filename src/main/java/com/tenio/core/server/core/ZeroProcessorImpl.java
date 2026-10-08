@@ -264,6 +264,9 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
   // This should be finished quickly because it's processed on the caller thread
   private void processSessionWillBeClosed(Session session, PlayerDisconnectMode playerDisconnectMode) {
     if (releaseSessionAssociation(session)) {
+      // The session is still available to handlers here. Emit before detaching it from the player
+      // or removing it, so applications can observe every associated connection close.
+      eventManager.emit(ServerEvent.CONNECTION_WILL_BE_CLOSED, session, playerDisconnectMode);
       var player = playerManager.getPlayerByIdentity(session.getName());
       // the player maybe existed
       if (player != null) {

@@ -47,6 +47,7 @@ EventBroadcastToChannel
 EventChannelCreated
 EventChannelWillBeRemoved
 EventConnectionEstablishedResult
+EventConnectionWillBeClosed
 EventDisconnectPlayer
 EventFetchedBandwidthInfo
 EventFetchedCcuInfo
