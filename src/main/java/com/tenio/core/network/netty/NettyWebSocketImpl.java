@@ -52,6 +52,7 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The implementation for the Netty's websockets services.
@@ -151,12 +152,12 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
     }
 
     if (webSocketAcceptors != null) {
-      webSocketAcceptors.shutdownGracefully(0, 10, java.util.concurrent.TimeUnit.SECONDS)
-          .awaitUninterruptibly(10, java.util.concurrent.TimeUnit.SECONDS);
+      webSocketAcceptors.shutdownGracefully(0, 10, TimeUnit.SECONDS)
+          .awaitUninterruptibly(10, TimeUnit.SECONDS);
     }
     if (webSocketWorkers != null) {
-      webSocketWorkers.shutdownGracefully(0, 10, java.util.concurrent.TimeUnit.SECONDS)
-          .awaitUninterruptibly(10, java.util.concurrent.TimeUnit.SECONDS);
+      webSocketWorkers.shutdownGracefully(0, 10, TimeUnit.SECONDS)
+          .awaitUninterruptibly(10, TimeUnit.SECONDS);
     }
 
     if (isInfoEnabled()) {
