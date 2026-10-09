@@ -186,7 +186,8 @@ public class DefaultPlayer implements Player {
 
   @Override
   public long getInactiveTimeInSeconds() {
-    return (now() - getLastActivityTime()) / 1000L;
+    // Inactive time should be calculated by the last written time (from the last command of the client)
+    return (now() - getLastWriteTime()) / 1000L;
   }
 
   private void setLastActivityTime(long timestamp) {

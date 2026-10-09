@@ -313,7 +313,7 @@ class DefaultPlayerTest {
   void testIsIdleReturnsTrueWhenIdleTimeExceeded() throws Exception {
     Player player = DefaultPlayer.newInstance("Test");
     player.configureMaxIdleTimeInSeconds(1);
-    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("lastActivityTime");
+    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("lastWriteTime");
     field.setAccessible(true);
     field.set(player, System.currentTimeMillis() - 5000L);
     assertTrue(player.isIdle());
@@ -333,7 +333,7 @@ class DefaultPlayerTest {
     Player player = DefaultPlayer.newInstance("Test");
     player.setNeverDeported(true);
     player.configureMaxIdleTimeNeverDeportedInSeconds(1);
-    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("lastActivityTime");
+    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("lastWriteTime");
     field.setAccessible(true);
     field.set(player, System.currentTimeMillis() - 5000L);
     assertTrue(player.isIdleNeverDeported());
