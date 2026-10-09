@@ -111,10 +111,11 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
 
       eventManager.on(ServerEvent.SESSION_WILL_BE_CLOSED, params -> {
         var session = (Session) params[0];
+        var connectionDisconnectMode = (ConnectionDisconnectMode) params[1];
         var playerDisconnectMode = (PlayerDisconnectMode) params[2];
         // The closing process should happen immediately on the caller thread
         // That's why we DID NOT mark the event SESSION_WILL_BE_CLOSED as @Asynchronous
-        processSessionWillBeClosed(session, playerDisconnectMode);
+        processSessionWillBeClosed(session, connectionDisconnectMode, playerDisconnectMode);
 
         return null;
       });
@@ -262,7 +263,8 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
   }
 
   // This should be finished quickly because it's processed on the caller thread
-  private void processSessionWillBeClosed(Session session, PlayerDisconnectMode playerDisconnectMode) {
+  private void processSessionWillBeClosed(Session session, ConnectionDisconnectMode connectionDisconnectMode,
+                                          PlayerDisconnectMode playerDisconnectMode) {
     if (releaseSessionAssociation(session)) {
       // The session is still available to handlers here. Emit before detaching it from the player
       // or removing it, so applications can observe every associated connection close.
@@ -273,20 +275,19 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
         synchronized (player) {
           // A reconnect may have bound a newer session already. A stale close must not
           // unsubscribe, remove, or clear that player.
-          if (player.getSession().filter(current -> current == session).isPresent()) {
-            if (keepPlayerOnDisconnection) {
-              // Retain the player's complete server-side state for a later reconnection. The
-              // closed session must still be detached, but disconnect cleanup would remove the
-              // player's room/channel membership and defeat the keep-player option.
+          if (player.getSession().filter(currentSession -> currentSession == session).isPresent()) {
+            if (shouldKeepPlayerOnDisconnection(keepPlayerOnDisconnection, connectionDisconnectMode,
+                    playerDisconnectMode)) {
+              // Retain room and channel state for reconnection, but detach the closed session.
               player.setSession(null);
             } else {
-              // Keep the ownership lock until the disconnect cleanup has completed so another
-              // connection cannot bind the player halfway through this cleanup.
+              // Keep the current session bound until all destructive cleanup has completed.
               serverApi.unsubscribeFromAllChannels(player);
               if (player.isInRoom()) {
                 serverApi.leaveRoom(player, PlayerLeaveRoomMode.SESSION_CLOSED);
               }
               eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
+
               player.setSession(null);
               playerManager.removePlayerByIdentity(player.getIdentity());
               player.clean();
@@ -302,6 +303,16 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
     }
     session.setName(null);
     session.remove();
+  }
+
+  private boolean shouldKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection,
+                                                  ConnectionDisconnectMode connectionDisconnectMode,
+                                                  PlayerDisconnectMode playerDisconnectMode) {
+    return keepPlayerOnDisconnection &&
+            !((connectionDisconnectMode == ConnectionDisconnectMode.CLIENT_REQUEST &&
+                    playerDisconnectMode == PlayerDisconnectMode.CLIENT_REQUEST)
+              || (connectionDisconnectMode == ConnectionDisconnectMode.IDLE &&
+                    playerDisconnectMode == PlayerDisconnectMode.IDLE));
   }
 
   /**

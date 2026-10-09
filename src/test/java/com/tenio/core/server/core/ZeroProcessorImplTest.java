@@ -128,11 +128,18 @@ public class ZeroProcessorImplTest {
   }
 
   private void processSessionWillBeClosed(Session session) throws Exception {
+    processSessionWillBeClosed(session, ConnectionDisconnectMode.CLIENT_REQUEST,
+        PlayerDisconnectMode.CLIENT_REQUEST);
+  }
+
+  private void processSessionWillBeClosed(Session session,
+                                          ConnectionDisconnectMode connectionDisconnectMode,
+                                          PlayerDisconnectMode playerDisconnectMode) throws Exception {
     Method method =
         ZeroProcessorImpl.class.getDeclaredMethod("processSessionWillBeClosed",
-            Session.class, PlayerDisconnectMode.class);
+            Session.class, ConnectionDisconnectMode.class, PlayerDisconnectMode.class);
     method.setAccessible(true);
-    method.invoke(processor, session, PlayerDisconnectMode.CLIENT_REQUEST);
+    method.invoke(processor, session, connectionDisconnectMode, playerDisconnectMode);
   }
 
   private void processSessionReadMessage(Session session, DataCollection message) throws Exception {
@@ -329,7 +336,8 @@ public class ZeroProcessorImplTest {
     when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(player);
     reset(eventManager); // Clear previous interactions
 
-    processSessionWillBeClosed(session);
+    processSessionWillBeClosed(session, ConnectionDisconnectMode.LOST_IN_READ,
+        PlayerDisconnectMode.CONNECTION_LOST);
 
     verify(player).setSession(null);
     verify(serverApi, never()).unsubscribeFromAllChannels(player);

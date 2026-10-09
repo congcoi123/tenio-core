@@ -95,6 +95,10 @@ public final class AutoCleanOrphanSessionTask extends AbstractSystemTask {
                   if (isErrorEnabled()) {
                     error(exception, session.toString());
                   }
+                } finally {
+                  // A terminated session cannot emit SESSION_WILL_BE_CLOSED again. Remove it
+                  // directly so it cannot remain in the manager and be selected forever.
+                  session.remove();
                 }
               }
             }
