@@ -243,7 +243,7 @@ class DefaultPlayerTest {
   void testOnUpdateListenerTriggeredOnSetActivated() {
     Player player = DefaultPlayer.newInstance("Test");
     AtomicReference<Field> captured = new AtomicReference<>();
-    player.onUpdateListener(field -> captured.set(field));
+    player.onUpdateListener(captured::set);
     player.setActivated(true);
     assertNotNull(captured.get());
   }
@@ -253,7 +253,7 @@ class DefaultPlayerTest {
   void testOnUpdateListenerTriggeredOnSetNeverDeported() {
     Player player = DefaultPlayer.newInstance("Test");
     AtomicReference<Field> captured = new AtomicReference<>();
-    player.onUpdateListener(field -> captured.set(field));
+    player.onUpdateListener(captured::set);
     player.setNeverDeported(true);
     assertEquals(Field.DEPORTATION, captured.get());
   }
@@ -263,7 +263,7 @@ class DefaultPlayerTest {
   void testOnUpdateListenerTriggeredOnSetProperty() {
     Player player = DefaultPlayer.newInstance("Test");
     AtomicReference<Field> captured = new AtomicReference<>();
-    player.onUpdateListener(field -> captured.set(field));
+    player.onUpdateListener(captured::set);
     player.setProperty("x", 1);
     assertEquals(Field.PROPERTY, captured.get());
   }
@@ -273,7 +273,7 @@ class DefaultPlayerTest {
   void testOnUpdateListenerTriggeredOnSetRole() {
     Player player = DefaultPlayer.newInstance("Test");
     AtomicReference<Field> captured = new AtomicReference<>();
-    player.onUpdateListener(field -> captured.set(field));
+    player.onUpdateListener(captured::set);
     player.setRoleInRoom(com.tenio.core.entity.define.room.PlayerRoleInRoom.PARTICIPANT);
     assertEquals(Field.ROLE_IN_ROOM, captured.get());
   }
@@ -313,7 +313,7 @@ class DefaultPlayerTest {
   void testIsIdleReturnsTrueWhenIdleTimeExceeded() throws Exception {
     Player player = DefaultPlayer.newInstance("Test");
     player.configureMaxIdleTimeInSeconds(1);
-    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("lastWriteTime");
+    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("lastReadTime");
     field.setAccessible(true);
     field.set(player, System.currentTimeMillis() - 5000L);
     assertTrue(player.isIdle());
@@ -333,7 +333,7 @@ class DefaultPlayerTest {
     Player player = DefaultPlayer.newInstance("Test");
     player.setNeverDeported(true);
     player.configureMaxIdleTimeNeverDeportedInSeconds(1);
-    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("lastWriteTime");
+    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("lastReadTime");
     field.setAccessible(true);
     field.set(player, System.currentTimeMillis() - 5000L);
     assertTrue(player.isIdleNeverDeported());
