@@ -39,6 +39,7 @@ import com.tenio.core.handler.event.EventPlayerBeforeLeaveRoom;
 import com.tenio.core.handler.event.EventPlayerJoinedRoomResult;
 import com.tenio.core.handler.event.EventPlayerLogin;
 import com.tenio.core.handler.event.EventPlayerConnectionRetry;
+import com.tenio.core.handler.event.EventPlayerConnectionReplacing;
 import com.tenio.core.handler.event.EventPlayerConnectionResumed;
 import com.tenio.core.handler.event.EventPlayerSubscribedChannel;
 import com.tenio.core.handler.event.EventPlayerUnsubscribedChannel;
@@ -138,6 +139,12 @@ public enum ServerEvent {
    * @see EventPlayerConnectionRetry
    */
   PLAYER_CONNECTION_RETRY,
+  /**
+   * When an active player connection is being replaced by a newer connection.
+   *
+   * @see EventPlayerConnectionReplacing
+   */
+  PLAYER_CONNECTION_REPLACING,
   /**
    * When the server responds a player reconnected request.
    *

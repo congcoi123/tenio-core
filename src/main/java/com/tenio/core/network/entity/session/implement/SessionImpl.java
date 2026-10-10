@@ -191,10 +191,13 @@ public class SessionImpl extends AbstractLogger implements Session {
   }
 
   @Override
-  public void markPlayerAssociationClosing() {
+  public void prepareForReplacement() {
     synchronized (playerAssociationLock) {
       if (!transitionAssociatedState(AssociatedState.DONE, AssociatedState.CLOSING)) {
         transitionAssociatedState(AssociatedState.DOING, AssociatedState.CLOSING);
+      }
+      if (outboundQueue != null) {
+        outboundQueue.clear();
       }
     }
   }

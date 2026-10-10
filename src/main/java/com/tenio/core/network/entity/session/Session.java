@@ -154,10 +154,13 @@ public interface Session {
   boolean beginPlayerAssociationClose();
 
   /**
-   * Marks the current player association as closing without performing player cleanup. This is
-   * used when a reconnect deliberately replaces an older session.
+   * Prepares this session to be replaced by another connection for the same player.
+   *
+   * <p>The old session can no longer submit player messages and any queued outbound messages are
+   * discarded. The transport remains active so a final response can be sent with
+   * {@link com.tenio.core.network.entity.outbound.Response#writeThenClose()}.</p>
    */
-  void markPlayerAssociationClosing();
+  void prepareForReplacement();
 
   /**
    * Marks this session to be closed by the network writer after its queued final response has

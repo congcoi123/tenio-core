@@ -174,6 +174,21 @@ class SessionImplTest {
   }
 
   @Test
+  @DisplayName("Test prepareForReplacement blocks input and discards queued output")
+  void testPrepareForReplacement() {
+    Session session = SessionImpl.newInstance();
+    Player player = DefaultPlayer.newInstance("player-1");
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    session.configureOutboundQueue(outboundQueue);
+    assertTrue(session.associatePlayer(player));
+
+    session.prepareForReplacement();
+
+    assertTrue(session.isAssociatedToPlayer(AssociatedState.CLOSING));
+    verify(outboundQueue).clear();
+  }
+
+  @Test
   @DisplayName("Test isOrphan returns false for a freshly created session")
   void testIsOrphanReturnsFalseForFreshSession() {
     Session session = SessionImpl.newInstance();

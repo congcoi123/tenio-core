@@ -53,6 +53,7 @@ EventFetchedBandwidthInfo
 EventFetchedCcuInfo
 EventPlayerAfterLeftRoom
 EventPlayerBeforeLeaveRoom
+EventPlayerConnectionReplacing
 EventPlayerJoinedRoomResult
 EventPlayerLogin
 EventPlayerConnectionResumed

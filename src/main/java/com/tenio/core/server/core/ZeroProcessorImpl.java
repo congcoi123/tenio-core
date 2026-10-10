@@ -204,8 +204,18 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
           // trying to reconnect
           if (currentSession.isActivated() && !currentSession.equals(session)) {
             try {
-              // Detach the current session from its player
-              markSessionClosingForReconnection(currentSession);
+              // Make the previous connection unable to submit or receive normal player traffic
+              // before the application sends its final handover notification.
+              currentSession.prepareForReplacement();
+              try {
+                eventManager.emit(ServerEvent.PLAYER_CONNECTION_REPLACING, player, currentSession,
+                    session);
+              } catch (Exception exception) {
+                if (isErrorEnabled()) {
+                  error(exception, "Error while notifying about connection replacement: ",
+                      currentSession);
+                }
+              }
               // A duplicate-login handler may have queued a final notification with
               // Response#writeThenClose(). Let the writer deliver that response before it closes
               // the stale session; otherwise the client misses the duplicate-login code and
@@ -336,11 +346,6 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
    */
   private boolean releaseSessionAssociation(Session session) {
     return session.beginPlayerAssociationClose();
-  }
-
-  private void markSessionClosingForReconnection(Session session) {
-    session.setName("STALE-" + session.getName());
-    session.markPlayerAssociationClosing();
   }
 
   // In this phase, the session must be bound with a player, a free session can only be accepted

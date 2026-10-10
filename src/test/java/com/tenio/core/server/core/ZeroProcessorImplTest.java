@@ -489,7 +489,6 @@ public class ZeroProcessorImplTest {
   public void shouldCloseOldSessionOnReconnectionWhenCurrentSessionIsActivated() throws Exception {
     Session currentSession = mock(Session.class);
     when(currentSession.isActivated()).thenReturn(true);
-    when(currentSession.getName()).thenReturn("old-name");
     when(session.isActivated()).thenReturn(true);
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING)).thenReturn(true);
@@ -510,7 +509,6 @@ public class ZeroProcessorImplTest {
   public void shouldLetWriterCloseOldSessionAfterFinalResponseOnReconnection() throws Exception {
     Session currentSession = mock(Session.class);
     when(currentSession.isActivated()).thenReturn(true);
-    when(currentSession.getName()).thenReturn("old-name");
     when(currentSession.isCloseAfterPendingWriteMarked()).thenReturn(true);
     when(session.isActivated()).thenReturn(true);
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
@@ -527,7 +525,9 @@ public class ZeroProcessorImplTest {
 
     processor.processRequest(request);
 
-    verify(currentSession).markPlayerAssociationClosing();
+    verify(currentSession).prepareForReplacement();
+    verify(eventManager).emit(eq(ServerEvent.PLAYER_CONNECTION_REPLACING), eq(player),
+        eq(currentSession), eq(session));
     verify(currentSession, never()).close(
         eq(ConnectionDisconnectMode.RECONNECTION), eq(PlayerDisconnectMode.RECONNECTION));
     verify(session).associatePlayer(player);
@@ -697,7 +697,6 @@ public class ZeroProcessorImplTest {
   public void shouldHandleIOExceptionFromCurrentSessionCloseOnReconnection() throws Exception {
     Session currentSession = mock(Session.class);
     when(currentSession.isActivated()).thenReturn(true);
-    when(currentSession.getName()).thenReturn("old-session");
     when(session.isActivated()).thenReturn(true);
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,
         Session.AssociatedState.DOING)).thenReturn(true);
