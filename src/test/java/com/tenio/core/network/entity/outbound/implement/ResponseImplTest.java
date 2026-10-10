@@ -250,6 +250,27 @@ class ResponseImplTest {
   }
 
   @Test
+  void testConstructRecipientPlayersKeepsTheSessionThatWasAddressed() throws Exception {
+    Player player = mock(Player.class);
+    Session oldSession = mock(Session.class);
+    Session replacementSession = mock(Session.class);
+    when(player.getSession()).thenReturn(Optional.of(oldSession));
+    when(oldSession.isTcp()).thenReturn(true);
+    when(oldSession.containsUdp()).thenReturn(false);
+    when(replacementSession.isTcp()).thenReturn(true);
+
+    response.setRecipientPlayer(player);
+    when(player.getSession()).thenReturn(Optional.of(replacementSession));
+
+    Method method = ResponseImpl.class.getDeclaredMethod("constructRecipientPlayers");
+    method.setAccessible(true);
+    method.invoke(response);
+
+    assertTrue(response.getRecipientSocketSessions().contains(oldSession));
+    assertFalse(response.getRecipientSocketSessions().contains(replacementSession));
+  }
+
+  @Test
   @DisplayName("write() calls ServerImpl.getInstance().write(this, false)")
   void testWriteCallsServerWrite() {
     assertDoesNotThrow(() -> response.write());

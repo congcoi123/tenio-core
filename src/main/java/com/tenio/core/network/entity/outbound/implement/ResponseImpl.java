@@ -34,6 +34,8 @@ import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.server.ServerImpl;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,6 +51,11 @@ public final class ResponseImpl extends SystemLogger implements Response {
   private Collection<Session> socketSessions;
   private Collection<Session> datagramSessions;
   private Collection<Session> webSocketSessions;
+  /**
+   * The session that owned each player when the response was addressed. Keeping this association
+   * prevents an already-created response from following a player to a replacement connection.
+   */
+  private Map<Player, Session> addressedPlayerSessions;
   private ResponseGuarantee guarantee;
   private boolean prioritizedUdp;
   private boolean encrypted;
@@ -59,6 +66,7 @@ public final class ResponseImpl extends SystemLogger implements Response {
     datagramSessions = null;
     webSocketSessions = null;
     nonSessionPlayers = null;
+    addressedPlayerSessions = new IdentityHashMap<>();
     guarantee = ResponseGuarantee.NORMAL;
     prioritizedUdp = false;
     encrypted = false;
@@ -116,11 +124,7 @@ public final class ResponseImpl extends SystemLogger implements Response {
 
   @Override
   public Response setRecipientPlayers(Collection<Player> players) {
-    if (this.players == null) {
-      this.players = players;
-    } else {
-      this.players.addAll(players);
-    }
+    players.forEach(this::setRecipientPlayer);
     return this;
   }
 
@@ -130,6 +134,9 @@ public final class ResponseImpl extends SystemLogger implements Response {
       players = new ArrayList<>();
     }
     players.add(player);
+    // Address the response to the connection that exists now. Resolving this only in write()
+    // lets a delayed response for an old connection be delivered to a newly logged-in device.
+    player.getSession().ifPresent(session -> addressedPlayerSessions.put(player, session));
     return this;
   }
 
@@ -208,12 +215,20 @@ public final class ResponseImpl extends SystemLogger implements Response {
       return;
     }
 
-    // if UDP is set to the highest priority in use but the session type is WebSocket, then use the
-    // WebSocket channel instead
+    // If the player had a session when it was addressed, retain that exact session. A player may
+    // have moved to a replacement connection before this response is finally written.
+    //
+    // If it had no session then, retain the existing non-session behavior and resolve it here.
+    // This supports responses that are intentionally addressed while a player is offline.
+    //
+    // If UDP is set to the highest priority in use but the session type is WebSocket, then use the
+    // WebSocket channel instead.
     players.forEach(player -> {
-      if (player.containsSession()) {
-        var session = player.getSession();
-        session.ifPresent(this::checksAndAddsSession);
+      Session addressedSession = addressedPlayerSessions.get(player);
+      if (addressedSession != null) {
+        checksAndAddsSession(addressedSession);
+      } else if (player.containsSession()) {
+        player.getSession().ifPresent(this::checksAndAddsSession);
       } else {
         if (nonSessionPlayers == null) {
           nonSessionPlayers = new ArrayList<>();
