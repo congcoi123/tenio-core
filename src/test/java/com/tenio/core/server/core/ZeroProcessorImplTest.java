@@ -425,6 +425,19 @@ public class ZeroProcessorImplTest {
   }
 
   @Test
+  public void shouldIgnoreMessageFromSupersededSession() throws Exception {
+    Session replacementSession = mock(Session.class);
+    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
+    when(session.getName()).thenReturn(PLAYER_IDENTITY);
+    when(playerManager.getPlayerByIdentity(PLAYER_IDENTITY)).thenReturn(player);
+    when(player.getSession()).thenReturn(Optional.of(replacementSession));
+
+    processSessionReadMessage(session, message);
+
+    verify(eventManager, never()).emit(eq(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER), any(), any());
+  }
+
+  @Test
   public void shouldReturnWhenDatagramResultIsNotOptional() {
     when(eventManager.emit(eq(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION), eq(message)))
         .thenReturn("not-an-optional");

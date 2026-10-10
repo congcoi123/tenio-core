@@ -359,6 +359,11 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
         }
         return;
       }
+      // A player can have moved to a replacement connection after this session queued the
+      // message. Never let an older connection mutate the shared game state after that cutover.
+      if (player.getSession().orElse(null) != session) {
+        return;
+      }
       eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
     }
   }
