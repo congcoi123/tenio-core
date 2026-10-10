@@ -158,7 +158,6 @@ public final class ApplicationLauncher extends SystemLogger {
         debug("LAST SYSTEM MONITORING", SystemMonitoring.newInstance());
       }
       server.shutdown();
-      System.exit(0);
     }));
   }
 }

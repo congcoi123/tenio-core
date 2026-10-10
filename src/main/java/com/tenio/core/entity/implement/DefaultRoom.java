@@ -243,7 +243,8 @@ public class DefaultRoom implements Room {
   }
 
   @Override
-  public void addPlayer(Player player, String password, boolean asSpectator, int targetSlot) {
+  public synchronized void addPlayer(Player player, String password, boolean asSpectator,
+                                     int targetSlot) {
     if (this.password != null && !this.password.equals(password)) {
       throw new PlayerJoinedRoomException(
           String.format("Unable to add player: %s to room due to invalid password provided", player.getIdentity()),
@@ -264,25 +265,30 @@ public class DefaultRoom implements Room {
           PlayerJoinedRoomResult.ROOM_IS_FULL);
     }
 
-    playerManager.addPlayer(player);
-
     if (asSpectator) {
       player.setRoleInRoom(PlayerRoleInRoom.SPECTATOR);
-    } else {
-      player.setRoleInRoom(PlayerRoleInRoom.PARTICIPANT);
-    }
-
-    classifyPlayersByRoles();
-
-    if (asSpectator) {
       player.setPlayerSlotInCurrentRoom(NIL_SLOT);
     } else {
+      player.setRoleInRoom(PlayerRoleInRoom.PARTICIPANT);
       allocateSlotToPlayer(player, targetSlot);
+    }
+
+    try {
+      playerManager.addPlayer(player);
+      player.setCurrentRoom(this);
+      classifyPlayersByRoles();
+    } catch (RuntimeException exception) {
+      if (!asSpectator) {
+        roomPlayerSlotGeneratedStrategy.freeSlotWhenPlayerLeft(
+            player.getPlayerSlotInCurrentRoom());
+      }
+      player.setCurrentRoom(null);
+      throw exception;
     }
   }
 
   @Override
-  public void removePlayer(Player player) {
+  public synchronized void removePlayer(Player player) {
     roomPlayerSlotGeneratedStrategy.freeSlotWhenPlayerLeft(player.getPlayerSlotInCurrentRoom());
     playerManager.removePlayerByIdentity(player.getIdentity());
     player.setCurrentRoom(null);
@@ -296,7 +302,7 @@ public class DefaultRoom implements Room {
   }
 
   @Override
-  public void switchParticipantToSpectator(Player player) {
+  public synchronized void switchParticipantToSpectator(Player player) {
     if (!containsPlayerIdentity(player.getIdentity())) {
       throw new SwitchedPlayerRoleInRoomException(
           String.format("Player %s was not in room", player.getIdentity()),
@@ -316,7 +322,7 @@ public class DefaultRoom implements Room {
   }
 
   @Override
-  public void switchSpectatorToParticipant(Player player, int targetSlot) {
+  public synchronized void switchSpectatorToParticipant(Player player, int targetSlot) {
     if (!containsPlayerIdentity(player.getIdentity())) {
       throw new SwitchedPlayerRoleInRoomException(
           String.format("Player %s was not in room", player.getIdentity()),
@@ -346,7 +352,7 @@ public class DefaultRoom implements Room {
     classifyPlayersByRoles();
   }
 
-  private synchronized void classifyPlayersByRoles() {
+  private void classifyPlayersByRoles() {
     snapshotParticipants = getSnapshotPlayersList().stream()
         .filter(player -> player.getRoleInRoom() == PlayerRoleInRoom.PARTICIPANT)
         .toList();
@@ -414,6 +420,26 @@ public class DefaultRoom implements Room {
   }
 
   @Override
+  public synchronized void changeCapacity(int maxParticipants, int maxSpectators) {
+    int participantCount = getSnapshotParticipantCount();
+    if (maxParticipants <= participantCount) {
+      throw new IllegalArgumentException(String.format(
+          "Unable to assign the new max participants number: %d, "
+              + "because it's less than the current number of participants: %d",
+          maxParticipants, participantCount));
+    }
+    int spectatorCount = getSnapshotSpectatorCount();
+    if (maxSpectators <= spectatorCount) {
+      throw new IllegalArgumentException(String.format(
+          "Unable to assign the new max spectator number: %d, "
+              + "because it's less than the current number of spectator: %d",
+          maxSpectators, spectatorCount));
+    }
+    this.maxParticipants = maxParticipants;
+    this.maxSpectators = maxSpectators;
+  }
+
+  @Override
   public void configurePlayerManager(PlayerManager playerManager) {
     this.playerManager = playerManager;
   }
@@ -421,6 +447,8 @@ public class DefaultRoom implements Room {
   @Override
   public void configurePlayerSlotGeneratedStrategy(RoomPlayerSlotGeneratedStrategy roomPlayerSlotGeneratedStrategy) {
     this.roomPlayerSlotGeneratedStrategy = roomPlayerSlotGeneratedStrategy;
+    roomPlayerSlotGeneratedStrategy.setRoom(this);
+    roomPlayerSlotGeneratedStrategy.initialize();
   }
 
   @Override
@@ -447,7 +475,7 @@ public class DefaultRoom implements Room {
         ", owner=" + owner +
         ", state=" + state.get() +
         ", name='" + name + '\'' +
-        ", password='" + password + '\'' +
+        ", passwordProtected=" + (password != null) +
         ", snapshotParticipants=" + snapshotParticipants +
         ", maxParticipants=" + maxParticipants +
         ", snapshotSpectators=" + snapshotSpectators +

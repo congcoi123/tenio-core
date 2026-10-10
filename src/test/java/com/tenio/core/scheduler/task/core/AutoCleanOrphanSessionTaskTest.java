@@ -128,8 +128,8 @@ class AutoCleanOrphanSessionTaskTest {
   }
 
   @Test
-  @DisplayName("lambda body: orphan session is closed")
-  void testLambdaBodyClosesOrphanSession() throws IOException {
+  @DisplayName("lambda body: orphan session is closed and removed")
+  void testLambdaBodyClosesAndRemovesOrphanSession() throws IOException {
     Session orphan = Mockito.mock(Session.class);
     Mockito.when(orphan.isOrphan()).thenReturn(true);
     Mockito.when(sessionManager.getSnapshotSessionsList()).thenReturn(List.of(orphan));
@@ -139,6 +139,7 @@ class AutoCleanOrphanSessionTaskTest {
 
     Mockito.verify(orphan).close(ConnectionDisconnectMode.ORPHAN,
         PlayerDisconnectMode.CONNECTION_LOST);
+    Mockito.verify(orphan).remove();
   }
 
   @Test
@@ -164,6 +165,7 @@ class AutoCleanOrphanSessionTaskTest {
     Mockito.when(sessionManager.getSnapshotSessionCount()).thenReturn(1);
 
     assertDoesNotThrow(() -> runWithImmediateExecution(task::run));
+    Mockito.verify(orphan).remove();
   }
 
   @Test

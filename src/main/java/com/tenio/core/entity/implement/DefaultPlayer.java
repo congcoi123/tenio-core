@@ -186,7 +186,8 @@ public class DefaultPlayer implements Player {
 
   @Override
   public long getInactiveTimeInSeconds() {
-    return (now() - getLastActivityTime()) / 1000L;
+    // Inactive time should be calculated by the last read time (from the last command of the client)
+    return (now() - getLastReadTime()) / 1000L;
   }
 
   private void setLastActivityTime(long timestamp) {
@@ -242,12 +243,15 @@ public class DefaultPlayer implements Player {
   }
 
   @Override
-  public void setSession(Session session) {
+  public synchronized void setSession(Session session) {
+    // Session.associatePlayer owns the association lock before calling this method. Assign the
+    // player-side reference before publishing DONE so that state is never visible without the
+    // matching reference.
+    this.session = session;
     if (session != null) {
       session.setName(identity);
       session.setAssociatedToPlayer(Session.AssociatedState.DONE);
     }
-    this.session = session;
   }
 
   @Override
@@ -283,7 +287,9 @@ public class DefaultPlayer implements Player {
   @Override
   public void setCurrentRoom(Room room) {
     currentRoom = room;
-    setPlayerSlotInCurrentRoom(room == null ? Room.NIL_SLOT : Room.DEFAULT_SLOT);
+    if (room == null) {
+      setPlayerSlotInCurrentRoom(Room.NIL_SLOT);
+    }
     setLastJoinedRoomTime();
   }
 

@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,7 +43,6 @@ import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.server.Server;
 import com.tenio.core.server.ServerImpl;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,26 +51,26 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 class ResponseImplTest {
 
   private Response response;
   private Server mockServer;
+  private MockedStatic<ServerImpl> mockedServerImpl;
 
   @BeforeEach
-  void setUp() throws Exception {
-    response = ResponseImpl.newInstance();
+  void setUp() {
     mockServer = mock(Server.class);
-    Field instanceField = ServerImpl.class.getDeclaredField("instance");
-    instanceField.setAccessible(true);
-    instanceField.set(null, mockServer);
+    mockedServerImpl = mockStatic(ServerImpl.class);
+    mockedServerImpl.when(ServerImpl::getInstance).thenReturn(mockServer);
+
+    response = ResponseImpl.newInstance();
   }
 
   @AfterEach
-  void tearDown() throws Exception {
-    Field instanceField = ServerImpl.class.getDeclaredField("instance");
-    instanceField.setAccessible(true);
-    instanceField.set(null, null);
+  void tearDown() {
+    mockedServerImpl.close();
   }
 
   @Test
@@ -247,6 +247,27 @@ class ResponseImplTest {
 
     assertNotNull(response.getNonSessionRecipientPlayers());
     assertTrue(response.getNonSessionRecipientPlayers().contains(player));
+  }
+
+  @Test
+  void testConstructRecipientPlayersKeepsTheSessionThatWasAddressed() throws Exception {
+    Player player = mock(Player.class);
+    Session oldSession = mock(Session.class);
+    Session replacementSession = mock(Session.class);
+    when(player.getSession()).thenReturn(Optional.of(oldSession));
+    when(oldSession.isTcp()).thenReturn(true);
+    when(oldSession.containsUdp()).thenReturn(false);
+    when(replacementSession.isTcp()).thenReturn(true);
+
+    response.setRecipientPlayer(player);
+    when(player.getSession()).thenReturn(Optional.of(replacementSession));
+
+    Method method = ResponseImpl.class.getDeclaredMethod("constructRecipientPlayers");
+    method.setAccessible(true);
+    method.invoke(response);
+
+    assertTrue(response.getRecipientSocketSessions().contains(oldSession));
+    assertFalse(response.getRecipientSocketSessions().contains(replacementSession));
   }
 
   @Test

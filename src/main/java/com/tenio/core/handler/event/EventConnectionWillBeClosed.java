@@ -22,30 +22,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.security.ssl;
+package com.tenio.core.handler.event;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
+import com.tenio.core.network.entity.session.Session;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+/**
+ * When a connection is about to be closed on the server.
+ */
+@FunctionalInterface
+public interface EventConnectionWillBeClosed {
 
-@DisplayName("Unit Test Cases For WebSocketSslContext")
-class WebSocketSslContextTest {
-
-  @Test
-  @DisplayName("constructor fails fast when TLS configuration is unavailable")
-  void testConstructorFailsFastWhenKeystoreUnavailable() {
-    assertThrows(IllegalStateException.class, WebSocketSslContext::new);
-  }
-
-  @Test
-  @DisplayName("constructor uses custom algorithm from Security property when set")
-  void testConstructorUsesCustomAlgorithmFromSecurityProperty() {
-    java.security.Security.setProperty("ssl.KeyManagerFactory.algorithm", "SunX509");
-    try {
-      assertThrows(IllegalStateException.class, WebSocketSslContext::new);
-    } finally {
-      java.security.Security.setProperty("ssl.KeyManagerFactory.algorithm", "");
-    }
-  }
+  /**
+   * Called before the session is detached from its player and removed. This is emitted for every
+   * associated session close, including retained-player disconnections.
+   *
+   * @param session the connection session that is about to be closed
+   * @param mode the reason that the player's connection is being closed
+   * @see ServerEvent#CONNECTION_WILL_BE_CLOSED
+   */
+  void onConnectionWillBeClosed(Session session, PlayerDisconnectMode mode);
 }

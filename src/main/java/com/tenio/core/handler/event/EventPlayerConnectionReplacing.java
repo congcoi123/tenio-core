@@ -22,30 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.security.ssl;
+package com.tenio.core.handler.event;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import com.tenio.core.entity.Player;
+import com.tenio.core.network.entity.session.Session;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+/**
+ * Invoked after an old player connection has been made unable to send or receive normal traffic,
+ * but before a replacement connection is associated to that player.
+ */
+@FunctionalInterface
+public interface EventPlayerConnectionReplacing<P extends Player> {
 
-@DisplayName("Unit Test Cases For WebSocketSslContext")
-class WebSocketSslContextTest {
-
-  @Test
-  @DisplayName("constructor fails fast when TLS configuration is unavailable")
-  void testConstructorFailsFastWhenKeystoreUnavailable() {
-    assertThrows(IllegalStateException.class, WebSocketSslContext::new);
-  }
-
-  @Test
-  @DisplayName("constructor uses custom algorithm from Security property when set")
-  void testConstructorUsesCustomAlgorithmFromSecurityProperty() {
-    java.security.Security.setProperty("ssl.KeyManagerFactory.algorithm", "SunX509");
-    try {
-      assertThrows(IllegalStateException.class, WebSocketSslContext::new);
-    } finally {
-      java.security.Security.setProperty("ssl.KeyManagerFactory.algorithm", "");
-    }
-  }
+  /**
+   * Sends any application-specific final message to the replaced connection. Use
+   * {@link com.tenio.core.network.entity.outbound.Response#writeThenClose()} when a message
+   * must be delivered before the old connection is closed.
+   *
+   * @param player the player whose connection is being replaced
+   * @param staleSession the prepared old session
+   * @param replacementSession the new session that will be associated to the player
+   */
+  void onPlayerConnectionReplacing(P player, Session staleSession, Session replacementSession);
 }
