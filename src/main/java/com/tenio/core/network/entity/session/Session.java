@@ -160,6 +160,22 @@ public interface Session {
   void markPlayerAssociationClosing();
 
   /**
+   * Marks this session to be closed by the network writer after its queued final response has
+   * been delivered.
+   *
+   * <p>This prevents another server flow from closing the socket between queuing a final response
+   * and the writer sending it.</p>
+   */
+  void markCloseAfterPendingWrite();
+
+  /**
+   * Determines whether the network writer owns this session's pending close.
+   *
+   * @return {@code true} when a final response must be delivered before closing the session
+   */
+  boolean isCloseAfterPendingWriteMarked();
+
+  /**
    * In allowance period of time, if the session can not be associated to any player, it is
    * considered as an orphan session and will be removed.
    *

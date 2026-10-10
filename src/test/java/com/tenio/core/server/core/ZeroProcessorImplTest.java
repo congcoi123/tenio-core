@@ -494,6 +494,33 @@ public class ZeroProcessorImplTest {
   }
 
   @Test
+  public void shouldLetWriterCloseOldSessionAfterFinalResponseOnReconnection() throws Exception {
+    Session currentSession = mock(Session.class);
+    when(currentSession.isActivated()).thenReturn(true);
+    when(currentSession.getName()).thenReturn("old-name");
+    when(currentSession.isCloseAfterPendingWriteMarked()).thenReturn(true);
+    when(session.isActivated()).thenReturn(true);
+    when(session.transitionAssociatedState(Session.AssociatedState.NONE,
+        Session.AssociatedState.DOING)).thenReturn(true);
+    when(session.associatePlayer(player)).thenReturn(true);
+    when(eventManager.emit(eq(ServerEvent.PLAYER_CONNECTION_RETRY), eq(session), eq(message)))
+        .thenReturn(Optional.of(player));
+    when(player.getSession()).thenReturn(Optional.of(currentSession));
+    when(player.isInRoom()).thenReturn(false);
+    Request request = SessionRequest.newInstance()
+        .setEvent(ServerEvent.SESSION_REQUEST_CONNECTION)
+        .setSender(session)
+        .setMessage(message);
+
+    processor.processRequest(request);
+
+    verify(currentSession).markPlayerAssociationClosing();
+    verify(currentSession, never()).close(
+        eq(ConnectionDisconnectMode.RECONNECTION), eq(PlayerDisconnectMode.RECONNECTION));
+    verify(session).associatePlayer(player);
+  }
+
+  @Test
   public void shouldLeaveRoomOnReconnectionWhenPlayerIsInRoom() {
     when(session.isActivated()).thenReturn(true);
     when(session.transitionAssociatedState(Session.AssociatedState.NONE,

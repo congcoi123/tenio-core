@@ -206,7 +206,14 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
             try {
               // Detach the current session from its player
               markSessionClosingForReconnection(currentSession);
-              currentSession.close(ConnectionDisconnectMode.RECONNECTION, PlayerDisconnectMode.RECONNECTION);
+              // A duplicate-login handler may have queued a final notification with
+              // Response#writeThenClose(). Let the writer deliver that response before it closes
+              // the stale session; otherwise the client misses the duplicate-login code and
+              // starts reconnecting again.
+              if (!currentSession.isCloseAfterPendingWriteMarked()) {
+                currentSession.close(ConnectionDisconnectMode.RECONNECTION,
+                    PlayerDisconnectMode.RECONNECTION);
+              }
             } catch (IOException exception) {
               if (isErrorEnabled()) {
                 error(exception, "Error while closing old session: ", currentSession);

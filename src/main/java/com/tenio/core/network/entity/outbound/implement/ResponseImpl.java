@@ -192,7 +192,15 @@ public final class ResponseImpl extends SystemLogger implements Response {
   @Override
   public void writeThenClose() {
     constructRecipientPlayers();
+    markRecipientsForCloseAfterPendingWrite(socketSessions);
+    markRecipientsForCloseAfterPendingWrite(webSocketSessions);
     ServerImpl.getInstance().write(this, true);
+  }
+
+  private void markRecipientsForCloseAfterPendingWrite(Collection<Session> sessions) {
+    if (sessions != null) {
+      sessions.forEach(Session::markCloseAfterPendingWrite);
+    }
   }
 
   private void constructRecipientPlayers() {

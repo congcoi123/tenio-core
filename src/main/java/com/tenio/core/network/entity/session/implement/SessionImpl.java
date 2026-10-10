@@ -94,6 +94,7 @@ public class SessionImpl extends AbstractLogger implements Session {
   private volatile long inactivatedTime;
   private volatile long lastActivityTime;
   private volatile boolean hasUdp;
+  private volatile boolean closeAfterPendingWriteMarked;
 
   private int maxIdleTimeInSecond;
 
@@ -196,6 +197,16 @@ public class SessionImpl extends AbstractLogger implements Session {
         transitionAssociatedState(AssociatedState.DOING, AssociatedState.CLOSING);
       }
     }
+  }
+
+  @Override
+  public void markCloseAfterPendingWrite() {
+    closeAfterPendingWriteMarked = true;
+  }
+
+  @Override
+  public boolean isCloseAfterPendingWriteMarked() {
+    return closeAfterPendingWriteMarked;
   }
 
   @Override
