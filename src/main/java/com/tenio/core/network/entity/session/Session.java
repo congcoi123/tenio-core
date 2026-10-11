@@ -34,6 +34,7 @@ import com.tenio.core.network.codec.packet.PacketReadState;
 import com.tenio.core.network.codec.packet.PendingPacket;
 import com.tenio.core.network.codec.packet.ProcessedPacket;
 import com.tenio.core.network.define.TransportType;
+import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
@@ -158,7 +159,7 @@ public interface Session {
    *
    * <p>The old session can no longer submit player messages and any queued outbound messages are
    * discarded. The transport remains active so a final response can be sent with
-   * {@link com.tenio.core.network.entity.outbound.Response#writeThenClose()}.</p>
+   * {@link Response#writeThenClose()}.</p>
    */
   void prepareForReplacement();
 

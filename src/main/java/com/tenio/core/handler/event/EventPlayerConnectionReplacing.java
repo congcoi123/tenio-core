@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.handler.event;
 
 import com.tenio.core.entity.Player;
+import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.entity.session.Session;
 
 /**
@@ -36,7 +37,7 @@ public interface EventPlayerConnectionReplacing<P extends Player> {
 
   /**
    * Sends any application-specific final message to the replaced connection. Use
-   * {@link com.tenio.core.network.entity.outbound.Response#writeThenClose()} when a message
+   * {@link Response#writeThenClose()} when a message
    * must be delivered before the old connection is closed.
    *
    * @param player the player whose connection is being replaced
