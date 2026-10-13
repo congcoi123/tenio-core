@@ -93,10 +93,6 @@
                  getting message from client.
                  Set it to -1 to ignore the checking -->
             <Property name="max-player-idle-time">180</Property>                    <!-- Unit: Seconds -->
-            <!-- The max IDLE time in seconds which server can wait from the last
-                 getting message from client (in case the player enables the never deported flag).
-                 Set it to -1 to ignore the checking -->
-            <Property name="max-player-idle-time-never-deported">86400</Property>    <!-- Unit: Seconds -->
         </Properties>
     </Configuration>
 

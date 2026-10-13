@@ -83,25 +83,17 @@ public final class AutoDisconnectPlayerTask extends AbstractSystemTask {
             Iterator<Player> iterator = playerManager.getSnapshotPlayersList().listIterator();
             while (iterator.hasNext()) {
               Player player = iterator.next();
-              if (player.isNeverDeported()) {
-                if (player.isIdleNeverDeported()) {
+              if (!player.containsSession()) {
+                if (player.isReconnectGracePeriodExpired()) {
                   if (isDebugEnabled()) {
                     debug("AUTO DISCONNECT PLAYER",
                         player.getIdentity(),
-                        " (never deported) is going to be forced to remove by the cleaning task > ", player);
+                        " exceeded the reconnect grace period and is going to be removed > ", player);
                   }
                   ServerImpl.getInstance().getApi().logout(player, ConnectionDisconnectMode.IDLE,
                       PlayerDisconnectMode.IDLE);
                 }
-              } else {
-                if (player.isIdle()) {
-                  if (isDebugEnabled()) {
-                    debug("AUTO DISCONNECT PLAYER",
-                        player.getIdentity(), " is going to be forced to remove by the cleaning task > ", player);
-                  }
-                  ServerImpl.getInstance().getApi().logout(player, ConnectionDisconnectMode.IDLE,
-                      PlayerDisconnectMode.IDLE);
-                }
+                continue;
               }
             }
           });

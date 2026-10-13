@@ -225,10 +225,20 @@ class PlayerManagerImplTest {
   }
 
   @Test
-  @DisplayName("Test configureMaxIdleTimeNeverDeportedInSeconds does not throw")
-  void testConfigureMaxIdleTimeNeverDeportedInSeconds() {
-    playerManager.configureMaxIdleTimeNeverDeportedInSeconds(60);
-    // no exception expected
+  @DisplayName("A room membership manager does not clear the configured reconnect grace period")
+  void testRoomMembershipManagerKeepsReconnectGracePeriod() throws Exception {
+    playerManager.configureMaxIdleTimeInSeconds(1);
+    Player player = DefaultPlayer.newInstance("reconnecting", mock(Session.class));
+    playerManager.addPlayer(player);
+
+    PlayerManager roomPlayerManager = PlayerManagerImpl.newInstance(EventManager.newInstance());
+    roomPlayerManager.addPlayer(player);
+    player.setSession(null);
+    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("disconnectedTime");
+    field.setAccessible(true);
+    field.set(player, System.currentTimeMillis() - 2000L);
+
+    assertTrue(player.isReconnectGracePeriodExpired());
   }
 
   @Test

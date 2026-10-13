@@ -49,7 +49,6 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   private volatile List<Player> snapshotPlayersList;
   private volatile int snapshotPlayerCount;
   private volatile int maxIdleTimeInSecond;
-  private volatile int maxIdleTimeNeverDeportedInSecond;
 
   private PlayerManagerImpl(EventManager eventManager) {
     super(eventManager);
@@ -177,11 +176,6 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
   }
 
   @Override
-  public void configureMaxIdleTimeNeverDeportedInSeconds(int seconds) {
-    maxIdleTimeNeverDeportedInSecond = seconds;
-  }
-
-  @Override
   public void clear() {
     synchronized (playersLock) {
       players.clear();
@@ -197,8 +191,12 @@ public final class PlayerManagerImpl extends AbstractManager implements PlayerMa
    * @param player the target player
    */
   private void configureInitialPlayer(Player player) {
-    player.configureMaxIdleTimeInSeconds(maxIdleTimeInSecond);
-    player.configureMaxIdleTimeNeverDeportedInSeconds(maxIdleTimeNeverDeportedInSecond);
+    // Room-owned player managers only track membership and intentionally have no reconnect
+    // timeout. Do not let their default zero value overwrite the server player's configured
+    // grace period when a player joins a room.
+    if (maxIdleTimeInSecond > 0) {
+      player.configureMaxIdleTimeInSeconds(maxIdleTimeInSecond);
+    }
     player.setActivated(true);
     player.setLoggedIn(true);
   }

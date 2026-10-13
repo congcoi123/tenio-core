@@ -112,6 +112,23 @@ class DefaultPlayerTest {
   }
 
   @Test
+  @DisplayName("Reconnect grace period starts only after a session is detached")
+  void testReconnectGracePeriod() throws Exception {
+    Player player = DefaultPlayer.newInstance("Test", mock(Session.class));
+    player.configureMaxIdleTimeInSeconds(1);
+    assertFalse(player.isReconnectGracePeriodExpired());
+
+    player.setSession(null);
+    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("disconnectedTime");
+    field.setAccessible(true);
+    field.set(player, System.currentTimeMillis() - 2000L);
+
+    assertTrue(player.isReconnectGracePeriodExpired());
+    player.setSession(mock(Session.class));
+    assertFalse(player.isReconnectGracePeriodExpired());
+  }
+
+  @Test
   @DisplayName("Test room setter/getter")
   void testRoomAssignment() {
     Player player = DefaultPlayer.newInstance("Test");
@@ -153,18 +170,6 @@ class DefaultPlayerTest {
     player.setProperty("a", 1);
     player.clearProperties();
     assertFalse(player.containsProperty("a"));
-  }
-
-  @Test
-  @DisplayName("Test IDLE/Deportation states getter/setter")
-  void testIdleAndDeportation() {
-    Player player = DefaultPlayer.newInstance("Test");
-    player.configureMaxIdleTimeInSeconds(0);
-    assertFalse(player.isIdle());
-    player.setNeverDeported(true);
-    assertTrue(player.isNeverDeported());
-    player.configureMaxIdleTimeNeverDeportedInSeconds(0);
-    assertFalse(player.isIdleNeverDeported());
   }
 
   @Test
@@ -249,16 +254,6 @@ class DefaultPlayerTest {
   }
 
   @Test
-  @DisplayName("Test onUpdateListener is called on setNeverDeported")
-  void testOnUpdateListenerTriggeredOnSetNeverDeported() {
-    Player player = DefaultPlayer.newInstance("Test");
-    AtomicReference<Field> captured = new AtomicReference<>();
-    player.onUpdateListener(captured::set);
-    player.setNeverDeported(true);
-    assertEquals(Field.DEPORTATION, captured.get());
-  }
-
-  @Test
   @DisplayName("Test onUpdateListener is called on setProperty")
   void testOnUpdateListenerTriggeredOnSetProperty() {
     Player player = DefaultPlayer.newInstance("Test");
@@ -306,37 +301,6 @@ class DefaultPlayerTest {
     Player player = DefaultPlayer.newInstance("Test");
     player.setSession(mock(com.tenio.core.network.entity.session.Session.class));
     assertTrue(player.containsSession());
-  }
-
-  @Test
-  @DisplayName("isIdle returns true when maxIdleTime is exceeded")
-  void testIsIdleReturnsTrueWhenIdleTimeExceeded() throws Exception {
-    Player player = DefaultPlayer.newInstance("Test");
-    player.configureMaxIdleTimeInSeconds(1);
-    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("lastReadTime");
-    field.setAccessible(true);
-    field.set(player, System.currentTimeMillis() - 5000L);
-    assertTrue(player.isIdle());
-  }
-
-  @Test
-  @DisplayName("isIdle returns false when maxIdleTime is set but not yet exceeded")
-  void testIsIdleReturnsFalseWhenNotYetIdle() {
-    Player player = DefaultPlayer.newInstance("Test");
-    player.configureMaxIdleTimeInSeconds(3600);
-    assertFalse(player.isIdle());
-  }
-
-  @Test
-  @DisplayName("isIdleNeverDeported returns true when never deported and idle")
-  void testIsIdleNeverDeportedReturnsTrueWhenConditionsMet() throws Exception {
-    Player player = DefaultPlayer.newInstance("Test");
-    player.setNeverDeported(true);
-    player.configureMaxIdleTimeNeverDeportedInSeconds(1);
-    java.lang.reflect.Field field = DefaultPlayer.class.getDeclaredField("lastReadTime");
-    field.setAccessible(true);
-    field.set(player, System.currentTimeMillis() - 5000L);
-    assertTrue(player.isIdleNeverDeported());
   }
 
   @Test
