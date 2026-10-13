@@ -220,14 +220,6 @@ class DefaultPlayerTest {
   }
 
   @Test
-  @DisplayName("Test getInactiveTimeInSeconds returns non-negative value")
-  void testGetInactiveTimeInSeconds() {
-    Player player = DefaultPlayer.newInstance("Test");
-    player.setLastReadTime(System.currentTimeMillis());
-    assertTrue(player.getInactiveTimeInSeconds() >= 0);
-  }
-
-  @Test
   @DisplayName("Test getLastJoinedRoomTime returns 0 initially")
   void testGetLastJoinedRoomTimeInitiallyZero() {
     Player player = DefaultPlayer.newInstance("Test");

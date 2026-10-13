@@ -174,14 +174,6 @@ public interface Player {
   long getLastActivityTime();
 
   /**
-   * Retrieves the duration from the last activity.
-   * This value is used for idle state management.
-   *
-   * @return the duration from the last activity in seconds
-   */
-  long getInactiveTimeInSeconds();
-
-  /**
    * Retrieves the last time when the player receives the last byte of data.
    * This value is used for connection monitoring.
    *
