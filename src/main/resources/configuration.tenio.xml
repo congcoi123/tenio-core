@@ -84,7 +84,6 @@
 			<!-- The max IDLE time in seconds which server can wait from the last 
 				getting message from client -->
 			<Property name="max-player-idle-time">180</Property>		<!-- Unit: Seconds -->
-			<Property name="max-player-idle-time-never-deported">86400</Property>	<!-- Unit: Seconds -->
 		</Properties>
 	</Configuration>
 

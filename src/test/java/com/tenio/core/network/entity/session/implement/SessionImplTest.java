@@ -38,6 +38,8 @@ import static org.mockito.Mockito.when;
 
 import com.tenio.common.data.DataCollection;
 import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.implement.DefaultPlayer;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.exception.InboundQueueFullException;
@@ -145,6 +147,45 @@ class SessionImplTest {
     boolean result = session.transitionAssociatedState(AssociatedState.DONE, AssociatedState.NONE);
     assertFalse(result);
     assertTrue(session.isAssociatedToPlayer(AssociatedState.NONE)); // unchanged
+  }
+
+  @Test
+  @DisplayName("Test associatePlayer binds a fresh session and publishes DONE")
+  void testAssociatePlayer() {
+    Session session = SessionImpl.newInstance();
+    Player player = DefaultPlayer.newInstance("player-1");
+
+    assertTrue(session.associatePlayer(player));
+    assertEquals(session, player.getSession().orElseThrow());
+    assertEquals("player-1", session.getName());
+    assertTrue(session.isAssociatedToPlayer(AssociatedState.DONE));
+  }
+
+  @Test
+  @DisplayName("Test beginPlayerAssociationClose makes the association terminal")
+  void testBeginPlayerAssociationClose() {
+    Session session = SessionImpl.newInstance();
+    Player player = DefaultPlayer.newInstance("player-1");
+    assertTrue(session.associatePlayer(player));
+
+    assertTrue(session.beginPlayerAssociationClose());
+    assertTrue(session.isAssociatedToPlayer(AssociatedState.CLOSING));
+    assertFalse(session.associatePlayer(player));
+  }
+
+  @Test
+  @DisplayName("Test prepareForReplacement blocks input and discards queued output")
+  void testPrepareForReplacement() {
+    Session session = SessionImpl.newInstance();
+    Player player = DefaultPlayer.newInstance("player-1");
+    OutboundQueue outboundQueue = mock(OutboundQueue.class);
+    session.configureOutboundQueue(outboundQueue);
+    assertTrue(session.associatePlayer(player));
+
+    session.prepareForReplacement();
+
+    assertTrue(session.isAssociatedToPlayer(AssociatedState.CLOSING));
+    verify(outboundQueue).clear();
   }
 
   @Test

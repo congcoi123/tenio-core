@@ -40,7 +40,9 @@ import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
+import io.netty.util.ReferenceCountUtil;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 /**
  * Receive all messages sent from clients side. It converts serialize data to a system's object
@@ -105,19 +107,22 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object raw) {
-    // only allow this type of frame
-    if (raw instanceof BinaryWebSocketFrame) {
+    try {
+      // only allow this type of frame
+      if (!(raw instanceof BinaryWebSocketFrame frame)) {
+        return;
+      }
       // convert the BinaryWebSocketFrame to bytes' array
-      var buffer = ((BinaryWebSocketFrame) raw).content();
+      var buffer = frame.content();
       var binaries = new byte[buffer.readableBytes()];
       buffer.getBytes(buffer.readerIndex(), binaries);
-      buffer.release();
 
       var session = sessionManager.getSessionByWebSocket(ctx.channel());
 
       if (session == null) {
         try {
-          var address = ctx.channel().remoteAddress().toString();
+          var address = ((InetSocketAddress) ctx.channel().remoteAddress())
+              .getAddress().getHostAddress();
           connectionFilter.validateAndAddAddress(address);
         } catch (RefusedConnectionAddressException exception) {
           if (logger.isErrorEnabled()) {
@@ -126,6 +131,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
           // handle refused connection, it should send to the client the reason before closing connection
           eventManager.emit(ServerEvent.WEBSOCKET_CONNECTION_REFUSED, ctx.channel(), exception);
           ctx.channel().close();
+          return;
         }
 
         session = sessionManager.createWebSocketSession(ctx.channel());
@@ -161,6 +167,8 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
           networkReaderStatistic.updateReadDroppedPackets(1);
         }
       }
+    } finally {
+      ReferenceCountUtil.release(raw);
     }
   }
 

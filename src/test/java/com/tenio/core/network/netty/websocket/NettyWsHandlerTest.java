@@ -336,6 +336,7 @@ class NettyWsHandlerTest {
     verify(eventManager).emit(eq(ServerEvent.WEBSOCKET_CONNECTION_REFUSED), eq(channel),
         any(RefusedConnectionAddressException.class));
     verify(channel).close();
+    verify(sessionManager, never()).createWebSocketSession(channel);
   }
 
   @Test
