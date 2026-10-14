@@ -35,6 +35,7 @@ import com.tenio.core.server.ServerImpl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -58,6 +59,7 @@ public final class ResponseImpl extends SystemLogger implements Response {
   private Map<Player, Session> addressedPlayerSessions;
   private ResponseGuarantee guarantee;
   private boolean prioritizedUdp;
+  private boolean onlyUdp;
   private boolean encrypted;
 
   private ResponseImpl() {
@@ -69,6 +71,7 @@ public final class ResponseImpl extends SystemLogger implements Response {
     addressedPlayerSessions = new IdentityHashMap<>();
     guarantee = ResponseGuarantee.NORMAL;
     prioritizedUdp = false;
+    onlyUdp = false;
     encrypted = false;
   }
 
@@ -159,6 +162,12 @@ public final class ResponseImpl extends SystemLogger implements Response {
   }
 
   @Override
+  public Response onlyUdp() {
+    onlyUdp = true;
+    return this;
+  }
+
+  @Override
   public Response encrypted() {
     encrypted = true;
     return this;
@@ -222,43 +231,59 @@ public final class ResponseImpl extends SystemLogger implements Response {
     // This supports responses that are intentionally addressed while a player is offline.
     //
     // If UDP is set to the highest priority in use but the session type is WebSocket, then use the
-    // WebSocket channel instead.
-    players.forEach(player -> {
+    // WebSocket channel instead. When UDP is required exclusively, skip recipients without it.
+    Iterator<Player> iterator = players.iterator();
+    while (iterator.hasNext()) {
+      Player player = iterator.next();
       Session addressedSession = addressedPlayerSessions.get(player);
       if (addressedSession != null) {
-        checksAndAddsSession(addressedSession);
+        if (!checksAndAddsSession(addressedSession)) {
+          iterator.remove();
+        }
       } else if (player.containsSession()) {
-        player.getSession().ifPresent(this::checksAndAddsSession);
+        if (!player.getSession().filter(this::checksAndAddsSession).isPresent()) {
+          iterator.remove();
+        }
+      } else if (onlyUdp) {
+        iterator.remove();
       } else {
         if (nonSessionPlayers == null) {
           nonSessionPlayers = new ArrayList<>();
         }
         nonSessionPlayers.add(player);
       }
-    });
+    }
   }
 
-  private void checksAndAddsSession(Session session) {
+  private boolean checksAndAddsSession(Session session) {
     if (session.isTcp()) {
-      // when the session contains a UDP connection and the response requires it, add its session
-      // to the list: UDP > TCP
-      if (prioritizedUdp && session.containsUdp()) {
+      // When the session contains UDP and the response requires it, add it to the UDP list.
+      if ((prioritizedUdp || onlyUdp) && session.containsUdp()) {
         if (datagramSessions == null) {
           datagramSessions = new ArrayList<>();
         }
         datagramSessions.add(session);
-      } else {
-        if (socketSessions == null) {
-          socketSessions = new ArrayList<>();
-        }
-        socketSessions.add(session);
+        return true;
       }
+      if (onlyUdp) {
+        return false;
+      }
+      if (socketSessions == null) {
+        socketSessions = new ArrayList<>();
+      }
+      socketSessions.add(session);
+      return true;
     } else if (session.isWebSocket()) {
+      if (onlyUdp) {
+        return false;
+      }
       if (webSocketSessions == null) {
         webSocketSessions = new ArrayList<>();
       }
       webSocketSessions.add(session);
+      return true;
     }
+    return false;
   }
 
   @Override
@@ -272,6 +297,7 @@ public final class ResponseImpl extends SystemLogger implements Response {
         ", webSocketSessions=" + webSocketSessions +
         ", guarantee=" + guarantee +
         ", prioritizedUdp=" + prioritizedUdp +
+        ", onlyUdp=" + onlyUdp +
         ", encrypted=" + encrypted +
         '}';
   }

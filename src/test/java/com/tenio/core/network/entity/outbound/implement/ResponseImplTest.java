@@ -172,6 +172,45 @@ class ResponseImplTest {
   }
 
   @Test
+  void testSetRecipientSessionTcpWithUdpAndOnlyUdpGoesToDatagramSessions() {
+    Session session = mock(Session.class);
+    when(session.isTcp()).thenReturn(true);
+    when(session.containsUdp()).thenReturn(true);
+
+    response.onlyUdp().setRecipientSession(session);
+
+    assertNotNull(response.getRecipientDatagramSessions());
+    assertTrue(response.getRecipientDatagramSessions().contains(session));
+    assertNull(response.getRecipientSocketSessions());
+  }
+
+  @Test
+  void testSetRecipientSessionWithoutUdpIsIgnoredWhenOnlyUdp() {
+    Session session = mock(Session.class);
+    when(session.isTcp()).thenReturn(true);
+    when(session.containsUdp()).thenReturn(false);
+
+    response.onlyUdp().setRecipientSession(session);
+
+    assertNull(response.getRecipientSocketSessions());
+    assertNull(response.getRecipientDatagramSessions());
+    assertNull(response.getRecipientWebSocketSessions());
+  }
+
+  @Test
+  void testSetRecipientWebSocketIsIgnoredWhenOnlyUdp() {
+    Session session = mock(Session.class);
+    when(session.isTcp()).thenReturn(false);
+    when(session.isWebSocket()).thenReturn(true);
+
+    response.onlyUdp().setRecipientSession(session);
+
+    assertNull(response.getRecipientSocketSessions());
+    assertNull(response.getRecipientDatagramSessions());
+    assertNull(response.getRecipientWebSocketSessions());
+  }
+
+  @Test
   void testSetRecipientSessionWebSocketGoesToWebSocketSessions() {
     Session session = mock(Session.class);
     when(session.isTcp()).thenReturn(false);
@@ -247,6 +286,26 @@ class ResponseImplTest {
 
     assertNotNull(response.getNonSessionRecipientPlayers());
     assertTrue(response.getNonSessionRecipientPlayers().contains(player));
+  }
+
+  @Test
+  void testConstructRecipientPlayerWithoutUdpIsIgnoredWhenOnlyUdp() throws Exception {
+    Player player = mock(Player.class);
+    Session session = mock(Session.class);
+    when(player.getSession()).thenReturn(Optional.of(session));
+    when(session.isTcp()).thenReturn(true);
+    when(session.containsUdp()).thenReturn(false);
+
+    response.onlyUdp().setRecipientPlayer(player);
+
+    Method method = ResponseImpl.class.getDeclaredMethod("constructRecipientPlayers");
+    method.setAccessible(true);
+    method.invoke(response);
+
+    assertTrue(response.getRecipientPlayers().isEmpty());
+    assertNull(response.getNonSessionRecipientPlayers());
+    assertNull(response.getRecipientSocketSessions());
+    assertNull(response.getRecipientDatagramSessions());
   }
 
   @Test
