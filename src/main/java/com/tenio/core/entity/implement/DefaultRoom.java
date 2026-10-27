@@ -72,7 +72,16 @@ public class DefaultRoom implements Room {
    * Constructor.
    */
   public DefaultRoom() {
-    id = ID_COUNTER.getAndIncrement();
+    this(ID_COUNTER.getAndIncrement());
+  }
+
+  /** Creates a room using an externally assigned identity. */
+  protected DefaultRoom(long assignedId) {
+    if (assignedId < 0) {
+      throw new IllegalArgumentException("Room identity must be non-negative");
+    }
+
+    id = assignedId;
     properties = new ConcurrentHashMap<>();
     state = new AtomicReference<>();
     snapshotSpectators = new ArrayList<>();
