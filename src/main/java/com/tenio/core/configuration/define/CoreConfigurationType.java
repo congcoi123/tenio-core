@@ -136,6 +136,13 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   INTERVAL_CCU_SCAN("ccu-scan-interval"),
   /**
+   * Delay between main-connection keepalive scans, in seconds. A positive value enables
+   * scheduling independently of the receive timeout.
+   *
+   * @since 0.7.4
+   */
+  INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN("main-connection-keepalive-scan-interval"),
+  /**
    * Sets an interval to frequently check whether a deadlock occurred.Disable
    * this feature by setting the value to {@code 0}.
    *
@@ -197,9 +204,13 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   PROP_MAX_NUMBER_ROOMS("max-number-rooms"),
   /**
-   * Sets the maximum live-session inactivity and reconnect grace period in seconds.
+   * Sets the detached-player reconnect grace period in seconds, live TCP silence is configured separately.
    */
   PROP_MAX_PLAYER_IDLE_TIME("max-player-idle-time"),
+  /**
+   * Maximum main-connection silence for an authenticated player session, in seconds.
+   */
+  PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS("main-connection-keepalive-timeout-seconds"),
   /**
    * Determines whether the WebSocket connection could use SSL configuration.
    */

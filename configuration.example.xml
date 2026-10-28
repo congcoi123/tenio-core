@@ -63,6 +63,8 @@
             <Task name="removed-room-scan-interval">30</Task>        <!-- Unit: Seconds -->
             <!-- The period checking player time out in seconds -->
             <Task name="disconnected-player-scan-interval">45</Task>        <!-- Unit: Seconds -->
+            <!-- Main-connection keepalive scan delay: 0 disables this task -->
+            <Task name="main-connection-keepalive-scan-interval">0</Task>        <!-- Unit: Seconds -->
             <!-- The period checking CCU in seconds -->
             <Task name="ccu-scan-interval">60</Task>                <!-- Unit: Seconds -->
             <!-- Schedule detecting deadlocked threads -->
@@ -89,9 +91,8 @@
             <Property name="max-number-players">1000</Property>
             <!-- The maximum number of rooms which game can handle -->
             <Property name="max-number-rooms">1000</Property>
-            <!-- Maximum inactivity time in seconds for a live connection and the reconnect
-                 grace period after that connection is detached.
-                 Set it to -1 to ignore the checking -->
+            <!-- Reconnect grace period in seconds after the primary connection is detached  -->
+            <Property name="main-connection-keepalive-timeout-seconds">0</Property> <!-- Unit: Seconds, 0 disables expiry checks -->
             <Property name="max-player-idle-time">180</Property>                    <!-- Unit: Seconds -->
         </Properties>
     </Configuration>

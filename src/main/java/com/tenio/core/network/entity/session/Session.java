@@ -418,14 +418,14 @@ public interface Session {
   long getCreatedTime();
 
   /**
-   * Retrieves the last activity time of session.
+   * Retrieves the last activity timestamp supplied by a read or write update.
    *
    * @return the last activity time in milliseconds ({@code long} value)
    */
   long getLastActivityTime();
 
   /**
-   * Retrieves the last time when the session receives the last byte of data from client side.
+   * Retrieves the last receive timestamp.
    *
    * @return the last reading new data time in milliseconds ({@code long} value)
    */
@@ -439,7 +439,21 @@ public interface Session {
   void setLastReadTime(long timestamp);
 
   /**
-   * Retrieves the last time when session sends the last byte of data to client side.
+   * Retrieves the last reliable transport byte-receipt time.
+   *
+   * @return last TCP/WebSocket receipt timestamp, or creation time before the first receipt
+   */
+  long getLastReliableReadTime();
+
+  /**
+   * Records reliable transport byte receipt and updates general read/activity timestamps.
+   *
+   * @param timestamp reliable transport receipt time in epoch milliseconds
+   */
+  void setLastReliableReadTime(long timestamp);
+
+  /**
+   * Retrieves the last outbound activity timestamp.
    *
    * @return the last writing data time in milliseconds ({@code long} value)
    */
@@ -453,7 +467,7 @@ public interface Session {
   void setLastWriteTime(long timestamp);
 
   /**
-   * Retrieves the total number of binaries which the session receives from client side.
+   * Retrieves the thread-safe total of bytes reported by this session's transport readers.
    *
    * @return the total number of binaries ({@code long} value) which the session receives from
    * client side
@@ -461,15 +475,16 @@ public interface Session {
   long getReadBytes();
 
   /**
-   * Increases the total number of binaries which the session receives from client side.
+   * Adds transport-received bytes atomically.
    *
    * @param numberBytes the additional number of binaries ({@code long} value) which the
    *                    session receives from client side
+   * @throws IllegalArgumentException if numberBytes is negative
    */
   void addReadBytes(long numberBytes);
 
   /**
-   * Retrieves the total number of binaries which the session sends to client side.
+   * Retrieves the thread-safe total of bytes reported by this session's transport writers.
    *
    * @return the total number of binaries ({@code long} value) which the session sends to
    * client side
@@ -477,15 +492,16 @@ public interface Session {
   long getWrittenBytes();
 
   /**
-   * Increases the total number of binaries which the session sends to client side.
+   * Adds transport-written bytes atomically.
    *
    * @param numberBytes the additional number of binaries ({@code long} value) which the
    *                    session sends to client side
+   * @throws IllegalArgumentException if numberBytes is negative
    */
   void addWrittenBytes(long numberBytes);
 
   /**
-   * Retrieves the total number of messages which the session receives from client side.
+   * Retrieves the thread-safe total of decoded messages processed for this session.
    *
    * @return the total number of messages ({@code long} value) which the session receives from
    * client side
@@ -501,8 +517,7 @@ public interface Session {
   void increaseReadMessages();
 
   /**
-   * Retrieves the total number of dropped packets which violated the session's policies and is
-   * not able to send to client side.
+   * Retrieves the thread-safe total of outbound packet drops reported for this session.
    *
    * @return the total number of dropped packets ({@code long} value) which violated the
    * session's policies and is not able to send to client side
@@ -516,6 +531,7 @@ public interface Session {
    * @param numberPackets the additional number of dropped packets ({@code integer} value)
    *                      which violated the session's policies and is not able to send to client
    *                      side
+   * @throws IllegalArgumentException if numberPackets is negative
    */
   void addDroppedPackets(int numberPackets);
 

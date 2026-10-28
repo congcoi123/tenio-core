@@ -230,6 +230,10 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   private void setupScheduleService(Configuration configuration) {
+    scheduler.setMainConnectionKeepAliveTimeoutSeconds(
+        configuration.getInt(CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS));
+    scheduler.setMainConnectionKeepAliveScanInterval(
+        configuration.getInt(CoreConfigurationType.INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN));
     scheduler.setCcuReportInterval(
         configuration.getInt(CoreConfigurationType.INTERVAL_CCU_SCAN));
     scheduler.setDeadlockScanInterval(

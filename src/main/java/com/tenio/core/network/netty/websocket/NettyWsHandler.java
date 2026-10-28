@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.netty.websocket;
 
+import com.tenio.common.utility.TimeUtility;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
@@ -153,6 +154,9 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       }
 
       session.addReadBytes(binaries.length);
+      if (binaries.length > 0) {
+        session.setLastReliableReadTime(TimeUtility.currentTimeMillis());
+      }
       networkReaderStatistic.updateReadBytes(binaries.length);
       networkReaderStatistic.updateReadPackets(1);
 

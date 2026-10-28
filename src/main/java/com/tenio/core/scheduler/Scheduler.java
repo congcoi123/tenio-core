@@ -91,6 +91,22 @@ public interface Scheduler extends Service {
   void setSystemMonitoringInterval(int interval);
 
   /**
+   * Configures the delay between main-connection keepalive scans before startup.
+   *
+   * @param interval scan delay in seconds, non-positive values disable scheduling
+   */
+  void setMainConnectionKeepAliveScanInterval(int interval);
+
+  /**
+   * Configures the main connection's maximum inbound silence before scheduler startup.
+   *
+   * @param timeoutSeconds receive deadline in seconds, 0 disables expiry checks
+   * @throws IllegalArgumentException if the timeout is negative
+   * @see #setMainConnectionKeepAliveScanInterval(int)
+   */
+  void setMainConnectionKeepAliveTimeoutSeconds(int timeoutSeconds);
+
+  /**
    * Sets an instance of session manager to the service.
    *
    * @param sessionManager an instance of {@link SessionManager}
