@@ -60,15 +60,18 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.util.Optional;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 @DisplayName("Unit Test Cases For ZeroProcessorImpl")
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ZeroProcessorImplTest {
 
   private static final String PLAYER_IDENTITY = "test-player";
@@ -98,7 +101,7 @@ public class ZeroProcessorImplTest {
   private NetworkWriterStatistic networkWriterStatistic;
   private ZeroProcessorImpl processor;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     processor = ZeroProcessorImpl.newInstance(eventManager, serverApi, datagramChannelManager);
     processor.setSessionManager(sessionManager);

@@ -30,6 +30,7 @@ import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.bootstrap.BootstrapHandler;
+import com.tenio.core.bootstrap.injector.ProfileSelection;
 import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.system.SystemCommandManager;
 import com.tenio.core.configuration.DefaultCoreConfiguration;
@@ -52,10 +53,10 @@ import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.codec.encoder.BinaryPacketEncoderImpl;
 import com.tenio.core.network.codec.encryption.BinaryPacketEncryptor;
 import com.tenio.core.network.configuration.SocketConfiguration;
+import com.tenio.core.network.entity.inbound.policy.RequestPolicy;
+import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.entity.outbound.packet.policy.DefaultOutboundQueuePolicy;
 import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
-import com.tenio.core.network.entity.outbound.Response;
-import com.tenio.core.network.entity.inbound.policy.RequestPolicy;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.security.filter.DefaultConnectionFilter;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
@@ -76,9 +77,8 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
 /**
- * This class manages the workflow of the current server. The instruction's
- * orders are important, event subscribes must be set last and all configuration
- * values should be confirmed.
+ * This class manages the workflow of the current server. The instruction's orders are important,
+ * event subscribes must be set last and all configuration values should be confirmed.
  */
 public final class ServerImpl extends SystemLogger implements Server {
 
@@ -146,6 +146,14 @@ public final class ServerImpl extends SystemLogger implements Server {
     // load the file
     configuration.load(file);
 
+    // verify profile
+    var selectedProfiles = bootstrapHandler.getActiveProfiles();
+    if (selectedProfiles != null
+        && !selectedProfiles.isEmpty()
+        && !selectedProfiles.equals(ProfileSelection.parseRequired(configuration.getString(CoreConfigurationType.PROFILE)))) {
+      throw new IllegalStateException("Configuration profiles changed after bootstrap selection");
+    }
+
     // Put the current configurations to the logger
     if (isInfoEnabled()) {
       info("CONFIGURATION", configuration.toString());
@@ -160,9 +168,9 @@ public final class ServerImpl extends SystemLogger implements Server {
     }
 
     // subscribing for processes and handlers
-    zeroProcessor.subscribe(configuration.get(CoreConfigurationType.NETWORK_TCP) != null ||
-            configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) != null,
-            configuration.get(CoreConfigurationType.NETWORK_UDP) != null);
+    zeroProcessor.subscribe(configuration.get(CoreConfigurationType.NETWORK_TCP) != null || configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) != null,
+        configuration.get(CoreConfigurationType.NETWORK_UDP) != null
+    );
 
     bootstrapHandler.getEventHandler().initialize(eventManager);
 
@@ -186,9 +194,10 @@ public final class ServerImpl extends SystemLogger implements Server {
     zeroProcessor.activate();
 
     // it should wait for a while to let everything settles down
-    int servicesTakeTime = Math.max(Math.max(network.getMaximumStartingTimeInMilliseconds(),
-                    zeroProcessor.getMaximumStartingTimeInMilliseconds()),
-            scheduler.getMaximumStartingTimeInMilliseconds());
+    int servicesTakeTime = Math.max(
+            Math.max(network.getMaximumStartingTimeInMilliseconds(), zeroProcessor.getMaximumStartingTimeInMilliseconds()),
+            scheduler.getMaximumStartingTimeInMilliseconds()
+    );
     int totalWaitingTime = servicesTakeTime + CoreConstant.DELAY_BEFORE_SERVER_IS_READY_IN_MILLISECONDS;
     Thread.sleep(totalWaitingTime);
 
@@ -216,39 +225,34 @@ public final class ServerImpl extends SystemLogger implements Server {
     scheduler.start();
   }
 
-  private void setupCommands(ClientCommandManager clientCommandManager,
-                             SystemCommandManager systemCommandManager) {
+  private void setupCommands(ClientCommandManager clientCommandManager, SystemCommandManager systemCommandManager) {
     this.clientCommandManager = clientCommandManager;
     this.systemCommandManager = systemCommandManager;
   }
 
   private void setupEntitiesManagementService(Configuration configuration) {
-    playerManager.configureMaxIdleTimeInSeconds(
-        configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
-    roomManager.configureMaxRooms(
-        configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_ROOMS));
+    playerManager.configureMaxIdleTimeInSeconds(configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
+    roomManager.configureMaxRooms(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_ROOMS));
   }
 
   private void setupScheduleService(Configuration configuration) {
+    // Older custom configurations may omit these optional settings; omission disables keepalive.
     scheduler.setMainConnectionKeepAliveTimeoutSeconds(
-        configuration.getInt(CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS));
+            configuration.getString(CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS) == null
+            ? 0
+            : configuration.getInt(CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS)
+    );
     scheduler.setMainConnectionKeepAliveScanInterval(
-        configuration.getInt(CoreConfigurationType.INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN));
-    scheduler.setCcuReportInterval(
-        configuration.getInt(CoreConfigurationType.INTERVAL_CCU_SCAN));
-    scheduler.setDeadlockScanInterval(
-        configuration.getInt(CoreConfigurationType.INTERVAL_DEADLOCK_SCAN));
-    scheduler.setDisconnectedPlayerScanInterval(
-        configuration.getInt(CoreConfigurationType.INTERVAL_DISCONNECTED_PLAYER_SCAN));
-    scheduler
-        .setRemovedRoomScanInterval(
-            configuration.getInt(CoreConfigurationType.INTERVAL_REMOVED_ROOM_SCAN));
-    scheduler
-        .setSystemMonitoringInterval(
-            configuration.getInt(CoreConfigurationType.INTERVAL_SYSTEM_MONITORING));
-    scheduler
-        .setTrafficCounterInterval(
-            configuration.getInt(CoreConfigurationType.INTERVAL_TRAFFIC_COUNTER));
+            configuration.getString(CoreConfigurationType.INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN) == null
+            ? 0
+            : configuration.getInt(CoreConfigurationType.INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN)
+    );
+    scheduler.setCcuReportInterval(configuration.getInt(CoreConfigurationType.INTERVAL_CCU_SCAN));
+    scheduler.setDeadlockScanInterval(configuration.getInt(CoreConfigurationType.INTERVAL_DEADLOCK_SCAN));
+    scheduler.setDisconnectedPlayerScanInterval(configuration.getInt(CoreConfigurationType.INTERVAL_DISCONNECTED_PLAYER_SCAN));
+    scheduler.setRemovedRoomScanInterval(configuration.getInt(CoreConfigurationType.INTERVAL_REMOVED_ROOM_SCAN));
+    scheduler.setSystemMonitoringInterval(configuration.getInt(CoreConfigurationType.INTERVAL_SYSTEM_MONITORING));
+    scheduler.setTrafficCounterInterval(configuration.getInt(CoreConfigurationType.INTERVAL_TRAFFIC_COUNTER));
 
     scheduler.setSessionManager(network.getSessionManager());
     scheduler.setPlayerManager(playerManager);
@@ -283,77 +287,61 @@ public final class ServerImpl extends SystemLogger implements Server {
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_ACCEPTOR_BUFFER_SIZE));
     network.setSocketAcceptorWorkers(CoreConstant.DEFAULT_ENGINE_THREAD_POOL_SIZE);
 
-    var tcpSocketConfiguration = configuration.get(CoreConfigurationType.NETWORK_TCP) != null ?
-            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_TCP) : null;
-    var udpChannelConfiguration = configuration.get(CoreConfigurationType.NETWORK_UDP) != null ?
-            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_UDP) : null;
-    var webSocketConfiguration = configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) != null ?
-            (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) : null;
+    var tcpSocketConfiguration =
+            configuration.get(CoreConfigurationType.NETWORK_TCP) != null
+            ? (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_TCP)
+            : null;
+    var udpChannelConfiguration =
+            configuration.get(CoreConfigurationType.NETWORK_UDP) != null
+            ? (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_UDP)
+            : null;
+    var webSocketConfiguration =
+            configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET) != null
+            ? (SocketConfiguration) configuration.get(CoreConfigurationType.NETWORK_WEBSOCKET)
+            : null;
     network.setSocketConfigurations(tcpSocketConfiguration, udpChannelConfiguration, webSocketConfiguration);
 
     if (udpChannelConfiguration != null) {
       datagramChannelManager.configureUdpPort(udpChannelConfiguration.port());
     }
 
-    network.setSocketReaderBufferSize(
-        configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_READER_BUFFER_SIZE));
-    network.setSocketReaderWorkers(
-        configuration.getInt(CoreConfigurationType.WORKER_SOCKET_READER));
+    network.setSocketReaderBufferSize(configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_READER_BUFFER_SIZE));
+    network.setSocketReaderWorkers(configuration.getInt(CoreConfigurationType.WORKER_SOCKET_READER));
 
-    network.setSocketWriterBufferSize(
-        configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_WRITER_BUFFER_SIZE));
-    network.setSocketWriterWorkers(
-        configuration.getInt(CoreConfigurationType.WORKER_SOCKET_WRITER));
+    network.setSocketWriterBufferSize(configuration.getInt(CoreConfigurationType.NETWORK_PROP_SOCKET_WRITER_BUFFER_SIZE));
+    network.setSocketWriterWorkers(configuration.getInt(CoreConfigurationType.WORKER_SOCKET_WRITER));
 
-    network
-        .setWebSocketConsumerWorkers(
-            configuration.getInt(CoreConfigurationType.WORKER_WEBSOCKET_CONSUMER));
-    network
-        .setWebSocketProducerWorkers(
-            configuration.getInt(CoreConfigurationType.WORKER_WEBSOCKET_PRODUCER));
+    network.setWebSocketConsumerWorkers(configuration.getInt(CoreConfigurationType.WORKER_WEBSOCKET_CONSUMER));
+    network.setWebSocketProducerWorkers(configuration.getInt(CoreConfigurationType.WORKER_WEBSOCKET_PRODUCER));
 
-    network.setWebSocketReceiverBufferSize(
-        configuration.getInt(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_RECEIVER_BUFFER_SIZE));
-    network.setWebSocketSenderBufferSize(
-        configuration.getInt(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_SENDER_BUFFER_SIZE));
-    network
-        .setWebSocketUsingSsl(
-            configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_USING_SSL));
+    network.setWebSocketReceiverBufferSize(configuration.getInt(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_RECEIVER_BUFFER_SIZE));
+    network.setWebSocketSenderBufferSize(configuration.getInt(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_SENDER_BUFFER_SIZE));
+    network.setWebSocketUsingSsl(configuration.getBoolean(CoreConfigurationType.NETWORK_PROP_WEBSOCKET_USING_SSL));
 
     OutboundQueuePolicy outboundQueuePolicy = bootstrapHandler.getBeanByClazz(OutboundQueuePolicy.class);
     if (outboundQueuePolicy == null) {
       outboundQueuePolicy = new DefaultOutboundQueuePolicy();
     }
     network.setSessionOutboundQueuePolicy(outboundQueuePolicy);
-    network.setSessionInboundQueueSize(
-            configuration.getInt(CoreConfigurationType.PROP_MAX_SESSION_REQUEST_QUEUE_SIZE));
-    network.setSessionOutboundQueueSize(
-        configuration.getInt(CoreConfigurationType.PROP_MAX_SESSION_RESPONSE_QUEUE_SIZE));
-    network.setSessionSlowConsumingInboundQueueWarningThreshold(
-        configuration.getInt(CoreConfigurationType.PROP_SLOW_CONSUMING_WARNING_SESSION_REQUEST_THRESHOLD));
-    network.setSessionSlowConsumingOutboundQueueWarningThreshold(
-        configuration.getInt(CoreConfigurationType.PROP_SLOW_CONSUMING_WARNING_SESSION_RESPONSE_THRESHOLD));
+    network.setSessionInboundQueueSize(configuration.getInt(CoreConfigurationType.PROP_MAX_SESSION_REQUEST_QUEUE_SIZE));
+    network.setSessionOutboundQueueSize(configuration.getInt(CoreConfigurationType.PROP_MAX_SESSION_RESPONSE_QUEUE_SIZE));
+    network.setSessionSlowConsumingInboundQueueWarningThreshold(configuration.getInt(CoreConfigurationType.PROP_SLOW_CONSUMING_WARNING_SESSION_REQUEST_THRESHOLD));
+    network.setSessionSlowConsumingOutboundQueueWarningThreshold(configuration.getInt(CoreConfigurationType.PROP_SLOW_CONSUMING_WARNING_SESSION_RESPONSE_THRESHOLD));
 
-    DatagramPacketPolicy datagramPacketPolicy =
-        bootstrapHandler.getBeanByClazz(DatagramPacketPolicy.class);
+    DatagramPacketPolicy datagramPacketPolicy = bootstrapHandler.getBeanByClazz(DatagramPacketPolicy.class);
     if (datagramPacketPolicy == null) {
       datagramPacketPolicy = new DefaultDatagramPacketPolicy();
     }
     network.setDatagramPacketPolicy(datagramPacketPolicy);
 
-    network.setSessionMaxIdleTimeInSeconds(
-        configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
+    network.setSessionMaxIdleTimeInSeconds(configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
 
-    BinaryPacketCompressor binaryPacketCompressor =
-        bootstrapHandler.getBeanByClazz(BinaryPacketCompressor.class);
-    BinaryPacketEncryptor binaryPacketEncryptor =
-        bootstrapHandler.getBeanByClazz(BinaryPacketEncryptor.class);
+    BinaryPacketCompressor binaryPacketCompressor = bootstrapHandler.getBeanByClazz(BinaryPacketCompressor.class);
+    BinaryPacketEncryptor binaryPacketEncryptor = bootstrapHandler.getBeanByClazz(BinaryPacketEncryptor.class);
     BinaryPacketEncoder binaryPacketEncoder = new BinaryPacketEncoderImpl();
     BinaryPacketDecoder binaryPacketDecoder = new BinaryPacketDecoderImpl();
 
-    binaryPacketEncoder.setCompressionThresholdBytes(
-        configuration.getInt(
-            CoreConfigurationType.NETWORK_PROP_PACKET_COMPRESSION_THRESHOLD_BYTES));
+    binaryPacketEncoder.setCompressionThresholdBytes(configuration.getInt(CoreConfigurationType.NETWORK_PROP_PACKET_COMPRESSION_THRESHOLD_BYTES));
     binaryPacketEncoder.setCompressor(binaryPacketCompressor);
     binaryPacketEncoder.setEncryptor(binaryPacketEncryptor);
 
@@ -364,17 +352,14 @@ public final class ServerImpl extends SystemLogger implements Server {
     network.setPacketEncoder(binaryPacketEncoder);
   }
 
-  private void setupInternalProcessorService(Configuration configuration,
-                                             BootstrapHandler bootstrapHandler) {
+  private void setupInternalProcessorService(Configuration configuration, BootstrapHandler bootstrapHandler) {
     RequestPolicy requestPolicy = bootstrapHandler.getBeanByClazz(RequestPolicy.class);
     zeroProcessor.setRequestPolicy(requestPolicy);
-    zeroProcessor
-        .setMaxNumberPlayers(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS));
+    zeroProcessor.setMaxNumberPlayers(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS));
     zeroProcessor.setSessionManager(network.getSessionManager());
     zeroProcessor.setPlayerManager(playerManager);
     zeroProcessor.setThreadPoolSize(configuration.getInt(CoreConfigurationType.WORKER_PROCESSOR));
-    zeroProcessor.setKeepPlayerOnDisconnection(
-        configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION));
+    zeroProcessor.setKeepPlayerOnDisconnection(configuration.getBoolean(CoreConfigurationType.PROP_KEEP_PLAYER_ON_DISCONNECTION));
 
     zeroProcessor.setNetworkReaderStatistic(network.getNetworkReaderStatistic());
     zeroProcessor.setNetworkWriterStatistic(network.getNetworkWriterStatistic());

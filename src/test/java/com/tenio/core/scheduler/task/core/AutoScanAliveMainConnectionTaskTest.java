@@ -44,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class AutoScanAliveMainConnectionTaskTest {
 
@@ -248,6 +249,48 @@ class AutoScanAliveMainConnectionTaskTest {
       task.shutdown();
       verify(future).cancel(false);
       verify(executor).shutdownNow();
+    }
+  }
+
+  @Test
+  void enabledTaskRequiresAPlayerManagerBeforeCreatingWorker() {
+    task.setPlayerManager(null);
+    assertThrows(IllegalStateException.class, task::run);
+    assertNull(task.getScheduler());
+  }
+
+  @Test
+  void continuesAfterOnePlayerLookupThrowsRuntimeException() throws IOException {
+    Player brokenPlayer = mock(Player.class);
+    when(brokenPlayer.getSession()).thenThrow(new IllegalStateException("player unavailable"));
+    when(players.getSnapshotPlayersList()).thenReturn(List.of(brokenPlayer, player));
+
+    assertDoesNotThrow(() -> task.scan(31000L));
+
+    verify(session).close(ConnectionDisconnectMode.IDLE, PlayerDisconnectMode.CONNECTION_LOST);
+  }
+
+  @Test
+  void scheduledScanRecoversAfterRegistryFailure() throws IOException {
+    var executor = mock(ScheduledExecutorService.class);
+    var future = mock(ScheduledFuture.class);
+    var callback = ArgumentCaptor.forClass(Runnable.class);
+    when(executor.scheduleWithFixedDelay(any(Runnable.class), eq(1L), eq(1L),
+        eq(TimeUnit.SECONDS))).thenReturn(future);
+    when(players.getSnapshotPlayersList()).thenThrow(new IllegalStateException("registry unavailable"))
+        .thenReturn(List.of(player));
+    try (var executors = mockStatic(Executors.class)) {
+      executors.when(() -> Executors.newSingleThreadScheduledExecutor(
+          any(ThreadFactory.class))).thenReturn(executor);
+      task.run();
+      verify(executor).scheduleWithFixedDelay(callback.capture(), eq(1L), eq(1L),
+          eq(TimeUnit.SECONDS));
+
+      assertDoesNotThrow(() -> callback.getValue().run());
+      assertDoesNotThrow(() -> callback.getValue().run());
+
+      verify(players, times(2)).getSnapshotPlayersList();
+      verify(session).close(ConnectionDisconnectMode.IDLE, PlayerDisconnectMode.CONNECTION_LOST);
     }
   }
 

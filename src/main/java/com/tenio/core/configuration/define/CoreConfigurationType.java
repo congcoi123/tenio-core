@@ -35,27 +35,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Defines the core configuration types used throughout the server.
- * This enum provides a centralized way to manage and access various server
- * configuration parameters, including server properties, worker thread settings,
- * network configurations, and player/room management settings.
+ * Defines the core configuration types used throughout the server. This enum provides a centralized
+ * way to manage and access various server configuration parameters, including server properties,
+ * worker thread settings, network configurations, and player/room management settings.
  *
  * <p>Key features:
+ *
  * <ul>
- *   <li>Server identity and version management</li>
- *   <li>Worker thread pool configuration</li>
- *   <li>Network and socket settings</li>
- *   <li>Player and room management parameters</li>
- *   <li>System monitoring and maintenance settings</li>
+ *   <li>Server identity and version management
+ *   <li>Worker thread pool configuration
+ *   <li>Network and socket settings
+ *   <li>Player and room management parameters
+ *   <li>System monitoring and maintenance settings
  * </ul>
  *
  * <p>Configuration categories:
+ *
  * <ul>
- *   <li>Server Properties: Basic server identification and settings</li>
- *   <li>Worker Settings: Thread pool configurations for various tasks</li>
- *   <li>Network Properties: Socket and connection settings</li>
- *   <li>Player Properties: Player management and behavior settings</li>
- *   <li>Room Properties: Room management and behavior settings</li>
+ *   <li>Server Properties: Basic server identification and settings
+ *   <li>Worker Settings: Thread pool configurations for various tasks
+ *   <li>Network Properties: Socket and connection settings
+ *   <li>Player Properties: Player management and behavior settings
+ *   <li>Room Properties: Room management and behavior settings
  * </ul>
  *
  * @see CoreConfiguration
@@ -64,6 +65,12 @@ import java.util.Map;
  */
 public enum CoreConfigurationType implements ConfigurationType {
 
+  /**
+   * Mandatory comma-separated startup names, trimmed before annotated definitions are selected.
+   *
+   * @since 0.7.4
+   */
+  PROFILE("profile"),
   /**
    * The server name.
    */

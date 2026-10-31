@@ -27,17 +27,40 @@ package com.tenio.core.scheduler;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.tenio.common.task.TaskManager;
+import com.tenio.common.task.implement.TaskManagerImpl;
+import com.tenio.core.entity.Player;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.scheduler.task.core.AutoScanAliveMainConnectionTask;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 
 @DisplayName("Unit Test Cases For SchedulerImpl")
 class SchedulerImplTest {
@@ -249,4 +272,90 @@ class SchedulerImplTest {
     scheduler.start();
     scheduler.shutdown();
   }
+  @Test
+  void keepaliveTaskIsNotRegisteredWhenScanIntervalIsOmitted() {
+    TaskManager taskManager = mock(TaskManager.class);
+    try (var managers = mockStatic(TaskManagerImpl.class)) {
+      managers.when(TaskManagerImpl::newInstance).thenReturn(taskManager);
+      scheduler.setMainConnectionKeepAliveTimeoutSeconds(30);
+      scheduler.initialize();
+      scheduler.start();
+
+      verify(taskManager, never()).create(eq("auto-scan-alive-main-connection"), any());
+      scheduler.shutdown();
+      verify(taskManager).clear();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {0, -1})
+  void nonPositiveScanIntervalDisablesPreviouslyEnabledKeepaliveTask(int interval) {
+    TaskManager taskManager = mock(TaskManager.class);
+    try (var managers = mockStatic(TaskManagerImpl.class)) {
+      managers.when(TaskManagerImpl::newInstance).thenReturn(taskManager);
+      scheduler.setMainConnectionKeepAliveTimeoutSeconds(30);
+      scheduler.setMainConnectionKeepAliveScanInterval(7);
+      scheduler.setMainConnectionKeepAliveScanInterval(interval);
+      scheduler.initialize();
+      scheduler.start();
+
+      verify(taskManager, never()).create(eq("auto-scan-alive-main-connection"), any());
+      scheduler.shutdown();
+      verify(taskManager).clear();
+    }
+  }
+
+  @Test
+  void enabledKeepaliveTaskReceivesPlayerManagerTimeoutAndScanInterval() throws Exception {
+    TaskManager taskManager = mock(TaskManager.class);
+    PlayerManager players = mock(PlayerManager.class);
+    Player player = mock(Player.class);
+    Session session = mock(Session.class);
+    when(players.getSnapshotPlayersList()).thenReturn(List.of(player));
+    when(player.getSession()).thenReturn(Optional.of(session));
+    when(session.isTcp()).thenReturn(true);
+    when(session.isActivated()).thenReturn(true);
+    var executor = mock(ScheduledExecutorService.class);
+    var future = mock(ScheduledFuture.class);
+    when(executor.scheduleWithFixedDelay(any(Runnable.class), eq(7L), eq(7L),
+        eq(TimeUnit.SECONDS))).thenReturn(future);
+
+    try (var managers = mockStatic(TaskManagerImpl.class);
+         var executors = mockStatic(Executors.class)) {
+      managers.when(TaskManagerImpl::newInstance).thenReturn(taskManager);
+      executors.when(() -> Executors.newSingleThreadScheduledExecutor(
+          any(ThreadFactory.class))).thenReturn(executor);
+      scheduler.setPlayerManager(players);
+      scheduler.setMainConnectionKeepAliveTimeoutSeconds(45);
+      scheduler.setMainConnectionKeepAliveScanInterval(7);
+      scheduler.initialize();
+      scheduler.start();
+      var task = ArgumentCaptor.forClass(AutoScanAliveMainConnectionTask.class);
+      verify(taskManager).create(eq("auto-scan-alive-main-connection"), task.capture());
+      try {
+        task.getValue().run();
+        var callback = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor).scheduleWithFixedDelay(callback.capture(), eq(7L), eq(7L),
+            eq(TimeUnit.SECONDS));
+        when(session.getLastReliableReadTime()).thenReturn(System.currentTimeMillis() - 30000L);
+        callback.getValue().run();
+        verify(session, never()).close(any(), any());
+
+        when(session.getLastReliableReadTime()).thenReturn(System.currentTimeMillis() - 60000L);
+        callback.getValue().run();
+        verify(session).close(ConnectionDisconnectMode.IDLE, PlayerDisconnectMode.CONNECTION_LOST);
+      } finally {
+        task.getValue().shutdown();
+        scheduler.shutdown();
+      }
+      verify(taskManager).clear();
+    }
+  }
+
+  @Test
+  void keepaliveTimeoutRejectsNegativeValuesThroughSchedulerApi() {
+    assertThrows(IllegalArgumentException.class,
+        () -> scheduler.setMainConnectionKeepAliveTimeoutSeconds(-1));
+  }
+
 }

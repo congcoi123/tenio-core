@@ -2,6 +2,8 @@
 <Server>
 
     <Properties>
+        <!-- Required startup profiles; comma-separated, trimmed and case-sensitive. -->
+        <Property name="profile">default</Property>
         <!-- The server name -->
         <Property name="server-name">TenIO Core</Property>
         <!-- The server id (module name) -->
