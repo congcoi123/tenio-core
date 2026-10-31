@@ -26,6 +26,7 @@ package com.tenio.core.configuration;
 
 import com.tenio.common.configuration.CommonConfiguration;
 import com.tenio.common.utility.XmlUtility;
+import com.tenio.core.bootstrap.injector.ProfileSelection;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.network.configuration.SocketConfiguration;
@@ -37,17 +38,17 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 /**
- * Manages core configuration settings for the game server.
- * This class handles loading and parsing of configuration from XML files,
- * providing access to various server settings and parameters.
+ * Manages core configuration settings for the game server. This class handles loading and parsing
+ * of configuration from XML files, providing access to various server settings and parameters.
  *
  * <p>Key features:
+ *
  * <ul>
- *   <li>XML-based configuration loading</li>
- *   <li>Support for custom configuration values</li>
- *   <li>Integration with common configuration</li>
- *   <li>Socket configuration management</li>
- *   <li>Transport type configuration</li>
+ *   <li>XML-based configuration loading
+ *   <li>Support for custom configuration values
+ *   <li>Integration with common configuration
+ *   <li>Socket configuration management
+ *   <li>Transport type configuration
  * </ul>
  *
  * @see CommonConfiguration
@@ -60,14 +61,12 @@ public abstract class CoreConfiguration extends CommonConfiguration {
   /**
    * Reads file content and converts it to configuration values.
    *
-   * @param file The {@link String} name of the configuration file and this file needs to be put
-   *             in same folder with the application
-   * @throws Exception some exceptions, which can be occurred when reading or
-   *                   parsing the file
+   * @param file The {@link String} name of the configuration file and this file needs to be put in
+   *     same folder with the application
+   * @throws Exception some exceptions, which can be occurred when reading or parsing the file
    */
   @Override
   public void load(String file) throws Exception {
-
     // 1. Check external file (user-provided)
     File externalFile = file == null ? null : new File(file);
     Document document;
@@ -92,16 +91,22 @@ public abstract class CoreConfiguration extends CommonConfiguration {
     Node root = document.getFirstChild();
 
     // Server Properties
+    String configuredProfiles = null;
     var attrServerProperties = XmlUtility.getNodeList(root, "//Server/Properties/Property");
     for (int j = 0; j < attrServerProperties.getLength(); j++) {
       var dataNode = attrServerProperties.item(j);
       var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
+      if (CoreConfigurationType.PROFILE.getValue().equals(paramName)) {
+        configuredProfiles = dataNode.getTextContent();
+      }
       push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
     }
 
+    // Validate the actual XML value; a reused configuration cannot retain a previous selection.
+    ProfileSelection.parseRequired(configuredProfiles);
+
     // Network Properties
-    var attrNetworkProperties =
-        XmlUtility.getNodeList(root, "//Server/Network/Properties/Property");
+    var attrNetworkProperties = XmlUtility.getNodeList(root, "//Server/Network/Properties/Property");
     for (int j = 0; j < attrNetworkProperties.getLength(); j++) {
       var dataNode = attrNetworkProperties.item(j);
       var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
@@ -112,12 +117,15 @@ public abstract class CoreConfiguration extends CommonConfiguration {
     for (int j = 0; j < attrNetworkSockets.getLength(); j++) {
       var dataNode = attrNetworkSockets.item(j);
       var cacheSizeNode = dataNode.getAttributes().getNamedItem("cacheSize");
-      int cacheSize = cacheSizeNode != null ?
-          Integer.parseInt(cacheSizeNode.getTextContent()) : 1; // The default value should be 1
-      var socketConfiguration =
-          new SocketConfiguration(dataNode.getAttributes().getNamedItem("name").getTextContent(),
+      int cacheSize = cacheSizeNode != null
+              ? Integer.parseInt(cacheSizeNode.getTextContent())
+              : 1; // The default value should be 1
+      var socketConfiguration = new SocketConfiguration(
+              dataNode.getAttributes().getNamedItem("name").getTextContent(),
               TransportType.getByValue(dataNode.getAttributes().getNamedItem("type").getTextContent()),
-              Integer.parseInt(dataNode.getTextContent()), cacheSize);
+              Integer.parseInt(dataNode.getTextContent()),
+              cacheSize
+      );
 
       if (socketConfiguration.type() == TransportType.TCP) {
         push(CoreConfigurationType.NETWORK_TCP, socketConfiguration);

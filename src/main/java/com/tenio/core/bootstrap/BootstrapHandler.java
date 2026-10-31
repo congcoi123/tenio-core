@@ -36,24 +36,40 @@ import jakarta.servlet.http.HttpServlet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-/**
- * This class provides instances for the events handler and the configuration setups.
- */
+/** This class provides instances for the events handler and the configuration setups. */
 @Component
 public final class BootstrapHandler {
 
-  @Autowired
-  private EventHandler eventHandler;
 
-  @Autowired
-  private ConfigurationHandler configurationHandler;
-
+  @Autowired private EventHandler eventHandler;
+  @Autowired private ConfigurationHandler configurationHandler;
+  /** Startup selection; null for a handler assembled outside XML bootstrap. */
+  private Set<String> activeProfiles;
   private SystemCommandManager systemCommandManager;
   private ClientCommandManager clientCommandManager;
   private Map<Class<?>, Class<?>> reversedClassesMap;
   private Map<BeanClass, Object> classBeansMap;
   private Map<String, HttpServlet> servletMap;
+
+  /**
+   * Records the selection used to construct this bootstrap generation.
+   *
+   * @param profiles immutable selection used to check the subsequently loaded configuration
+   */
+  public void setActiveProfiles(Set<String> profiles) {
+    activeProfiles = Set.copyOf(profiles);
+  }
+
+  /**
+   * Exposes the startup selection for configuration consistency validation.
+   *
+   * @return startup selection, or null for externally assembled handlers
+   */
+  public Set<String> getActiveProfiles() {
+    return activeProfiles;
+  }
 
   /**
    * Retrieves an events handler.

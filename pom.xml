@@ -5,7 +5,7 @@
 
     <groupId>io.github.congcoi123</groupId>
     <artifactId>tenio-core</artifactId>
-    <version>0.7.3</version>
+    <version>0.7.4</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -41,9 +41,9 @@
     <properties>
         <io.github.congcoi123.tenio.common>0.7.0</io.github.congcoi123.tenio.common>
 
-        <io.netty.version>4.2.12.Final</io.netty.version>
-        <org.eclipse.jetty.server.version>12.1.7</org.eclipse.jetty.server.version>
-        <org.eclipse.jetty.ee10.servlet.version>12.1.6</org.eclipse.jetty.ee10.servlet.version>
+        <io.netty.version>4.2.13.Final</io.netty.version>
+        <org.eclipse.jetty.server.version>12.1.13</org.eclipse.jetty.server.version>
+        <org.eclipse.jetty.ee10.servlet.version>12.1.13</org.eclipse.jetty.ee10.servlet.version>
         <jakarta.servlet.api.version>6.1.0</jakarta.servlet.api.version>
         <javax.servlet.version>2.5</javax.servlet.version>
         <org.jline.version>3.30.9</org.jline.version>
@@ -53,12 +53,15 @@
         <logging.log4j.version>2.25.4</logging.log4j.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Keeps late JaCoCo argLine evaluation valid when coverage is skipped. -->
+        <argLine/>
 
         <org.junit.jupiter.version>5.11.2</org.junit.jupiter.version>
         <org.junit.platform.version>1.11.2</org.junit.platform.version>
         <org.mockito.core.version>5.14.1</org.mockito.core.version>
 
         <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
+        <maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
         <jdk.release>21</jdk.release>
         <jdk.vendor>oracle</jdk.vendor>
 
@@ -149,7 +152,7 @@
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-runner</artifactId>
+            <artifactId>junit-platform-suite-api</artifactId>
             <version>${org.junit.platform.version}</version>
             <scope>test</scope>
         </dependency>
@@ -193,6 +196,20 @@
             </testResource>
         </testResources>
         <plugins>
+            <!-- Run Jupiter tests directly; the optional aggregate suite is IDE/explicit use. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surefire.plugin.version}</version>
+                <configuration>
+                    <failIfNoTests>true</failIfNoTests>
+                    <!-- Explicit Mockito instrumentation also works when JVM self-attach is disabled. -->
+                    <argLine>@{argLine} "-javaagent:${settings.localRepository}/org/mockito/mockito-core/${org.mockito.core.version}/mockito-core-${org.mockito.core.version}.jar"</argLine>
+                    <excludes>
+                        <exclude>**/TenIOCoreTest.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
             <!-- Compiler -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>

@@ -38,6 +38,7 @@ import com.tenio.core.scheduler.task.core.AutoDisconnectPlayerTask;
 import com.tenio.core.scheduler.task.core.AutoRemoveRoomTask;
 import com.tenio.core.scheduler.task.core.CcuReportTask;
 import com.tenio.core.scheduler.task.core.DeadlockScanTask;
+import com.tenio.core.scheduler.task.core.AutoScanAliveMainConnectionTask;
 import com.tenio.core.scheduler.task.core.SystemMonitoringTask;
 import com.tenio.core.scheduler.task.core.TrafficCounterTask;
 
@@ -51,12 +52,14 @@ public final class SchedulerImpl extends AbstractManager implements Scheduler {
   private final AutoDisconnectPlayerTask autoDisconnectPlayerTask;
   private final AutoCleanOrphanSessionTask autoCleanOrphanSessionTask;
   private final AutoRemoveRoomTask autoRemoveRoomTask;
+  private final AutoScanAliveMainConnectionTask autoScanAliveMainConnectionTask;
   private final CcuReportTask ccuReportTask;
   private final DeadlockScanTask deadlockScanTask;
   private final SystemMonitoringTask systemMonitoringTask;
   private final TrafficCounterTask trafficCounterTask;
   private TaskManager taskManager;
   private boolean enableCcuReportTask;
+  private boolean enableMainConnectionKeepAliveTask;
   private boolean enableDeadLockScanTask;
   private boolean enableSystemMonitoringTask;
   private boolean enableTrafficCounterTask;
@@ -69,6 +72,7 @@ public final class SchedulerImpl extends AbstractManager implements Scheduler {
     autoDisconnectPlayerTask = AutoDisconnectPlayerTask.newInstance(this.eventManager);
     autoCleanOrphanSessionTask = AutoCleanOrphanSessionTask.newInstance(this.eventManager);
     autoRemoveRoomTask = AutoRemoveRoomTask.newInstance(this.eventManager);
+    autoScanAliveMainConnectionTask = new AutoScanAliveMainConnectionTask();
     ccuReportTask = CcuReportTask.newInstance(this.eventManager);
     deadlockScanTask = DeadlockScanTask.newInstance(this.eventManager);
     systemMonitoringTask = SystemMonitoringTask.newInstance(this.eventManager);
@@ -107,6 +111,9 @@ public final class SchedulerImpl extends AbstractManager implements Scheduler {
     taskManager.create("auto-disconnect-player", autoDisconnectPlayerTask);
     taskManager.create("auto-clean-orphan-session", autoCleanOrphanSessionTask);
     taskManager.create("auto-remove-room", autoRemoveRoomTask);
+    if (enableMainConnectionKeepAliveTask) {
+      taskManager.create("auto-scan-alive-main-connection", autoScanAliveMainConnectionTask);
+    }
     if (enableCcuReportTask) {
       taskManager.create("ccu-report", ccuReportTask);
     }
@@ -195,6 +202,17 @@ public final class SchedulerImpl extends AbstractManager implements Scheduler {
   }
 
   @Override
+  public void setMainConnectionKeepAliveTimeoutSeconds(int timeoutSeconds) {
+    autoScanAliveMainConnectionTask.setTimeoutSeconds(timeoutSeconds);
+  }
+
+  @Override
+  public void setMainConnectionKeepAliveScanInterval(int interval) {
+    autoScanAliveMainConnectionTask.setInterval(interval);
+    enableMainConnectionKeepAliveTask = (interval > 0);
+  }
+
+  @Override
   public void setSystemMonitoringInterval(int interval) {
     systemMonitoringTask.setInterval(interval);
     enableSystemMonitoringTask = (interval > 0);
@@ -208,6 +226,7 @@ public final class SchedulerImpl extends AbstractManager implements Scheduler {
   @Override
   public void setPlayerManager(PlayerManager playerManager) {
     autoDisconnectPlayerTask.setPlayerManager(playerManager);
+    autoScanAliveMainConnectionTask.setPlayerManager(playerManager);
     ccuReportTask.setPlayerManager(playerManager);
   }
 

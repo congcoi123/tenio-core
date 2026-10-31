@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The commands' management class.
@@ -50,6 +52,7 @@ public final class SystemCommandManager extends SystemLogger {
   private final Map<String, AbstractSystemCommandHandler> commands = new HashMap<>();
   private final Map<String, SystemCommand> annotations = new HashMap<>();
   private final ExecutorService executors;
+  private final AtomicBoolean stopping;
 
   /**
    * Constructor.
@@ -58,6 +61,7 @@ public final class SystemCommandManager extends SystemLogger {
     var threadFactoryWorker =
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("system-command-worker-%d").build();
     executors = Executors.newCachedThreadPool(threadFactoryWorker);
+    stopping = new AtomicBoolean(false);
   }
 
   /**
@@ -138,6 +142,10 @@ public final class SystemCommandManager extends SystemLogger {
    * @param rawMessage The messaged used to invoke the command
    */
   public void invoke(String rawMessage) {
+    if (stopping.get()) {
+      return;
+    }
+
     rawMessage = rawMessage.trim();
     if (rawMessage.isBlank()) {
       return;
@@ -166,6 +174,25 @@ public final class SystemCommandManager extends SystemLogger {
       CommandUtility.INSTANCE.showConsoleMessage("The process is running in background.");
     } else {
       runnable.run();
+    }
+  }
+
+  /**
+   * Stops background command execution and waits briefly for running commands to finish.
+   */
+  public void shutdown() {
+    if (!stopping.compareAndSet(false, true)) {
+      return;
+    }
+
+    executors.shutdown();
+    try {
+      if (!executors.awaitTermination(10, TimeUnit.SECONDS)) {
+        executors.shutdownNow();
+      }
+    } catch (InterruptedException exception) {
+      executors.shutdownNow();
+      Thread.currentThread().interrupt();
     }
   }
 

@@ -56,9 +56,14 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -66,23 +71,26 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The Injector class provides a dependency injection mechanism for the application.
- * It supports automatic wiring of components and beans through annotations.
+ * The Injector class provides a dependency injection mechanism for the application. It supports
+ * automatic wiring of components and beans through annotations.
  *
  * <p>Key features:
+ *
  * <ul>
- *   <li>Automatic scanning and instantiation of components marked with {@link Component}</li>
- *   <li>Support for bean factories and bean creation through {@link BeanFactory} and {@link Bean}</li>
- *   <li>Dependency injection through {@link Autowired} and {@link AutowiredQualifier}</li>
- *   <li>Thread-safe implementation for concurrent access</li>
- *   <li>Component lifecycle management</li>
- *   <li>Error handling and validation</li>
- *   <li>Circular dependency detection</li>
+ *   <li>Automatic scanning and instantiation of components marked with {@link Component}
+ *   <li>Support for bean factories and bean creation through {@link BeanFactory} and {@link Bean}
+ *   <li>Dependency injection through {@link Autowired} and {@link AutowiredQualifier}
+ *   <li>Initialization-time bean lookup
+ *   <li>Component lifecycle management
+ *   <li>Error handling and validation
+ *   <li>Circular dependency detection
  * </ul>
  *
- * <p>Note: This class is designed to work in conjunction with the
- * {@link Component}, {@link Bean}, {@link Autowired}, and {@link AutowiredQualifier}
- * annotations for proper dependency injection.
+ * <p>Note: This class is designed to work in conjunction with the {@link Component}, {@link Bean},
+ * {@link Autowired}, and {@link AutowiredQualifier} annotations for proper dependency injection.
+ *
+ * <p>Profile selection, scanning and bean lookups run sequentially during application
+ * initialization, before application services start.
  *
  * @see Component
  * @see BeanFactory
@@ -98,34 +106,33 @@ public final class Injector extends SystemLogger {
 
   /**
    * A map contains values are interfaces and keys are implemented classes.
-   *
-   * <p>This map is protected by the class instance to ensure thread-safe.
    */
   private final Map<Class<?>, List<Class<?>>> classesMap;
+
   /**
    * A map has keys are {@link #classesMap}'s key implemented classes and the value are keys'
    * instances.
-   *
-   * <p>This map is protected by the class instance to ensure thread-safe.
    */
   private final Map<BeanClass, Object> classBeansMap;
+
   /**
    * A set of classes that are created by {@link Bean} and {@link BeanFactory} annotations.
-   * This map is protected by the class instance to ensure thread-safe.
    */
   private final Set<Class<?>> manualClassesSet;
-  /**
-   * A map is using to initialize restful servlets.
-   */
+
+  /** A map is using to initialize restful servlets. */
   private final Map<String, HttpServlet> servletBeansMap;
-  /**
-   * The object manages all supported system commands.
-   */
+
+  /** The object manages all supported system commands. */
   private final SystemCommandManager systemCommandManager;
-  /**
-   * The object manages all self-defined user commands.
-   */
+
+  /** The object manages all self-defined user commands. */
   private final ClientCommandManager clientCommandManager;
+
+  /**
+   * Active creation policy installed before scanning; unprofiled definitions always participate.
+   */
+  private ProfileSelection profiles;
 
   private Injector() {
     if (instance != null) {
@@ -138,6 +145,7 @@ public final class Injector extends SystemLogger {
     servletBeansMap = new HashMap<>();
     systemCommandManager = new SystemCommandManager();
     clientCommandManager = new ClientCommandManager();
+    profiles = new ProfileSelection(Set.of());
   }
 
   /**
@@ -150,32 +158,51 @@ public final class Injector extends SystemLogger {
   }
 
   /**
-   * Scans all input packages to create classes' instances and put them into maps.
-   * This method performs component scanning and dependency injection in a single
-   * atomic operation.
+   * Scans all input packages to create classes' instances and initialize their dependencies.
+   * Scanning runs sequentially during application initialization.
    *
-   * @param entryClass the root class which should be located in the parent package of other
-   *                   class' packages
-   * @param packages   a list of packages' names. It allows to define the scanning packages by
-   *                   their names
-   * @throws InstantiationException          if a class cannot be instantiated
-   * @throws IllegalAccessException          if a class or its constructor is not accessible
-   * @throws ClassNotFoundException          if a required class cannot be found
-   * @throws IllegalArgumentException        if invalid arguments are provided
-   * @throws InvocationTargetException       if a constructor throws an exception
-   * @throws NoSuchMethodException           if a required method cannot be found
-   * @throws SecurityException               if a security violation occurs
+   * @param entryClass the root class which should be located in the parent package of other class' packages
+   * @param packages a list of packages' names. It allows to define the scanning packages by their names
+   *
+   * @throws InstantiationException if a class cannot be instantiated
+   * @throws IllegalAccessException if a class or its constructor is not accessible
+   * @throws ClassNotFoundException if a required class cannot be found
+   * @throws IllegalArgumentException if invalid arguments are provided
+   * @throws InvocationTargetException if a constructor throws an exception
+   * @throws NoSuchMethodException if a required method cannot be found
+   * @throws SecurityException if a security violation occurs
    * @throws DuplicatedBeanCreationException if a bean is created more than once
    */
-  @SuppressWarnings("unchecked")
   public void scanPackages(Class<?> entryClass, String... packages)
-      throws InstantiationException, IllegalAccessException, ClassNotFoundException,
-      IllegalArgumentException, InvocationTargetException, NoSuchMethodException,
-      SecurityException, DuplicatedBeanCreationException {
-
-    // clean first
+      throws InstantiationException,
+          IllegalAccessException,
+          ClassNotFoundException,
+          IllegalArgumentException,
+          InvocationTargetException,
+          NoSuchMethodException,
+          SecurityException,
+          DuplicatedBeanCreationException {
+    // A failed scan must not leave a partially wired generation available to subsequent lookups.
     cleanup();
+    boolean completed = false;
+    try {
+      scanSelectedPackages(entryClass, packages);
+      completed = true;
+    } finally {
+      if (!completed) {
+        cleanup();
+      }
+    }
+  }
 
+  @SuppressWarnings("unchecked")
+  private void scanSelectedPackages(Class<?> entryClass, String... packages)
+      throws InstantiationException,
+          IllegalAccessException,
+          ClassNotFoundException,
+          InvocationTargetException,
+          NoSuchMethodException,
+          DuplicatedBeanCreationException {
     var allPackageNames = new HashSet<String>();
 
     if (entryClass != null) {
@@ -187,34 +214,22 @@ public final class Injector extends SystemLogger {
     }
 
     // fetches all classes that are in the same package as the root one
-    var allClasses = ClassLoaderUtility.getClasses(allPackageNames);
+    var allClasses = ClassLoaderUtility.getClasses(allPackageNames).stream()
+            .filter(profiles::matches)
+            .filter(clazz -> !Modifier.isAbstract(clazz.getModifiers()) && !clazz.isInterface())
+            .sorted(Comparator.comparing(Class::getName))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
 
     // Step 1: We collect classes
     // The implemented class is defined with the "Component" annotation declared inside it
-    // in case you need more annotations with the same effect with this one, you should put them
-    // in here
-    var listAnnotations = new Class[] {
-        Component.class,
-        EventHandler.class,
-        Setting.class
-    };
+    // in case you need more annotations with the same effect with this one, you should put them in here
+    var listAnnotations = new Class[] {Component.class, EventHandler.class, Setting.class};
     var implementedComponentClasses = new HashSet<Class<?>>();
-    Arrays.stream(listAnnotations).forEach(
-        annotation -> implementedComponentClasses.addAll(
-            ClassLoaderUtility.getTypesAnnotatedWith(allClasses, annotation)));
+    Arrays.stream(listAnnotations)
+        .forEach(annotation -> implementedComponentClasses.addAll(ClassLoaderUtility.getTypesAnnotatedWith(allClasses, annotation)));
     // scans all interfaces with their implemented classes
     for (var implementedClass : implementedComponentClasses) {
-      var classInterfaces = implementedClass.getInterfaces();
-      // in case the class has not implemented any interfaces, it still can be created, so put
-      // the class into the map
-      if (classInterfaces.length == 0) {
-        classesMap.put(implementedClass, List.of(implementedClass));
-      } else {
-        // normal case, put the pair of class and its list of interfaces
-        // the interface will be used to retrieved back the corresponding class when we want to
-        // create a bean by its interface
-        classesMap.put(implementedClass, List.of(classInterfaces));
-      }
+      classesMap.put(implementedClass, implementedTypes(implementedClass));
     }
 
     // Retrieves all classes those are declared by the @Bean annotation
@@ -222,7 +237,10 @@ public final class Injector extends SystemLogger {
     var beanFactoryClasses = ClassLoaderUtility.getTypesAnnotatedWith(allClasses, BeanFactory.class);
     for (var configurationClass : beanFactoryClasses) {
       for (var method : configurationClass.getMethods()) {
-        if (method.isAnnotationPresent(Bean.class)) {
+        if (method.isAnnotationPresent(Bean.class)
+            && profiles.matches(method)
+            && profiles.matches(method.getReturnType())
+        ) {
           if (Modifier.isPublic(method.getModifiers())) {
             var clazz = method.getReturnType();
             if (clazz.isPrimitive()) {
@@ -239,17 +257,21 @@ public final class Injector extends SystemLogger {
         }
       }
     }
-    // append all classes
+
+    // Append all classes
     for (var implementedClass : implementedBeanClasses) {
-      classesMap.put(implementedClass, List.of(implementedClass));
+      classesMap.put(implementedClass, implementedTypes(implementedClass));
     }
 
     // Add all classes annotated by @RestController
     var implementedRestClasses = ClassLoaderUtility.getTypesAnnotatedWith(allClasses, RestController.class);
-    // append all classes
+
+    // Append all classes
     for (var implementedClass : implementedRestClasses) {
-      classesMap.put(implementedClass, List.of(implementedClass));
+      classesMap.put(implementedClass, implementedTypes(implementedClass));
     }
+
+    warnProfileCollisions(allClasses);
 
     // Step 2: We create instances
     // create beans (class instances) based on annotations
@@ -270,7 +292,9 @@ public final class Injector extends SystemLogger {
         // fetches all bean instances and save them to classes map
         var beanFactoryInstance = clazz.getDeclaredConstructor().newInstance();
         for (var method : clazz.getMethods()) {
-          if (method.isAnnotationPresent(Bean.class)) {
+          if (method.isAnnotationPresent(Bean.class)
+              && profiles.matches(method)
+              && profiles.matches(method.getReturnType())) {
             if (Modifier.isPublic(method.getModifiers())) {
               var methodClazz = method.getReturnType();
               if (methodClazz.isPrimitive()) {
@@ -294,23 +318,22 @@ public final class Injector extends SystemLogger {
       } else if (clazz.isAnnotationPresent(RestController.class)) {
         // fetches all bean instances and save them to rest controller map
         var restControllerInstance = clazz.getDeclaredConstructor().newInstance();
-        var beanClass =
-            new BeanClass(clazz, clazz.getAnnotation(RestController.class).value());
+        var beanClass = new BeanClass(clazz, clazz.getAnnotation(RestController.class).value());
         if (classBeansMap.containsKey(beanClass)) {
           throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
         }
         classBeansMap.put(beanClass, restControllerInstance);
         for (var method : clazz.getMethods()) {
-          if (method.isAnnotationPresent(RestMapping.class)) {
+          if (method.isAnnotationPresent(RestMapping.class) && profiles.matches(method)) {
             if (Modifier.isPublic(method.getModifiers())) {
               var methodClazz = method.getReturnType();
               if (!methodClazz.equals(HttpServlet.class)) {
                 throw new InvalidRestMappingClassException();
               } else {
-                String uri = String.join("/", StringUtility.trimStringByString(
-                        clazz.getAnnotation(RestController.class).value(), "/"),
-                    StringUtility.trimStringByString(
-                        method.getAnnotation(RestMapping.class).value(), "/"));
+                String uri = String.join(
+                        "/",
+                        StringUtility.trimStringByString(clazz.getAnnotation(RestController.class).value(), "/"),
+                        StringUtility.trimStringByString(method.getAnnotation(RestMapping.class).value(), "/"));
                 uri = StringUtility.trimStringByString(uri, "/");
 
                 beanClass = new BeanClass(methodClazz, uri);
@@ -331,8 +354,7 @@ public final class Injector extends SystemLogger {
           var systemCommandInstance = clazz.getDeclaredConstructor().newInstance();
           if (systemCommandInstance instanceof AbstractSystemCommandHandler handler) {
             // manages by the class bean system
-            var beanClass =
-                new BeanClass(clazz, String.valueOf(systemCommandAnnotation.label()));
+            var beanClass = new BeanClass(clazz, String.valueOf(systemCommandAnnotation.label()));
             if (classBeansMap.containsKey(beanClass)) {
               throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
             }
@@ -342,8 +364,7 @@ public final class Injector extends SystemLogger {
             systemCommandManager.registerCommand(systemCommandAnnotation.label(), handler);
           } else {
             if (isErrorEnabled()) {
-              error(new IllegalArgumentException(
-                  "Class " + clazz.getName() + " is not a AbstractSystemCommandHandler"));
+              error(new IllegalArgumentException("Class " + clazz.getName() + " is not a AbstractSystemCommandHandler"));
             }
           }
         } catch (Exception exception) {
@@ -357,20 +378,17 @@ public final class Injector extends SystemLogger {
           var clientCommandInstance = clazz.getDeclaredConstructor().newInstance();
           if (clientCommandInstance instanceof AbstractClientCommandHandler<?, ?> handler) {
             // manages by the class bean system
-            var beanClass =
-                new BeanClass(clazz, String.valueOf(clientCommandAnnotation.value()));
+            var beanClass = new BeanClass(clazz, String.valueOf(clientCommandAnnotation.value()));
             if (classBeansMap.containsKey(beanClass)) {
               throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
             }
             classBeansMap.put(beanClass, clientCommandInstance);
             // add to its own management system
             handler.setCommandManager(clientCommandManager);
-            clientCommandManager.registerCommand(clientCommandAnnotation.value(),
-                (AbstractClientCommandHandler<Player, DataCollection>) handler);
+            clientCommandManager.registerCommand(clientCommandAnnotation.value(), (AbstractClientCommandHandler<Player, DataCollection>) handler);
           } else {
             if (isErrorEnabled()) {
-              error(new IllegalArgumentException(
-                  "Class " + clazz.getName() + " is not a AbstractClientCommandHandler"));
+              error(new IllegalArgumentException("Class " + clazz.getName() + " is not a AbstractClientCommandHandler"));
             }
           }
         } catch (Exception exception) {
@@ -381,40 +399,47 @@ public final class Injector extends SystemLogger {
       }
     }
 
-    // Step 3: Make mapping between classes and their instances
-    // recursively create field instance for this class instance
-    classBeansMap.forEach((clazz, bean) -> {
-      try {
-        autowire(clazz, bean);
-      } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
-               NoSuchMethodException | ClassNotFoundException |
-               DuplicatedBeanCreationException exception) {
-        if (isErrorEnabled()) {
-          error("Initialize class: ", clazz.clazz().getName(), "\n",
-              StringUtility.getStackTrace(exception));
-        }
-      }
-    });
+    // Step 3: Propagate injection failures instead of starting with partially initialized handlers.
+    for (var entry : List.copyOf(classBeansMap.entrySet())) {
+      autowire(entry.getKey(), entry.getValue());
+    }
+
   }
 
   /**
-   * Retrieves an instance by using its corresponding declared interface.
+   * Retrieves an unnamed active bean by its type during application initialization.
    *
-   * @param <T>   the returned type of interface
+   * <p>Call this method sequentially after scanning has completed and before application services
+   * start. Each lookup resolves directly from the current bean registrations.
+   *
+   * @param <T> the returned type of interface
    * @param clazz the interface class
-   * @return a bean (an instance of the interface)
+   * @return the sole unnamed active bean, or null if none exists
+   * @throws IllegalStateException if several unnamed active beans satisfy the type
    */
-  @SuppressWarnings("unchecked")
   public <T> T getBean(Class<T> clazz) {
     if (clazz == null) {
       return null;
     }
-    var optional = classesMap.entrySet().stream()
-        .filter(entry -> entry.getValue().contains(clazz)).findFirst();
+    var candidates = classBeansMap.entrySet().stream()
+        .filter(entry -> entry.getKey().name().isEmpty() && clazz.isInstance(entry.getValue()))
+        .map(Entry::getValue)
+        .distinct()
+        .toList();
+    if (candidates.size() > 1) {
+      throw new IllegalStateException("Multiple active beans implement " + clazz.getName()
+          + "; select disjoint profiles or use an injection qualifier");
+    }
+    return candidates.isEmpty() ? null : clazz.cast(candidates.getFirst());
+  }
 
-    return optional.map(
-            classClassEntry -> (T) classBeansMap.get(new BeanClass(classClassEntry.getKey(), "")))
-        .orElse(null);
+  /**
+   * Installs an immutable selection for the next scan, independently of qualifiers.
+   *
+   * @param names active startup profile names
+   */
+  public void setProfiles(Set<String> names) {
+    profiles = new ProfileSelection(names);
   }
 
   /**
@@ -467,36 +492,57 @@ public final class Injector extends SystemLogger {
    * This method handles dependency injection for field-level autowiring.
    *
    * @param classInterface the interface using to create a new bean
-   * @param fieldName      the name of class's field that holds a reference of a bean in a class
-   * @param nameQualifier  this value aims to differentiate which implemented class should be
-   *                       used to create the bean (instance)
-   * @param classQualifier this value aims to differentiate which implemented class should be
-   *                       used to create the bean (instance)
+   * @param nameQualifier this value aims to differentiate which implemented class should be used to create the bean (instance)
+   * @param classQualifier this value aims to differentiate which implemented class should be used to create the bean (instance)
    * @return a bean object, an instance of the implemented class
-   * @throws ClassNotFoundException                        if a required class cannot be found
-   * @throws NoSuchMethodException                         if a required method cannot be found
-   * @throws InvocationTargetException                     if a constructor throws an exception
-   * @throws InstantiationException                        if a class cannot be instantiated
-   * @throws IllegalAccessException                        if a class or its constructor is not accessible
-   * @throws NoImplementedClassFoundException              if no implementation class is found
+   * @throws NoSuchMethodException if a required method cannot be found
+   * @throws InvocationTargetException if a constructor throws an exception
+   * @throws InstantiationException if a class cannot be instantiated
+   * @throws IllegalAccessException if a class or its constructor is not accessible
+   * @throws NoImplementedClassFoundException if no implementation class is found
    * @throws MultipleImplementedClassForInterfaceException if multiple implementations are found
-   * @throws DuplicatedBeanCreationException               if a bean is created more than once
+   * @throws DuplicatedBeanCreationException if a bean is created more than once
    */
-  private Object getBeanInstanceForInjector(Class<?> classInterface, String fieldName,
-                                            String nameQualifier, Class<?> classQualifier)
-      throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
-      InstantiationException, IllegalAccessException, NoImplementedClassFoundException,
-      MultipleImplementedClassForInterfaceException, DuplicatedBeanCreationException {
+  private Object getBeanInstanceForInjector(Class<?> classInterface, String nameQualifier, Class<?> classQualifier)
+      throws NoSuchMethodException,
+          InvocationTargetException,
+          InstantiationException,
+          IllegalAccessException,
+          NoImplementedClassFoundException,
+          MultipleImplementedClassForInterfaceException,
+          DuplicatedBeanCreationException {
+
+    if (classQualifier != null) {
+      // Factories may declare an interface return type; qualify their active runtime instances too.
+      Set<Object> candidates = Collections.newSetFromMap(new IdentityHashMap<>());
+      classBeansMap.forEach((key, candidate) -> {
+            if (key.name().equals(nameQualifier)
+                && classInterface.isInstance(candidate)
+                && classQualifier.isInstance(candidate)) {
+              candidates.add(candidate);
+            }
+          });
+      if (candidates.size() > 1) {
+        throw new MultipleImplementedClassForInterfaceException(classInterface);
+      }
+      if (!candidates.isEmpty()) {
+        return candidates.iterator().next();
+      }
+    }
 
     // check classes annotated by @Component and fields annotated by @Autowired
-    var implementedClass = getImplementedClass(classInterface, fieldName, classQualifier);
+    var implementedClass = getImplementedClass(classInterface, classQualifier);
 
     var beanClass = new BeanClass(implementedClass, nameQualifier);
     if (classBeansMap.containsKey(beanClass)) {
       return classBeansMap.get(beanClass);
     }
 
-    if (!manualClassesSet.contains(beanClass.getClass())) {
+    if (!profiles.matches(implementedClass)) {
+      return null;
+    }
+
+    if (!manualClassesSet.contains(implementedClass)) {
       if (classBeansMap.containsKey(beanClass)) {
         throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
       }
@@ -508,6 +554,118 @@ public final class Injector extends SystemLogger {
     return null;
   }
 
+  /** Includes ancestors so a concrete profiled handler inherits its abstract parent's events. */
+  private List<Class<?>> implementedTypes(Class<?> type) {
+    Set<Class<?>> types = new LinkedHashSet<>();
+    collectTypes(type, types);
+    return List.copyOf(types);
+  }
+
+  private void collectTypes(Class<?> type, Set<Class<?>> types) {
+    if (type == null || type == Object.class || !types.add(type)) {
+      return;
+    }
+    for (Class<?> contract : type.getInterfaces()) {
+      collectTypes(contract, types);
+    }
+    collectTypes(type.getSuperclass(), types);
+  }
+
+  /** Warns before construction about overlapping providers and explicit registration keys. */
+  private void warnProfileCollisions(Set<Class<?>> definitions) {
+    if (!isWarnEnabled()) {
+      return;
+    }
+
+    Map<Class<?>, List<Class<?>>> providers = new HashMap<>();
+    classesMap.forEach((implementation, types) ->
+            types.stream()
+                .filter(Class::isInterface)
+                .forEach(type -> providers
+                            .computeIfAbsent(type, ignored -> new ArrayList<>())
+                            .add(implementation)));
+    providers.forEach((contract, implementations) -> {
+          if (implementations.size() > 1) {
+            warn(
+                "PROFILE COLLISION",
+                "Active profiles ",
+                profiles.activeProfiles(),
+                " select multiple providers for ",
+                contract.getName(),
+                ": ",
+                implementations);
+          }
+        });
+
+    Map<String, String> registrations = new HashMap<>();
+    for (Class<?> definition : definitions) {
+      if (definition.isAnnotationPresent(ClientCommand.class)) {
+        warnRegistration(
+            registrations,
+            "client-command:" + definition.getAnnotation(ClientCommand.class).value(),
+            definition.getName()
+        );
+      }
+
+      if (definition.isAnnotationPresent(SystemCommand.class)) {
+        warnRegistration(
+            registrations,
+            "system-command:" + definition.getAnnotation(SystemCommand.class).label(),
+            definition.getName()
+        );
+      }
+
+      for (var method : definition.getMethods()) {
+        if (!profiles.matches(method)) {
+          continue;
+        }
+
+        if (definition.isAnnotationPresent(BeanFactory.class)
+            && method.isAnnotationPresent(Bean.class)
+            && profiles.matches(method.getReturnType())) {
+          warnRegistration(
+              registrations,
+              "bean:"
+                  + method.getReturnType().getName()
+                  + ":"
+                  + method.getAnnotation(Bean.class).value(),
+              method.toString()
+          );
+        }
+
+        if (definition.isAnnotationPresent(RestController.class)
+            && method.isAnnotationPresent(RestMapping.class)) {
+          String uri = String.join(
+                  "/",
+                  StringUtility.trimStringByString(definition.getAnnotation(RestController.class).value(), "/"),
+                  StringUtility.trimStringByString(method.getAnnotation(RestMapping.class).value(), "/"));
+          warnRegistration(
+              registrations,
+              "rest:" + StringUtility.trimStringByString(uri, "/"),
+              method.toString()
+          );
+        }
+      }
+    }
+  }
+
+  private void warnRegistration(Map<String, String> registrations, String key, String definition) {
+    String previous = registrations.putIfAbsent(key, definition);
+    if (previous != null) {
+      warn(
+          "PROFILE COLLISION",
+          "Active profiles ",
+          profiles.activeProfiles(),
+          " select duplicate ",
+          key,
+          ": ",
+          previous,
+          " and ",
+          definition
+      );
+    }
+  }
+
   private boolean isClassAnnotated(Class<?> clazz, Class<? extends Annotation>[] annotations) {
     for (Class<? extends Annotation> annotation : annotations) {
       if (clazz.isAnnotationPresent(annotation)) {
@@ -517,50 +675,57 @@ public final class Injector extends SystemLogger {
     return false;
   }
 
-  private Class<?> getImplementedClass(Class<?> classInterface, String fieldName,
-                                       Class<?> classQualifier) throws ClassNotFoundException {
+  private Class<?> getImplementedClass(Class<?> classInterface, Class<?> classQualifier) {
     var implementedClasses = classesMap.entrySet().stream()
-        .filter(entry -> entry.getValue().contains(classInterface)).collect(Collectors.toSet());
+            .filter(entry -> entry.getValue().contains(classInterface))
+            .collect(Collectors.toSet());
+
+    if (classQualifier != null) {
+      // A profile-excluded qualified provider must never fall back to another active provider.
+      return implementedClasses.stream()
+          .map(Entry::getKey)
+          .filter(classQualifier::equals)
+          .findFirst()
+          .orElseThrow(() -> new NoImplementedClassFoundException(classQualifier));
+    }
 
     if (implementedClasses.isEmpty()) {
       throw new NoImplementedClassFoundException(classInterface);
-    } else if (implementedClasses.size() == 1) {
-      // just only one implemented class for the interface
-      var optional = implementedClasses.stream().findFirst();
-      return optional.map(Entry::getKey).orElseThrow(ClassNotFoundException::new);
-    } else {
-      // multiple implemented class from the interface, need to be selected by
-      // "qualifier" value
-      final var findBy = classQualifier == null ? fieldName : classQualifier;
-      var optional = implementedClasses.stream()
-          .filter(entry -> entry.getKey().equals(findBy)).findAny();
-      // in case of could not find an appropriately single instance, so throw an exception
-      return optional.map(Entry::getKey)
-          .orElseThrow(
-              () -> new MultipleImplementedClassForInterfaceException(classInterface));
     }
+    if (implementedClasses.size() > 1) {
+      // Multiple active implementations require an explicit class qualifier.
+      throw new MultipleImplementedClassForInterfaceException(classInterface);
+    }
+    return implementedClasses.iterator().next().getKey();
   }
 
   /**
-   * Assigns bean (instance) values to its corresponding fields in a class.
-   * This method performs field-level dependency injection.
+   * Assigns bean (instance) values to its corresponding fields in a class. This method performs
+   * field-level dependency injection.
    *
    * @param beanClass the target class that holds declared bean fields
-   * @param bean      the bean (instance) associated with the declared field
-   * @throws IllegalArgumentException        if invalid arguments are provided
-   * @throws SecurityException               if a security violation occurs
-   * @throws NoSuchMethodException           if a required method cannot be found
-   * @throws InvocationTargetException       if a constructor throws an exception
-   * @throws InstantiationException          if a class cannot be instantiated
-   * @throws IllegalAccessException          if a class or its constructor is not accessible
+   * @param bean the bean (instance) associated with the declared field
+   * @throws IllegalArgumentException if invalid arguments are provided
+   * @throws SecurityException if a security violation occurs
+   * @throws NoSuchMethodException if a required method cannot be found
+   * @throws InvocationTargetException if a constructor throws an exception
+   * @throws InstantiationException if a class cannot be instantiated
+   * @throws IllegalAccessException if a class or its constructor is not accessible
    * @throws DuplicatedBeanCreationException if a bean is created more than once
    */
   private void autowire(BeanClass beanClass, Object bean)
-      throws InstantiationException, IllegalAccessException, IllegalArgumentException,
-      InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException,
-      DuplicatedBeanCreationException {
+      throws InstantiationException,
+          IllegalAccessException,
+          IllegalArgumentException,
+          InvocationTargetException,
+          NoSuchMethodException,
+          SecurityException,
+          DuplicatedBeanCreationException {
     var fields = findFields(beanClass.clazz());
     for (var field : fields) {
+      if (!profiles.matches(field)) {
+        continue;
+      }
       Class<?> classQualifier = null;
       String nameQualifier = "";
 
@@ -574,8 +739,7 @@ public final class Injector extends SystemLogger {
 
       if (field.isAnnotationPresent(AutowiredAcceptNull.class)) {
         try {
-          var fieldInstance =
-              getBeanInstanceForInjector(field.getType(), field.getName(), nameQualifier, classQualifier);
+          var fieldInstance = getBeanInstanceForInjector(field.getType(), nameQualifier, classQualifier);
           if (fieldInstance != null) {
             field.set(bean, fieldInstance);
             autowire(new BeanClass(fieldInstance.getClass(), nameQualifier), fieldInstance);
@@ -584,13 +748,13 @@ public final class Injector extends SystemLogger {
           // do nothing
         }
       } else if (field.isAnnotationPresent(Autowired.class)) {
-        var fieldInstance =
-            getBeanInstanceForInjector(field.getType(), field.getName(), nameQualifier,
-                classQualifier);
-        if (fieldInstance != null) {
-          field.set(bean, fieldInstance);
-          autowire(new BeanClass(fieldInstance.getClass(), nameQualifier), fieldInstance);
+        var fieldInstance = getBeanInstanceForInjector(field.getType(), nameQualifier, classQualifier);
+        if (fieldInstance == null) {
+          // An active factory for this type does not guarantee the requested named bean exists.
+          throw new NoImplementedClassFoundException(field.getType());
         }
+        field.set(bean, fieldInstance);
+        autowire(new BeanClass(fieldInstance.getClass(), nameQualifier), fieldInstance);
       }
     }
   }
@@ -620,9 +784,7 @@ public final class Injector extends SystemLogger {
     return fields;
   }
 
-  /**
-   * Clear all references and beans created by the injector.
-   */
+  /** Clear all references and beans created by the injector. */
   private void cleanup() {
     classesMap.clear();
     classBeansMap.clear();
