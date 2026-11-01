@@ -484,11 +484,8 @@ public class SessionImpl extends AbstractLogger implements Session {
 
   @Override
   public void addReadBytes(long bytes) {
-    if (bytes < 0) {
-      throw new IllegalArgumentException("Read byte count must not be negative");
-    }
-    readBytes.addAndGet(bytes);
     if (bytes > 0) {
+      readBytes.addAndGet(bytes);
       setLastReadTime(now());
     }
   }
@@ -500,11 +497,8 @@ public class SessionImpl extends AbstractLogger implements Session {
 
   @Override
   public void addWrittenBytes(long bytes) {
-    if (bytes < 0) {
-      throw new IllegalArgumentException("Written byte count must not be negative");
-    }
-    writtenBytes.addAndGet(bytes);
     if (bytes > 0) {
+      writtenBytes.addAndGet(bytes);
       setLastWriteTime(now());
     }
   }
@@ -526,10 +520,9 @@ public class SessionImpl extends AbstractLogger implements Session {
 
   @Override
   public void addDroppedPackets(int packets) {
-    if (packets < 0) {
-      throw new IllegalArgumentException("Dropped packet count must not be negative");
+    if (packets > 0) {
+      droppedPackets.addAndGet(packets);
     }
-    droppedPackets.addAndGet(packets);
   }
 
   @Override

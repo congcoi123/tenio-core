@@ -128,7 +128,7 @@ public final class ApplicationLauncher extends SystemLogger {
 
     Bootstrapper bootstrap = null;
     if (entryClass != null) {
-      bootstrap = Bootstrapper.newInstance();
+      bootstrap = new Bootstrapper();
       try {
         var selectionConfiguration = new DefaultCoreConfiguration();
         selectionConfiguration.load(params == null || params.length == 0 ? null : params[0]);

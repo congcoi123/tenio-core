@@ -24,9 +24,14 @@ THE SOFTWARE.
 
 package com.tenio.core.bootstrap;
 
+import static com.tenio.core.fixture.bootstrap.BootstrapBeans.CLIENT_COMMAND_CODE;
+import static com.tenio.core.fixture.bootstrap.BootstrapBeans.CONTROLLER_PATH;
+import static com.tenio.core.fixture.bootstrap.BootstrapBeans.SERVLET_PATH;
+import static com.tenio.core.fixture.bootstrap.BootstrapBeans.SYSTEM_COMMAND_LABEL;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -34,16 +39,16 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.tenio.core.bootstrap.injector.Injector;
+import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
 import com.tenio.core.event.handler.EventHandler;
 import com.tenio.core.exception.NoImplementedClassFoundException;
 import com.tenio.core.fixture.bootstrap.BootstrapApplication;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
+import com.tenio.core.fixture.bootstrap.BootstrapBeans.BootstrapClientCommand;
+import com.tenio.core.fixture.bootstrap.BootstrapBeans.BootstrapRestController;
+import com.tenio.core.fixture.bootstrap.BootstrapBeans.BootstrapSystemCommand;
+import jakarta.servlet.http.HttpServlet;
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -51,29 +56,37 @@ import org.junit.jupiter.api.Test;
 class BootstrapperTest {
 
   private static final String EVENT_HANDLERS = "com.tenio.core.event.handler";
-
-  private final Bootstrapper bootstrapper = Bootstrapper.newInstance();
-  private final Injector injector = Injector.newInstance();
+  private final Bootstrapper bootstrapper = new Bootstrapper();
 
   private static class NotBootstrap {
   }
 
-  @BeforeEach
-  @AfterEach
-  void resetBootstrapState() throws Exception {
-    // Reset the handler, profile selection and bean registrations together.
-    bootstrapper.run(NotBootstrap.class);
-  }
-
   @Test
-  @DisplayName("Throw an exception when the class's instance is attempted creating again")
-  void createNewInstanceShouldThrowException() throws NoSuchMethodException {
-    var constructor = Bootstrapper.class.getDeclaredConstructor();
-    assertTrue(Modifier.isPrivate(constructor.getModifiers()));
-    assertThrows(InvocationTargetException.class, () -> {
-      constructor.setAccessible(true);
-      constructor.newInstance();
-    });
+  @DisplayName("Constructed bootstrappers should own independent application contexts")
+  void constructedBootstrappersShouldOwnIndependentContexts() throws Exception {
+    bootstrapper.runWithProfiles(BootstrapApplication.class, Set.of("world"), EVENT_HANDLERS);
+    var first = snapshot(bootstrapper);
+
+    var other = new Bootstrapper();
+    assertNull(other.getBootstrapHandler());
+    assertContextUnchanged(bootstrapper, first);
+    other.runWithProfiles(BootstrapApplication.class, Set.of("game"), EVENT_HANDLERS);
+    var second = snapshot(other);
+
+    assertAll(
+        () -> assertNotSame(first.handler(), second.handler()),
+        () -> assertNotSame(first.eventHandler(), second.eventHandler()),
+        () -> assertNotSame(first.configurationHandler(), second.configurationHandler()),
+        () -> assertNotSame(first.clientCommand(), second.clientCommand()),
+        () -> assertNotSame(first.systemCommand(), second.systemCommand()),
+        () -> assertNotSame(first.servlet(), second.servlet()),
+        () -> assertNotSame(first.handler().getClientCommandManager(),
+            second.handler().getClientCommandManager()),
+        () -> assertNotSame(first.handler().getSystemCommandManager(),
+            second.handler().getSystemCommandManager()),
+        () -> assertNotSame(first.handler().getServletMap(), second.handler().getServletMap()));
+    assertContextUnchanged(bootstrapper, first);
+    assertContextUnchanged(other, second);
   }
 
   @Test
@@ -81,37 +94,29 @@ class BootstrapperTest {
   void runWithNonBootstrapClassShouldNotInitHandler() {
     assertDoesNotThrow(() -> bootstrapper.run(NotBootstrap.class));
     assertNull(bootstrapper.getBootstrapHandler());
-    assertTrue(injector.getClassBeansMap().isEmpty());
   }
 
   @Test
-  @DisplayName("run() should initialize a fully wired handler from an isolated application")
+  @DisplayName("run() should expose one fully wired context through its handler")
   void runWithBootstrapClassShouldInitHandler() {
     assertDoesNotThrow(() -> bootstrapper.run(BootstrapApplication.class, EVENT_HANDLERS));
 
     var handler = bootstrapper.getBootstrapHandler();
-    assertNotNull(handler);
-    assertAll(
-        () -> assertNotNull(handler.getEventHandler()),
-        () -> assertNotNull(handler.getConfigurationHandler()),
-        () -> assertSame(injector.getBean(EventHandler.class), handler.getEventHandler()),
-        () -> assertSame(injector.getSystemCommandManager(), handler.getSystemCommandManager()),
-        () -> assertSame(injector.getClientCommandManager(), handler.getClientCommandManager()),
-        () -> assertSame(injector.getServletBeansMap(), handler.getServletMap()),
-        () -> assertSame(handler.getEventHandler(), handler.getBeanByClazz(EventHandler.class)),
-        () -> assertEquals(Set.of(), handler.getActiveProfiles()));
+    assertFullyWired(handler);
+    assertEquals(Set.of(), handler.getActiveProfiles());
   }
 
   @Test
   @DisplayName("getBootstrapHandler() before run() should return null")
   void getBootstrapHandlerBeforeRunShouldReturnNull() {
-    assertNull(Bootstrapper.newInstance().getBootstrapHandler());
+    assertNull(bootstrapper.getBootstrapHandler());
   }
 
   @Test
-  @DisplayName("run() should propagate missing dependencies instead of exposing a partial handler")
-  void runShouldPropagateMissingDependency() throws Exception {
+  @DisplayName("A failed scan should clear registrations and permit a fresh successful run")
+  void runShouldPropagateMissingDependencyAndRecover() throws Exception {
     bootstrapper.run(BootstrapApplication.class, EVENT_HANDLERS);
+    var previous = snapshot(bootstrapper);
 
     // Omitting the event package deliberately removes the required EventHandler provider.
     var exception = assertThrows(NoImplementedClassFoundException.class,
@@ -119,67 +124,217 @@ class BootstrapperTest {
 
     assertTrue(exception.getMessage().contains(EventHandler.class.getName()));
     assertNull(bootstrapper.getBootstrapHandler());
+    assertRegistrationsCleared(previous.handler());
+
+    bootstrapper.run(BootstrapApplication.class, EVENT_HANDLERS);
+    assertFreshGeneration(previous, bootstrapper.getBootstrapHandler());
   }
 
   @Test
   @DisplayName("Matching profiles should start the entry point and retain an immutable selection")
   void runWithProfilesShouldSelectEntryPointAndDetachProfiles() throws Exception {
     var profiles = new HashSet<>(Set.of(" world "));
-    bootstrapper.runWithProfiles(BootstrapApplication.WorldApplication.class, profiles, EVENT_HANDLERS);
+    bootstrapper.runWithProfiles(BootstrapApplication.WorldApplication.class,
+        profiles, EVENT_HANDLERS);
     profiles.add("game");
 
     var handler = bootstrapper.getBootstrapHandler();
-    assertNotNull(handler);
-    assertNotNull(handler.getEventHandler());
+    assertFullyWired(handler);
     assertEquals(Set.of("world"), handler.getActiveProfiles());
-    assertThrows(UnsupportedOperationException.class, () -> handler.getActiveProfiles().add("game"));
+    assertThrows(UnsupportedOperationException.class,
+        () -> handler.getActiveProfiles().add("game"));
   }
 
   @Test
   @DisplayName("An excluded entry point should clear the prior bootstrap generation")
   void runWithExcludedProfileShouldClearPreviousBeans() throws Exception {
-    bootstrapper.runWithProfiles(BootstrapApplication.WorldApplication.class, Set.of("world"), EVENT_HANDLERS);
-    assertNotNull(injector.getBean(BootstrapHandler.class));
-    assertNotNull(injector.getBean(EventHandler.class));
+    bootstrapper.runWithProfiles(BootstrapApplication.WorldApplication.class,
+        Set.of("world"), EVENT_HANDLERS);
+    var previous = snapshot(bootstrapper);
 
-    bootstrapper.runWithProfiles(BootstrapApplication.WorldApplication.class, Set.of("game"), EVENT_HANDLERS);
+    bootstrapper.runWithProfiles(BootstrapApplication.WorldApplication.class,
+        Set.of("game"), EVENT_HANDLERS);
 
-    assertAll(
-        () -> assertNull(bootstrapper.getBootstrapHandler()),
-        () -> assertNull(injector.getBean(BootstrapHandler.class)),
-        () -> assertNull(injector.getBean(EventHandler.class)),
-        () -> assertTrue(injector.getClassesMap().isEmpty()),
-        () -> assertTrue(injector.getClassBeansMap().isEmpty()),
-        () -> assertTrue(injector.getServletBeansMap().isEmpty()));
+    assertNull(bootstrapper.getBootstrapHandler());
+    assertRegistrationsCleared(previous.handler());
+    assertEquals(Set.of("world"), previous.handler().getActiveProfiles());
   }
 
   @Test
-  @DisplayName("A non-bootstrap entry point should clear the prior handler and bean registrations")
+  @DisplayName("A non-bootstrap entry point should clear the prior handler and registrations")
   void nonBootstrapEntryShouldClearPreviousBeans() throws Exception {
     bootstrapper.run(BootstrapApplication.class, EVENT_HANDLERS);
-    assertNotNull(injector.getBean(BootstrapHandler.class));
+    var previous = snapshot(bootstrapper);
 
     bootstrapper.run(NotBootstrap.class);
 
     assertNull(bootstrapper.getBootstrapHandler());
-    assertNull(injector.getBean(BootstrapHandler.class));
-    assertNull(injector.getBean(EventHandler.class));
-    assertTrue(injector.getClassBeansMap().isEmpty());
+    assertRegistrationsCleared(previous.handler());
   }
 
   @Test
-  @DisplayName("Legacy run() should reset an earlier selection and construct a fresh generation")
+  @DisplayName("Legacy run() should reset profiles and construct a fresh generation")
   void runShouldResetProfilesAndCachedHandler() throws Exception {
     bootstrapper.runWithProfiles(BootstrapApplication.class, Set.of("world"), EVENT_HANDLERS);
-    var previousHandler = bootstrapper.getBootstrapHandler();
-    assertSame(previousHandler, injector.getBean(BootstrapHandler.class));
+    var previous = snapshot(bootstrapper);
 
     bootstrapper.run(BootstrapApplication.class, EVENT_HANDLERS);
 
     var handler = bootstrapper.getBootstrapHandler();
-    assertNotSame(previousHandler, handler);
-    assertNotSame(previousHandler.getEventHandler(), handler.getEventHandler());
-    assertSame(handler, injector.getBean(BootstrapHandler.class));
+    assertFreshGeneration(previous, handler);
     assertEquals(Set.of(), handler.getActiveProfiles());
+    assertEquals(Set.of("world"), previous.handler().getActiveProfiles());
+  }
+
+  @Test
+  @DisplayName("Resetting one bootstrapper should leave another context's registrations intact")
+  void resettingOneBootstrapperShouldLeaveAnotherContextIntact() throws Exception {
+    bootstrapper.run(BootstrapApplication.class, EVENT_HANDLERS);
+    var previous = snapshot(bootstrapper);
+    var other = startOtherContext();
+    var unaffected = snapshot(other);
+
+    bootstrapper.run(NotBootstrap.class);
+
+    assertNull(bootstrapper.getBootstrapHandler());
+    assertRegistrationsCleared(previous.handler());
+    assertContextUnchanged(other, unaffected);
+  }
+
+  @Test
+  @DisplayName("A failed scan and recovery should not change another bootstrapper's context")
+  void failedScanAndRecoveryShouldLeaveAnotherContextIntact() throws Exception {
+    bootstrapper.run(BootstrapApplication.class, EVENT_HANDLERS);
+    var previous = snapshot(bootstrapper);
+    var other = startOtherContext();
+    var unaffected = snapshot(other);
+
+    assertThrows(NoImplementedClassFoundException.class,
+        () -> bootstrapper.run(BootstrapApplication.class));
+
+    assertNull(bootstrapper.getBootstrapHandler());
+    assertRegistrationsCleared(previous.handler());
+    assertContextUnchanged(other, unaffected);
+
+    bootstrapper.run(BootstrapApplication.class, EVENT_HANDLERS);
+    assertFreshGeneration(previous, bootstrapper.getBootstrapHandler());
+    assertContextUnchanged(other, unaffected);
+  }
+
+  @Test
+  @DisplayName("Rescanning one bootstrapper should preserve the other context's object identities")
+  void rescanningOneBootstrapperShouldLeaveAnotherContextIntact() throws Exception {
+    bootstrapper.runWithProfiles(BootstrapApplication.class, Set.of("world"), EVENT_HANDLERS);
+    var previous = snapshot(bootstrapper);
+    var other = startOtherContext();
+    var unaffected = snapshot(other);
+
+    bootstrapper.run(BootstrapApplication.class, EVENT_HANDLERS);
+
+    assertFreshGeneration(previous, bootstrapper.getBootstrapHandler());
+    assertEquals(Set.of(), bootstrapper.getBootstrapHandler().getActiveProfiles());
+    assertContextUnchanged(other, unaffected);
+  }
+
+  private Bootstrapper startOtherContext() throws Exception {
+    var other = new Bootstrapper();
+    other.runWithProfiles(BootstrapApplication.class, Set.of("game"), EVENT_HANDLERS);
+    return other;
+  }
+
+  private static void assertFullyWired(BootstrapHandler handler) {
+    assertNotNull(handler);
+    assertNotNull(handler.getEventHandler());
+    assertNotNull(handler.getConfigurationHandler());
+    assertNotNull(handler.getClientCommandManager());
+    assertNotNull(handler.getSystemCommandManager());
+    assertNotNull(handler.getServletMap());
+    var client = assertInstanceOf(BootstrapClientCommand.class,
+        handler.getClientCommandManager().getHandler(CLIENT_COMMAND_CODE));
+    var system = assertInstanceOf(BootstrapSystemCommand.class,
+        handler.getSystemCommandManager().getHandler(SYSTEM_COMMAND_LABEL));
+    var controller = handler.getBeanByClazz(BootstrapRestController.class, CONTROLLER_PATH);
+    assertNotNull(controller);
+    assertNotNull(handler.getServletMap().get(SERVLET_PATH));
+    assertAll(
+        () -> assertSame(handler, handler.getBeanByClazz(BootstrapHandler.class)),
+        () -> assertSame(handler.getEventHandler(), handler.getBeanByClazz(EventHandler.class)),
+        () -> assertSame(handler.getConfigurationHandler(),
+            handler.getBeanByClazz(ConfigurationHandler.class)),
+        () -> assertSame(handler.getClientCommandManager(), client.getCommandManager()),
+        () -> assertSame(handler.getSystemCommandManager(), system.getCommandManager()),
+        () -> assertSame(handler.getEventHandler(), client.eventHandler),
+        () -> assertSame(handler.getEventHandler(), system.eventHandler),
+        () -> assertSame(handler.getEventHandler(), controller.eventHandler),
+        () -> assertSame(controller.status(), handler.getServletMap().get(SERVLET_PATH)),
+        () -> assertEquals(Set.of(CLIENT_COMMAND_CODE),
+            handler.getClientCommandManager().getHandlers().keySet()),
+        () -> assertEquals(Set.of(SYSTEM_COMMAND_LABEL),
+            handler.getSystemCommandManager().getHandlers().keySet()),
+        () -> assertEquals(Set.of(SYSTEM_COMMAND_LABEL),
+            handler.getSystemCommandManager().getAnnotations().keySet()),
+        () -> assertEquals(Set.of(SERVLET_PATH), handler.getServletMap().keySet()));
+  }
+
+  private static void assertRegistrationsCleared(BootstrapHandler previous) {
+    // These public views point to the previously populated context, not an unrelated Injector.
+    assertAll(
+        () -> assertNull(previous.getBeanByClazz(BootstrapHandler.class)),
+        () -> assertNull(previous.getBeanByClazz(EventHandler.class)),
+        () -> assertNull(previous.getBeanByClazz(ConfigurationHandler.class)),
+        () -> assertNull(previous.getClientCommandManager().getHandler(CLIENT_COMMAND_CODE)),
+        () -> assertNull(previous.getSystemCommandManager().getHandler(SYSTEM_COMMAND_LABEL)),
+        () -> assertNull(previous.getBeanByClazz(BootstrapRestController.class, CONTROLLER_PATH)),
+        () -> assertTrue(previous.getClientCommandManager().getHandlers().isEmpty()),
+        () -> assertTrue(previous.getSystemCommandManager().getHandlers().isEmpty()),
+        () -> assertTrue(previous.getSystemCommandManager().getAnnotations().isEmpty()),
+        () -> assertTrue(previous.getServletMap().isEmpty()));
+  }
+
+  private static ContextSnapshot snapshot(Bootstrapper owner) {
+    var handler = owner.getBootstrapHandler();
+    assertFullyWired(handler);
+    return new ContextSnapshot(handler, handler.getEventHandler(),
+        handler.getConfigurationHandler(),
+        (BootstrapClientCommand) handler.getClientCommandManager().getHandler(CLIENT_COMMAND_CODE),
+        (BootstrapSystemCommand) handler.getSystemCommandManager().getHandler(SYSTEM_COMMAND_LABEL),
+        handler.getServletMap().get(SERVLET_PATH), handler.getActiveProfiles());
+  }
+
+  private static void assertFreshGeneration(ContextSnapshot previous, BootstrapHandler handler) {
+    assertFullyWired(handler);
+    // Capture objects before rescanning: a prior handler's registry views remain live.
+    assertAll(
+        () -> assertNotSame(previous.handler(), handler),
+        () -> assertNotSame(previous.eventHandler(), handler.getEventHandler()),
+        () -> assertNotSame(previous.configurationHandler(), handler.getConfigurationHandler()),
+        () -> assertNotSame(previous.clientCommand(),
+            handler.getClientCommandManager().getHandler(CLIENT_COMMAND_CODE)),
+        () -> assertNotSame(previous.systemCommand(),
+            handler.getSystemCommandManager().getHandler(SYSTEM_COMMAND_LABEL)),
+        () -> assertNotSame(previous.servlet(), handler.getServletMap().get(SERVLET_PATH)));
+  }
+
+  private static void assertContextUnchanged(Bootstrapper owner, ContextSnapshot expected) {
+    var handler = owner.getBootstrapHandler();
+    assertSame(expected.handler(), handler);
+    assertFullyWired(handler);
+    assertAll(
+        () -> assertSame(expected.eventHandler(), handler.getBeanByClazz(EventHandler.class)),
+        () -> assertSame(expected.configurationHandler(),
+            handler.getBeanByClazz(ConfigurationHandler.class)),
+        () -> assertSame(expected.clientCommand(),
+            handler.getClientCommandManager().getHandler(CLIENT_COMMAND_CODE)),
+        () -> assertSame(expected.systemCommand(),
+            handler.getSystemCommandManager().getHandler(SYSTEM_COMMAND_LABEL)),
+        () -> assertSame(expected.servlet(), handler.getServletMap().get(SERVLET_PATH)),
+        () -> assertEquals(expected.profiles(), handler.getActiveProfiles()));
+  }
+
+  private record ContextSnapshot(BootstrapHandler handler, EventHandler eventHandler,
+                                 ConfigurationHandler configurationHandler,
+                                 BootstrapClientCommand clientCommand,
+                                 BootstrapSystemCommand systemCommand, HttpServlet servlet,
+                                 Set<String> profiles) {
   }
 }

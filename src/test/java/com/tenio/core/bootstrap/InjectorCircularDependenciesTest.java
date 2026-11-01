@@ -70,7 +70,7 @@ import org.junit.jupiter.api.Test;
 /** Regression tests for complete, finite wiring of cyclic singleton field dependencies. */
 class InjectorCircularDependenciesTest {
 
-  private final Injector injector = Injector.newInstance();
+  private final Injector injector = new Injector();
 
   @BeforeEach
   @AfterEach

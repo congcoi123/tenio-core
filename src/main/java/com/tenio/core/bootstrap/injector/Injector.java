@@ -57,7 +57,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -103,8 +102,6 @@ import java.util.stream.Collectors;
  */
 public final class Injector extends SystemLogger {
 
-  private static final Injector instance = new Injector();
-
   /**
    * A map contains values are interfaces and keys are implemented classes.
    */
@@ -135,11 +132,7 @@ public final class Injector extends SystemLogger {
    */
   private ProfileSelection profiles;
 
-  private Injector() {
-    if (instance != null) {
-      throw new ExceptionInInitializerError("Could not re-create the class instance");
-    }
-
+  public Injector() {
     classesMap = new HashMap<>();
     manualClassesSet = new HashSet<>();
     classBeansMap = new HashMap<>();
@@ -147,15 +140,6 @@ public final class Injector extends SystemLogger {
     systemCommandManager = new SystemCommandManager();
     clientCommandManager = new ClientCommandManager();
     profiles = new ProfileSelection(Set.of());
-  }
-
-  /**
-   * Returns an instance of the injector.
-   *
-   * @return an instance of the injector
-   */
-  public static Injector newInstance() {
-    return instance;
   }
 
   /**
@@ -272,7 +256,7 @@ public final class Injector extends SystemLogger {
       classesMap.put(implementedClass, implementedTypes(implementedClass));
     }
 
-    warnProfileCollisions(allClasses);
+    warnRegistrationCollisions(allClasses);
 
     // Step 2: We create instances
     // create beans (class instances) based on annotations
@@ -426,6 +410,7 @@ public final class Injector extends SystemLogger {
         .distinct()
         .toList();
     if (candidates.size() > 1) {
+      warnAmbiguousDependency(clazz, "getBean()", "", null);
       throw new IllegalStateException("Multiple active beans implement " + clazz.getName()
           + "; select disjoint profiles or use an injection qualifier");
     }
@@ -570,31 +555,11 @@ public final class Injector extends SystemLogger {
     collectTypes(type.getSuperclass(), types);
   }
 
-  /** Warns before construction about overlapping providers and explicit registration keys. */
-  private void warnProfileCollisions(Set<Class<?>> definitions) {
+  /** Warns before construction about duplicate explicit registration keys. */
+  private void warnRegistrationCollisions(Set<Class<?>> definitions) {
     if (!isWarnEnabled()) {
       return;
     }
-
-    Map<Class<?>, List<Class<?>>> providers = new HashMap<>();
-    classesMap.forEach((implementation, types) ->
-            types.stream()
-                .filter(Class::isInterface)
-                .forEach(type -> providers
-                            .computeIfAbsent(type, ignored -> new ArrayList<>())
-                            .add(implementation)));
-    providers.forEach((contract, implementations) -> {
-          if (implementations.size() > 1) {
-            warn(
-                "[PROFILE COLLISION] ",
-                "Active profiles ",
-                profiles.activeProfiles(),
-                " select multiple providers for ",
-                contract.getName(),
-                ": ",
-                implementations);
-          }
-        });
 
     Map<String, String> registrations = new HashMap<>();
     for (Class<?> definition : definitions) {
@@ -652,7 +617,7 @@ public final class Injector extends SystemLogger {
     String previous = registrations.putIfAbsent(key, definition);
     if (previous != null) {
       warn(
-          "[PROFILE COLLISION]" ,
+          "[PROFILE COLLISION] ",
           "Active profiles ",
           profiles.activeProfiles(),
           " select duplicate ",
@@ -661,6 +626,21 @@ public final class Injector extends SystemLogger {
           previous,
           " and ",
           definition
+      );
+    }
+  }
+
+  /** Reports ambiguity only after the requested dependency's resolution rules have been applied. */
+  private void warnAmbiguousDependency(Class<?> type, String target, String nameQualifier, Class<?> classQualifier) {
+    if (isWarnEnabled()) {
+      warn(
+          "[INJECTION AMBIGUITY] ",
+          "Active profiles ", profiles.activeProfiles(),
+          " cannot resolve ", target,
+          " of type ", type.getName(),
+          " (name='", nameQualifier,
+          "', classQualifier=", classQualifier == null ? "<none>" : classQualifier.getName(),
+          "): multiple providers match"
       );
     }
   }
@@ -748,8 +728,15 @@ public final class Injector extends SystemLogger {
         boolean optional = field.isAnnotationPresent(AutowiredAcceptNull.class);
         Object fieldInstance;
         try {
-          fieldInstance =
-              getBeanInstanceForInjector(field.getType(), nameQualifier, classQualifier);
+          fieldInstance = getBeanInstanceForInjector(field.getType(), nameQualifier, classQualifier);
+        } catch (MultipleImplementedClassForInterfaceException exception) {
+          warnAmbiguousDependency(
+                  field.getType(),
+              "field " + field.getDeclaringClass().getName() + "." + field.getName(),
+                  nameQualifier,
+                  classQualifier
+          );
+          throw exception;
         } catch (NoImplementedClassFoundException exception) {
           if (optional) {
             // Only this reference is optional; required fields on a resolved bean still must wire.

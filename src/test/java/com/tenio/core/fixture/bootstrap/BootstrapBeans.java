@@ -24,14 +24,31 @@ THE SOFTWARE.
 
 package com.tenio.core.fixture.bootstrap;
 
+import com.tenio.common.data.DataCollection;
 import com.tenio.core.bootstrap.BootstrapHandler;
+import com.tenio.core.bootstrap.annotation.Autowired;
 import com.tenio.core.bootstrap.annotation.Bean;
 import com.tenio.core.bootstrap.annotation.BeanFactory;
+import com.tenio.core.bootstrap.annotation.ClientCommand;
+import com.tenio.core.bootstrap.annotation.RestController;
+import com.tenio.core.bootstrap.annotation.RestMapping;
+import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
+import com.tenio.core.command.client.AbstractClientCommandHandler;
+import com.tenio.core.command.system.AbstractSystemCommandHandler;
+import com.tenio.core.entity.Player;
+import com.tenio.core.event.handler.EventHandler;
+import jakarta.servlet.http.HttpServlet;
+import java.util.List;
 
-/** Supplies only the framework beans outside the event-handler package under test. */
+/** Supplies framework beans and observable registrations for an isolated bootstrap context. */
 @BeanFactory
 public class BootstrapBeans {
+
+  public static final short CLIENT_COMMAND_CODE = 321;
+  public static final String SYSTEM_COMMAND_LABEL = "bootstrap-status";
+  public static final String CONTROLLER_PATH = "/bootstrap";
+  public static final String SERVLET_PATH = "bootstrap/status";
 
   @Bean
   public BootstrapHandler bootstrapHandler() {
@@ -41,5 +58,35 @@ public class BootstrapBeans {
   @Bean
   public ConfigurationHandler configurationHandler() {
     return new ConfigurationHandler();
+  }
+
+  @ClientCommand(CLIENT_COMMAND_CODE)
+  public static class BootstrapClientCommand
+      extends AbstractClientCommandHandler<Player, DataCollection> {
+    @Autowired public EventHandler eventHandler;
+
+    @Override
+    public void execute(Player player, DataCollection message) {
+    }
+  }
+
+  @SystemCommand(label = SYSTEM_COMMAND_LABEL)
+  public static class BootstrapSystemCommand extends AbstractSystemCommandHandler {
+    @Autowired public EventHandler eventHandler;
+
+    @Override
+    public void execute(List<String> arguments) {
+    }
+  }
+
+  @RestController(CONTROLLER_PATH)
+  public static class BootstrapRestController {
+    @Autowired public EventHandler eventHandler;
+    private final HttpServlet servlet = new HttpServlet() {};
+
+    @RestMapping("/status")
+    public HttpServlet status() {
+      return servlet;
+    }
   }
 }

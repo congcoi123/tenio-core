@@ -76,7 +76,7 @@ import org.junit.jupiter.api.Test;
 @DisplayName("Unit Test Cases For Injector")
 class InjectorTest {
 
-  private final Injector injector = Injector.newInstance();
+  private final Injector injector = new Injector();
 
   @BeforeEach
   @AfterEach
@@ -86,28 +86,9 @@ class InjectorTest {
   }
 
   @Test
-  @DisplayName("Throw an exception when the class's instance is attempted creating again")
-  void createNewInstanceShouldThrowException() throws NoSuchMethodException {
-    var constructor = Injector.class.getDeclaredConstructor();
-    assertTrue(Modifier.isPrivate(constructor.getModifiers()));
-    assertThrows(InvocationTargetException.class, () -> {
-      constructor.setAccessible(true);
-      constructor.newInstance();
-    });
-  }
-
-  @Test
-  @DisplayName("Injector.newInstance() always returns singleton")
-  void testNewInstanceSingleton() {
-    Injector i1 = Injector.newInstance();
-    Injector i2 = Injector.newInstance();
-    assertSame(i1, i2);
-  }
-
-  @Test
   @DisplayName("getClassesMap, getClassBeansMap, getServletBeansMap, getSystemCommandManager, getClientCommandManager should not be null")
   void testGettersNotNull() {
-    Injector injector = Injector.newInstance();
+    Injector injector = new Injector();
     assertNotNull(injector.getClassesMap());
     assertNotNull(injector.getClassBeansMap());
     assertNotNull(injector.getServletBeansMap());
@@ -118,14 +99,14 @@ class InjectorTest {
   @Test
   @DisplayName("getBean returns null for unknown class")
   void testGetBeanReturnsNullForUnknownClass() {
-    Injector injector = Injector.newInstance();
+    Injector injector = new Injector();
     assertNull(injector.getBean(String.class));
   }
 
   @Test
   @DisplayName("getBean returns correct instance after scanPackages")
   void testGetBeanAfterScanPackages() throws Exception {
-    Injector injector = Injector.newInstance();
+    Injector injector = new Injector();
     injector.scanPackages(BootstrapComponent.class, "com.tenio.core.bootstrap.bean");
     Object bean = injector.getBean(BootstrapComponent.class);
     assertNotNull(bean);
@@ -134,7 +115,7 @@ class InjectorTest {
   @Test
   @DisplayName("getServletBeansMap returns map that can be modified")
   void testServletBeansMapModifiable() {
-    Injector injector = Injector.newInstance();
+    Injector injector = new Injector();
     Map<String, HttpServlet> map = injector.getServletBeansMap();
     HttpServlet servlet = mock(HttpServlet.class);
     map.put("test", servlet);
@@ -251,7 +232,7 @@ class InjectorTest {
   @Test
   @DisplayName("Attempt fetching null bean should return null")
   void getNullBeanShouldReturnNull() {
-    assertNull(Injector.newInstance().getBean(null));
+    assertNull(new Injector().getBean(null));
   }
 
   @Test

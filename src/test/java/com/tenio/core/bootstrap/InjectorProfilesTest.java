@@ -50,7 +50,7 @@ import org.junit.jupiter.api.Test;
 @DisplayName("Profile selection across injector discovery, creation and registration")
 class InjectorProfilesTest {
 
-  private final Injector injector = Injector.newInstance();
+  private final Injector injector = new Injector();
 
   @BeforeEach
   void resetSideEffects() throws Exception {

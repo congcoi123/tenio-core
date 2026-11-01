@@ -28,7 +28,6 @@ import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.annotation.Bootstrap;
 import com.tenio.core.bootstrap.injector.Injector;
 import com.tenio.core.bootstrap.injector.ProfileSelection;
-import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 
 import java.util.Set;
 
@@ -44,7 +43,7 @@ import java.util.Set;
  *   <li>Dependency injection management
  *   <li>Command handler registration
  *   <li>Servlet bean management
- *   <li>Singleton instance management
+ *   <li>Independent bootstrap contexts
  * </ul>
  *
  * <p>Initialization process:
@@ -57,8 +56,8 @@ import java.util.Set;
  *   <li>Set up bootstrap handler
  * </ol>
  *
- * <p>Note: This class implements the singleton pattern and should be accessed through the {@link
- * #newInstance()} method.
+ * <p>Each instance owns its injector, bean registrations, and startup profile selection.
+ * Repeated runs rebuild that instance's registrations without changing another bootstrapper.
  *
  * @see Bootstrap
  * @see Injector
@@ -67,28 +66,15 @@ import java.util.Set;
  */
 public final class Bootstrapper extends SystemLogger {
 
-  private static final Bootstrapper instance = new Bootstrapper();
-
   private final Injector injector;
   private BootstrapHandler bootstrapHandler;
   /** Immutable selection installed before any application constructor runs. */
   private ProfileSelection profileSelection;
 
-  private Bootstrapper() {
-    if (instance != null) {
-      throw new CommandLine.InitializationException("Could not recreate this class instance");
-    }
-    injector = Injector.newInstance();
+  /** Creates a bootstrapper with its own injector and startup profile selection. */
+  public Bootstrapper() {
+    injector = new Injector();
     profileSelection = new ProfileSelection(Set.of());
-  }
-
-  /**
-   * Creates a new instance.
-   *
-   * @return a new instance of {@link Bootstrapper}
-   */
-  public static Bootstrapper newInstance() {
-    return instance;
   }
 
   /**
