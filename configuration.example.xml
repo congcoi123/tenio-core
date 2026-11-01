@@ -2,6 +2,8 @@
 <Server>
 
     <Properties>
+        <!-- Required startup profiles; comma-separated, trimmed and case-sensitive. -->
+        <Property name="profile">default</Property>
         <!-- The server name -->
         <Property name="server-name">TenIO Core</Property>
         <!-- The server id (module name) -->
@@ -63,6 +65,8 @@
             <Task name="removed-room-scan-interval">30</Task>        <!-- Unit: Seconds -->
             <!-- The period checking player time out in seconds -->
             <Task name="disconnected-player-scan-interval">45</Task>        <!-- Unit: Seconds -->
+            <!-- Main-connection keepalive scan delay: 0 disables this task -->
+            <Task name="main-connection-keepalive-scan-interval">0</Task>        <!-- Unit: Seconds -->
             <!-- The period checking CCU in seconds -->
             <Task name="ccu-scan-interval">60</Task>                <!-- Unit: Seconds -->
             <!-- Schedule detecting deadlocked threads -->
@@ -89,14 +93,9 @@
             <Property name="max-number-players">1000</Property>
             <!-- The maximum number of rooms which game can handle -->
             <Property name="max-number-rooms">1000</Property>
-            <!-- The max IDLE time in seconds which server can wait from the last
-                 getting message from client.
-                 Set it to -1 to ignore the checking -->
+            <!-- Reconnect grace period in seconds after the primary connection is detached  -->
+            <Property name="main-connection-keepalive-timeout-seconds">0</Property> <!-- Unit: Seconds, 0 disables expiry checks -->
             <Property name="max-player-idle-time">180</Property>                    <!-- Unit: Seconds -->
-            <!-- The max IDLE time in seconds which server can wait from the last
-                 getting message from client (in case the player enables the never deported flag).
-                 Set it to -1 to ignore the checking -->
-            <Property name="max-player-idle-time-never-deported">86400</Property>    <!-- Unit: Seconds -->
         </Properties>
     </Configuration>
 

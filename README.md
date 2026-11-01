@@ -47,11 +47,13 @@ EventBroadcastToChannel
 EventChannelCreated
 EventChannelWillBeRemoved
 EventConnectionEstablishedResult
+EventConnectionWillBeClosed
 EventDisconnectPlayer
 EventFetchedBandwidthInfo
 EventFetchedCcuInfo
 EventPlayerAfterLeftRoom
 EventPlayerBeforeLeaveRoom
+EventPlayerConnectionReplacing
 EventPlayerJoinedRoomResult
 EventPlayerLogin
 EventPlayerConnectionResumed
@@ -108,7 +110,7 @@ Maven Central
 <dependency>
     <groupId>io.github.congcoi123</groupId>
     <artifactId>tenio-core</artifactId>
-    <version>0.7.3</version>
+    <version>0.7.4</version>
 </dependency>
 ```
 GitHub

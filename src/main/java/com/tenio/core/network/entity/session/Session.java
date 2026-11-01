@@ -34,6 +34,7 @@ import com.tenio.core.network.codec.packet.PacketReadState;
 import com.tenio.core.network.codec.packet.PendingPacket;
 import com.tenio.core.network.codec.packet.ProcessedPacket;
 import com.tenio.core.network.define.TransportType;
+import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
@@ -134,6 +135,49 @@ public interface Session {
    * @since 0.6.1
    */
   boolean transitionAssociatedState(AssociatedState expectedState, AssociatedState newState);
+
+  /**
+   * Atomically binds this session to a player. The session implementation owns the lock that
+   * protects the association state and the player-side session reference.
+   *
+   * @param player the player to associate with this session
+   * @return {@code true} when the association was completed, otherwise {@code false}
+   */
+  boolean associatePlayer(Player player);
+
+  /**
+   * Starts closing this session's player association. A session that starts closing cannot be
+   * associated with a player again.
+   *
+   * @return {@code true} when the session had a completed association that requires player
+   *     cleanup, otherwise {@code false}
+   */
+  boolean beginPlayerAssociationClose();
+
+  /**
+   * Prepares this session to be replaced by another connection for the same player.
+   *
+   * <p>The old session can no longer submit player messages and any queued outbound messages are
+   * discarded. The transport remains active so a final response can be sent with
+   * {@link Response#writeThenClose()}.</p>
+   */
+  void prepareForReplacement();
+
+  /**
+   * Marks this session to be closed by the network writer after its queued final response has
+   * been delivered.
+   *
+   * <p>This prevents another server flow from closing the socket between queuing a final response
+   * and the writer sending it.</p>
+   */
+  void markCloseAfterPendingWrite();
+
+  /**
+   * Determines whether the network writer owns this session's pending close.
+   *
+   * @return {@code true} when a final response must be delivered before closing the session
+   */
+  boolean isCloseAfterPendingWriteMarked();
 
   /**
    * In allowance period of time, if the session can not be associated to any player, it is
@@ -374,14 +418,14 @@ public interface Session {
   long getCreatedTime();
 
   /**
-   * Retrieves the last activity time of session.
+   * Retrieves the last activity timestamp supplied by a read or write update.
    *
    * @return the last activity time in milliseconds ({@code long} value)
    */
   long getLastActivityTime();
 
   /**
-   * Retrieves the last time when the session receives the last byte of data from client side.
+   * Retrieves the last receive timestamp.
    *
    * @return the last reading new data time in milliseconds ({@code long} value)
    */
@@ -395,7 +439,21 @@ public interface Session {
   void setLastReadTime(long timestamp);
 
   /**
-   * Retrieves the last time when session sends the last byte of data to client side.
+   * Retrieves the last reliable transport byte-receipt time.
+   *
+   * @return last TCP/WebSocket receipt timestamp, or creation time before the first receipt
+   */
+  long getLastReliableReadTime();
+
+  /**
+   * Records reliable transport byte receipt and updates general read/activity timestamps.
+   *
+   * @param timestamp reliable transport receipt time in epoch milliseconds
+   */
+  void setLastReliableReadTime(long timestamp);
+
+  /**
+   * Retrieves the last outbound activity timestamp.
    *
    * @return the last writing data time in milliseconds ({@code long} value)
    */
@@ -409,7 +467,7 @@ public interface Session {
   void setLastWriteTime(long timestamp);
 
   /**
-   * Retrieves the total number of binaries which the session receives from client side.
+   * Retrieves the thread-safe total of bytes reported by this session's transport readers.
    *
    * @return the total number of binaries ({@code long} value) which the session receives from
    * client side
@@ -417,15 +475,16 @@ public interface Session {
   long getReadBytes();
 
   /**
-   * Increases the total number of binaries which the session receives from client side.
+   * Adds transport-received bytes atomically.
    *
    * @param numberBytes the additional number of binaries ({@code long} value) which the
    *                    session receives from client side
+   * @throws IllegalArgumentException if numberBytes is negative
    */
   void addReadBytes(long numberBytes);
 
   /**
-   * Retrieves the total number of binaries which the session sends to client side.
+   * Retrieves the thread-safe total of bytes reported by this session's transport writers.
    *
    * @return the total number of binaries ({@code long} value) which the session sends to
    * client side
@@ -433,15 +492,16 @@ public interface Session {
   long getWrittenBytes();
 
   /**
-   * Increases the total number of binaries which the session sends to client side.
+   * Adds transport-written bytes atomically.
    *
    * @param numberBytes the additional number of binaries ({@code long} value) which the
    *                    session sends to client side
+   * @throws IllegalArgumentException if numberBytes is negative
    */
   void addWrittenBytes(long numberBytes);
 
   /**
-   * Retrieves the total number of messages which the session receives from client side.
+   * Retrieves the thread-safe total of decoded messages processed for this session.
    *
    * @return the total number of messages ({@code long} value) which the session receives from
    * client side
@@ -457,8 +517,7 @@ public interface Session {
   void increaseReadMessages();
 
   /**
-   * Retrieves the total number of dropped packets which violated the session's policies and is
-   * not able to send to client side.
+   * Retrieves the thread-safe total of outbound packet drops reported for this session.
    *
    * @return the total number of dropped packets ({@code long} value) which violated the
    * session's policies and is not able to send to client side
@@ -472,6 +531,7 @@ public interface Session {
    * @param numberPackets the additional number of dropped packets ({@code integer} value)
    *                      which violated the session's policies and is not able to send to client
    *                      side
+   * @throws IllegalArgumentException if numberPackets is negative
    */
   void addDroppedPackets(int numberPackets);
 
@@ -589,5 +649,9 @@ public interface Session {
      * The session is associated with a {@link Player}.
      */
     DONE,
+    /**
+     * The session is closing and must not be associated with a player again.
+     */
+    CLOSING,
   }
 }

@@ -67,13 +67,9 @@ class AutoDisconnectPlayerTaskTest {
   }
 
   @Test
-  @DisplayName("When the task runs, IDLE players should be logged out")
-  void testRunSchedulesTaskAndLogsOutIdlePlayers() {
-    Player idlePlayer = Mockito.mock(Player.class);
-    Mockito.when(idlePlayer.isNeverDeported()).thenReturn(false);
-    Mockito.when(idlePlayer.isIdle()).thenReturn(true);
-    Mockito.when(idlePlayer.getIdentity()).thenReturn("player1");
-    Mockito.when(playerManager.getSnapshotPlayersList()).thenReturn(List.of(idlePlayer));
+  @DisplayName("When the task runs, it schedules disconnected-player cleanup")
+  void testRunSchedulesDisconnectedPlayerCleanup() {
+    Mockito.when(playerManager.getSnapshotPlayersList()).thenReturn(List.of());
     Mockito.when(playerManager.getSnapshotPlayerCount()).thenReturn(1);
     ServerApi api = Mockito.mock(ServerApi.class);
     ServerImpl server = Mockito.mock(ServerImpl.class);
@@ -147,48 +143,11 @@ class AutoDisconnectPlayerTaskTest {
   }
 
   @Test
-  @DisplayName("lambda body: never-deported idle player is logged out")
-  void testLambdaBodyLogsOutNeverDeportedIdlePlayer() {
+  @DisplayName("lambda body: a disconnected player is logged out after reconnect grace expires")
+  void testLambdaBodyLogsOutDisconnectedPlayerAfterReconnectGraceExpires() {
     Player player = Mockito.mock(Player.class);
-    Mockito.when(player.isNeverDeported()).thenReturn(true);
-    Mockito.when(player.isIdleNeverDeported()).thenReturn(true);
-    Mockito.when(playerManager.getSnapshotPlayersList()).thenReturn(List.of(player));
-    Mockito.when(playerManager.getSnapshotPlayerCount()).thenReturn(1);
-
-    runWithImmediateExecution(task::run);
-    // ServerImpl.getInstance().getApi().logout() was called via the mocked chain
-  }
-
-  @Test
-  @DisplayName("lambda body: never-deported non-idle player is skipped")
-  void testLambdaBodySkipsNeverDeportedNonIdlePlayer() {
-    Player player = Mockito.mock(Player.class);
-    Mockito.when(player.isNeverDeported()).thenReturn(true);
-    Mockito.when(player.isIdleNeverDeported()).thenReturn(false);
-    Mockito.when(playerManager.getSnapshotPlayersList()).thenReturn(List.of(player));
-    Mockito.when(playerManager.getSnapshotPlayerCount()).thenReturn(1);
-
-    runWithImmediateExecution(task::run);
-  }
-
-  @Test
-  @DisplayName("lambda body: regular idle player is logged out")
-  void testLambdaBodyLogsOutRegularIdlePlayer() {
-    Player player = Mockito.mock(Player.class);
-    Mockito.when(player.isNeverDeported()).thenReturn(false);
-    Mockito.when(player.isIdle()).thenReturn(true);
-    Mockito.when(playerManager.getSnapshotPlayersList()).thenReturn(List.of(player));
-    Mockito.when(playerManager.getSnapshotPlayerCount()).thenReturn(1);
-
-    runWithImmediateExecution(task::run);
-  }
-
-  @Test
-  @DisplayName("lambda body: regular non-idle player is skipped")
-  void testLambdaBodySkipsRegularNonIdlePlayer() {
-    Player player = Mockito.mock(Player.class);
-    Mockito.when(player.isNeverDeported()).thenReturn(false);
-    Mockito.when(player.isIdle()).thenReturn(false);
+    Mockito.when(player.containsSession()).thenReturn(false);
+    Mockito.when(player.isReconnectGracePeriodExpired()).thenReturn(true);
     Mockito.when(playerManager.getSnapshotPlayersList()).thenReturn(List.of(player));
     Mockito.when(playerManager.getSnapshotPlayerCount()).thenReturn(1);
 
