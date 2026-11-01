@@ -56,6 +56,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -83,7 +84,7 @@ import java.util.stream.Collectors;
  *   <li>Initialization-time bean lookup
  *   <li>Component lifecycle management
  *   <li>Error handling and validation
- *   <li>Circular dependency detection
+ *   <li>Circular field dependencies between constructed beans
  * </ul>
  *
  * <p>Note: This class is designed to work in conjunction with the {@link Component}, {@link Bean},
@@ -399,10 +400,8 @@ public final class Injector extends SystemLogger {
       }
     }
 
-    // Step 3: Propagate injection failures instead of starting with partially initialized handlers.
-    for (var entry : List.copyOf(classBeansMap.entrySet())) {
-      autowire(entry.getKey(), entry.getValue());
-    }
+    // Step 3: Wire every instance before making the completed graph available to the application.
+    autowireBeans();
 
   }
 
@@ -587,7 +586,7 @@ public final class Injector extends SystemLogger {
     providers.forEach((contract, implementations) -> {
           if (implementations.size() > 1) {
             warn(
-                "PROFILE COLLISION",
+                "[PROFILE COLLISION] ",
                 "Active profiles ",
                 profiles.activeProfiles(),
                 " select multiple providers for ",
@@ -653,7 +652,7 @@ public final class Injector extends SystemLogger {
     String previous = registrations.putIfAbsent(key, definition);
     if (previous != null) {
       warn(
-          "PROFILE COLLISION",
+          "[PROFILE COLLISION]" ,
           "Active profiles ",
           profiles.activeProfiles(),
           " select duplicate ",
@@ -700,11 +699,10 @@ public final class Injector extends SystemLogger {
   }
 
   /**
-   * Assigns bean (instance) values to its corresponding fields in a class. This method performs
-   * field-level dependency injection.
+   * Wires registered beans and any named components created while resolving their fields.
+   * Each object is queued once by identity, so circular references reuse existing instances
+   * without recursively traversing the dependency graph.
    *
-   * @param beanClass the target class that holds declared bean fields
-   * @param bean the bean (instance) associated with the declared field
    * @throws IllegalArgumentException if invalid arguments are provided
    * @throws SecurityException if a security violation occurs
    * @throws NoSuchMethodException if a required method cannot be found
@@ -713,48 +711,63 @@ public final class Injector extends SystemLogger {
    * @throws IllegalAccessException if a class or its constructor is not accessible
    * @throws DuplicatedBeanCreationException if a bean is created more than once
    */
-  private void autowire(BeanClass beanClass, Object bean)
-      throws InstantiationException,
+  private void autowireBeans() throws
+          InstantiationException,
           IllegalAccessException,
           IllegalArgumentException,
           InvocationTargetException,
           NoSuchMethodException,
           SecurityException,
           DuplicatedBeanCreationException {
-    var fields = findFields(beanClass.clazz());
-    for (var field : fields) {
-      if (!profiles.matches(field)) {
-        continue;
+    var pending = new ArrayDeque<>();
+    Set<Object> scheduled = Collections.newSetFromMap(new IdentityHashMap<>());
+    for (var bean : classBeansMap.values()) {
+      if (bean != null && scheduled.add(bean)) {
+        pending.addLast(bean);
       }
-      Class<?> classQualifier = null;
-      String nameQualifier = "";
+    }
 
-      if (field.isAnnotationPresent(AutowiredQualifier.class)) {
-        var classDefault = field.getAnnotation(AutowiredQualifier.class).clazz();
-        if (!classDefault.equals(AutowiredQualifier.DEFAULT.class)) {
-          classQualifier = classDefault;
+    while (!pending.isEmpty()) {
+      var bean = pending.removeFirst();
+      // A factory's declared return type may hide fields on the actual implementation.
+      for (var field : findFields(bean.getClass())) {
+        if (!profiles.matches(field)) {
+          continue;
         }
-        nameQualifier = field.getAnnotation(AutowiredQualifier.class).name();
-      }
+        Class<?> classQualifier = null;
+        String nameQualifier = "";
 
-      if (field.isAnnotationPresent(AutowiredAcceptNull.class)) {
-        try {
-          var fieldInstance = getBeanInstanceForInjector(field.getType(), nameQualifier, classQualifier);
-          if (fieldInstance != null) {
-            field.set(bean, fieldInstance);
-            autowire(new BeanClass(fieldInstance.getClass(), nameQualifier), fieldInstance);
+        if (field.isAnnotationPresent(AutowiredQualifier.class)) {
+          var qualifier = field.getAnnotation(AutowiredQualifier.class);
+          if (!qualifier.clazz().equals(AutowiredQualifier.DEFAULT.class)) {
+            classQualifier = qualifier.clazz();
           }
-        } catch (NoImplementedClassFoundException exception) {
-          // do nothing
+          nameQualifier = qualifier.name();
         }
-      } else if (field.isAnnotationPresent(Autowired.class)) {
-        var fieldInstance = getBeanInstanceForInjector(field.getType(), nameQualifier, classQualifier);
+
+        boolean optional = field.isAnnotationPresent(AutowiredAcceptNull.class);
+        Object fieldInstance;
+        try {
+          fieldInstance =
+              getBeanInstanceForInjector(field.getType(), nameQualifier, classQualifier);
+        } catch (NoImplementedClassFoundException exception) {
+          if (optional) {
+            // Only this reference is optional; required fields on a resolved bean still must wire.
+            continue;
+          }
+          throw exception;
+        }
         if (fieldInstance == null) {
+          if (optional) {
+            continue;
+          }
           // An active factory for this type does not guarantee the requested named bean exists.
           throw new NoImplementedClassFoundException(field.getType());
         }
         field.set(bean, fieldInstance);
-        autowire(new BeanClass(fieldInstance.getClass(), nameQualifier), fieldInstance);
+        if (scheduled.add(fieldInstance)) {
+          pending.addLast(fieldInstance);
+        }
       }
     }
   }
