@@ -125,6 +125,17 @@ class ApplicationLauncherProfilesTest {
       }
     }
 
+    // The suite's log4j2.xml suppresses output; the child asserts diagnostic text.
+    // Own the child logger so those assertions do not depend on the parent classpath order.
+    Files.writeString(isolatedClasses.resolve("log4j2.xml"), """
+        <Configuration status="off">
+          <Appenders><Console name="Probe" target="SYSTEM_OUT">
+            <PatternLayout pattern="%m%n%throwable"/>
+          </Console></Appenders>
+          <Loggers><Root level="error"><AppenderRef ref="Probe"/></Root></Loggers>
+        </Configuration>
+        """);
+
     Path testClasses = Path.of(ApplicationLauncherProfilesTest.class.getProtectionDomain()
         .getCodeSource().getLocation().toURI()).toAbsolutePath().normalize();
     String testClasspath = System.getProperty("surefire.test.class.path",
