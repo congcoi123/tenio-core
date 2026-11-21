@@ -103,6 +103,12 @@ public final class ServerImpl extends SystemLogger implements Server {
     return inspection;
   }
   private final Network network;
+  private volatile ConnectionFilter connectionFilter;
+
+  @Override
+  public ConnectionFilter getConnectionFilter() {
+    return connectionFilter;
+  }
   private final ServerApi serverApi;
   private final AtomicBoolean stopping;
   private final CountDownLatch stopped;
@@ -246,7 +252,7 @@ public final class ServerImpl extends SystemLogger implements Server {
       adminWindow = new AdminWindow("TenIO | " + serverName,
           inspection::query, (command, output) -> {
             var manager = bootstrapHandler.getSystemCommandManager();
-            if (manager == null || manager.getHandler(command.split(" ", 2)[0].toLowerCase(Locale.ROOT)) == null) {
+            if (manager == null || manager.getHandler(command.split("\\s+", 2)[0].toLowerCase(Locale.ROOT)) == null) {
               return false;
             }
             manager.invoke(command, output);
@@ -295,6 +301,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     network.setConnectionFilterClass(
         connectionFilter,
         configuration.getInt(CoreConfigurationType.NETWORK_PROP_MAX_CONNECTIONS_PER_IP));
+    this.connectionFilter = connectionFilter;
 
     var servletMap = bootstrapHandler.getServletMap();
     var httpConfiguration = configuration.get(CoreConfigurationType.NETWORK_HTTP);

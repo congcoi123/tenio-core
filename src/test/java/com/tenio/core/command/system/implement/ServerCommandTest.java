@@ -25,11 +25,10 @@ THE SOFTWARE.
 package com.tenio.core.command.system.implement;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,7 +53,7 @@ class ServerCommandTest {
   @Test
   @DisplayName("getDescription returns the server command description")
   void testGetDescription() {
-    assertEquals("Allows stopping or restarting the server", serverCommand.getDescription());
+    assertEquals("Stops the server or requests a restart from its supervisor", serverCommand.getDescription());
   }
 
   @Test
@@ -64,26 +63,38 @@ class ServerCommandTest {
   }
 
   @Test
-  @DisplayName("isRunningBackground is true")
+  @DisplayName("isRunningBackground is false")
   void testIsRunningBackgroundIsTrue() {
-    assertTrue(serverCommand.isRunningBackground());
+    assertFalse(serverCommand.isRunningBackground());
   }
 
   @Test
-  @DisplayName("execute with 'stop' does not throw")
-  void testExecuteStopDoesNotThrow() {
-    assertDoesNotThrow(() -> serverCommand.execute(List.of("stop")));
+  void stopShutsDownAndDoesNotExitForRestart() throws Exception {
+    var stopped = new java.util.concurrent.CountDownLatch(1);
+    var exited = new java.util.concurrent.atomic.AtomicBoolean();
+    var command = new ServerCommand(stopped::countDown, () -> true, code -> exited.set(true));
+    command.execute(List.of("stop"));
+    assertTrue(stopped.await(3, java.util.concurrent.TimeUnit.SECONDS));
+    assertFalse(exited.get());
   }
 
   @Test
-  @DisplayName("execute with 'restart' does not throw")
-  void testExecuteRestartDoesNotThrow() {
-    assertDoesNotThrow(() -> serverCommand.execute(List.of("restart")));
+  void supervisedRestartShutsDownBeforeSignalingTheSupervisor() throws Exception {
+    var actions = new java.util.concurrent.LinkedBlockingQueue<String>();
+    var command = new ServerCommand(() -> actions.add("shutdown"), () -> true,
+        code -> actions.add("exit " + code));
+    command.execute(List.of("restart"));
+    assertEquals("shutdown", actions.poll(3, java.util.concurrent.TimeUnit.SECONDS));
+    assertEquals("exit 75", actions.poll(3, java.util.concurrent.TimeUnit.SECONDS));
   }
 
   @Test
-  @DisplayName("execute with empty args does not throw")
-  void testExecuteEmptyArgsDoesNotThrow() {
-    assertDoesNotThrow(() -> serverCommand.execute(Collections.emptyList()));
+  void restartWithoutSupervisorKeepsTheServerRunning() {
+    var output = new java.util.ArrayList<String>();
+    var command = new ServerCommand(() -> { throw new AssertionError("Unexpected shutdown"); },
+        () -> false, code -> { throw new AssertionError("Unexpected exit"); });
+    com.tenio.core.utility.CommandUtility.INSTANCE.withOutput(output::add,
+        () -> command.execute(List.of("restart")));
+    assertTrue(output.getFirst().contains("supervisor"));
   }
 }

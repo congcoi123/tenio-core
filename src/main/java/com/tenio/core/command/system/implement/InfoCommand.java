@@ -28,6 +28,7 @@ import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.command.system.AbstractSystemCommandHandler;
 import com.tenio.core.utility.CommandUtility;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Provides brief information about players and rooms on the server.
@@ -42,25 +43,16 @@ public final class InfoCommand extends AbstractSystemCommandHandler {
 
   @Override
   public void execute(List<String> arguments) {
-    var action = arguments.get(0);
-
+    String action = arguments.size() == 1 ? arguments.getFirst().toLowerCase(Locale.ROOT) : "";
     switch (action) {
-      case "player":
-        CommandUtility.INSTANCE.showConsoleMessage(
-            "There are " + api().getSnapshotPlayerCount() + " players > The first 10 entities > " +
-                api().getSnapshotPlayersList().subList(0, Math.min(api().getSnapshotPlayerCount(), 10)));
-        break;
-
-      case "room":
-        var rooms = api().getSnapshotRoomsList();
-        CommandUtility.INSTANCE.showConsoleMessage(
-            "There are " + rooms.size() + " rooms > The first 10 entities > " +
-                rooms.subList(0, Math.min(rooms.size(), 10)));
-        break;
-
-      default:
-        CommandUtility.INSTANCE.showConsoleMessage("The feature is not available at the moment.");
-        break;
+      case "player" -> showSnapshot("players", api().getSnapshotPlayersList());
+      case "room" -> showSnapshot("rooms", api().getSnapshotRoomsList());
+      default -> CommandUtility.INSTANCE.showConsoleMessage("Usage: info player | info room");
     }
+  }
+
+  private void showSnapshot(String entity, List<?> snapshot) {
+    CommandUtility.INSTANCE.showConsoleMessage("There are " + snapshot.size() + " " + entity
+        + " > The first 10 entities > " + snapshot.subList(0, Math.min(snapshot.size(), 10)));
   }
 }

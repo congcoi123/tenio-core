@@ -82,8 +82,15 @@ class InfoCommandTest {
   }
 
   @Test
-  @DisplayName("execute with unknown action prints not-available message")
+  @DisplayName("execute with unknown action prints usage")
   void testExecuteUnknownActionDoesNotThrow() {
     assertDoesNotThrow(() -> infoCommand.execute(List.of("unknown")));
+  }
+  @Test
+  void missingArgumentShowsUsage() {
+    var output = new java.util.ArrayList<String>();
+    com.tenio.core.utility.CommandUtility.INSTANCE.withOutput(output::add,
+        () -> infoCommand.execute(List.of()));
+    assertEquals(List.of("Usage: info player | info room"), output);
   }
 }

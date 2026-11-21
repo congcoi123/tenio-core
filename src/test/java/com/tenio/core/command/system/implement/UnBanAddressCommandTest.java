@@ -54,14 +54,14 @@ class UnBanAddressCommandTest {
   @Test
   @DisplayName("getDescription returns the unban command description")
   void testGetDescription() {
-    assertEquals("Allows removing banned Ip addresses from the ban list",
+    assertEquals("Removes an IP address from the ban list",
         unBanAddressCommand.getDescription());
   }
 
   @Test
   @DisplayName("getUsage returns the usage pattern")
   void testGetUsage() {
-    assertArrayEquals(new String[]{"[<address>,<command>,<command>]"},
+    assertArrayEquals(new String[]{"<ip-address>"},
         unBanAddressCommand.getUsage());
   }
 
@@ -72,9 +72,13 @@ class UnBanAddressCommandTest {
   }
 
   @Test
-  @DisplayName("execute with address arg does not throw")
+  @DisplayName("execute removes only the requested address")
   void testExecuteWithAddressDoesNotThrow() {
-    assertDoesNotThrow(() -> unBanAddressCommand.execute(List.of("192.168.1.1")));
+    var filter = new com.tenio.core.network.security.filter.DefaultConnectionFilter();
+    filter.addBannedAddress("192.168.1.1");
+    filter.addBannedAddress("192.168.1.2");
+    new UnBanAddressCommand(() -> filter).execute(List.of("192.168.1.1"));
+    assertArrayEquals(new String[]{"192.168.1.2"}, filter.getBannedAddresses());
   }
 
   @Test

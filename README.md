@@ -133,6 +133,11 @@ Pressure is measured at 80 percent of configured outbound capacity. The pressure
 sessions on demand and returns up to 50 matches. Routine stats use aggregate counters. Independent UDP
 receive timestamps are currently unavailable. Room queries return at most 50 member identities.
 
+Built-in commands include `help`, `info player`, `info room`, `unban <ip-address>`, and
+`server stop`. For `server restart`, run TenIO under a process supervisor configured to
+relaunch it when it exits with status 75, and set `-Dtenio.supervisedRestart=true`.
+The restart command performs a graceful shutdown before signaling the supervisor.
+
 ### Command limits and history
 
 Set `requestsPerSecond` and optionally `burst` on a client command. The injector registers the

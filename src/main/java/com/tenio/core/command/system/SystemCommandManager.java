@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -156,9 +157,9 @@ public final class SystemCommandManager extends SystemLogger {
     }
 
     // parses message
-    var split = rawMessage.split(" ");
+    var split = rawMessage.split("\\s+");
     var args = new LinkedList<>(Arrays.asList(split));
-    var label = args.remove(0).toLowerCase();
+    var label = args.remove(0).toLowerCase(Locale.ROOT);
 
     // gets command handler
     var handler = getHandler(label);

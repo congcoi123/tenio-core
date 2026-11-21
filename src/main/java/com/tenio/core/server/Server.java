@@ -36,6 +36,7 @@ import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.outbound.Response;
+import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import io.netty.bootstrap.Bootstrap;
 
@@ -67,6 +68,11 @@ public interface Server {
    * Shuts down the server and closes all services.
    */
   void shutdown();
+
+  /** Returns the active TCP and WebSocket connection filter. */
+  default ConnectionFilter getConnectionFilter() {
+    return null;
+  }
 
   /**
    * Retrieves a server APIs object which provides all supporting APIs on the server.
