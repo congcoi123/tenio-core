@@ -75,7 +75,7 @@ class OutboundQueueImplTest {
   void testClear() {
     OutboundQueueImpl newInstanceResult = OutboundQueueImpl.newInstance();
     newInstanceResult.clear();
-    assertEquals("OutboundQueue{queue=[], outboundQueuePolicy=null, maxSize=0, snapshotSize=0}", newInstanceResult.toString());
+    assertEquals("OutboundQueue{outboundQueuePolicyType=null, maxSize=0, snapshotSize=0}", newInstanceResult.toString());
     assertTrue(newInstanceResult.isSnapshotEmpty());
   }
 

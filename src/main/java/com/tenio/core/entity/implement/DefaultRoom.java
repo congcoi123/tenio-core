@@ -478,16 +478,18 @@ public class DefaultRoom implements Room {
 
   @Override
   public String toString() {
+    var currentState = state.get();
+    var roomOwner = owner;
     return "DefaultRoom{" +
         "id=" + id +
-        ", properties=" + properties +
-        ", owner=" + owner +
-        ", state=" + state.get() +
+        ", propertyCount=" + properties.size() +
+        ", ownerIdentity=" + (roomOwner == null ? null : roomOwner.getIdentity()) +
+        ", stateType=" + (currentState == null ? null : currentState.getClass().getName()) +
         ", name='" + name + '\'' +
         ", passwordProtected=" + (password != null) +
-        ", snapshotParticipants=" + snapshotParticipants +
+        ", participantCount=" + snapshotParticipants.size() +
         ", maxParticipants=" + maxParticipants +
-        ", snapshotSpectators=" + snapshotSpectators +
+        ", spectatorCount=" + snapshotSpectators.size() +
         ", maxSpectators=" + maxSpectators +
         ", roomRemoveMode=" + roomRemoveMode +
         ", activated=" + activated +

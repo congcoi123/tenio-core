@@ -157,8 +157,7 @@ public final class OutboundQueueImpl implements OutboundQueue {
   @Override
   public String toString() {
     return "OutboundQueue{" +
-        "queue=" + queue +
-        ", outboundQueuePolicy=" + outboundQueuePolicy +
+        "outboundQueuePolicyType=" + (outboundQueuePolicy == null ? null : outboundQueuePolicy.getClass().getName()) +
         ", maxSize=" + maxSize +
         ", snapshotSize=" + snapshotSize +
         '}';

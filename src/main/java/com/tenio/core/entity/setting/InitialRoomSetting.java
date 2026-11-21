@@ -151,9 +151,9 @@ public final class InitialRoomSetting {
         ", maxSpectators=" + maxSpectators +
         ", activated=" + activated +
         ", roomRemoveMode=" + roomRemoveMode +
-        ", roomCredentialValidatedStrategy=" + roomCredentialValidatedStrategy +
-        ", roomPlayerSlotGeneratedStrategy=" + roomPlayerSlotGeneratedStrategy +
-        ", properties=" + properties +
+        ", roomCredentialValidatedStrategyType=" + (roomCredentialValidatedStrategy == null ? null : roomCredentialValidatedStrategy.getClass().getName()) +
+        ", roomPlayerSlotGeneratedStrategyType=" + (roomPlayerSlotGeneratedStrategy == null ? null : roomPlayerSlotGeneratedStrategy.getClass().getName()) +
+        ", propertyCount=" + (properties == null ? 0 : properties.size()) +
         '}';
   }
 
