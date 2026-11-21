@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.outbound.packet.implement;
 
+import com.tenio.core.exception.OutboundQueueFullException;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
@@ -136,6 +137,9 @@ public final class OutboundQueueImpl implements OutboundQueue {
   public void put(Packet packet) {
     synchronized (queue) {
       snapshotSize = queue.size();
+      if (isSnapshotFull()) {
+        throw new OutboundQueueFullException(snapshotSize);
+      }
       outboundQueuePolicy.applyPolicy(this, packet);
       queue.add(packet);
       snapshotSize = queue.size();

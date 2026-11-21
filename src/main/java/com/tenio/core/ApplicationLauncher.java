@@ -138,6 +138,7 @@ public final class ApplicationLauncher extends SystemLogger {
             CoreConstant.DEFAULT_BOOTSTRAP_PACKAGE,
             CoreConstant.DEFAULT_EVENT_PACKAGE,
             CoreConstant.DEFAULT_COMMAND_PACKAGE,
+            CoreConstant.DEFAULT_SCHEDULER_PACKAGE,
             CoreConstant.DEFAULT_REST_CONTROLLER_PACKAGE
         );
       } catch (Exception exception) {

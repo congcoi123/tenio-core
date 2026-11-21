@@ -22,18 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.scheduler.task.core;
+package com.tenio.core.scheduler.task;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.network.entity.session.Session;
-import com.tenio.core.scheduler.task.AbstractTask;
+import com.tenio.common.logger.AbstractLogger;
 import java.io.IOException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -44,41 +41,11 @@ import java.util.concurrent.TimeUnit;
  * The normal session-close pipeline emits connection loss and detaches the connection;
  * this task never removes the logical player or decides room and reconnect-grace policy.
  *
- * <p>Configure the player manager, receive timeout and scan interval before calling {@link #run()}.
- * Scans are serial and use the session timestamps' wall-clock basis. Each scan starts after
- * the configured interval has elapsed since the previous scan completed; the first scan waits
- * one interval too. Failures are isolated per player. A non-positive scan interval disables
- * scheduling. A zero timeout makes scheduled scans skip expiry checks without accessing
- * the player registry. Shutdown is terminal and idempotent; repeated run calls do not create
- * workers.
  */
-public final class AutoScanAliveMainConnectionTask extends AbstractTask {
+public final class AutoScanAliveMainConnectionTask extends AbstractLogger {
 
   private PlayerManager playerManager;
   private volatile long timeoutMillis;
-  private ScheduledExecutorService executor;
-  private ScheduledFuture<?> scheduler;
-  private boolean stopped;
-
-  /**
-   * Creates an optional scan task with scheduling disabled until an interval is configured.
-   */
-  public AutoScanAliveMainConnectionTask() {
-    interval = -1;
-  }
-
-  /**
-   * Configures the scan delay before scheduling begins.
-   * A positive interval starts the task; a zero receive timeout makes scans skip expiry checks.
-   * Set {@code 0} to disable; other non-positive values also disable the scan task.
-   *
-   * @param interval delay in seconds between scans and before the first scan
-   */
-  @Override
-  public void setInterval(int interval) {
-    super.setInterval(interval);
-  }
-
   /**
    * Supplies the owner of authenticated player sessions before scheduling begins.
    *
@@ -101,42 +68,17 @@ public final class AutoScanAliveMainConnectionTask extends AbstractTask {
     timeoutMillis = TimeUnit.SECONDS.toMillis(timeoutSeconds);
   }
 
-  @Override
-  public synchronized void run() {
-    if (interval <= 0 || stopped || executor != null) {
-      return;
-    }
-    if (playerManager == null) {
-      throw new IllegalStateException("A player manager is required for main-connection keepalive monitoring");
-    }
-    executor = Executors.newSingleThreadScheduledExecutor(runnable -> {
-      Thread thread = new Thread(runnable, "task-scan-main-alive-connection");
-      thread.setDaemon(true);
-      return thread;
-    });
-    scheduler = executor.scheduleWithFixedDelay(() -> {
-      try {
-        scan(System.currentTimeMillis());
-      } catch (RuntimeException exception) {
-        // A registry failure must not cancel subsequent executions of the watchdog.
-        if (isErrorEnabled()) {
-          error(exception);
-        }
-      }
-    }, interval, interval, TimeUnit.SECONDS);
-  }
-
   /**
    * Scans current primary TCP sessions without removing retained logical players.
    * Replaced, inactive and non-TCP sessions are skipped; one failed close cannot prevent
    * another player from being checked. A future read timestamp is treated as recent activity.
-   * A non-positive scan interval or 0 timeout makes this method a no-op.
+   * A zero timeout makes this method a no-op.
    *
    * @param currentTimeMillis current wall-clock time in milliseconds
    */
-  void scan(long currentTimeMillis) {
+  public void scan(long currentTimeMillis) {
     long receiveTimeoutMillis = timeoutMillis;
-    if (receiveTimeoutMillis == 0 || interval <= 0) {
+    if (receiveTimeoutMillis == 0) {
       return;
     }
     for (Player player : playerManager.getSnapshotPlayersList()) {
@@ -152,22 +94,6 @@ public final class AutoScanAliveMainConnectionTask extends AbstractTask {
           error(exception);
         }
       }
-    }
-  }
-
-  @Override
-  public synchronized ScheduledFuture<?> getScheduler() {
-    return scheduler;
-  }
-
-  @Override
-  public synchronized void shutdown() {
-    stopped = true;
-    if (scheduler != null) {
-      scheduler.cancel(false);
-    }
-    if (executor != null) {
-      executor.shutdownNow();
     }
   }
 }

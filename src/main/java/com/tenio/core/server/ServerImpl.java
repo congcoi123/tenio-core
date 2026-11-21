@@ -62,13 +62,15 @@ import com.tenio.core.network.security.filter.DefaultConnectionFilter;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.network.zero.engine.reader.policy.DefaultDatagramPacketPolicy;
-import com.tenio.core.scheduler.Scheduler;
-import com.tenio.core.scheduler.SchedulerImpl;
+import com.tenio.core.scheduler.ScheduledJobs;
+import com.tenio.core.scheduler.job.MetricReportJob;
+import com.tenio.core.scheduler.job.MaintenanceJob;
 import com.tenio.core.server.core.ZeroProcessor;
 import com.tenio.core.server.core.ZeroProcessorImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
 import com.tenio.core.utility.CommandUtility;
 import java.io.IOError;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReaderBuilder;
@@ -92,10 +94,11 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final ChannelManager channelManager;
   private final DatagramChannelManager datagramChannelManager;
   private final ZeroProcessor zeroProcessor;
-  private final Scheduler scheduler;
+  private ScheduledJobs scheduledJobs;
   private final Network network;
   private final ServerApi serverApi;
   private final AtomicBoolean stopping;
+  private final CountDownLatch stopped;
   private ClientCommandManager clientCommandManager;
   private SystemCommandManager systemCommandManager;
   private Configuration configuration;
@@ -111,8 +114,8 @@ public final class ServerImpl extends SystemLogger implements Server {
     network = NetworkImpl.newInstance(eventManager);
     serverApi = ServerApiImpl.newInstance(this);
     zeroProcessor = ZeroProcessorImpl.newInstance(eventManager, serverApi, datagramChannelManager);
-    scheduler = SchedulerImpl.newInstance(eventManager);
     stopping = new AtomicBoolean(false);
+    stopped = new CountDownLatch(1);
   } // prevent creation manually
 
   /**
@@ -184,7 +187,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     setupEntitiesManagementService(configuration);
     setupNetworkService(configuration, bootstrapHandler);
     setupInternalProcessorService(configuration, bootstrapHandler);
-    setupScheduleService(configuration);
+    setupScheduledJobs(bootstrapHandler);
 
     initializeServices();
     startServices();
@@ -194,10 +197,7 @@ public final class ServerImpl extends SystemLogger implements Server {
     zeroProcessor.activate();
 
     // it should wait for a while to let everything settles down
-    int servicesTakeTime = Math.max(
-            Math.max(network.getMaximumStartingTimeInMilliseconds(), zeroProcessor.getMaximumStartingTimeInMilliseconds()),
-            scheduler.getMaximumStartingTimeInMilliseconds()
-    );
+    int servicesTakeTime = Math.max(network.getMaximumStartingTimeInMilliseconds(), zeroProcessor.getMaximumStartingTimeInMilliseconds());
     int totalWaitingTime = servicesTakeTime + CoreConstant.DELAY_BEFORE_SERVER_IS_READY_IN_MILLISECONDS;
     Thread.sleep(totalWaitingTime);
 
@@ -211,18 +211,26 @@ public final class ServerImpl extends SystemLogger implements Server {
     if (configuration.getBoolean(CoreConfigurationType.ENABLE_TERMINAL_COMMAND)) {
       startConsole(bootstrapHandler.getSystemCommandManager());
     }
+
+    startLifecycleThread();
   }
 
   private void initializeServices() {
     network.initialize();
     zeroProcessor.initialize();
-    scheduler.initialize();
   }
 
   private void startServices() {
     network.start();
     zeroProcessor.start();
-    scheduler.start();
+    try {
+      if (scheduledJobs != null) {
+        scheduledJobs.start();
+      }
+    } catch (RuntimeException exception) {
+      shutdownServices();
+      throw exception;
+    }
   }
 
   private void setupCommands(ClientCommandManager clientCommandManager, SystemCommandManager systemCommandManager) {
@@ -233,32 +241,6 @@ public final class ServerImpl extends SystemLogger implements Server {
   private void setupEntitiesManagementService(Configuration configuration) {
     playerManager.configureMaxIdleTimeInSeconds(configuration.getInt(CoreConfigurationType.PROP_MAX_PLAYER_IDLE_TIME));
     roomManager.configureMaxRooms(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_ROOMS));
-  }
-
-  private void setupScheduleService(Configuration configuration) {
-    // Older custom configurations may omit these optional settings; omission disables keepalive.
-    scheduler.setMainConnectionKeepAliveTimeoutSeconds(
-            configuration.getString(CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS) == null
-            ? 0
-            : configuration.getInt(CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS)
-    );
-    scheduler.setMainConnectionKeepAliveScanInterval(
-            configuration.getString(CoreConfigurationType.INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN) == null
-            ? 0
-            : configuration.getInt(CoreConfigurationType.INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN)
-    );
-    scheduler.setCcuReportInterval(configuration.getInt(CoreConfigurationType.INTERVAL_CCU_SCAN));
-    scheduler.setDeadlockScanInterval(configuration.getInt(CoreConfigurationType.INTERVAL_DEADLOCK_SCAN));
-    scheduler.setDisconnectedPlayerScanInterval(configuration.getInt(CoreConfigurationType.INTERVAL_DISCONNECTED_PLAYER_SCAN));
-    scheduler.setRemovedRoomScanInterval(configuration.getInt(CoreConfigurationType.INTERVAL_REMOVED_ROOM_SCAN));
-    scheduler.setSystemMonitoringInterval(configuration.getInt(CoreConfigurationType.INTERVAL_SYSTEM_MONITORING));
-    scheduler.setTrafficCounterInterval(configuration.getInt(CoreConfigurationType.INTERVAL_TRAFFIC_COUNTER));
-
-    scheduler.setSessionManager(network.getSessionManager());
-    scheduler.setPlayerManager(playerManager);
-    scheduler.setRoomManager(roomManager);
-    scheduler.setNetworkReaderStatistic(network.getNetworkReaderStatistic());
-    scheduler.setNetworkWriterStatistic(network.getNetworkWriterStatistic());
   }
 
   private void setupNetworkService(Configuration configuration, BootstrapHandler bootstrapHandler)
@@ -365,6 +347,18 @@ public final class ServerImpl extends SystemLogger implements Server {
     zeroProcessor.setNetworkWriterStatistic(network.getNetworkWriterStatistic());
   }
 
+  private void setupScheduledJobs(BootstrapHandler bootstrapHandler) {
+    scheduledJobs = bootstrapHandler.getScheduledJobs();
+    var maintenance = bootstrapHandler.getBeanByClazz(MaintenanceJob.class);
+    if (maintenance != null) {
+      maintenance.configure(network.getSessionManager(), configuration, scheduledJobs);
+    }
+    var metrics = bootstrapHandler.getBeanByClazz(MetricReportJob.class);
+    if (metrics != null) {
+      metrics.configure(network.getNetworkReaderStatistic(), network.getNetworkWriterStatistic());
+    }
+  }
+
   private void startConsole(SystemCommandManager systemCommandManager) {
     Terminal terminal = null;
     try {
@@ -418,6 +412,27 @@ public final class ServerImpl extends SystemLogger implements Server {
     if (isInfoEnabled()) {
       info(serverName, "STATE", "STOPPING");
     }
+
+    try {
+      stopServer();
+    } finally {
+      stopped.countDown();
+    }
+  }
+
+  Thread startLifecycleThread() {
+    return Thread.ofPlatform().daemon(false).name("tenio-server-lifecycle").start(this::awaitShutdown);
+  }
+
+  private void awaitShutdown() {
+    try {
+      stopped.await();
+    } catch (InterruptedException exception) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  private void stopServer() {
     // emit "server shutdown" event
     eventManager.emit(ServerEvent.SERVER_TEARDOWN, serverName);
     shutdownServices();
@@ -427,9 +442,11 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   private void shutdownServices() {
+    if (scheduledJobs != null) {
+      scheduledJobs.shutdown();
+    }
     network.shutdown();
     zeroProcessor.shutdown();
-    scheduler.shutdown();
     if (systemCommandManager != null) {
       systemCommandManager.shutdown();
     }

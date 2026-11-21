@@ -25,12 +25,15 @@ THE SOFTWARE.
 package com.tenio.core.server;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -42,16 +45,13 @@ import com.tenio.common.configuration.Configuration;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.bootstrap.configuration.ConfigurationHandler;
 import com.tenio.core.configuration.define.CoreConfigurationType;
-import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.scheduler.ScheduledJobs;
 import com.tenio.core.network.Network;
 import com.tenio.core.network.entity.session.manager.SessionManager;
-import com.tenio.core.network.statistic.NetworkReaderStatistic;
-import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.scheduler.Scheduler;
-import com.tenio.core.scheduler.SchedulerImpl;
+import com.tenio.core.scheduler.job.MaintenanceJob;
 import com.tenio.core.server.core.ZeroProcessor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
+import java.time.Duration;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -59,6 +59,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
 
 @DisplayName("Unit Test Cases For ServerImpl")
 class ServerImplTest {
@@ -142,10 +143,8 @@ class ServerImplTest {
     var bootstrap = bootstrapFor(configuration, Set.of("world"));
     var processor = mock(ZeroProcessor.class);
     var network = mock(Network.class);
-    var scheduler = mock(Scheduler.class);
     replaceField(server, "zeroProcessor", processor);
     replaceField(server, "network", network);
-    replaceField(server, "scheduler", scheduler);
     when(configuration.getString(CoreConfigurationType.PROFILE)).thenReturn("game");
 
     var exception = assertThrows(IllegalStateException.class,
@@ -153,7 +152,7 @@ class ServerImplTest {
 
     assertEquals("Configuration profiles changed after bootstrap selection", exception.getMessage());
     verify(configuration).load("selected.xml");
-    verifyNoInteractions(processor, network, scheduler);
+    verifyNoInteractions(processor, network);
     assertNull(server.getConfiguration());
   }
 
@@ -213,54 +212,37 @@ class ServerImplTest {
   @CsvSource({",,0,0", "45,,45,0", ",7,0,7", "45,7,45,7", "0,0,0,0"})
   @DisplayName("Scheduler setup defaults each omitted keepalive setting to disabled independently")
   void setupScheduleShouldApplyOptionalKeepaliveDefaults(String timeout, String interval,
-      int expectedTimeout, int expectedInterval) throws Exception {
-    var server = newIsolatedServer();
+      int expectedTimeout, int expectedInterval) {
     var configuration = mock(Configuration.class);
-    var scheduler = mock(Scheduler.class);
-    var network = mock(Network.class);
-    var sessionManager = mock(SessionManager.class);
-    var readerStatistic = mock(NetworkReaderStatistic.class);
-    var writerStatistic = mock(NetworkWriterStatistic.class);
-    replaceField(server, "scheduler", scheduler);
-    replaceField(server, "network", network);
-    when(network.getSessionManager()).thenReturn(sessionManager);
-    when(network.getNetworkReaderStatistic()).thenReturn(readerStatistic);
-    when(network.getNetworkWriterStatistic()).thenReturn(writerStatistic);
+    var jobs = mock(ScheduledJobs.class);
     configureOptionalInteger(configuration,
         CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS, timeout);
     configureOptionalInteger(configuration,
         CoreConfigurationType.INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN, interval);
 
-    setupSchedule(server, configuration);
-
-    verify(scheduler).setMainConnectionKeepAliveTimeoutSeconds(expectedTimeout);
-    verify(scheduler).setMainConnectionKeepAliveScanInterval(expectedInterval);
-    verify(scheduler).setSessionManager(sessionManager);
-    verify(scheduler).setPlayerManager(server.getPlayerManager());
-    verify(scheduler).setRoomManager(server.getRoomManager());
-    verify(scheduler).setNetworkReaderStatistic(readerStatistic);
-    verify(scheduler).setNetworkWriterStatistic(writerStatistic);
+    new MaintenanceJob().configure(mock(SessionManager.class), configuration, jobs);
+    if (expectedTimeout > 0 && expectedInterval > 0) {
+      verify(jobs).registerInterval(eq("SCAN_MAIN_CONNECTION_KEEPALIVE"), any(), eq(expectedInterval));
+    } else {
+      verifyNoInteractions(jobs);
+    }
     if (timeout == null) {
-      verify(configuration, never())
-          .getInt(CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS);
+      verify(configuration, never()).getInt(CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS);
     }
     if (interval == null) {
-      verify(configuration, never())
-          .getInt(CoreConfigurationType.INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN);
+      verify(configuration, never()).getInt(CoreConfigurationType.INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN);
     }
   }
 
   @Test
   @DisplayName("An explicit negative keepalive timeout must remain invalid rather than defaulting")
-  void setupScheduleShouldRejectExplicitNegativeTimeout() throws Exception {
-    var server = newIsolatedServer();
+  void setupScheduleShouldRejectExplicitNegativeTimeout() {
     var configuration = mock(Configuration.class);
-    replaceField(server, "scheduler", SchedulerImpl.newInstance(mock(EventManager.class)));
     configureOptionalInteger(configuration,
         CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS, "-1");
 
     var exception = assertThrows(IllegalArgumentException.class,
-        () -> setupSchedule(server, configuration));
+        () -> new MaintenanceJob().configure(mock(SessionManager.class), configuration, mock(ScheduledJobs.class)));
 
     assertTrue(exception.getMessage().contains("must not be negative"));
     verify(configuration).getInt(CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS);
@@ -268,11 +250,8 @@ class ServerImplTest {
 
   @Test
   @DisplayName("Malformed explicit keepalive values must not be silently treated as omitted")
-  void setupScheduleShouldPreserveMalformedConfigurationFailure() throws Exception {
-    var server = newIsolatedServer();
+  void setupScheduleShouldPreserveMalformedConfigurationFailure() {
     var configuration = mock(Configuration.class);
-    var scheduler = mock(Scheduler.class);
-    replaceField(server, "scheduler", scheduler);
     var invalidValue = new NumberFormatException("invalid keepalive timeout");
     when(configuration.getString(CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS))
         .thenReturn("invalid");
@@ -280,8 +259,45 @@ class ServerImplTest {
         .thenThrow(invalidValue);
 
     assertSame(invalidValue, assertThrows(NumberFormatException.class,
-        () -> setupSchedule(server, configuration)));
-    verifyNoInteractions(scheduler);
+        () -> new MaintenanceJob().configure(mock(SessionManager.class), configuration, mock(ScheduledJobs.class))));
+  }
+
+  @Test
+  void serverStartsAndStopsItsOwnJobsBeforeShuttingDownNetwork() throws Exception {
+    var server = newIsolatedServer();
+    var jobs = mock(ScheduledJobs.class);
+    var network = mock(Network.class);
+    replaceField(server, "scheduledJobs", jobs);
+    replaceField(server, "network", network);
+    replaceField(server, "zeroProcessor", mock(ZeroProcessor.class));
+    var start = ServerImpl.class.getDeclaredMethod("startServices");
+    start.setAccessible(true);
+    start.invoke(server);
+    server.shutdown();
+    server.shutdown();
+    var order = Mockito.inOrder(network, jobs);
+    order.verify(network).start();
+    order.verify(jobs).start();
+    order.verify(jobs).shutdown();
+    order.verify(network).shutdown();
+    verify(jobs).shutdown();
+  }
+
+  @Test
+  void serverLifetimeEndsOnShutdownWithAnEmptyScheduler() throws Exception {
+    var server = newIsolatedServer();
+    replaceField(server, "scheduledJobs", new ScheduledJobs());
+    replaceField(server, "network", mock(Network.class));
+    replaceField(server, "zeroProcessor", mock(ZeroProcessor.class));
+    var waiter = server.startLifecycleThread();
+    try {
+      assertTrue(waiter.isAlive());
+      assertFalse(waiter.isDaemon());
+      server.shutdown();
+      assertTrue(waiter.join(Duration.ofSeconds(5)));
+    } finally {
+      waiter.interrupt();
+    }
   }
 
   private void assertLegacyStartupContinues(Set<String> selectedProfiles) throws Exception {
@@ -293,8 +309,7 @@ class ServerImplTest {
     doThrow(reachedServices).when(processor).subscribe(anyBoolean(), anyBoolean());
     replaceField(server, "zeroProcessor", processor);
 
-    assertSame(reachedServices,
-        assertThrows(IllegalStateException.class, () -> server.start(bootstrap, null)));
+    assertSame(reachedServices, assertThrows(IllegalStateException.class, () -> server.start(bootstrap, null)));
     verify(configuration, never()).getString(CoreConfigurationType.PROFILE);
   }
 
@@ -320,27 +335,13 @@ class ServerImplTest {
     field.set(server, value);
   }
 
-  private void configureOptionalInteger(Configuration configuration, CoreConfigurationType type,
-      String value) {
+  private void configureOptionalInteger(Configuration configuration, CoreConfigurationType type, String value) {
     when(configuration.getString(type)).thenReturn(value);
     if (value == null) {
       // The real configuration parser rejects an absent value when getInt() is called.
       when(configuration.getInt(type)).thenThrow(new NumberFormatException("Missing optional value"));
     } else {
       when(configuration.getInt(type)).thenReturn(Integer.parseInt(value));
-    }
-  }
-
-  private void setupSchedule(ServerImpl server, Configuration configuration) throws Exception {
-    var method = ServerImpl.class.getDeclaredMethod("setupScheduleService", Configuration.class);
-    method.setAccessible(true);
-    try {
-      method.invoke(server, configuration);
-    } catch (InvocationTargetException exception) {
-      if (exception.getCause() instanceof Exception cause) {
-        throw cause;
-      }
-      throw exception;
     }
   }
 }

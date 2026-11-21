@@ -58,8 +58,7 @@ public final class SystemCommandManager extends SystemLogger {
    * Constructor.
    */
   public SystemCommandManager() {
-    var threadFactoryWorker =
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("system-command-worker-%d").build();
+    var threadFactoryWorker = new ThreadFactoryBuilder().setDaemon(true).setNameFormat("system-command-worker-%d").build();
     executors = Executors.newCachedThreadPool(threadFactoryWorker);
     stopping = new AtomicBoolean(false);
   }

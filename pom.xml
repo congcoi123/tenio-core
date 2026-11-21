@@ -42,6 +42,7 @@
         <io.github.congcoi123.tenio.common>1.0.0</io.github.congcoi123.tenio.common>
 
         <io.netty.version>4.2.13.Final</io.netty.version>
+        <google.guava.version>33.5.0-jre</google.guava.version>
         <org.eclipse.jetty.server.version>12.1.13</org.eclipse.jetty.server.version>
         <org.eclipse.jetty.ee10.servlet.version>12.1.13</org.eclipse.jetty.ee10.servlet.version>
         <jakarta.servlet.api.version>6.1.0</jakarta.servlet.api.version>
@@ -96,6 +97,11 @@
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <version>${io.netty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${google.guava.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>

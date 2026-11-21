@@ -101,6 +101,7 @@ public final class Bootstrapper extends SystemLogger {
       bootstrapHandler.setActiveProfiles(profileSelection.activeProfiles());
       bootstrapHandler.setClassBeansMap(injector.getClassBeansMap());
       bootstrapHandler.setServletMap(injector.getServletBeansMap());
+      bootstrapHandler.setScheduledJobs(injector.getScheduledJobs());
       bootstrapHandler.setSystemCommandManager(injector.getSystemCommandManager());
       bootstrapHandler.setClientCommandManager(injector.getClientCommandManager());
     } else {

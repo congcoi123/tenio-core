@@ -22,15 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.scheduler.task;
+package com.tenio.core.fixture.injector.scheduled;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import com.tenio.core.bootstrap.annotation.Autowired;
+import com.tenio.core.bootstrap.annotation.Component;
+import com.tenio.core.bootstrap.annotation.Scheduled;
+import java.util.concurrent.CountDownLatch;
 
-@DisplayName("Unit Test Cases For AbstractSystemTask")
-class AbstractSystemTaskTest {
+@Component
+public class ScheduledFixture {
 
-  @Test
-  void placeholder() {
+  @Component
+  public static class Dependency {
+    public final CountDownLatch invoked = new CountDownLatch(1);
+  }
+
+  @Autowired
+  private Dependency dependency;
+
+  @Scheduled(intervalSeconds = 60, profile = "world")
+  public void report() {
+    dependency.invoked.countDown();
   }
 }

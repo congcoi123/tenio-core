@@ -24,48 +24,43 @@ THE SOFTWARE.
 
 package com.tenio.core.scheduler.task;
 
-import com.tenio.common.logger.SystemLogger;
-import com.tenio.common.task.Task;
+import com.tenio.core.configuration.CoreConfiguration;
+import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.monitoring.system.SystemMonitoring;
 
 /**
- * The abstract task for system related schedule.
+ * To retrieve the current system information in period time. You can configure
+ * this time in your own configurations, see {@link CoreConfiguration}
  */
-public abstract class AbstractSystemTask extends SystemLogger implements Task {
+public final class SystemMonitoringTask {
 
-  private static final int DEFAULT_INITIAL_DELAY_IN_SECONDS = 60;
-  private static final int DEFAULT_INTERVAL_IN_SECONDS = 60;
+  private final EventManager eventManager;
+  private final SystemMonitoring systemMonitoring;
 
-  /**
-   * The event manager.
-   */
-  protected final EventManager eventManager;
-  /**
-   * The initial delay time. The task should wait a little until the system becomes stable.
-   */
-  protected final int initialDelay;
-  /**
-   * The interval value.
-   */
-  protected int interval;
-
-  /**
-   * Initialization.
-   *
-   * @param eventManager the event manager
-   */
-  protected AbstractSystemTask(EventManager eventManager) {
+  private SystemMonitoringTask(EventManager eventManager) {
     this.eventManager = eventManager;
-    initialDelay = DEFAULT_INITIAL_DELAY_IN_SECONDS;
-    interval = DEFAULT_INTERVAL_IN_SECONDS;
+    systemMonitoring = SystemMonitoring.newInstance();
   }
 
   /**
-   * Set the interval.
+   * Creates a new task instance.
    *
-   * @param interval the value
+   * @param eventManager an instance of {@link EventManager}
+   * @return a new instance of {@link SystemMonitoringTask}
    */
-  public void setInterval(int interval) {
-    this.interval = interval;
+  public static SystemMonitoringTask newInstance(EventManager eventManager) {
+    return new SystemMonitoringTask(eventManager);
+  }
+
+  /** Performs one scheduled sample. */
+  public void sample() {
+    eventManager.emit(ServerEvent.SYSTEM_MONITORING,
+            systemMonitoring.getCpuUsage(),
+            systemMonitoring.getTotalMemory(),
+            systemMonitoring.getUsedMemory(),
+            systemMonitoring.getFreeMemory(),
+            systemMonitoring.countRunningPlatformThreads()
+    );
   }
 }

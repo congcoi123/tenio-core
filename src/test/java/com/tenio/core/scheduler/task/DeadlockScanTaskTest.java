@@ -22,21 +22,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.scheduler.task.core;
+package com.tenio.core.scheduler.task;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
-import com.tenio.core.event.implement.EventManager;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,53 +46,17 @@ import org.mockito.Mockito;
 @DisplayName("Unit Test Cases For DeadlockScanTask")
 class DeadlockScanTaskTest {
 
-  private EventManager eventManager;
   private DeadlockScanTask task;
 
   @BeforeEach
   void setUp() {
-    eventManager = Mockito.mock(EventManager.class);
-    task = DeadlockScanTask.newInstance(eventManager);
+    task = DeadlockScanTask.newInstance();
   }
 
   @Test
   @DisplayName("Test creating a new instance")
   void testNewInstance() {
-    assertNotNull(DeadlockScanTask.newInstance(eventManager));
-  }
-
-  @Test
-  @DisplayName("Test scheduler is null before run")
-  void testGetSchedulerBeforeRunIsNull() {
-    assertNull(task.getScheduler());
-  }
-
-  @Test
-  @DisplayName("Test run initializes the scheduler")
-  void testRunInitializesScheduler() {
-    task.run();
-    assertNotNull(task.getScheduler());
-    task.shutdown();
-  }
-
-  @Test
-  @DisplayName("Test shutdown after run completes without exception")
-  void testShutdownAfterRun() {
-    task.run();
-    task.shutdown(); // should not throw
-  }
-
-  @Test
-  @DisplayName("Test shutdown before run completes without exception")
-  void testShutdownBeforeRun() {
-    task.shutdown(); // scheduledService is null, should not throw
-  }
-
-  @Test
-  @DisplayName("Test setInterval updates interval without exception")
-  void testSetInterval() {
-    task.setInterval(30);
-    // no exception expected
+    assertNotNull(DeadlockScanTask.newInstance());
   }
 
   @Test
@@ -134,18 +97,6 @@ class DeadlockScanTaskTest {
       m.invoke(task, mockInfo);
     } catch (InvocationTargetException e) {
       assertInstanceOf(IllegalStateException.class, e.getCause());
-    }
-  }
-
-  @Test
-  @DisplayName("shutdown handles InterruptedException from awaitTermination")
-  void testShutdownHandlesInterruptedException() {
-    task.run();
-    Thread.currentThread().interrupt();
-    try {
-      task.shutdown();
-    } finally {
-      Thread.interrupted();
     }
   }
 

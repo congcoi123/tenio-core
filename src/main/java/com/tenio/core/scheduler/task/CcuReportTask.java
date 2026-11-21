@@ -22,32 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.scheduler.task.core;
+package com.tenio.core.scheduler.task;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.scheduler.task.AbstractSystemTask;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  * To retrieve the CCU in period time. You can configure this time in your own
  * configurations, see {@link CoreConfiguration}
  */
-public final class CcuReportTask extends AbstractSystemTask {
+public final class CcuReportTask {
 
-  private ScheduledExecutorService scheduledService;
-  private ScheduledFuture<?> scheduler;
+  private final EventManager eventManager;
   private PlayerManager playerManager;
 
   private CcuReportTask(EventManager eventManager) {
-    super(eventManager);
+    this.eventManager = eventManager;
   }
 
   /**
@@ -60,13 +52,9 @@ public final class CcuReportTask extends AbstractSystemTask {
     return new CcuReportTask(eventManager);
   }
 
-  @Override
-  public void run() {
-    var threadFactoryTask = new ThreadFactoryBuilder().setNameFormat("task-ccu-report").build();
-    scheduledService = Executors.newSingleThreadScheduledExecutor(threadFactoryTask);
-    scheduler = scheduledService.scheduleAtFixedRate(
-        () -> eventManager.emit(ServerEvent.FETCHED_CCU_INFO, playerManager.getSnapshotPlayerCount()),
-        initialDelay, interval, TimeUnit.SECONDS);
+  /** Performs one scheduled sample. */
+  public void sample() {
+    eventManager.emit(ServerEvent.FETCHED_CCU_INFO, playerManager.getSnapshotPlayerCount());
   }
 
   /**
@@ -76,27 +64,5 @@ public final class CcuReportTask extends AbstractSystemTask {
    */
   public void setPlayerManager(PlayerManager playerManager) {
     this.playerManager = playerManager;
-  }
-
-  @Override
-  public ScheduledFuture<?> getScheduler() {
-    return scheduler;
-  }
-
-  @Override
-  public void shutdown() {
-    if (scheduledService != null) {
-      scheduledService.shutdown();
-    }
-
-    try {
-      if (scheduledService != null) {
-        scheduledService.awaitTermination(5, TimeUnit.SECONDS);
-      }
-    } catch (InterruptedException exception) {
-      if (scheduledService != null) {
-        scheduledService.shutdownNow();
-      }
-    }
   }
 }

@@ -53,7 +53,7 @@ class CoreProfileConfigurationTest {
     var configuration = new DefaultCoreConfiguration();
     configuration.load(null);
 
-    assertEquals(Set.of("default"), selectedProfiles(configuration));
+    assertEquals(Set.of("default", "metrics"), selectedProfiles(configuration));
   }
 
   @Test
@@ -61,7 +61,7 @@ class CoreProfileConfigurationTest {
     var configuration = new DefaultCoreConfiguration();
     configuration.load(directory.resolve("not-present.xml").toString());
 
-    assertEquals(Set.of("default"), selectedProfiles(configuration));
+    assertEquals(Set.of("default", "metrics"), selectedProfiles(configuration));
   }
 
   @Test
@@ -132,6 +132,24 @@ class CoreProfileConfigurationTest {
         + "<Property name=\"profile\">world</Property></Properties></Network>");
 
     assertThrows(IllegalArgumentException.class, () -> configuration.load(file.toString()));
+  }
+
+  @Test
+  void legacyIntervalsAreIgnoredWhileProfileStillLoads() throws Exception {
+    var configuration = new DefaultCoreConfiguration();
+    var schedules = new StringBuilder("<Configuration><Schedules>");
+    for (String name : Set.of("ccu-scan-interval", "deadlock-scan-interval",
+        "system-monitoring-interval", "traffic-counter-interval")) {
+      assertTrue(CoreConfigurationType.getByValue(name) == null);
+      schedules.append("<Task name='").append(name).append("'>invalid</Task>");
+    }
+    schedules.append("<Task name='removed-room-scan-interval'>17</Task>");
+    schedules.append("<Task name='main-connection-keepalive-scan-interval'>5</Task></Schedules></Configuration>");
+    configuration.load(writeXml("<Properties><Property name='profile'>world</Property></Properties>"
+        + schedules).toString());
+    assertFalse(configuration.isDefined(CoreConfigurationType.INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN));
+    assertTrue(CoreConfigurationType.getByValue("removed-room-scan-interval") == null);
+    assertEquals(Set.of("world"), selectedProfiles(configuration));
   }
 
   private Path writeXml(String body) throws Exception {

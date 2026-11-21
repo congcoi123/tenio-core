@@ -123,53 +123,12 @@ public enum CoreConfigurationType implements ConfigurationType {
    */
   WORKER_WEBSOCKET_CONSUMER("websocket-consumer"),
   /**
-   * Sets an interval to frequently check removable rooms for removing them.
-   *
-   * @see RoomRemoveMode
-   */
-  INTERVAL_REMOVED_ROOM_SCAN("removed-room-scan-interval"),
-  /**
-   * Sets an interval to frequently check disconnected players. In case a disconnected time of a
-   * player excess the allowed time then that player will be logged out from the server.
-   *
-   * @see PlayerDisconnectMode
-   */
-  INTERVAL_DISCONNECTED_PLAYER_SCAN("disconnected-player-scan-interval"),
-  /**
-   * Sets an interval to frequently check the concurrent users activating on the server. Disable
-   * this feature by setting the value to {@code 0}.
-   *
-   * @since 0.5.1
-   */
-  INTERVAL_CCU_SCAN("ccu-scan-interval"),
-  /**
    * Delay between main-connection keepalive scans, in seconds. A positive value enables
    * scheduling independently of the receive timeout.
    *
    * @since 0.7.4
    */
   INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN("main-connection-keepalive-scan-interval"),
-  /**
-   * Sets an interval to frequently check whether a deadlock occurred.Disable
-   * this feature by setting the value to {@code 0}.
-   *
-   * @since 0.5.1
-   */
-  INTERVAL_DEADLOCK_SCAN("deadlock-scan-interval"),
-  /**
-   * Sets an interval to frequently report the current read and written number of packets on the
-   * server. Disable this feature by setting the value to {@code 0}.
-   *
-   * @since 0.5.1
-   */
-  INTERVAL_TRAFFIC_COUNTER("traffic-counter-interval"),
-  /**
-   * Sets an interval to frequently monitoring the server information. Disable
-   * this feature by setting the value to {@code 0}.
-   *
-   * @since 0.5.1
-   */
-  INTERVAL_SYSTEM_MONITORING("system-monitoring-interval"),
   /**
    * Sets the maximum size of an inbound queue (response queue). Notes that every {@link Session} has
    * its own queue, and this setting applies for all of them.

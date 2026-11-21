@@ -102,6 +102,11 @@ public final class CoreConstant {
   public static final String DEFAULT_COMMAND_PACKAGE = "com.tenio.core.command";
 
   /**
+   * Package containing built-in scheduled components.
+   */
+  public static final String DEFAULT_SCHEDULER_PACKAGE = "com.tenio.core.scheduler.job";
+
+  /**
    * Default package path for REST controller components.
    * Used for REST endpoint scanning and registration.
    */

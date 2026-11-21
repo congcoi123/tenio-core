@@ -22,74 +22,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.scheduler.task.core;
+package com.tenio.core.scheduler.task;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.core.configuration.CoreConfiguration;
-import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.scheduler.task.AbstractSystemTask;
+import com.tenio.common.logger.SystemLogger;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  * To detect deadlock in period time. You can configure this time in your own
  * configurations, see {@link CoreConfiguration}
  */
-public final class DeadlockScanTask extends AbstractSystemTask {
+public final class DeadlockScanTask extends SystemLogger {
 
   private final ThreadMXBean threadMxBean;
-  private ScheduledExecutorService scheduledService;
-  private ScheduledFuture<?> scheduler;
 
-  private DeadlockScanTask(EventManager eventManager) {
-    super(eventManager);
-
+  private DeadlockScanTask() {
     threadMxBean = ManagementFactory.getThreadMXBean();
   }
 
   /**
    * Creates a new task instance.
    *
-   * @param eventManager an instance of {@link EventManager}
    * @return a new instance of {@link DeadlockScanTask}
    */
-  public static DeadlockScanTask newInstance(EventManager eventManager) {
-    return new DeadlockScanTask(eventManager);
+  public static DeadlockScanTask newInstance() {
+    return new DeadlockScanTask();
   }
 
-  @Override
-  public void run() {
-    var threadFactoryTask = new ThreadFactoryBuilder().setNameFormat("task-deadlock-scan").build();
-    scheduledService = Executors.newSingleThreadScheduledExecutor(threadFactoryTask);
-    scheduler = scheduledService.scheduleAtFixedRate(
-            this::checkForDeadlockedThreads, initialDelay, interval, TimeUnit.SECONDS);
-  }
-
-  @Override
-  public ScheduledFuture<?> getScheduler() {
-    return scheduler;
-  }
-
-  @Override
-  public void shutdown() {
-    if (scheduledService != null) {
-      scheduledService.shutdown();
-    }
-
-    try {
-      if (scheduledService != null) {
-        scheduledService.awaitTermination(5, TimeUnit.SECONDS);
-      }
-    } catch (InterruptedException exception) {
-      if (scheduledService != null) {
-        scheduledService.shutdownNow();
-      }
-    }
+  /** Performs one scheduled sample. */
+  public void sample() {
+    checkForDeadlockedThreads();
   }
 
   private void checkForDeadlockedThreads() {

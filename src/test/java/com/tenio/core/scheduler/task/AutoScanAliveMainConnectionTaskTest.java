@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.scheduler.task.core;
+package com.tenio.core.scheduler.task;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -35,16 +35,9 @@ import com.tenio.core.network.entity.session.Session;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 class AutoScanAliveMainConnectionTaskTest {
 
@@ -61,17 +54,11 @@ class AutoScanAliveMainConnectionTaskTest {
     session = mock(Session.class);
     task.setPlayerManager(players);
     task.setTimeoutSeconds(30);
-    task.setInterval(1);
     when(players.getSnapshotPlayersList()).thenReturn(List.of(player));
     when(player.getSession()).thenReturn(Optional.of(session));
     when(session.isTcp()).thenReturn(true);
     when(session.isActivated()).thenReturn(true);
     when(session.getLastReliableReadTime()).thenReturn(1000L);
-  }
-
-  @AfterEach
-  void tearDown() {
-    task.shutdown();
   }
 
   @Test
@@ -161,22 +148,10 @@ class AutoScanAliveMainConnectionTaskTest {
   }
 
   @Test
-  void zeroTimeoutSkipsExpiryButKeepsConfiguredSchedule() {
+  void zeroTimeoutSkipsPlayerRegistry() {
     task.setTimeoutSeconds(0);
     task.scan(Long.MAX_VALUE);
-    task.run();
-    assertNotNull(task.getScheduler());
     verifyNoInteractions(players);
-    task.shutdown();
-    assertTrue(task.getScheduler().isCancelled());
-  }
-
-  @Test
-  void omissionDefaultsToDisabled() {
-    AutoScanAliveMainConnectionTask unconfigured = new AutoScanAliveMainConnectionTask();
-    unconfigured.run();
-    assertNull(unconfigured.getScheduler());
-    unconfigured.shutdown();
   }
 
   @Test
@@ -185,78 +160,10 @@ class AutoScanAliveMainConnectionTaskTest {
   }
 
   @Test
-  void startsOnlyOnceAndShutdownCancelsWorker() {
-    task.run();
-    var scheduled = task.getScheduler();
-    assertNotNull(scheduled);
-    task.run();
-    assertSame(scheduled, task.getScheduler());
-    task.shutdown();
-    assertTrue(scheduled.isCancelled());
-    task.run();
-    assertSame(scheduled, task.getScheduler());
-  }
-
-  @Test
-  void shutdownBeforeRunDoesNotStartWorker() {
-    task.shutdown();
-    task.run();
-    assertNull(task.getScheduler());
-  }
-
-  @Test
   void supportsLargeTimeoutWithoutIntegerOverflow() throws IOException {
     task.setTimeoutSeconds(Integer.MAX_VALUE);
     task.scan(31000L);
     verify(session, never()).close(any(), any());
-  }
-  @Test
-  void disabledScanIntervalsDoNotSchedule() {
-    for (int interval : new int[] {-1, 0, -2}) {
-      task.setInterval(interval);
-      task.scan(Long.MAX_VALUE);
-      task.run();
-      assertNull(task.getScheduler());
-    }
-    verifyNoInteractions(players);
-  }
-
-  @Test
-  void omittedIntervalDisablesTaskEvenWhenTimeoutIsPositive() {
-    AutoScanAliveMainConnectionTask unconfigured = new AutoScanAliveMainConnectionTask();
-    unconfigured.setPlayerManager(players);
-    unconfigured.setTimeoutSeconds(30);
-    unconfigured.run();
-    assertNull(unconfigured.getScheduler());
-    unconfigured.shutdown();
-    verifyNoInteractions(players);
-  }
-
-  @Test
-  void configuredIntervalControlsInitialDelayAndSubsequentScans() {
-    var executor = mock(ScheduledExecutorService.class);
-    var future = mock(ScheduledFuture.class);
-    when(executor.scheduleWithFixedDelay(any(Runnable.class), eq(7L), eq(7L),
-        eq(TimeUnit.SECONDS))).thenReturn(future);
-    try (var executors = mockStatic(Executors.class)) {
-      executors.when(() -> Executors.newSingleThreadScheduledExecutor(
-          any(ThreadFactory.class))).thenReturn(executor);
-      task.setInterval(7);
-      task.run();
-      verify(executor).scheduleWithFixedDelay(any(Runnable.class), eq(7L), eq(7L),
-          eq(TimeUnit.SECONDS));
-      assertSame(future, task.getScheduler());
-      task.shutdown();
-      verify(future).cancel(false);
-      verify(executor).shutdownNow();
-    }
-  }
-
-  @Test
-  void enabledTaskRequiresAPlayerManagerBeforeCreatingWorker() {
-    task.setPlayerManager(null);
-    assertThrows(IllegalStateException.class, task::run);
-    assertNull(task.getScheduler());
   }
 
   @Test
@@ -269,29 +176,4 @@ class AutoScanAliveMainConnectionTaskTest {
 
     verify(session).close(ConnectionDisconnectMode.IDLE, PlayerDisconnectMode.CONNECTION_LOST);
   }
-
-  @Test
-  void scheduledScanRecoversAfterRegistryFailure() throws IOException {
-    var executor = mock(ScheduledExecutorService.class);
-    var future = mock(ScheduledFuture.class);
-    var callback = ArgumentCaptor.forClass(Runnable.class);
-    when(executor.scheduleWithFixedDelay(any(Runnable.class), eq(1L), eq(1L),
-        eq(TimeUnit.SECONDS))).thenReturn(future);
-    when(players.getSnapshotPlayersList()).thenThrow(new IllegalStateException("registry unavailable"))
-        .thenReturn(List.of(player));
-    try (var executors = mockStatic(Executors.class)) {
-      executors.when(() -> Executors.newSingleThreadScheduledExecutor(
-          any(ThreadFactory.class))).thenReturn(executor);
-      task.run();
-      verify(executor).scheduleWithFixedDelay(callback.capture(), eq(1L), eq(1L),
-          eq(TimeUnit.SECONDS));
-
-      assertDoesNotThrow(() -> callback.getValue().run());
-      assertDoesNotThrow(() -> callback.getValue().run());
-
-      verify(players, times(2)).getSnapshotPlayersList();
-      verify(session).close(ConnectionDisconnectMode.IDLE, PlayerDisconnectMode.CONNECTION_LOST);
-    }
-  }
-
 }

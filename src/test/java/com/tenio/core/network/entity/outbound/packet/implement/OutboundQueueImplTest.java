@@ -27,10 +27,12 @@ package com.tenio.core.network.entity.outbound.packet.implement;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import com.tenio.core.exception.OutboundQueueFullException;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
 import org.junit.jupiter.api.BeforeEach;
@@ -123,6 +125,8 @@ class OutboundQueueImplTest {
     q.configureOutboundQueuePolicy(mock(OutboundQueuePolicy.class));
     q.put(mock(Packet.class));
     assertTrue(q.isSnapshotFull());
+    assertThrows(OutboundQueueFullException.class, () -> q.put(mock(Packet.class)));
+    assertEquals(1, q.getSize());
   }
 
   @Test

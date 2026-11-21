@@ -22,38 +22,47 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.scheduler.task;
+package com.tenio.core.bootstrap.annotation;
 
-import com.tenio.common.logger.AbstractLogger;
-import com.tenio.common.task.Task;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * The abstract task.
- *
- * @since 0.5.0
+ * Schedules a public, parameterless instance method on a managed bean.
  */
-public abstract class AbstractTask extends AbstractLogger implements Task {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Scheduled {
 
-  private static final int DEFAULT_INTERVAL_IN_SECONDS = 60;
+    /**
+     * Delay in seconds measured from completion of the previous invocation.
+     */
+    long intervalSeconds() default 0;
 
-  /**
-   * The interval value.
-   */
-  protected int interval;
+    /**
+     * Delay before the first interval invocation.
+     */
+    long initialDelaySeconds() default 0;
 
-  /**
-   * Initialization.
-   */
-  protected AbstractTask() {
-    interval = DEFAULT_INTERVAL_IN_SECONDS;
-  }
+    /**
+     * Five-field numeric cron expression, starting with minutes.
+     */
+    String cron() default "";
 
-  /**
-   * Set the interval.
-   *
-   * @param interval the value
-   */
-  public void setInterval(int interval) {
-    this.interval = interval;
-  }
+    /**
+     * Time zone for cron expressions.
+     */
+    String zone() default "UTC";
+
+    /**
+     * Optional worker name visible during this invocation.
+     */
+    String threadName() default "";
+
+    /**
+     * Active profiles, using the same rules as Component.
+     */
+    String[] profile() default {};
 }

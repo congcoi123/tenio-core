@@ -146,14 +146,6 @@ public abstract class CoreConfiguration extends CommonConfiguration {
       var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
       push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
     }
-    // Configured Schedules
-    var attrConfigurationSchedules =
-        XmlUtility.getNodeList(root, "//Server/Configuration/Schedules/Task");
-    for (int j = 0; j < attrConfigurationSchedules.getLength(); j++) {
-      var dataNode = attrConfigurationSchedules.item(j);
-      var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
-      push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
-    }
     // Configured Properties
     var attrConfigurationProperties =
         XmlUtility.getNodeList(root, "//Server/Configuration/Properties/Property");

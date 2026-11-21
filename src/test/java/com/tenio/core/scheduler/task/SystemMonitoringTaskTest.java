@@ -24,43 +24,39 @@ THE SOFTWARE.
 
 package com.tenio.core.scheduler.task;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.util.concurrent.ScheduledFuture;
+import com.tenio.core.event.implement.EventManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
-@DisplayName("Unit Test Cases For AbstractTask")
-class AbstractTaskTest {
+@DisplayName("Unit Test Cases For SystemMonitoringTask")
+class SystemMonitoringTaskTest {
 
-  private static class ConcreteTask extends AbstractTask {
+  private EventManager eventManager;
+  private SystemMonitoringTask task;
 
-    @Override
-    public void run() {
-    }
-
-    @Override
-    public ScheduledFuture<?> getScheduler() {
-      return null;
-    }
-
-    @Override
-    public void shutdown() {
-    }
+  @BeforeEach
+  void setUp() {
+    eventManager = Mockito.mock(EventManager.class);
+    task = SystemMonitoringTask.newInstance(eventManager);
   }
 
   @Test
-  @DisplayName("Test default interval is 60 seconds")
-  void testDefaultInterval() {
-    ConcreteTask task = new ConcreteTask();
-    assertEquals(60, task.interval);
+  @DisplayName("Test creating a new instance")
+  void testNewInstance() {
+    assertNotNull(SystemMonitoringTask.newInstance(eventManager));
   }
 
   @Test
-  @DisplayName("Test setInterval updates the interval")
-  void testSetInterval() {
-    ConcreteTask task = new ConcreteTask();
-    task.setInterval(30);
-    assertEquals(30, task.interval);
+  @DisplayName("A sample emits SYSTEM_MONITORING with monitoring data")
+  void testSampleEmitsSystemMonitoring() {
+    task.sample();
+    Mockito.verify(eventManager).emit(
+        Mockito.eq(com.tenio.core.configuration.define.ServerEvent.SYSTEM_MONITORING),
+        Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()
+    );
   }
 }

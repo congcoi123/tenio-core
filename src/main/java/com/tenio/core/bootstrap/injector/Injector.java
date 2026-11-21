@@ -44,6 +44,7 @@ import com.tenio.core.command.client.AbstractClientCommandHandler;
 import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.system.AbstractSystemCommandHandler;
 import com.tenio.core.command.system.SystemCommandManager;
+import com.tenio.core.scheduler.ScheduledJobs;
 import com.tenio.core.entity.Player;
 import com.tenio.core.exception.DuplicatedBeanCreationException;
 import com.tenio.core.exception.IllegalDefinedAccessControlException;
@@ -124,6 +125,9 @@ public final class Injector extends SystemLogger {
   /** The object manages all supported system commands. */
   private final SystemCommandManager systemCommandManager;
 
+  /** The object manages all scheduled jobs. */
+  private final ScheduledJobs scheduledJobs;
+
   /** The object manages all self-defined user commands. */
   private final ClientCommandManager clientCommandManager;
 
@@ -139,6 +143,7 @@ public final class Injector extends SystemLogger {
     servletBeansMap = new HashMap<>();
     systemCommandManager = new SystemCommandManager();
     clientCommandManager = new ClientCommandManager();
+    scheduledJobs = new ScheduledJobs();
     profiles = new ProfileSelection(Set.of());
   }
 
@@ -387,6 +392,8 @@ public final class Injector extends SystemLogger {
     // Step 3: Wire every instance before making the completed graph available to the application.
     autowireBeans();
 
+    // Step 4 (Extra): Discover to find and register scheduled jobs.
+    scheduledJobs.discover(classBeansMap.values(), profiles.activeProfiles());
   }
 
   /**
@@ -469,6 +476,13 @@ public final class Injector extends SystemLogger {
    */
   public ClientCommandManager getClientCommandManager() {
     return clientCommandManager;
+  }
+
+  /**
+   * Returns the jobs registered on fully injected instances during this scan.
+   */
+  public ScheduledJobs getScheduledJobs() {
+    return scheduledJobs;
   }
 
   /**
@@ -792,5 +806,6 @@ public final class Injector extends SystemLogger {
     servletBeansMap.clear();
     systemCommandManager.clear();
     clientCommandManager.clear();
+    scheduledJobs.shutdown();
   }
 }

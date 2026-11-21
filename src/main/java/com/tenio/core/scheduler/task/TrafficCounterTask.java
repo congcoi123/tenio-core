@@ -22,31 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.scheduler.task.core;
+package com.tenio.core.scheduler.task;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.scheduler.task.AbstractSystemTask;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Collecting the traffic data like the amount of reader and writer binary.
  */
-public final class TrafficCounterTask extends AbstractSystemTask {
+public final class TrafficCounterTask {
 
-  private ScheduledExecutorService scheduledService;
-  private ScheduledFuture<?> scheduler;
+  private final EventManager eventManager;
   private NetworkReaderStatistic networkReaderStatistic;
   private NetworkWriterStatistic networkWriterStatistic;
 
   private TrafficCounterTask(EventManager eventManager) {
-    super(eventManager);
+    this.eventManager = eventManager;
   }
 
   /**
@@ -59,41 +52,16 @@ public final class TrafficCounterTask extends AbstractSystemTask {
     return new TrafficCounterTask(eventManager);
   }
 
-  @Override
-  public void run() {
-    var threadFactoryTask = new ThreadFactoryBuilder().setNameFormat("task-traffic-counter").build();
-    scheduledService = Executors.newSingleThreadScheduledExecutor(threadFactoryTask);
-    scheduler = scheduledService.scheduleAtFixedRate(
-        () -> eventManager.emit(ServerEvent.FETCHED_BANDWIDTH_INFO,
+  /** Performs one scheduled sample. */
+  public void sample() {
+    eventManager.emit(ServerEvent.FETCHED_BANDWIDTH_INFO,
             networkReaderStatistic.getReadBytes(),
             networkReaderStatistic.getReadPackets(),
             networkReaderStatistic.getReadDroppedPackets(),
             networkWriterStatistic.getWrittenBytes(), networkWriterStatistic.getWrittenPackets(),
             networkWriterStatistic.getWrittenDroppedPacketsByPolicy(),
-            networkWriterStatistic.getWrittenDroppedPacketsByFull()),
-        initialDelay, interval, TimeUnit.SECONDS);
-  }
-
-  @Override
-  public ScheduledFuture<?> getScheduler() {
-    return scheduler;
-  }
-
-  @Override
-  public void shutdown() {
-    if (scheduledService != null) {
-      scheduledService.shutdown();
-    }
-
-    try {
-      if (scheduledService != null) {
-        scheduledService.awaitTermination(5, TimeUnit.SECONDS);
-      }
-    } catch (InterruptedException exception) {
-      if (scheduledService != null) {
-        scheduledService.shutdownNow();
-      }
-    }
+            networkWriterStatistic.getWrittenDroppedPacketsByFull()
+    );
   }
 
   /**
