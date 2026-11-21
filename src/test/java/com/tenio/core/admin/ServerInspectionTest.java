@@ -81,6 +81,7 @@ class ServerInspectionTest {
 
     assertEquals(InspectionResult.message("Session no longer exists"), inspection.query("session 7"));
     assertTrue(inspection.query("server stop").values().getFirst().startsWith("Commands"));
+    assertTrue(inspection.query("history 7").values().getFirst().contains("restart TenIO"));
     verifyNoInteractions(server);
   }
   @Test
@@ -111,10 +112,10 @@ class ServerInspectionTest {
       history.record(8, "TCP", OperationalHistory.Kind.RECONNECT, "resumed");
 
       var inspection = new ServerInspection(server, network);
-      assertEquals("help | stats | room <id> | session <id> | network pressure | limits | history [id]",
+      assertEquals("help | stats | room <id> | session <id> | network pressure | limits | history [id] | clear",
           AdminCommands.shortcuts());
       assertEquals(List.of("stats", "room <id>", "session <id>", "network pressure", "limits",
-          "history [id]"), inspection.query("help").labels());
+          "history [id]", "clear"), inspection.query("help").labels());
       assertTrue(inspection.query("ROOM  42").labels().contains("Room ID"));
       assertTrue(inspection.query("session 7").labels().contains("Outbound depth"));
       assertTrue(inspection.query("network pressure").labels().contains("Session 7"));

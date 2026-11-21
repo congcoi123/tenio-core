@@ -158,7 +158,7 @@ public final class ServerInspection {
       }
       var history = sessions.getOperationalHistory();
       if (history == null) {
-        return InspectionResult.message("History is disabled");
+        return InspectionResult.message("History is disabled. Add history to the configuration profile (for example, default,history) and restart TenIO.");
       }
       rows.add("Dropped exports", history.droppedExports());
       history.snapshot().reversed().stream()

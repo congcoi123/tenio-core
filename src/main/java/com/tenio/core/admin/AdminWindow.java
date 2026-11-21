@@ -94,7 +94,7 @@ public final class AdminWindow implements AutoCloseable {
     output = new JTextArea(8, 64);
     output.setEditable(false);
     input = new JTextField();
-    input.setToolTipText("stats, room <id>, session <id>, network pressure, history, limits");
+    input.setToolTipText("stats, room <id>, session <id>, network pressure, history, limits, clear");
     input.addActionListener(event -> execute(input.getText().strip(), true));
     var tabs = new JTabbedPane();
     tabs.addTab("Statistics", new JScrollPane(new JTable(table)));
@@ -122,11 +122,19 @@ public final class AdminWindow implements AutoCloseable {
   }
 
   private void execute(String command, boolean manual) {
+    if (closed.get() || command.isBlank()) {
+      return;
+    }
+    if (manual && AdminCommands.normalize(command).equals("clear")) {
+      input.setText("");
+      output.setText("");
+      return;
+    }
     if (busy && manual && pending == null) {
       pending = command;
       input.setEditable(false);
     }
-    if (closed.get() || busy || command.isBlank()) {
+    if (busy) {
       return;
     }
     busy = true;
@@ -205,8 +213,11 @@ public final class AdminWindow implements AutoCloseable {
 
   private static final class Chart extends JPanel {
     private final ArrayDeque<Integer> samples = new ArrayDeque<>();
+    private static final int SAMPLE_LIMIT = 60;
+    private static final int TARGET_TICKS = 4;
+
     void addSample(int count) {
-      if (samples.size() == 60) {
+      if (samples.size() == SAMPLE_LIMIT) {
         samples.removeFirst();
       }
       samples.addLast(count);
@@ -214,14 +225,42 @@ public final class AdminWindow implements AutoCloseable {
     }
     @Override protected void paintComponent(Graphics g) {
       super.paintComponent(g);
-      int max = samples.stream().mapToInt(Integer::intValue).max().orElse(1);
-      int i = 0, previousX = 0, previousY = 0;
+      int peak = Math.max(1, samples.stream().mapToInt(Integer::intValue).max().orElse(0));
+      long step = Math.ceilDiv((long) peak, TARGET_TICKS);
+      long maximum = Math.ceilDiv(peak, step) * step;
+      var formatter = java.text.NumberFormat.getIntegerInstance(java.util.Locale.US);
+      var font = g.getFontMetrics();
+      int left = Math.max(font.stringWidth("Players"), font.stringWidth(formatter.format(maximum))) + 16;
+      int right = getWidth() - 14;
+      int top = getInsets().top + font.getHeight() + 8;
+      int bottom = getHeight() - font.getDescent() - 8;
+      if (right <= left || bottom <= top) {
+        return;
+      }
+
+      g.setColor(getForeground());
+      g.drawString("Players", 6, top - 8);
+      g.drawLine(left, top, left, bottom);
+      g.drawLine(left, bottom, right, bottom);
+      for (long count = 0; count <= maximum; count += step) {
+        int y = bottom - (int) Math.round((double) count / maximum * (bottom - top));
+        String label = formatter.format(count);
+        g.drawLine(left - 4, y, left, y);
+        g.drawString(label, left - 8 - font.stringWidth(label), y + font.getAscent() / 2);
+      }
+
+      int index = 0;
+      int previousX = 0;
+      int previousY = 0;
       for (int count : samples) {
-        int x = 12 + i * (getWidth() - 24) / 59;
-        int y = getHeight() - 14 - (int) (count / (double) Math.max(1, max) * (getHeight() - 48));
-        if (i++ > 0) {
+        int x = left + index * (right - left) / (SAMPLE_LIMIT - 1);
+        int y = bottom - (int) Math.round((double) count / maximum * (bottom - top));
+        if (index == 0) {
+          g.fillOval(x - 2, y - 2, 4, 4);
+        } else {
           g.drawLine(previousX, previousY, x, y);
         }
+        index++;
         previousX = x;
         previousY = y;
       }
