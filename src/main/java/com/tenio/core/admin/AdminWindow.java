@@ -101,12 +101,13 @@ public final class AdminWindow implements AutoCloseable {
     tabs.addTab("Players", chart);
     var lower = new JPanel(new BorderLayout(4, 4));
     lower.add(new JScrollPane(output));
-    lower.add(input, BorderLayout.SOUTH);
+    var commandPanel = new JPanel(new BorderLayout(4, 4));
+    commandPanel.add(new JLabel(AdminCommands.shortcuts()), BorderLayout.NORTH);
+    commandPanel.add(input, BorderLayout.CENTER);
+    lower.add(commandPanel, BorderLayout.SOUTH);
     var split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tabs, lower);
     split.setResizeWeight(0.6);
     frame.add(split);
-    append(commands == null ? "stats | room <id> | session <id> | network pressure | limits | history [id]"
-        : "help | stats | room <id> | session <id> | network pressure | limits | history [id]");
     frame.setSize(new Dimension(680, 500));
     frame.setLocationByPlatform(true);
     frame.setVisible(true);
@@ -135,20 +136,21 @@ public final class AdminWindow implements AutoCloseable {
     }
     worker.execute(() -> {
       try {
-        boolean handled = manual && commands != null && !command.equals("server stats")
+        String normalized = AdminCommands.normalize(command);
+        boolean handled = manual && !AdminCommands.handles(command) && commands != null
             && commands.execute(command, text -> SwingUtilities.invokeLater(() -> append(text)));
-        if (!handled) {
-          var result = query.run(command);
+        if (normalized.equals("help") || !handled) {
+          var result = query.run(normalized);
           SwingUtilities.invokeLater(() -> {
             if (closed.get()) {
               return;
             }
-            if (command.equals("stats") || command.equals("server stats")) {
+            if (normalized.equals("stats") || normalized.equals("server stats")) {
               table.setRowCount(0);
               for (int i = 0; i < result.labels().size(); i++) {
                 table.addRow(new Object[]{result.labels().get(i), result.values().get(i)});
                 if (result.labels().get(i).equals("Players")) {
-                  chart.addSample(Integer.parseInt(result.values().get(i)));
+                  chart.addSample(Integer.parseInt(result.values().get(i).replace(",", "")));
                 }
               }
             } else if (manual) {

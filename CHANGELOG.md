@@ -158,6 +158,7 @@
 - Added opt-in per-command token buckets with player/session isolation and rejection counters.
 - Added read-only session, room, traffic, and outbound-pressure inspection with optional per-queue metrics.
 - Replaced terminal stdin with a local desktop admin window using the system look and feel.
+- Pinned admin commands and added inspection usage to help. Formatted uptime and statistics totals.
 - Added optional instance-local operational history with bounded asynchronous export.
 - Accepted an explicitly empty XML profile for deployments using unrestricted components.
 - Removed the unused JLine dependencies and the unfilled security policy template.

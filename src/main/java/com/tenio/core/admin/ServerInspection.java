@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.admin;
 
+import java.util.Locale;
 import java.util.Map;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
@@ -48,10 +49,17 @@ public final class ServerInspection {
   }
 
   public InspectionResult query(String input) {
-    String[] words = input.strip().split("\\s+");
+    input = AdminCommands.normalize(input);
+    String[] words = input.split(" ");
+    if (input.equals("help")) {
+      return AdminCommands.help();
+    }
     var rows = new Rows();
     var sessions = network.getSessionManager();
-    if (words.length == 2 && (words[0].equals("session") || words[0].equals("room"))) {
+    if (words[0].equals("session") || words[0].equals("room")) {
+      if (words.length != 2) {
+        return InspectionResult.message("Usage: " + words[0] + " <id>");
+      }
       long id;
       try {
         id = Long.parseLong(words[1]);
@@ -103,13 +111,17 @@ public final class ServerInspection {
         }
       }
     } else if (input.equals("stats") || input.equals("server stats")) {
-      rows.add("Uptime (ms)", server.getUptime());
+      rows.add("Uptime", formatUptime(server.getUptime()));
       rows.add("Players", server.getPlayerManager().getSnapshotPlayerCount());
       rows.add("Rooms", server.getRoomManager().getSnapshotRoomCount());
       rows.add("Sessions", sessions.getSnapshotSessionCount());
-      rows.add("Bytes read", network.getNetworkReaderStatistic().getReadBytes());
+      var reader = network.getNetworkReaderStatistic();
+      rows.add("Bytes read", reader.getReadBytes());
+      rows.add("Packets read", reader.getReadPackets());
+      rows.add("Inbound drops", reader.getReadDroppedPackets());
       var writer = network.getNetworkWriterStatistic();
       rows.add("Bytes written", writer.getWrittenBytes());
+      rows.add("Packets written", writer.getWrittenPackets());
       rows.add("Full drops", writer.getWrittenDroppedPacketsByFull());
       rows.add("Policy drops", writer.getWrittenDroppedPacketsByPolicy());
     } else if (input.equals("network pressure")) {
@@ -134,7 +146,10 @@ public final class ServerInspection {
         commands.limitCounts().entrySet().stream().sorted(Map.Entry.comparingByKey())
             .limit(MAX_ROWS).forEach(e -> rows.add(e.getKey().toString(), e.getValue()));
       }
-    } else if (input.equals("history") || (words.length == 2 && words[0].equals("history"))) {
+    } else if (words[0].equals("history")) {
+      if (words.length > 2) {
+        return InspectionResult.message("Usage: history [id]");
+      }
       Long sessionId;
       try {
         sessionId = words.length == 2 ? Long.valueOf(words[1]) : null;
@@ -151,9 +166,30 @@ public final class ServerInspection {
           .forEach(e -> rows.add(e.timestamp() + " / " + e.sessionId(),
               e.transport() + " " + e.kind() + " " + e.reason()));
     } else {
-      return InspectionResult.message("Commands: stats, session <id>, room <id>, network pressure, limits, history [session ID]");
+      return InspectionResult.message("Commands: " + AdminCommands.shortcuts());
     }
     return rows.result();
+  }
+
+  static String formatUptime(long milliseconds) {
+    long seconds = milliseconds / 1000;
+    if (seconds < 5) {
+      return "just now";
+    }
+    if (seconds < 60) {
+      return duration(seconds, "second");
+    }
+    if (seconds < 3600) {
+      return duration(seconds / 60, "minute");
+    }
+    if (seconds < 86400) {
+      return duration(seconds / 3600, "hour");
+    }
+    return duration(seconds / 86400, "day");
+  }
+
+  private static String duration(long amount, String unit) {
+    return String.format(Locale.US, "%,d %s%s", amount, unit, amount == 1 ? "" : "s");
   }
 
   private static String age(long time) {
@@ -165,7 +201,12 @@ public final class ServerInspection {
     private final ArrayList<String> values = new ArrayList<>();
     void add(String key, Object value) {
       labels.add(key);
-      String text = value == null ? "unavailable" : value.toString();
+      String text = switch (value) {
+        case null -> "unavailable";
+        case Integer count -> String.format(Locale.US, "%,d", count);
+        case Long count -> String.format(Locale.US, "%,d", count);
+        default -> value.toString();
+      };
       values.add(text.length() > 240 ? text.substring(0, 240) : text);
     }
     int size() {
