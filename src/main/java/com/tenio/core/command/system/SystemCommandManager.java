@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.command.system;
 
+import java.util.function.Consumer;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.annotation.Component;
@@ -141,6 +142,10 @@ public final class SystemCommandManager extends SystemLogger {
    * @param rawMessage The messaged used to invoke the command
    */
   public void invoke(String rawMessage) {
+    invoke(rawMessage, null);
+  }
+
+  public void invoke(String rawMessage, Consumer<String> output) {
     if (stopping.get()) {
       return;
     }
@@ -167,10 +172,21 @@ public final class SystemCommandManager extends SystemLogger {
     var annotation = annotations.get(label);
 
     // invokes execute method for handler
-    Runnable runnable = () -> handler.execute(args);
+    Runnable runnable = output == null ? () -> handler.execute(args)
+        : () -> CommandUtility.INSTANCE.withOutput(output, () -> {
+          try {
+            handler.execute(args);
+          } catch (RuntimeException failure) {
+            output.accept(failure.toString());
+          }
+        });
     if (annotation.isBackgroundRunning()) {
       executors.execute(runnable);
-      CommandUtility.INSTANCE.showConsoleMessage("The process is running in background.");
+      if (output == null) {
+        CommandUtility.INSTANCE.showConsoleMessage("The process is running in background.");
+      } else {
+        output.accept("The process is running in background.");
+      }
     } else {
       runnable.run();
     }

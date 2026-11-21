@@ -98,7 +98,9 @@ public abstract class CoreConfiguration extends CommonConfiguration {
     }
 
     // Validate the actual XML value; a reused configuration cannot retain a previous selection.
-    ProfileSelection.parseRequired(configuredProfiles);
+    if (configuredProfiles == null || !configuredProfiles.isBlank()) {
+      ProfileSelection.parseRequired(configuredProfiles);
+    }
 
     // Network Properties
     var attrNetworkProperties = XmlUtility.getNodeList(root, "//Server/Network/Properties/Property");

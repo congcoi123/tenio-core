@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.server.core;
 
+import com.tenio.core.admin.OperationalHistory;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.api.ServerApi;
@@ -245,7 +246,13 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
 
         // Connect the player to the new session only while this session still owns the
         // DOING state. A concurrent close changes it to NONE and makes this fail.
-        if (!attachPlayerToSession(player, session)) {
+        boolean attached = attachPlayerToSession(player, session);
+        var history = sessionManager == null ? null : sessionManager.getOperationalHistory();
+        if (history != null) {
+          history.record(session.getId(), String.valueOf(session.getTransportType()),
+              OperationalHistory.Kind.RECONNECT, attached ? "resumed" : "attachment failed");
+        }
+        if (!attached) {
           return;
         }
         player.setLastReadTime(now());

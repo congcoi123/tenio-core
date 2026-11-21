@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.session.manager;
 
+import com.tenio.core.admin.OperationalHistory;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
@@ -208,6 +209,15 @@ public interface SessionManager extends Manager {
    * @since 0.7.3
    */
   List<Session> getSnapshotSessionsList();
+
+  default Session getSessionById(long id) {
+    return getSnapshotSessionsList().stream().filter(session -> session.getId() == id)
+        .findFirst().orElse(null);
+  }
+
+  default OperationalHistory getOperationalHistory() {
+    return null;
+  }
 
   /**
    * Retrieves a copy of current sessions' list.

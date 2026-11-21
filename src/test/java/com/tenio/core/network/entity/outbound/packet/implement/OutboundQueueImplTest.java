@@ -162,4 +162,28 @@ class OutboundQueueImplTest {
     queue.take();
     assertEquals(1, queue.getSnapshotSize());
   }
+  @Test
+  void recordsPressureTransitionsAndDistinguishesFullQueues() {
+    var history = new com.tenio.core.admin.OperationalHistory(4);
+    queue.enableMonitoring(history, 7, "TCP");
+    queue.configureMaxSize(2);
+    var packet = mock(Packet.class);
+    queue.put(packet);
+    queue.put(packet);
+    assertThrows(OutboundQueueFullException.class, () -> queue.put(packet));
+    queue.take();
+    assertEquals(2, queue.statistics().highWater());
+    assertEquals(1, queue.statistics().fullDrops());
+    assertEquals(0, queue.statistics().policyDrops());
+    assertEquals(2, history.snapshot().size());
+    assertEquals("PRESSURE_START", history.snapshot().getFirst().kind().name());
+    assertEquals("PRESSURE_END", history.snapshot().getLast().kind().name());
+  }
+
+  @Test
+  void unmonitoredQueueDoesNotCollectHighWater() {
+    queue.put(mock(Packet.class));
+    assertEquals(-1, queue.statistics().highWater());
+  }
+
 }

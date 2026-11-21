@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.session.implement;
 
+import com.tenio.core.admin.OperationalHistory;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.logger.AbstractLogger;
 import com.tenio.common.utility.TimeUtility;
@@ -578,6 +579,11 @@ public class SessionImpl extends AbstractLogger implements Session {
     // Once the session is terminated, it cannot be reused
     if (transitionState(State.INITIALIZED, State.TERMINATED) || transitionState(State.ACTIVATED, State.TERMINATED)) {
       inactivatedTime = now();
+      var history = sessionManager == null ? null : sessionManager.getOperationalHistory();
+      if (history != null) {
+        history.record(id, String.valueOf(transportType), OperationalHistory.Kind.DISCONNECT,
+            String.valueOf(connectionDisconnectMode));
+      }
 
       if (connectionFilter != null && socketRemoteAddress != null) {
         connectionFilter.removeAddress(socketRemoteAddress.getAddress().getHostAddress());

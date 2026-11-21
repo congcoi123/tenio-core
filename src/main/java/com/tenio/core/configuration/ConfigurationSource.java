@@ -60,7 +60,8 @@ public final class ConfigurationSource {
     var profiles = XmlUtility.getNodeList(document, "//Server/Properties/Property[@name='"
         + CoreConfigurationType.PROFILE.getValue() + "']");
     int count = profiles.getLength();
-    return ProfileSelection.parseRequired(count == 0 ? null : profiles.item(count - 1).getTextContent());
+    String value = count == 0 ? null : profiles.item(count - 1).getTextContent();
+    return value != null && value.isBlank() ? Set.of() : ProfileSelection.parseRequired(value);
   }
 
   Document document() {

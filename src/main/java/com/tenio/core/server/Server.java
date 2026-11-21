@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.server;
 
+import com.tenio.core.admin.ServerInspection;
 import com.tenio.common.configuration.Configuration;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.bootstrap.BootstrapHandler;
@@ -139,6 +140,11 @@ public interface Server {
    * @return the current server's uptime in milliseconds
    */
   long getUptime();
+
+  /** Available when the local admin window or operational history is enabled. */
+  default ServerInspection getInspection() {
+    return null;
+  }
 
   /**
    * Writes down data to socket/channel to send them to client sides.

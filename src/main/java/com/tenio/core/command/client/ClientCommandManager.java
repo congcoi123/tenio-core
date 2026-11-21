@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.command.client;
 
+import com.tenio.core.bootstrap.annotation.ClientCommand;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.annotation.Component;
@@ -41,6 +42,32 @@ import java.util.Map;
  */
 @Component
 public final class ClientCommandManager extends SystemLogger {
+
+  private volatile CommandLimits limits;
+
+  public Map<Short, CommandLimits.Counts> limitCounts() {
+    var active = limits;
+    return active == null ? Map.of() : active.counts();
+  }
+
+  public boolean hasLimits() {
+    var active = limits;
+    return active != null && active.enabled();
+  }
+
+  public void releaseSession(long sessionId) {
+    var active = limits;
+    if (active != null && active.enabled()) {
+      active.releaseSession(sessionId);
+    }
+  }
+
+  public synchronized CommandLimits getLimits() {
+    if (limits == null) {
+      limits = new CommandLimits();
+    }
+    return limits;
+  }
 
   private final Map<Short, AbstractClientCommandHandler<Player, DataCollection>> commands =
       new HashMap<>();
@@ -63,6 +90,11 @@ public final class ClientCommandManager extends SystemLogger {
     }
 
     // gets command data
+    var binding = command.getClass().getAnnotation(ClientCommand.class);
+    if (binding != null && (binding.requestsPerSecond() != 0 || binding.burst() != 0)) {
+      getLimits().configure(code, binding.requestsPerSecond(),
+          binding.burst() == 0 ? binding.requestsPerSecond() : binding.burst());
+    }
     commands.put(code, command);
   }
 
@@ -111,8 +143,11 @@ public final class ClientCommandManager extends SystemLogger {
     }
 
     // invokes execute method for handler
-    Runnable runnable = () -> handler.execute(player, message);
-    runnable.run();
+    var activeLimits = limits;
+    if (activeLimits == null || !activeLimits.enabled()
+        || activeLimits.allow(code, player == null ? null : player.getIdentity())) {
+      handler.execute(player, message);
+    }
   }
 
   /**
@@ -120,5 +155,9 @@ public final class ClientCommandManager extends SystemLogger {
    */
   public void clear() {
     commands.clear();
+    if (limits != null) {
+      limits.clear();
+      limits = null;
+    }
   }
 }

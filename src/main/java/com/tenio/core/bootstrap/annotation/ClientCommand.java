@@ -99,4 +99,10 @@ public @interface ClientCommand {
    * @return the command value
    */
   short value();
+
+  /** Sustained rate per player. Zero leaves the command unrestricted. */
+  int requestsPerSecond() default 0;
+
+  /** Initial burst allowance. Zero uses the sustained rate. */
+  int burst() default 0;
 }

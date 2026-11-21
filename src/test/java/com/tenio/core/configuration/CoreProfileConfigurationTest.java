@@ -92,12 +92,17 @@ class CoreProfileConfigurationTest {
   @ParameterizedTest
   @EmptySource
   @ValueSource(strings = {" ", "\t\n", ",", " , , "})
-  void blankOrCommaOnlyXmlPropertyFails(String value) throws Exception {
+  void blankProfileIsUnrestrictedAndCommaOnlyIsRejected(String value) throws Exception {
     var configuration = new DefaultCoreConfiguration();
     Path file = writeXml("<Properties><Property name=\"profile\">" + value
         + "</Property></Properties>");
 
-    assertThrows(IllegalArgumentException.class, () -> configuration.load(file.toString()));
+    if (value.isBlank()) {
+      configuration.load(file.toString());
+      assertEquals(Set.of(), ConfigurationSource.read(file.toString(), getClass().getClassLoader()).profiles());
+    } else {
+      assertThrows(IllegalArgumentException.class, () -> configuration.load(file.toString()));
+    }
   }
 
   @Test

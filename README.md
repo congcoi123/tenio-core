@@ -119,3 +119,34 @@ $ git clone https://github.com/congcoi123/tenio-core.git
 ```
 
 > Happy coding !
+
+## Desktop administration
+
+With `enable-terminal-command` set to `true`, TenIO opens a Swing window using the system look and feel.
+Closing the window leaves the server running. A headless JVM skips the window. The embedded terminal
+input loop is removed. Local registered commands such as `help` send their results to the window via
+`CommandUtility.showConsoleMessage`. Direct writes to stdout still go to the server log/console.
+
+The Statistics tab refreshes every five seconds while visible; the Players tab plots the last 60 samples.
+Use `stats`, `session <id>`, `room <id>`, `network pressure`, `limits`, or `history [sessionId]`.
+Pressure is measured at 80 percent of configured outbound capacity. The pressure view scans active
+sessions on demand and returns up to 50 matches. Routine stats use aggregate counters. Independent UDP
+receive timestamps are currently unavailable. Room queries return at most 50 member identities.
+
+### Command limits and history
+
+Set `requestsPerSecond` and optionally `burst` on a client command. The injector registers the
+policy once. Invoke the command through `ClientCommandManager.invoke` after resolving its code.
+For application-defined routers configure a rule once with `getLimits().configure(code, rate, burst)`
+and call `allow(code, playerIdentity)` before dispatch. For pre-login handlers call
+`allowSession(code, sessionId)`. Configure during startup for automatic session cleanup.
+A rejection skips the handler. Applications control any reply. Unconfigured codes remain unrestricted.
+Each rule caps its identity table at 65,536, expires fully refilled entries on use, and rejects
+new identities if the cap is reached. Accepted and rejected totals are grouped by command code.
+
+Enable `history` to retain the latest 1,024 lifecycle and pressure events per instance. Use
+`server.getInspection().history().enableExport(backlog, consumer)` during initialization to
+persist events in your application. A blocked exporter fills only its bounded backlog; overflow
+and callback failures increment the dropped-export counter. The history view returns at most 50 events.
+A blank server-level profile property selects unrestricted components. Omitting the property in
+an external configuration still fails validation. The history profile is optional.

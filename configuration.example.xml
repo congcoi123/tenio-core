@@ -2,7 +2,7 @@
 <Server>
 
     <Properties>
-        <!-- Required startup profiles; comma-separated, trimmed and case-sensitive. -->
+        <!-- Startup profiles are comma-separated. An empty value selects unrestricted components. -->
         <Property name="profile">default,metrics</Property>
         <!-- The server name -->
         <Property name="server-name">TenIO Core</Property>
@@ -14,7 +14,7 @@
         <Property name="version-code">1</Property>
         <!-- The current version name of your server in string type -->
         <Property name="version-name">1.0</Property>
-        <!-- Set this flag to `true` to enable terminal command -->
+        <!-- Open the local desktop admin window when a display is available. -->
         <Property name="enable-terminal-command">false</Property>
     </Properties>
 

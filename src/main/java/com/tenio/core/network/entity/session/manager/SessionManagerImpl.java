@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.session.manager;
 
+import com.tenio.core.admin.OperationalHistory;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
@@ -51,6 +52,38 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @see SessionManager
  */
 public final class SessionManagerImpl extends AbstractManager implements SessionManager {
+
+  private java.util.function.LongConsumer onSessionRemoved;
+
+  public void onSessionRemoved(java.util.function.LongConsumer listener) {
+    onSessionRemoved = listener;
+  }
+
+  private volatile boolean monitoring;
+  private volatile OperationalHistory history;
+
+  public void enableQueueMonitoring() {
+    monitoring = true;
+  }
+
+  public void setOperationalHistory(OperationalHistory history) {
+    this.history = history;
+  }
+
+  @Override
+  public OperationalHistory getOperationalHistory() {
+    return history;
+  }
+
+  @Override
+  public Session getSessionById(long id) {
+    lock.readLock().lock();
+    try {
+      return sessionByIds.get(id);
+    } finally {
+      lock.readLock().unlock();
+    }
+  }
 
   private final Map<Long, Session> sessionByIds;
   private final Map<SocketChannel, Session> sessionBySockets;
@@ -248,6 +281,9 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     } finally {
       lock.writeLock().unlock();
     }
+    if (onSessionRemoved != null) {
+      onSessionRemoved.accept(session.getId());
+    }
   }
 
   @Override
@@ -295,8 +331,11 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     snapshotSessionCount = snapshotSessionsList.size();
   }
 
-  private OutboundQueue configureNewOutboundQueue() {
-    OutboundQueue outboundQueue = OutboundQueueImpl.newInstance();
+  private OutboundQueue configureNewOutboundQueue(Session session) {
+    var outboundQueue = OutboundQueueImpl.newInstance();
+    if (monitoring) {
+      outboundQueue.enableMonitoring(history, session.getId(), String.valueOf(session.getTransportType()));
+    }
     outboundQueue.configureMaxSize(outboundQueueSize);
     outboundQueue.configureOutboundQueuePolicy(outboundQueuePolicy);
     return outboundQueue;
@@ -305,7 +344,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private void configureSession(Session session) {
     session.configureSessionManager(this);
     session.configureMaxInboundQueueSize(inboundQueueSize);
-    session.configureOutboundQueue(configureNewOutboundQueue());
+    session.configureOutboundQueue(configureNewOutboundQueue(session));
     session.configureSlowConsumingInboundQueueWarningThreshold(slowConsumingInboundQueueWarningThreshold);
     session.configureSlowConsumingOutboundQueueWarningThreshold(slowConsumingOutboundQueueWarningThreshold);
     session.configureConnectionFilter(connectionFilter);

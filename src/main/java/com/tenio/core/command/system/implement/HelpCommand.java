@@ -51,7 +51,7 @@ public final class HelpCommand extends AbstractSystemCommandHandler {
   @Override
   public void execute(List<String> arguments) {
     var commandManager = getCommandManager();
-    var commands = new ArrayList<>();
+    var commands = new ArrayList<String>();
     if (arguments.isEmpty()) {
       commandManager.getHandlers()
           .forEach((key, command) -> commands.add(createCommandDetails(command)));
@@ -67,6 +67,6 @@ public final class HelpCommand extends AbstractSystemCommandHandler {
         }
       }
     }
-    commands.forEach(System.out::println);
+    commands.forEach(CommandUtility.INSTANCE::showConsoleMessage);
   }
 }

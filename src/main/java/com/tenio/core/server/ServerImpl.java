@@ -24,6 +24,11 @@ THE SOFTWARE.
 
 package com.tenio.core.server;
 
+import java.util.Locale;
+import com.tenio.core.network.entity.session.manager.SessionManagerImpl;
+import com.tenio.core.admin.ServerInspection;
+import com.tenio.core.admin.AdminWindow;
+import com.tenio.core.admin.OperationalHistory;
 import com.tenio.common.configuration.Configuration;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.common.utility.TimeUtility;
@@ -70,15 +75,8 @@ import com.tenio.core.scheduler.job.MaintenanceJob;
 import com.tenio.core.server.core.ZeroProcessor;
 import com.tenio.core.server.core.ZeroProcessorImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
-import com.tenio.core.utility.CommandUtility;
-import java.io.IOError;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.jline.reader.EndOfFileException;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.reader.UserInterruptException;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
 
 /**
  * This class manages the workflow of the current server. The instruction's orders are important,
@@ -97,6 +95,13 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final DatagramChannelManager datagramChannelManager;
   private final ZeroProcessor zeroProcessor;
   private ScheduledJobs scheduledJobs;
+  private ServerInspection inspection;
+  private AdminWindow adminWindow;
+
+  @Override
+  public ServerInspection getInspection() {
+    return inspection;
+  }
   private final Network network;
   private final ServerApi serverApi;
   private final AtomicBoolean stopping;
@@ -199,6 +204,23 @@ public final class ServerImpl extends SystemLogger implements Server {
     setupEntitiesManagementService(configuration);
     setupNetworkService(configuration, bootstrapHandler);
     setupInternalProcessorService(configuration, bootstrapHandler);
+    var profiles = bootstrapHandler.getActiveProfiles();
+    if (clientCommandManager != null && clientCommandManager.hasLimits()
+        && network.getSessionManager() instanceof SessionManagerImpl sessions) {
+      sessions.onSessionRemoved(clientCommandManager::releaseSession);
+    }
+    boolean historyEnabled = profiles != null && profiles.contains("history");
+    boolean windowEnabled = configuration.getBoolean(CoreConfigurationType.ENABLE_TERMINAL_COMMAND)
+        && !java.awt.GraphicsEnvironment.isHeadless();
+    if (windowEnabled || historyEnabled) {
+      inspection = new ServerInspection(this, network);
+      if (network.getSessionManager() instanceof SessionManagerImpl sessions) {
+        sessions.enableQueueMonitoring();
+        if (historyEnabled) {
+          sessions.setOperationalHistory(new OperationalHistory(1024));
+        }
+      }
+    }
     setupScheduledJobs(bootstrapHandler);
 
     initializeServices();
@@ -220,8 +242,16 @@ public final class ServerImpl extends SystemLogger implements Server {
     // emit "server initialization" event
     eventManager.emit(ServerEvent.SERVER_INITIALIZATION, serverName);
 
-    if (configuration.getBoolean(CoreConfigurationType.ENABLE_TERMINAL_COMMAND)) {
-      startConsole(bootstrapHandler.getSystemCommandManager());
+    if (windowEnabled) {
+      adminWindow = new AdminWindow("TenIO | " + serverName,
+          inspection::query, (command, output) -> {
+            var manager = bootstrapHandler.getSystemCommandManager();
+            if (manager == null || manager.getHandler(command.split(" ", 2)[0].toLowerCase(Locale.ROOT)) == null) {
+              return false;
+            }
+            manager.invoke(command, output);
+            return true;
+          });
     }
 
     startLifecycleThread();
@@ -371,50 +401,6 @@ public final class ServerImpl extends SystemLogger implements Server {
     }
   }
 
-  private void startConsole(SystemCommandManager systemCommandManager) {
-    Terminal terminal = null;
-    try {
-      terminal = TerminalBuilder.builder().jna(true).build();
-    } catch (Exception exception) {
-      try {
-        // fallback to a dumb jLine terminal
-        terminal = TerminalBuilder.builder().dumb(true).build();
-      } catch (Exception exception1) {
-        // when dumb is true, build() never throws, ignore it
-      }
-    }
-    var consoleLineReader = LineReaderBuilder.builder().terminal(terminal).build();
-
-    String input = null;
-    boolean isLastInterrupted = false;
-    while (true) {
-      try {
-        input = consoleLineReader.readLine("$ ");
-      } catch (UserInterruptException exception) {
-        if (!isLastInterrupted) {
-          isLastInterrupted = true;
-          CommandUtility.INSTANCE.showConsoleMessage("Press Ctrl-C again to shutdown.");
-          continue;
-        } else {
-          Runtime.getRuntime().exit(0);
-        }
-      } catch (EndOfFileException exception) {
-        CommandUtility.INSTANCE.showConsoleMessage("EOF detected.");
-        continue;
-      } catch (IOError exception) {
-        CommandUtility.INSTANCE.showConsoleMessage("An IO error occurred.");
-        continue;
-      }
-
-      isLastInterrupted = false;
-      try {
-        systemCommandManager.invoke(input);
-      } catch (Exception exception) {
-        CommandUtility.INSTANCE.showConsoleMessage("Exception > " + exception.getMessage());
-      }
-    }
-  }
-
   @Override
   public void shutdown() {
     if (!stopping.compareAndSet(false, true)) {
@@ -454,10 +440,17 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   private void shutdownServices() {
+    if (adminWindow != null) {
+      adminWindow.close();
+    }
     if (scheduledJobs != null) {
       scheduledJobs.shutdown();
     }
     network.shutdown();
+    var sessions = network.getSessionManager();
+    if (sessions != null && sessions.getOperationalHistory() != null) {
+      sessions.getOperationalHistory().close();
+    }
     zeroProcessor.shutdown();
     if (systemCommandManager != null) {
       systemCommandManager.shutdown();

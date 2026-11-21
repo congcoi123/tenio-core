@@ -152,3 +152,12 @@
 - Updated dependencies and expanded regression tests for profiles, dependency injection, sessions, connection replacement, and cleanup.
 - Corrected TCP framing to decode the fully accumulated body and treat 16-bit frame lengths as unsigned. Added regression coverage for fragmented/coalesced frames and large normal-sized frames.
 - Isolated launcher-profile test logging so diagnostic assertions are independent of suite logging configuration.
+
+## Unreleased
+
+- Added opt-in per-command token buckets with player/session isolation and rejection counters.
+- Added read-only session, room, traffic, and outbound-pressure inspection with optional per-queue metrics.
+- Replaced terminal stdin with a local desktop admin window using the system look and feel.
+- Added optional instance-local operational history with bounded asynchronous export.
+- Accepted an explicitly empty XML profile for deployments using unrestricted components.
+- Removed the unused JLine dependencies and the unfilled security policy template.

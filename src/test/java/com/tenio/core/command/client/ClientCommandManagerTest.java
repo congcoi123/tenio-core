@@ -137,4 +137,20 @@ class ClientCommandManagerTest {
     assertNotNull(manager.getHandlers());
     assertTrue(manager.getHandlers().isEmpty());
   }
+  @Test
+  void onePlayersBurstDoesNotConsumeAnotherPlayersAllowance() {
+    var first = mock(Player.class);
+    var second = mock(Player.class);
+    org.mockito.Mockito.when(first.getIdentity()).thenReturn("one");
+    org.mockito.Mockito.when(second.getIdentity()).thenReturn("two");
+    var message = mock(DataCollection.class);
+    var handler = stubHandler();
+    manager.registerCommand((short) 1, handler);
+    manager.getLimits().configure((short) 1, 1, 1);
+    manager.invoke((short) 1, first, message);
+    manager.invoke((short) 1, first, message);
+    manager.invoke((short) 1, second, message);
+    assertEquals(new CommandLimits.Counts(2, 1), manager.getLimits().counts().get((short) 1));
+  }
+
 }

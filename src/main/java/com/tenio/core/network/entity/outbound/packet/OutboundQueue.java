@@ -95,6 +95,13 @@ public interface OutboundQueue {
    */
   boolean isSnapshotFull();
 
+  record Statistics(int depth, int capacity, int highWater, long fullDrops, long policyDrops,
+                    long pressureAgeMillis) {}
+
+  default Statistics statistics() {
+    return new Statistics(getSnapshotSize(), -1, -1, -1, -1, 0);
+  }
+
   /**
    * Determines whether the queue is full.
    * This method is costly, use with caution.
