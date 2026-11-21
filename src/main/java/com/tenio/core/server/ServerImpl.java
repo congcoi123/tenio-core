@@ -33,6 +33,8 @@ import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.bootstrap.injector.ProfileSelection;
 import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.system.SystemCommandManager;
+import com.tenio.core.configuration.ConfigurationSource;
+import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.configuration.DefaultCoreConfiguration;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.define.CoreConfigurationType;
@@ -130,6 +132,12 @@ public final class ServerImpl extends SystemLogger implements Server {
 
   @Override
   public void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception {
+    start(bootstrapHandler, params, null);
+  }
+
+  @Override
+  public void start(BootstrapHandler bootstrapHandler, String[] params, ConfigurationSource source)
+      throws Exception {
     // record the started time
     startedTime = TimeUtility.currentTimeMillis();
 
@@ -147,7 +155,11 @@ public final class ServerImpl extends SystemLogger implements Server {
     var file = params == null ? null : (params.length == 0 ? null : params[0]);
 
     // load the file
-    configuration.load(file);
+    if (source != null && configuration instanceof CoreConfiguration core) {
+      core.loadPrepared(file, source);
+    } else {
+      configuration.load(file);
+    }
 
     // verify profile
     var selectedProfiles = bootstrapHandler.getActiveProfiles();

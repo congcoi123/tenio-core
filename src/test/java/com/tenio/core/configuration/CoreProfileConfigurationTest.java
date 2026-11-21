@@ -152,6 +152,19 @@ class CoreProfileConfigurationTest {
     assertEquals(Set.of("world"), selectedProfiles(configuration));
   }
 
+  @Test
+  void startupUsesTheSelectedXmlEvenIfTheExternalFileDisappears() throws Exception {
+    Path file = writeXml("<Properties><Property name='profile'>world</Property></Properties>");
+    var source = ConfigurationSource.read(file.toString(), getClass().getClassLoader());
+    assertEquals(Set.of("world"), source.profiles());
+    Files.delete(file);
+
+    var configuration = new TrackingConfiguration();
+    configuration.loadPrepared(file.toString(), source);
+    assertEquals(Set.of("world"), selectedProfiles(configuration));
+    assertTrue(configuration.extended);
+  }
+
   private Path writeXml(String body) throws Exception {
     Path file = Files.createTempFile(directory, "configuration-", ".xml");
     return Files.writeString(file, "<?xml version=\"1.0\"?><Server>" + body + "</Server>");

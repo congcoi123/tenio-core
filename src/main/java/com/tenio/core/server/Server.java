@@ -29,6 +29,7 @@ import com.tenio.core.api.ServerApi;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.bootstrap.Bootstrapper;
 import com.tenio.core.command.client.ClientCommandManager;
+import com.tenio.core.configuration.ConfigurationSource;
 import com.tenio.core.entity.manager.ChannelManager;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
@@ -54,6 +55,12 @@ public interface Server {
    * @see Bootstrapper
    */
   void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception;
+
+  /** Starts with XML already read by the application launcher. */
+  default void start(BootstrapHandler bootstrapHandler, String[] params, ConfigurationSource source)
+      throws Exception {
+    start(bootstrapHandler, params);
+  }
 
   /**
    * Shuts down the server and closes all services.
