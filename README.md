@@ -144,7 +144,9 @@ Enter a command in the field at the bottom and press Enter. Up recalls older com
 moves forward or restores the text you were typing. `clear` clears the output and closing the window
 leaves the server running.
 
-![TenIO admin console showing server statistics and command output](assets/tenio-admin-console.jpg)
+![TenIO admin console showing server statistics and command output 1](assets/tenio-core-admin-console-1.png)
+![TenIO admin console showing server statistics and command output 2](assets/tenio-core-admin-console-2.png)
+![TenIO admin console showing server statistics and command output 3](assets/tenio-core-admin-console-3.png)
 
 | Command | Usage |
 | --- | --- |

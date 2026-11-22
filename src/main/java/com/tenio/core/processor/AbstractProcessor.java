@@ -183,9 +183,6 @@ public abstract class AbstractProcessor extends AbstractManager implements Proce
   }
 
   private void destroyProcessor() {
-    if (isInfoEnabled()) {
-      info("STOPPING PROCESSOR", buildgen(getName(), " (", executorSize, ")"));
-    }
     destroy();
     if (isInfoEnabled()) {
       info("DESTROYED PROCESSOR", buildgen(getName(), " (", executorSize, ")"));
