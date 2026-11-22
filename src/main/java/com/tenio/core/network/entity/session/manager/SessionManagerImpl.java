@@ -336,8 +336,7 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     var operationalHistory = history;
     boolean diagnostics = monitoring;
     if (diagnostics || operationalHistory != null) {
-      outboundQueue.enableMonitoring(diagnostics, operationalHistory, session.getId(),
-          String.valueOf(session.getTransportType()));
+      outboundQueue.enableMonitoring(diagnostics, operationalHistory, session.getId(), String.valueOf(session.getTransportType()));
     }
     outboundQueue.configureMaxSize(outboundQueueSize);
     outboundQueue.configureOutboundQueuePolicy(outboundQueuePolicy);

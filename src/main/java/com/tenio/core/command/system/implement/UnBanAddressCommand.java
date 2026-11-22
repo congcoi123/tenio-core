@@ -44,6 +44,7 @@ import java.util.function.Supplier;
     usage = {"<ip-address>"},
     description = "Removes an IP address from the ban list")
 public final class UnBanAddressCommand extends AbstractSystemCommandHandler {
+
   private final Supplier<ConnectionFilter> filter;
 
   public UnBanAddressCommand() {

@@ -47,60 +47,6 @@ public final class OutboundQueueImpl implements OutboundQueue {
   private int maxSize;
   private Monitor monitor;
 
-  private static final class Monitor {
-    int highWater;
-    long fullDrops;
-    long policyDrops;
-    boolean pressured;
-    long pressureSince;
-    final boolean diagnostics;
-    final OperationalHistory history;
-    final long id;
-    final String transport;
-
-    Monitor(boolean diagnostics, OperationalHistory history, long id, String transport) {
-      this.diagnostics = diagnostics;
-      this.history = history;
-      this.id = id;
-      this.transport = transport;
-    }
-  }
-
-  /** Configure before publishing the session. */
-  public void enableMonitoring(OperationalHistory history, long id, String transport) {
-    enableMonitoring(true, history, id, transport);
-  }
-
-  /** Enables diagnostics or history recording before the queue is published. */
-  public void enableMonitoring(boolean diagnostics, OperationalHistory history, long id, String transport) {
-    monitor = diagnostics || history != null ? new Monitor(diagnostics, history, id, transport) : null;
-  }
-
-  @Override
-  public Statistics statistics() {
-    synchronized (queue) {
-      if (monitor == null || !monitor.diagnostics) {
-        return new Statistics(snapshotSize, maxSize, -1, -1, -1, 0);
-      }
-      long age = monitor.pressured ? (System.nanoTime() - monitor.pressureSince) / 1_000_000 : 0;
-      return new Statistics(snapshotSize, maxSize, monitor.highWater, monitor.fullDrops, monitor.policyDrops, age);
-    }
-  }
-
-  private void updatePressure() {
-    boolean next = maxSize > 0 && snapshotSize * 100L >= maxSize * 80L;
-    if (next != monitor.pressured) {
-      monitor.pressured = next;
-      if (monitor.diagnostics) {
-        monitor.pressureSince = next ? System.nanoTime() : 0;
-      }
-      if (monitor.history != null) {
-        monitor.history.record(monitor.id, monitor.transport, next ? OperationalHistory.Kind.PRESSURE_START
-            : OperationalHistory.Kind.PRESSURE_END, "outbound queue 80% threshold");
-      }
-    }
-  }
-
   /**
    * Constructor.
    */
@@ -184,6 +130,11 @@ public final class OutboundQueueImpl implements OutboundQueue {
   }
 
   @Override
+  public void enableMonitoring(boolean diagnostics, OperationalHistory history, long id, String transport) {
+    monitor = diagnostics || history != null ? new Monitor(diagnostics, history, id, transport) : null;
+  }
+
+  @Override
   public void configureOutboundQueuePolicy(OutboundQueuePolicy outboundQueuePolicy) {
     this.outboundQueuePolicy = outboundQueuePolicy;
   }
@@ -234,6 +185,51 @@ public final class OutboundQueueImpl implements OutboundQueue {
       snapshotSize = 0;
       if (monitor != null) {
         updatePressure();
+      }
+    }
+  }
+
+  private static final class Monitor {
+
+    int highWater;
+    long fullDrops;
+    long policyDrops;
+    boolean pressured;
+    long pressureSince;
+    final boolean diagnostics;
+    final OperationalHistory history;
+    final long id;
+    final String transport;
+
+    Monitor(boolean diagnostics, OperationalHistory history, long id, String transport) {
+      this.diagnostics = diagnostics;
+      this.history = history;
+      this.id = id;
+      this.transport = transport;
+    }
+  }
+
+  @Override
+  public Statistics statistics() {
+    synchronized (queue) {
+      if (monitor == null || !monitor.diagnostics) {
+        return new Statistics(snapshotSize, maxSize, -1, -1, -1, 0);
+      }
+      long age = monitor.pressured ? (System.nanoTime() - monitor.pressureSince) / 1_000_000 : 0;
+      return new Statistics(snapshotSize, maxSize, monitor.highWater, monitor.fullDrops, monitor.policyDrops, age);
+    }
+  }
+
+  private void updatePressure() {
+    boolean next = maxSize > 0 && snapshotSize * 100L >= maxSize * 80L;
+    if (next != monitor.pressured) {
+      monitor.pressured = next;
+      if (monitor.diagnostics) {
+        monitor.pressureSince = next ? System.nanoTime() : 0;
+      }
+      if (monitor.history != null) {
+        monitor.history.record(monitor.id, monitor.transport, next ? OperationalHistory.Kind.PRESSURE_START
+                : OperationalHistory.Kind.PRESSURE_END, "outbound queue 80% threshold");
       }
     }
   }

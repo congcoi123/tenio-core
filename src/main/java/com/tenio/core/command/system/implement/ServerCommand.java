@@ -44,6 +44,7 @@ import java.util.function.IntConsumer;
     usage = {"stop", "restart"},
     description = "Stops the server or requests a restart from its supervisor")
 public final class ServerCommand extends AbstractSystemCommandHandler {
+
   private static final int RESTART_EXIT_CODE = 75;
   private final AtomicBoolean stopping = new AtomicBoolean();
   private final Runnable shutdown;
