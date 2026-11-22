@@ -114,6 +114,26 @@ public final class CoreConstant {
       ".controller";
 
   /**
+   * Conventional baseline label used by the bundled configuration.
+   */
+  public static final String DEFAULT_PROFILE = "default";
+
+  /**
+   * Enables scheduled metrics reporting and JVM deadlock checks.
+   */
+  public static final String METRICS_PROFILE = "metrics";
+
+  /**
+   * Enables operational history recording.
+   */
+  public static final String HISTORY_PROFILE = "history";
+
+  /**
+   * Enables desktop administration and system command registration.
+   */
+  public static final String MONITOR_PROFILE = "monitor";
+
+  /**
    * Default key for UDP convey ID in packet data.
    * Used for UDP packet identification and routing.
    */

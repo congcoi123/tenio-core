@@ -91,9 +91,15 @@ public final class ClientCommandManager extends SystemLogger {
 
     // gets command data
     var binding = command.getClass().getAnnotation(ClientCommand.class);
-    if (binding != null && (binding.requestsPerSecond() != 0 || binding.burst() != 0)) {
-      getLimits().configure(code, binding.requestsPerSecond(),
-          binding.burst() == 0 ? binding.requestsPerSecond() : binding.burst());
+    if (binding != null) {
+      int rate = binding.requestsPerSecond();
+      int burst = binding.burst();
+      if (rate < 0 || burst < 0) {
+        throw new IllegalArgumentException("Command rate and burst cannot be negative");
+      }
+      if (rate > 0) {
+        getLimits().configure(code, rate, burst == 0 ? rate : burst);
+      }
     }
     commands.put(code, command);
   }

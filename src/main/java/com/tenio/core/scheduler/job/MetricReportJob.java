@@ -26,6 +26,7 @@ package com.tenio.core.scheduler.job;
 
 import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.annotation.Scheduled;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.scheduler.task.CcuReportTask;
@@ -37,7 +38,7 @@ import com.tenio.core.server.ServerImpl;
 /**
  * Collects server metrics on the injector-owned scheduler.
  */
-@Component(profile = "metrics")
+@Component(profile = CoreConstant.METRICS_PROFILE)
 public final class MetricReportJob {
 
     private static final int INITIAL_DELAY_SECONDS = 60;

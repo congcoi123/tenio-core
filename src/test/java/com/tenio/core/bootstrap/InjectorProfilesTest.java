@@ -279,7 +279,7 @@ class InjectorProfilesTest {
 
   @Test
   void disjointCommandProfilesReuseKeysAndInjectSelectedHandlers() throws Exception {
-    scan(CommandFixtures.class, "world");
+    scan(CommandFixtures.class, "world", "monitor");
     var client = assertInstanceOf(CommandFixtures.WorldClient.class,
         injector.getClientCommandManager().getHandler((short) 42));
     var system = assertInstanceOf(CommandFixtures.WorldSystem.class,
@@ -297,8 +297,8 @@ class InjectorProfilesTest {
 
   @Test
   void profileChangesReplaceCommandHandlersAndClearInactiveRegistrations() throws Exception {
-    scan(CommandFixtures.class, "world");
-    scan(CommandFixtures.class, "game");
+    scan(CommandFixtures.class, "world", "monitor");
+    scan(CommandFixtures.class, "game", "monitor");
 
     var client = assertInstanceOf(CommandFixtures.GameClient.class,
         injector.getClientCommandManager().getHandler((short) 42));
@@ -309,10 +309,13 @@ class InjectorProfilesTest {
     assertEquals(1, injector.getClientCommandManager().getHandlers().size());
     assertEquals(1, injector.getSystemCommandManager().getHandlers().size());
 
-    scan(CommandFixtures.class, "unrelated");
-    assertTrue(injector.getClientCommandManager().getHandlers().isEmpty());
-    assertTrue(injector.getSystemCommandManager().getHandlers().isEmpty());
-    assertTrue(injector.getSystemCommandManager().getAnnotations().isEmpty());
+    var previousManager = injector.getSystemCommandManager();
+    scan(CommandFixtures.class, "world");
+    assertEquals(1, injector.getClientCommandManager().getHandlers().size());
+    assertNull(injector.getSystemCommandManager());
+    assertTrue(previousManager.getHandlers().isEmpty());
+    assertTrue(previousManager.getAnnotations().isEmpty());
+    assertEquals(3, CommandFixtures.worldConstructions);
   }
 
   private void scan(Class<?> fixtures, String... profiles) throws Exception {

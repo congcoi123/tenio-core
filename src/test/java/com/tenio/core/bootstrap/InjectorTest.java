@@ -86,13 +86,13 @@ class InjectorTest {
   }
 
   @Test
-  @DisplayName("getClassesMap, getClassBeansMap, getServletBeansMap, getSystemCommandManager, getClientCommandManager should not be null")
+  @DisplayName("getClassesMap, getClassBeansMap, Registries exist before scanning and the system command manager is opt-in")
   void testGettersNotNull() {
     Injector injector = new Injector();
     assertNotNull(injector.getClassesMap());
     assertNotNull(injector.getClassBeansMap());
     assertNotNull(injector.getServletBeansMap());
-    assertNotNull(injector.getSystemCommandManager());
+    assertNull(injector.getSystemCommandManager());
     assertNotNull(injector.getClientCommandManager());
   }
 
@@ -238,6 +238,7 @@ class InjectorTest {
   @Test
   @DisplayName("scanPackages with @SystemCommand class registers it in system command manager")
   void scanPackageWithSystemCommandRegistersCommand() throws Exception {
+    injector.setProfiles(Set.of("monitor"));
     injector.scanPackages(null, "com.tenio.core.bootstrap.command");
     assertNotNull(injector.getSystemCommandManager().getHandler("test-sys"));
   }
@@ -252,6 +253,7 @@ class InjectorTest {
   @Test
   @DisplayName("scanPackages with @SystemCommand class stores it in class beans map")
   void scanPackageWithSystemCommandAddsToBeansMap() throws Exception {
+    injector.setProfiles(Set.of("monitor"));
     injector.scanPackages(null, "com.tenio.core.bootstrap.command");
     boolean found = injector.getClassBeansMap().entrySet().stream()
         .anyMatch(e -> e.getValue() instanceof TestSystemCommandHandler);
@@ -448,7 +450,7 @@ class InjectorTest {
         () -> assertTrue(injector.getClassesMap().isEmpty()),
         () -> assertTrue(injector.getClassBeansMap().isEmpty()),
         () -> assertTrue(injector.getServletBeansMap().isEmpty()),
-        () -> assertNull(injector.getSystemCommandManager().getHandler("test-sys")),
+        () -> assertNull(injector.getSystemCommandManager()),
         () -> assertNull(injector.getClientCommandManager().getHandler((short) 42)),
         () -> assertNull(injector.getBean(TestInterfaceA.class)),
         () -> assertNull(injector.getBean(BootstrapComponentTwo.class)));
@@ -466,7 +468,7 @@ class InjectorTest {
         () -> assertTrue(injector.getClassesMap().isEmpty()),
         () -> assertTrue(injector.getClassBeansMap().isEmpty()),
         () -> assertTrue(injector.getServletBeansMap().isEmpty()),
-        () -> assertNull(injector.getSystemCommandManager().getHandler("test-sys")),
+        () -> assertNull(injector.getSystemCommandManager()),
         () -> assertNull(injector.getClientCommandManager().getHandler((short) 42)));
   }
   @Test

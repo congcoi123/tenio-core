@@ -27,7 +27,6 @@ package com.tenio.core.admin;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
@@ -93,11 +92,9 @@ class ServerInspectionTest {
     var session = mock(Session.class);
     var queue = mock(OutboundQueue.class);
     var room = mock(Room.class);
-    var commands = new ClientCommandManager();
     try (var history = new OperationalHistory(4)) {
       when(network.getSessionManager()).thenReturn(sessions);
       when(server.getRoomManager()).thenReturn(rooms);
-      when(server.getClientCommandManager()).thenReturn(commands);
       when(rooms.getRoomById(42)).thenReturn(room);
       when(room.getOwner()).thenReturn(Optional.empty());
       when(room.getSnapshotPlayersList()).thenReturn(List.of());
@@ -107,8 +104,7 @@ class ServerInspectionTest {
       when(session.fetchOutboundQueue()).thenReturn(queue);
       when(queue.statistics()).thenReturn(new OutboundQueue.Statistics(8, 10, 8, 0, 0, 12));
       when(sessions.getOperationalHistory()).thenReturn(history);
-      commands.getLimits().configure((short) 4, 1, 1);
-      history.record(7, "TCP", OperationalHistory.Kind.DISCONNECT, "idle");
+      history.record(7, "TCP", OperationalHistory.Kind.DISCONNECT, "EXCEPTION");
       history.record(8, "TCP", OperationalHistory.Kind.RECONNECT, "resumed");
 
       var inspection = new ServerInspection(server, network);
@@ -119,9 +115,12 @@ class ServerInspectionTest {
       assertTrue(inspection.query("ROOM  42").labels().contains("Room ID"));
       assertTrue(inspection.query("session 7").labels().contains("Outbound depth"));
       assertTrue(inspection.query("network pressure").labels().contains("Session 7"));
-      assertTrue(inspection.query("limits").labels().contains("4"));
-      assertEquals(3, inspection.query("history").labels().size());
-      assertEquals(2, inspection.query("history 7").labels().size());
+      assertEquals(2, inspection.query("history").labels().size());
+      var result = inspection.query("history 7");
+      assertTrue(result.labels().getFirst().matches(
+          "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3} (Z|[+-]\\d{2}:\\d{2}) \\| Session #7"));
+      assertEquals(List.of("Disconnected (TCP) — Connection error"), result.values());
+      assertEquals(List.of("No events recorded for session #99."), inspection.query("history 99").values());
     }
   }
 

@@ -53,4 +53,19 @@ class OperationalHistoryTest {
       release.countDown();
     }
   }
+  @Test
+  void fileModeDrainsEventsAndKeepsNoSnapshot(@org.junit.jupiter.api.io.TempDir java.nio.file.Path directory)
+      throws Exception {
+    var history = OperationalHistory.toFile(directory);
+    try (history) {
+      history.record(8, "TCP", OperationalHistory.Kind.DISCONNECT, "EXCEPTION");
+      history.record(9, "TCP", OperationalHistory.Kind.RECONNECT, "resumed");
+      assertTrue(history.snapshot().isEmpty());
+    }
+    var rows = java.nio.file.Files.readAllLines(history.file());
+    assertEquals(3, rows.size());
+    assertTrue(rows.get(1).endsWith("\t8\tTCP\tDISCONNECT\tEXCEPTION"));
+    assertTrue(rows.get(2).endsWith("\t9\tTCP\tRECONNECT\tresumed"));
+    assertEquals(0, history.droppedExports());
+  }
 }

@@ -33,6 +33,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import com.tenio.common.data.DataCollection;
+import com.tenio.core.bootstrap.annotation.ClientCommand;
 import com.tenio.core.entity.Player;
 import com.tenio.core.exception.AddedDuplicatedClientCommandException;
 import org.junit.jupiter.api.BeforeEach;
@@ -137,6 +138,43 @@ class ClientCommandManagerTest {
     assertNotNull(manager.getHandlers());
     assertTrue(manager.getHandlers().isEmpty());
   }
+  @Test
+  void omittedRateLeavesCommandUnrestrictedEvenWithAnExplicitBurst() {
+    var handler = new BurstOnlyCommand();
+    var player = mock(Player.class);
+    manager.registerCommand((short) 10, handler);
+    manager.invoke((short) 10, player, null);
+    manager.invoke((short) 10, player, null);
+
+    assertEquals(2, handler.invocations);
+    assertTrue(manager.limitCounts().isEmpty());
+    org.mockito.Mockito.verifyNoInteractions(player);
+  }
+
+  @Test
+  void omittedBurstUsesTheRateForBucketCapacity() {
+    manager.registerCommand((short) 11, new RateOnlyCommand());
+    assertTrue(manager.getLimits().allow((short) 11, "player"));
+    assertEquals(new CommandLimits.Counts(1, 0), manager.limitCounts().get((short) 11));
+  }
+
+  @ClientCommand(value = 10, burst = 2)
+  private static final class BurstOnlyCommand extends AbstractClientCommandHandler<Player, DataCollection> {
+    private int invocations;
+
+    @Override
+    public void execute(Player player, DataCollection data) {
+      invocations++;
+    }
+  }
+
+  @ClientCommand(value = 11, requestsPerSecond = 2)
+  private static final class RateOnlyCommand extends AbstractClientCommandHandler<Player, DataCollection> {
+    @Override
+    public void execute(Player player, DataCollection data) {
+    }
+  }
+
   @Test
   void onePlayersBurstDoesNotConsumeAnotherPlayersAllowance() {
     var first = mock(Player.class);

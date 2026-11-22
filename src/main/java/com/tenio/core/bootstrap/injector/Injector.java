@@ -44,6 +44,7 @@ import com.tenio.core.command.client.AbstractClientCommandHandler;
 import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.system.AbstractSystemCommandHandler;
 import com.tenio.core.command.system.SystemCommandManager;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.scheduler.ScheduledJobs;
 import com.tenio.core.entity.Player;
 import com.tenio.core.exception.DuplicatedBeanCreationException;
@@ -123,7 +124,7 @@ public final class Injector extends SystemLogger {
   private final Map<String, HttpServlet> servletBeansMap;
 
   /** The object manages all supported system commands. */
-  private final SystemCommandManager systemCommandManager;
+  private SystemCommandManager systemCommandManager;
 
   /** The object manages all scheduled jobs. */
   private final ScheduledJobs scheduledJobs;
@@ -141,7 +142,6 @@ public final class Injector extends SystemLogger {
     manualClassesSet = new HashSet<>();
     classBeansMap = new HashMap<>();
     servletBeansMap = new HashMap<>();
-    systemCommandManager = new SystemCommandManager();
     clientCommandManager = new ClientCommandManager();
     scheduledJobs = new ScheduledJobs();
     profiles = new ProfileSelection(Set.of());
@@ -193,6 +193,11 @@ public final class Injector extends SystemLogger {
           InvocationTargetException,
           NoSuchMethodException,
           DuplicatedBeanCreationException {
+    boolean monitoring = profiles.activeProfiles().contains(CoreConstant.MONITOR_PROFILE);
+    if (monitoring) {
+      systemCommandManager = new SystemCommandManager();
+    }
+
     var allPackageNames = new HashSet<String>();
 
     if (entryClass != null) {
@@ -206,6 +211,7 @@ public final class Injector extends SystemLogger {
     // fetches all classes that are in the same package as the root one
     var allClasses = ClassLoaderUtility.getClasses(allPackageNames).stream()
             .filter(profiles::matches)
+            .filter(clazz -> monitoring || !clazz.isAnnotationPresent(SystemCommand.class))
             .filter(clazz -> !Modifier.isAbstract(clazz.getModifiers()) && !clazz.isInterface())
             .sorted(Comparator.comparing(Class::getName))
             .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -274,7 +280,8 @@ public final class Injector extends SystemLogger {
         if (classBeansMap.containsKey(beanClass)) {
           throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
         }
-        var bean = clazz.getDeclaredConstructor().newInstance();
+        var bean = clazz == SystemCommandManager.class
+            ? systemCommandManager : clazz.getDeclaredConstructor().newInstance();
         classBeansMap.put(beanClass, bean);
 
         // create beans manually
@@ -804,7 +811,11 @@ public final class Injector extends SystemLogger {
     classBeansMap.clear();
     manualClassesSet.clear();
     servletBeansMap.clear();
-    systemCommandManager.clear();
+    if (systemCommandManager != null) {
+      systemCommandManager.clear();
+      systemCommandManager.shutdown();
+      systemCommandManager = null;
+    }
     clientCommandManager.clear();
     scheduledJobs.shutdown();
   }

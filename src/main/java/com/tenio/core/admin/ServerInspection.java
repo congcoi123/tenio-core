@@ -24,6 +24,9 @@ THE SOFTWARE.
 
 package com.tenio.core.admin;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Map;
 import com.tenio.core.entity.Player;
@@ -36,6 +39,8 @@ import java.util.ArrayList;
 /** Read-only views. Only an explicit pressure query scans the session snapshot. */
 public final class ServerInspection {
   private static final int MAX_ROWS = 50;
+  private static final DateTimeFormatter EVENT_TIME =
+      DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss.SSS XXX", Locale.ROOT);
   private final Server server;
   private final Network network;
 
@@ -142,10 +147,12 @@ public final class ServerInspection {
       rows.add("Sessions under pressure", underPressure);
     } else if (input.equals("limits")) {
       var commands = server.getClientCommandManager();
-      if (commands != null) {
-        commands.limitCounts().entrySet().stream().sorted(Map.Entry.comparingByKey())
-            .limit(MAX_ROWS).forEach(e -> rows.add(e.getKey().toString(), e.getValue()));
+      if (commands == null || !commands.hasLimits()) {
+        return InspectionResult.message("Client command limits are disabled.");
       }
+      commands.limitCounts().entrySet().stream().sorted(Map.Entry.comparingByKey())
+          .limit(MAX_ROWS).forEach(e -> rows.add("Command " + e.getKey(),
+              e.getValue().accepted() + " accepted, " + e.getValue().rejected() + " rejected"));
     } else if (words[0].equals("history")) {
       if (words.length > 2) {
         return InspectionResult.message("Usage: history [id]");
@@ -158,13 +165,36 @@ public final class ServerInspection {
       }
       var history = sessions.getOperationalHistory();
       if (history == null) {
-        return InspectionResult.message("History is disabled. Add history to the configuration profile (for example, default,history) and restart TenIO.");
+        return InspectionResult.message("History is disabled. Add history to the configuration profile (for example, monitor,history) and restart TenIO.");
       }
-      rows.add("Dropped exports", history.droppedExports());
-      history.snapshot().reversed().stream()
-          .filter(e -> sessionId == null || sessionId == e.sessionId()).limit(MAX_ROWS)
-          .forEach(e -> rows.add(e.timestamp() + " / " + e.sessionId(),
-              e.transport() + " " + e.kind() + " " + e.reason()));
+      if (history.file() != null) {
+        return InspectionResult.message("History is written to " + history.file().toAbsolutePath());
+      }
+      var events = history.snapshot().reversed().stream()
+          .filter(event -> sessionId == null || sessionId == event.sessionId())
+          .limit(MAX_ROWS).toList();
+      if (events.isEmpty()) {
+        rows.add("History", sessionId == null ? "No events recorded yet."
+            : "No events recorded for session #" + sessionId + ".");
+      }
+      var time = EVENT_TIME.withZone(ZoneId.systemDefault());
+      for (var event : events) {
+        String label = time.format(Instant.ofEpochMilli(event.timestamp())) + " | Session #" + event.sessionId();
+        String description = switch (event.kind()) {
+          case DISCONNECT -> "Disconnected";
+          case RECONNECT -> "Reconnect attempt";
+          case PRESSURE_START -> "Outbound queue under pressure";
+          case PRESSURE_END -> "Outbound queue recovered";
+        };
+        String reason = "EXCEPTION".equals(event.reason()) ? "Connection error"
+            : java.util.Objects.toString(event.reason(), "").replace('_', ' ').toLowerCase(Locale.ROOT);
+        String detail = description + " (" + event.transport() + ")";
+        rows.add(label, reason.isBlank() ? detail : detail + " — " + reason);
+      }
+      long dropped = history.droppedExports();
+      if (dropped > 0) {
+        rows.add("Events lost during export", dropped);
+      }
     } else {
       return InspectionResult.message("Commands: " + AdminCommands.shortcuts());
     }

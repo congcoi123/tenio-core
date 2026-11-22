@@ -14,8 +14,7 @@
 		<Property name="version-code">1</Property>
 		<!-- The current version name of your server in string type -->
 		<Property name="version-name">1.0</Property>
-		<!-- Open the local desktop admin window when a display is available. -->
-		<Property name="enable-terminal-command">false</Property>
+
 	</Properties>
 
 	<Network>

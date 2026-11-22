@@ -28,6 +28,7 @@ import java.util.function.Consumer;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.annotation.Component;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.exception.AddedDuplicatedCommandException;
 import com.tenio.core.utility.CommandUtility;
@@ -48,7 +49,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @since 0.4.0
  */
-@Component
+@Component(profile = CoreConstant.MONITOR_PROFILE)
 public final class SystemCommandManager extends SystemLogger {
 
   private final Map<String, AbstractSystemCommandHandler> commands = new HashMap<>();

@@ -57,6 +57,7 @@ public final class AdminWindow implements AutoCloseable {
   private Timer refresh;
   private JTextArea output;
   private JTextField input;
+  private CommandHistory commandHistory;
   private DefaultTableModel table;
   private Chart chart;
   private boolean busy;
@@ -94,8 +95,9 @@ public final class AdminWindow implements AutoCloseable {
     output = new JTextArea(8, 64);
     output.setEditable(false);
     input = new JTextField();
-    input.setToolTipText("stats, room <id>, session <id>, network pressure, history, limits, clear");
+    input.setToolTipText("Press Up or Down to recall commands");
     input.addActionListener(event -> execute(input.getText().strip(), true));
+    commandHistory = new CommandHistory(input);
     var tabs = new JTabbedPane();
     tabs.addTab("Statistics", new JScrollPane(new JTable(table)));
     tabs.addTab("Players", chart);
@@ -126,6 +128,7 @@ public final class AdminWindow implements AutoCloseable {
       return;
     }
     if (manual && AdminCommands.normalize(command).equals("clear")) {
+      commandHistory.record(command);
       input.setText("");
       output.setText("");
       return;
@@ -139,6 +142,7 @@ public final class AdminWindow implements AutoCloseable {
     }
     busy = true;
     if (manual) {
+      commandHistory.record(command);
       input.setText("");
       append("> " + command);
     }

@@ -24,6 +24,12 @@ THE SOFTWARE.
 
 package com.tenio.core.admin;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Objects;
@@ -37,23 +43,62 @@ import java.util.function.Consumer;
 
 /** Bounded instance-local history. Export callbacks run on a dedicated daemon worker. */
 public final class OperationalHistory implements AutoCloseable {
+  private static final int FILE_BACKLOG = 1024;
   public enum Kind { DISCONNECT, RECONNECT, PRESSURE_START, PRESSURE_END }
   public record Entry(long timestamp, UUID instance, long sessionId, String transport,
                       Kind kind, String reason) {}
 
   private final UUID instance = UUID.randomUUID();
   private final int capacity;
-  private final ArrayDeque<Entry> entries = new ArrayDeque<>();
+  private final ArrayDeque<Entry> entries;
+  private final Path file;
   private final LongAdder lostExports = new LongAdder();
   private ThreadPoolExecutor worker;
   private Consumer<Entry> exporter;
   private boolean closed;
 
   public OperationalHistory(int capacity) {
-    if (capacity < 1) {
+    this(capacity, null);
+  }
+
+  private OperationalHistory(int capacity, Path file) {
+    if (file == null && capacity < 1) {
       throw new IllegalArgumentException("History capacity must be positive");
     }
     this.capacity = capacity;
+    this.file = file;
+    entries = file == null ? new ArrayDeque<>() : null;
+  }
+
+  /** Stores the event stream on disk with a bounded export queue and no in-memory history. */
+  public static OperationalHistory toFile(Path directory) throws IOException {
+    Files.createDirectories(directory);
+    Path path = Files.createTempFile(directory, "tenio-history-", ".tsv");
+    Files.writeString(path, "timestamp\tinstance\tsession\ttransport\tevent\treason\n");
+    var history = new OperationalHistory(0, path);
+    history.enableExport(FILE_BACKLOG, history::appendToFile);
+    return history;
+  }
+
+  /** Returns the archive path in file mode, or null in memory mode. */
+  public Path file() {
+    return file;
+  }
+
+  private void appendToFile(Entry event) {
+    String row = String.join("\t", Instant.ofEpochMilli(event.timestamp()).toString(),
+        event.instance().toString(), Long.toString(event.sessionId()), escape(event.transport()),
+        event.kind().name(), escape(event.reason()));
+    try {
+      Files.writeString(file, row + "\n", StandardOpenOption.APPEND);
+    } catch (IOException failure) {
+      throw new UncheckedIOException(failure);
+    }
+  }
+
+  private static String escape(String value) {
+    return Objects.toString(value, "").replace("\\", "\\\\").replace("\t", "\\t")
+        .replace("\r", "\\r").replace("\n", "\\n");
   }
 
   public synchronized void enableExport(int backlog, Consumer<Entry> sink) {
@@ -70,10 +115,12 @@ public final class OperationalHistory implements AutoCloseable {
       return;
     }
     var entry = new Entry(System.currentTimeMillis(), instance, id, transport, kind, reason);
-    if (entries.size() == capacity) {
-      entries.removeFirst();
+    if (entries != null) {
+      if (entries.size() == capacity) {
+        entries.removeFirst();
+      }
+      entries.addLast(entry);
     }
-    entries.addLast(entry);
     if (worker != null) {
       try {
         worker.execute(() -> {
@@ -81,6 +128,10 @@ public final class OperationalHistory implements AutoCloseable {
             exporter.accept(entry);
           } catch (RuntimeException failure) {
             lostExports.increment();
+            if (file != null && lostExports.sum() == 1) {
+              System.getLogger(OperationalHistory.class.getName())
+                  .log(System.Logger.Level.ERROR, "Writing operational history failed", failure);
+            }
           }
         });
       } catch (RejectedExecutionException full) {
@@ -90,7 +141,7 @@ public final class OperationalHistory implements AutoCloseable {
   }
 
   public synchronized List<Entry> snapshot() {
-    return List.copyOf(entries);
+    return entries == null ? List.of() : List.copyOf(entries);
   }
 
   public long droppedExports() {
@@ -98,11 +149,35 @@ public final class OperationalHistory implements AutoCloseable {
   }
 
   @Override
-  public synchronized void close() {
-    closed = true;
-    if (worker != null) {
-      lostExports.add(worker.shutdownNow().size());
+  public void close() {
+    ThreadPoolExecutor drain;
+    synchronized (this) {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      if (entries != null) {
+        entries.clear();
+        if (worker != null) {
+          lostExports.add(worker.shutdownNow().size());
+        }
+        return;
+      }
+      drain = worker;
+      drain.shutdown();
     }
-    entries.clear();
+    try {
+      if (!drain.awaitTermination(5, TimeUnit.SECONDS)) {
+        lostExports.add(drain.shutdownNow().size());
+      }
+    } catch (InterruptedException interrupted) {
+      lostExports.add(drain.shutdownNow().size());
+      Thread.currentThread().interrupt();
+    }
+    long lost = droppedExports();
+    if (lost > 0) {
+      System.getLogger(OperationalHistory.class.getName()).log(System.Logger.Level.WARNING,
+          "Operational history lost " + lost + " events while exporting to " + file);
+    }
   }
 }

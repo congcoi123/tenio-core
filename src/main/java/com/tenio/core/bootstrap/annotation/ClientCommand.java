@@ -100,9 +100,9 @@ public @interface ClientCommand {
    */
   short value();
 
-  /** Sustained rate per player. Zero leaves the command unrestricted. */
+  /** Sustained requests per second per player. Zero disables limiting. */
   int requestsPerSecond() default 0;
 
-  /** Initial burst allowance. Zero uses the sustained rate. */
+  /** Token bucket capacity. Zero uses the sustained rate when limiting is enabled. */
   int burst() default 0;
 }
