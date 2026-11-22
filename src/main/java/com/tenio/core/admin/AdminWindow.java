@@ -25,11 +25,14 @@ THE SOFTWARE.
 package com.tenio.core.admin;
 
 import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -57,6 +60,7 @@ public final class AdminWindow implements AutoCloseable {
             Thread.ofPlatform().daemon(true).name("tenio-admin-ui-query").factory()
     );
     private JFrame frame;
+    private JDialog fullListDialog;
     private Timer refresh;
     private JTextArea output;
     private JTextField input;
@@ -154,10 +158,11 @@ public final class AdminWindow implements AutoCloseable {
         worker.execute(() -> {
             try {
                 String normalized = AdminCommands.normalize(command);
+                boolean fullHelp = normalized.equals("help all");
                 boolean handled = manual && !AdminCommands.handles(command) && commands != null
                         && commands.execute(command, text -> SwingUtilities.invokeLater(() -> append(text)));
                 if (normalized.equals("help") || !handled) {
-                    var result = query.run(normalized);
+                    var result = fullHelp ? fullHelp() : query.run(normalized);
                     SwingUtilities.invokeLater(() -> {
                         if (closed.get()) {
                             return;
@@ -170,6 +175,9 @@ public final class AdminWindow implements AutoCloseable {
                                     chart.addSample(Integer.parseInt(result.values().get(i).replace(",", "")));
                                 }
                             }
+                        } else if (manual && AdminCommands.opensFullList(normalized)
+                                && !result.labels().equals(List.of("Result"))) {
+                            showFullList(normalized, result);
                         } else if (manual) {
                             for (int i = 0; i < result.labels().size(); i++) {
                                 append(result.labels().get(i) + ": " + result.values().get(i));
@@ -194,6 +202,69 @@ public final class AdminWindow implements AutoCloseable {
                 });
             }
         });
+    }
+
+    private InspectionResult fullHelp() throws Exception {
+        var builtInHelp = query.run("help");
+        var labels = new ArrayList<>(builtInHelp.labels());
+        var values = new ArrayList<>(builtInHelp.values());
+        if (commands != null) {
+            commands.execute("help all", text -> {
+                String[] details = text.split(" - ", 2);
+                labels.add(details[0]);
+                values.add(details.length == 2
+                        ? details[1].lines().map(String::strip).collect(java.util.stream.Collectors.joining(" | "))
+                        : "");
+            });
+        }
+        return new InspectionResult(labels, values);
+    }
+
+    private void showFullList(String command, InspectionResult result) {
+        if (fullListDialog != null) {
+            fullListDialog.dispose();
+        }
+
+        var model = new AbstractTableModel() {
+            @Override
+            public int getRowCount() {
+                return result.labels().size();
+            }
+
+            @Override
+            public int getColumnCount() {
+                return 2;
+            }
+
+            @Override
+            public String getColumnName(int column) {
+                return column == 0 ? "Item" : "Value";
+            }
+
+            @Override
+            public Object getValueAt(int row, int column) {
+                return column == 0 ? result.labels().get(row) : result.values().get(row);
+            }
+        };
+        var results = new JTable(model);
+        results.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        results.getColumnModel().getColumn(0).setPreferredWidth(310);
+        results.getColumnModel().getColumn(1).setPreferredWidth(520);
+        var dialog = new JDialog(frame, "TenIO | " + command, false);
+        fullListDialog = dialog;
+        dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        dialog.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent event) {
+                if (fullListDialog == dialog) {
+                    fullListDialog = null;
+                }
+            }
+        });
+        dialog.add(new JScrollPane(results));
+        dialog.setSize(870, 450);
+        dialog.setLocationRelativeTo(frame);
+        dialog.setVisible(true);
     }
 
     private void append(String text) {

@@ -150,14 +150,14 @@ leaves the server running.
 
 | Command | Usage |
 | --- | --- |
-| `help` | List inspection commands and registered system commands. |
+| `help [all]` | Show inspection commands and preview up to 50 registered system commands. Add `all` for the full table. |
 | `stats` | Refresh the Statistics tab. |
-| `session <id>`, `room <id>` | Inspect one session or room. Session details include inbound full rejections and outbound queue drops by reason. |
-| `network pressure` | List sessions whose inbound or outbound queues are at least 80% full. |
-| `limits` | Show accepted and rejected requests for rate-limited client commands. |
-| `history [id]` | Show recent operational events, optionally for a single session. Requires `history`. |
+| `session <id>`, `room <id> [all]` | Inspect one session or room. Session details include inbound full rejections and outbound queue drops by reason. |
+| `network pressure [all]` | Show queues at least 80% full and totals for both directions. Add `all` for the full table. |
+| `limits [all]` | Show accepted and rejected requests for rate-limited client commands. |
+| `history [id] [all]` | Show recent operational events, optionally for a single session. Requires `history`. |
 | `clear` | Clear the monitor's console output. |
-| `info player`, `info room` | List the first ten players or rooms. |
+| `info player [all]`, `info room [all]` | Preview ten players or rooms, or open the full table. |
 | `unban <ip-address>` | Remove an address from the active connection ban list. |
 | `server stop`, `server restart` | Shut down gracefully. Restart requires `-Dtenio.supervisedRestart=true` and a supervisor configured to relaunch on exit status 75. |
 
@@ -201,6 +201,10 @@ during startup and call `allow(code, playerIdentity)` or `allowSession(code, ses
 Register pre-login rules before the network starts so the server can release session-scoped buckets
 when connections close.
 
+Use `all` to open a scrollable snapshot for a long list. The default console output shows up
+to 50 pressure rows, rate-limit counters, history events, or room members and reports when more
+are available. Try `network pressure all`, `limits all`, `history 7 all`, or `room 42 all`.
+
 ### Operational history
 
 `history` helps answer when a session closed, the recorded reason, whether a reconnect succeeded,
@@ -208,7 +212,7 @@ and when its outbound queue crossed or recovered from the 80% pressure threshold
 
 | Startup configuration | Storage and access |
 | --- | --- |
-| `monitor,history` with a graphical desktop | The newest 1,024 events are kept in memory. Enter `history` or `history 7` to see up to 50 matching events with timestamps in the window's local time zone. |
+| `monitor,history` with a graphical desktop | The newest 1,024 events are kept in memory. Enter `history` or `history 7` to preview up to 50 matching events, or add `all` for the full table, with timestamps in the window's local time zone. |
 | `history` without the window | TenIO writes a new `logs/history/tenio-history-*.tsv` file each run. The file contains UTC timestamps, instance and session IDs, transport, event, and reason. It remains available after shutdown. |
 
 File mode uses a bounded asynchronous write queue and no in-memory event archive. The server drains

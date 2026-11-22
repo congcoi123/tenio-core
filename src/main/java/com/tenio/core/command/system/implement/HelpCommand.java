@@ -36,7 +36,7 @@ import java.util.List;
  *
  * @since 0.4.0
  */
-@SystemCommand(label = "help", usage = {"[name]"}, description = "Shows all supporting commands")
+@SystemCommand(label = "help", usage = {"[name]", "all"}, description = "Shows all supporting commands")
 public final class HelpCommand extends AbstractSystemCommandHandler {
 
   private void showDetails(AbstractSystemCommandHandler command) {
@@ -52,9 +52,16 @@ public final class HelpCommand extends AbstractSystemCommandHandler {
   @Override
   public void execute(List<String> arguments) {
     var manager = getCommandManager();
-    if (arguments.isEmpty()) {
-      manager.getHandlers().keySet().stream().sorted().map(manager::getHandler)
+    boolean showAll = arguments.size() == 1 && arguments.getFirst().equalsIgnoreCase("all");
+    if (arguments.isEmpty() || showAll) {
+      int total = manager.getHandlers().size();
+      int shown = showAll ? total : Math.min(total, 50);
+      manager.getHandlers().keySet().stream().sorted().limit(shown).map(manager::getHandler)
           .forEach(this::showDetails);
+      if (shown < total) {
+        CommandUtility.INSTANCE.showConsoleMessage(
+            "Showing " + shown + " of " + total + " system commands. Use help all for the full table.");
+      }
       return;
     }
     arguments.stream().flatMap(argument -> Arrays.stream(argument.split(",")))

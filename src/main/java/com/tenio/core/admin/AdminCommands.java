@@ -38,11 +38,11 @@ final class AdminCommands {
 
     private static final List<Command> COMMANDS = List.of(
             new Command("stats", "Refresh the statistics table."),
-            new Command("room <id>", "Show room details. Example: room 42"),
+            new Command("room <id>", "Show room details and up to 50 members. Use room <id> all for the full table."),
             new Command("session <id>", "Show connection and queue details. Example: session 7"),
-            new Command("network pressure", "List sessions with inbound or outbound queues at least 80% full."),
-            new Command("limits", "Show accepted and rejected requests for rate-limited commands."),
-            new Command("history [id]", "Show recent events, optionally for one session. Requires the history profile."),
+            new Command("network pressure", "Show up to 50 queues at least 80% full. Use network pressure all for the full table."),
+            new Command("limits", "Show up to 50 rate-limit counters. Use limits all for the full table."),
+            new Command("history [id]", "Show up to 50 recent events. Use history all or history <id> all for the full table. Requires history."),
             new Command("clear", "Clear the local console output."));
 
     private AdminCommands() {
@@ -59,10 +59,16 @@ final class AdminCommands {
 
     static boolean handles(String input) {
         String normalized = normalize(input);
-        return normalized.equals("server stats") || COMMANDS.stream().anyMatch(command -> {
+        return opensFullList(normalized) || normalized.equals("server stats") || COMMANDS.stream().anyMatch(command -> {
             String name = command.usage().split(" [<\\[]", 2)[0];
             return normalized.equals(name) || normalized.startsWith(name + " ");
         });
+    }
+
+    static boolean opensFullList(String input) {
+        return input.equals("help all") || input.equals("network pressure all") || input.equals("limits all")
+                || input.equals("history all") || input.equals("info player all") || input.equals("info room all")
+                || input.matches("(room|history) [^ ]+ all");
     }
 
     static String normalize(String input) {

@@ -60,7 +60,7 @@ class InfoCommandTest {
   @Test
   @DisplayName("getUsage returns usage array with player and room")
   void testGetUsage() {
-    assertArrayEquals(new String[]{"player", "room"}, infoCommand.getUsage());
+    assertArrayEquals(new String[]{"player [all]", "room [all]"}, infoCommand.getUsage());
   }
 
   @Test
@@ -91,6 +91,6 @@ class InfoCommandTest {
     var output = new java.util.ArrayList<String>();
     com.tenio.core.utility.CommandUtility.INSTANCE.withOutput(output::add,
         () -> infoCommand.execute(List.of()));
-    assertEquals(List.of("Usage: info player | info room"), output);
+    assertEquals(List.of("Usage: info player [all] | info room [all]"), output);
   }
 }

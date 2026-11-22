@@ -122,14 +122,17 @@ class ServerInspectionTest {
       assertEquals(List.of("stats", "room <id>", "session <id>", "network pressure", "limits",
           "history [id]", "clear"), inspection.query("help").labels());
       assertTrue(inspection.query("ROOM  42").labels().contains("Room ID"));
+      assertEquals(inspection.query("room 42"), inspection.query("room 42 all"));
+      assertEquals(inspection.query("history"), inspection.query("history all"));
+      assertEquals(inspection.query("history 7"), inspection.query("history 7 all"));
       var details = inspection.query("session 7");
       assertEquals("3", details.values().get(details.labels().indexOf("Inbound messages rejected (queue full)")));
       assertEquals("0", details.values().get(details.labels().indexOf("Outbound packets dropped (queue full)")));
       assertEquals("0", details.values().get(details.labels().indexOf("Outbound packets dropped (queue policy)")));
       var pressure = inspection.query("network pressure");
-      assertEquals(List.of("Session 7 inbound", "Session 7 outbound", "Sessions under inbound pressure",
+      assertEquals(List.of("Session 7 inbound", "Session 7 outbound", "Matching queues", "Sessions under inbound pressure",
           "Sessions under outbound pressure"), pressure.labels());
-      assertEquals(List.of("8/10", "8/10 for 12 ms", "1", "1"), pressure.values());
+      assertEquals(List.of("8/10", "8/10 for 12 ms", "Showing 2 of 2 matching queue rows", "1", "1"), pressure.values());
       assertEquals(2, inspection.query("history").labels().size());
       var result = inspection.query("history 7");
       assertTrue(result.labels().getFirst().matches(
@@ -137,6 +140,26 @@ class ServerInspectionTest {
       assertEquals(List.of("Disconnected (TCP) — Connection error"), result.values());
       assertEquals(List.of("No events recorded for session #99."), inspection.query("history 99").values());
     }
+  }
+
+  @Test
+  void fullPressureListIncludesEveryQueueAndDefaultReportsItsCap() {
+    var server = mock(Server.class);
+    var network = mock(Network.class);
+    var sessions = mock(SessionManager.class);
+    var session = mock(Session.class);
+    when(network.getSessionManager()).thenReturn(sessions);
+    when(sessions.getSnapshotSessionsList()).thenReturn(java.util.Collections.nCopies(51, session));
+    when(session.inboundQueueStatistics()).thenReturn(new Session.InboundQueueStatistics(8, 10, 0));
+
+    var inspection = new ServerInspection(server, network, true);
+    var limited = inspection.query("network pressure");
+    var full = inspection.query("network pressure all");
+
+    assertEquals(53, limited.labels().size());
+    assertTrue(limited.values().get(50).startsWith("Showing 50 of 51 matching queue rows"));
+    assertEquals(54, full.labels().size());
+    assertEquals("Showing 51 of 51 matching queue rows", full.values().get(51));
   }
 
   @Test

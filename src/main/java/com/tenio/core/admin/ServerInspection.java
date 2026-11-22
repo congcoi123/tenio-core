@@ -66,15 +66,28 @@ public final class ServerInspection {
 
     public InspectionResult query(String input) {
         input = AdminCommands.normalize(input);
+        boolean fullList = AdminCommands.opensFullList(input);
+        if (fullList) {
+            input = input.substring(0, input.length() - " all".length());
+        }
+        int rowLimit = fullList ? Integer.MAX_VALUE : MAX_ROWS;
         String[] words = input.split(" ");
         if (input.equals("help")) {
             return AdminCommands.help();
         }
         var rows = new Rows();
         var sessions = network.getSessionManager();
-        if (words[0].equals("session") || words[0].equals("room")) {
+        if (fullList && input.equals("info player")) {
+            var players = server.getPlayerManager().getSnapshotPlayersList();
+            players.forEach(player -> rows.add("Player", player.getIdentity()));
+            rows.add("Players", players.size());
+        } else if (fullList && input.equals("info room")) {
+            var rooms = server.getRoomManager().getSnapshotRoomsList();
+            rooms.forEach(room -> rows.add("Room " + room.getId(), room.getName()));
+            rows.add("Rooms", rooms.size());
+        } else if (words[0].equals("session") || words[0].equals("room")) {
             if (words.length != 2) {
-                return InspectionResult.message("Usage: " + words[0] + " <id>");
+                return InspectionResult.message(words[0].equals("room") ? "Usage: room <id> [all]" : "Usage: session <id>");
             }
             long id;
             try {
@@ -92,8 +105,11 @@ public final class ServerInspection {
                 rows.add("Owner", room.getOwner().map(Player::getIdentity).orElse(""));
                 rows.add("Players", room.getSnapshotPlayerCount());
                 rows.add("Capacity", room.getCapacity());
-                room.getSnapshotPlayersList().stream().limit(MAX_ROWS)
-                        .forEach(player -> rows.add("Member", player.getIdentity()));
+                var members = room.getSnapshotPlayersList();
+                members.stream().limit(rowLimit).forEach(player -> rows.add("Member", player.getIdentity()));
+                if (members.size() > rowLimit) {
+                    rows.add("Members shown", shown(rowLimit, members.size(), "members", input + " all"));
+                }
             } else {
                 var session = sessions.getSessionById(id);
                 if (session == null) {
@@ -138,18 +154,22 @@ public final class ServerInspection {
             if (!queueDiagnostics) {
                 return InspectionResult.message("Network pressure requires the monitor profile.");
             }
-            addNetworkPressure(rows, sessions.getSnapshotSessionsList());
+            addNetworkPressure(rows, sessions.getSnapshotSessionsList(), rowLimit);
         } else if (input.equals("limits")) {
             var commands = server.getClientCommandManager();
             if (commands == null || !commands.hasLimits()) {
                 return InspectionResult.message("Client command limits are disabled.");
             }
-            commands.limitCounts().entrySet().stream().sorted(Map.Entry.comparingByKey())
-                    .limit(MAX_ROWS).forEach(e -> rows.add("Command " + e.getKey(),
+            var counts = commands.limitCounts();
+            counts.entrySet().stream().sorted(Map.Entry.comparingByKey())
+                    .limit(rowLimit).forEach(e -> rows.add("Command " + e.getKey(),
                             e.getValue().accepted() + " accepted, " + e.getValue().rejected() + " rejected"));
+            if (counts.size() > rowLimit) {
+                rows.add("Counters shown", shown(rowLimit, counts.size(), "counters", "limits all"));
+            }
         } else if (words[0].equals("history")) {
             if (words.length > 2) {
-                return InspectionResult.message("Usage: history [id]");
+                return InspectionResult.message("Usage: history [id] [all]");
             }
             Long sessionId;
             try {
@@ -166,13 +186,13 @@ public final class ServerInspection {
             }
             var events = history.snapshot().reversed().stream()
                     .filter(event -> sessionId == null || sessionId == event.sessionId())
-                    .limit(MAX_ROWS).toList();
+                    .toList();
             if (events.isEmpty()) {
                 rows.add("History", sessionId == null ? "No events recorded yet."
                         : "No events recorded for session #" + sessionId + ".");
             }
             var time = EVENT_TIME.withZone(ZoneId.systemDefault());
-            for (var event : events) {
+            for (var event : events.subList(0, Math.min(events.size(), rowLimit))) {
                 String label = time.format(Instant.ofEpochMilli(event.timestamp())) + " | Session #" + event.sessionId();
                 String description = switch (event.kind()) {
                     case DISCONNECT -> "Disconnected";
@@ -184,6 +204,9 @@ public final class ServerInspection {
                         : java.util.Objects.toString(event.reason(), "").replace('_', ' ').toLowerCase(Locale.ROOT);
                 String detail = description + " (" + event.transport() + ")";
                 rows.add(label, reason.isBlank() ? detail : detail + " — " + reason);
+            }
+            if (events.size() > rowLimit) {
+                rows.add("Events shown", shown(rowLimit, events.size(), "events", input + " all"));
             }
             long dropped = history.droppedExports();
             if (dropped > 0) {
@@ -215,14 +238,14 @@ public final class ServerInspection {
                 ? "unavailable" : outbound.policyDrops());
     }
 
-    private static void addNetworkPressure(Rows rows, List<Session> sessions) {
+    private static void addNetworkPressure(Rows rows, List<Session> sessions, int rowLimit) {
         int inboundCount = 0;
         int outboundCount = 0;
         for (Session session : sessions) {
             var inbound = session.inboundQueueStatistics();
             if (inbound != null && underPressure(inbound.depth(), inbound.capacity())) {
                 inboundCount++;
-                if (rows.size() < MAX_ROWS) {
+                if (rows.size() < rowLimit) {
                     rows.add("Session " + session.getId() + " inbound", inbound.depth() + "/" + inbound.capacity());
                 }
             }
@@ -231,15 +254,22 @@ public final class ServerInspection {
                 var outbound = queue.statistics();
                 if (outbound.capacity() != Integer.MAX_VALUE && underPressure(outbound.depth(), outbound.capacity())) {
                     outboundCount++;
-                    if (rows.size() < MAX_ROWS) {
+                    if (rows.size() < rowLimit) {
                         rows.add("Session " + session.getId() + " outbound", outbound.depth() + "/" + outbound.capacity()
                                 + " for " + outbound.pressureAgeMillis() + " ms");
                     }
                 }
             }
         }
+        rows.add("Matching queues", shown(rows.size(), (long) inboundCount + outboundCount,
+                "matching queue rows", "network pressure all"));
         rows.add("Sessions under inbound pressure", inboundCount);
         rows.add("Sessions under outbound pressure", outboundCount);
+    }
+
+    private static String shown(int displayed, long total, String unit, String fullCommand) {
+        String summary = String.format(Locale.US, "Showing %,d of %,d %s", displayed, total, unit);
+        return displayed < total ? summary + ". Use " + fullCommand + " for the full table." : summary;
     }
 
     private static boolean underPressure(int depth, int capacity) {

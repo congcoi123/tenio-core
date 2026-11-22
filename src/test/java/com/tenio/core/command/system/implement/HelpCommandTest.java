@@ -67,7 +67,7 @@ class HelpCommandTest {
   @Test
   @DisplayName("getUsage returns usage array")
   void testGetUsage() {
-    assertArrayEquals(new String[]{"[name]"}, helpCommand.getUsage());
+    assertArrayEquals(new String[]{"[name]", "all"}, helpCommand.getUsage());
   }
 
   @Test

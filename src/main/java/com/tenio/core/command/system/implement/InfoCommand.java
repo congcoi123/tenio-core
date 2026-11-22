@@ -36,8 +36,8 @@ import java.util.Locale;
  * @since 0.4.0
  */
 @SystemCommand(label = "info", usage = {
-    "player",
-    "room"
+    "player [all]",
+    "room [all]"
 }, description = "Provides brief information about players and rooms on the server")
 public final class InfoCommand extends AbstractSystemCommandHandler {
 
@@ -47,12 +47,16 @@ public final class InfoCommand extends AbstractSystemCommandHandler {
     switch (action) {
       case "player" -> showSnapshot("players", api().getSnapshotPlayersList());
       case "room" -> showSnapshot("rooms", api().getSnapshotRoomsList());
-      default -> CommandUtility.INSTANCE.showConsoleMessage("Usage: info player | info room");
+      default -> CommandUtility.INSTANCE.showConsoleMessage("Usage: info player [all] | info room [all]");
     }
   }
 
   private void showSnapshot(String entity, List<?> snapshot) {
-    CommandUtility.INSTANCE.showConsoleMessage("There are " + snapshot.size() + " " + entity
-        + " > The first 10 entities > " + snapshot.subList(0, Math.min(snapshot.size(), 10)));
+    int shown = Math.min(snapshot.size(), 10);
+    String output = "Showing " + shown + " of " + snapshot.size() + " " + entity + " > " + snapshot.subList(0, shown);
+    if (shown < snapshot.size()) {
+      output += "\nUse info " + (entity.equals("players") ? "player" : "room") + " all for the full table.";
+    }
+    CommandUtility.INSTANCE.showConsoleMessage(output);
   }
 }
