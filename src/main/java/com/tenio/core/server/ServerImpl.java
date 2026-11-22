@@ -252,7 +252,7 @@ public final class ServerImpl extends SystemLogger implements Server {
 
     // show admin tool when enabled
     if (windowEnabled) {
-      adminWindow = new AdminWindow(serverName,
+      adminWindow = new AdminWindow("[TenIO] Monitoring | " + serverName,
           inspection::query, (command, output) -> {
             var manager = bootstrapHandler.getSystemCommandManager();
             if (manager == null || manager.getHandler(command.split("\\s+", 2)[0].toLowerCase(Locale.ROOT)) == null) {

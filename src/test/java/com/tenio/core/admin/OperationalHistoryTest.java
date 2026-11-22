@@ -24,48 +24,55 @@ THE SOFTWARE.
 
 package com.tenio.core.admin;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OperationalHistoryTest {
-  @Test
-  void blockedExporterCannotBlockRecordingOrGrowHistory() throws Exception {
-    var entered = new CountDownLatch(1);
-    var release = new CountDownLatch(1);
-    try (var history = new OperationalHistory(2)) {
-      history.enableExport(1, event -> {
-        entered.countDown();
-        try {
-          release.await();
-        } catch (InterruptedException interrupted) {
-          Thread.currentThread().interrupt();
+
+    @Test
+    void blockedExporterCannotBlockRecordingOrGrowHistory() throws Exception {
+        var entered = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        try (var history = new OperationalHistory(2)) {
+            history.enableExport(1, event -> {
+                entered.countDown();
+                try {
+                    release.await();
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                }
+            });
+            history.record(1, "TCP", OperationalHistory.Kind.DISCONNECT, "idle");
+            assertTrue(entered.await(3, TimeUnit.SECONDS));
+            history.record(2, "TCP", OperationalHistory.Kind.RECONNECT, "resumed");
+            history.record(3, "TCP", OperationalHistory.Kind.DISCONNECT, "idle");
+            assertEquals(1, history.droppedExports());
+            assertEquals(2, history.snapshot().getFirst().sessionId());
+        } finally {
+            release.countDown();
         }
-      });
-      history.record(1, "TCP", OperationalHistory.Kind.DISCONNECT, "idle");
-      assertTrue(entered.await(3, TimeUnit.SECONDS));
-      history.record(2, "TCP", OperationalHistory.Kind.RECONNECT, "resumed");
-      history.record(3, "TCP", OperationalHistory.Kind.DISCONNECT, "idle");
-      assertEquals(1, history.droppedExports());
-      assertEquals(2, history.snapshot().getFirst().sessionId());
-    } finally {
-      release.countDown();
     }
-  }
-  @Test
-  void fileModeDrainsEventsAndKeepsNoSnapshot(@org.junit.jupiter.api.io.TempDir java.nio.file.Path directory)
-      throws Exception {
-    var history = OperationalHistory.toFile(directory);
-    try (history) {
-      history.record(8, "TCP", OperationalHistory.Kind.DISCONNECT, "EXCEPTION");
-      history.record(9, "TCP", OperationalHistory.Kind.RECONNECT, "resumed");
-      assertTrue(history.snapshot().isEmpty());
+
+    @Test
+    void fileModeDrainsEventsAndKeepsNoSnapshot(@TempDir Path directory) throws Exception {
+        var history = OperationalHistory.toFile(directory);
+        try (history) {
+            history.record(8, "TCP", OperationalHistory.Kind.DISCONNECT, "EXCEPTION");
+            history.record(9, "TCP", OperationalHistory.Kind.RECONNECT, "resumed");
+            assertTrue(history.snapshot().isEmpty());
+        }
+        var rows = Files.readAllLines(history.file());
+        assertEquals(3, rows.size());
+        assertTrue(rows.get(1).endsWith("\t8\tTCP\tDISCONNECT\tEXCEPTION"));
+        assertTrue(rows.get(2).endsWith("\t9\tTCP\tRECONNECT\tresumed"));
+        assertEquals(0, history.droppedExports());
     }
-    var rows = java.nio.file.Files.readAllLines(history.file());
-    assertEquals(3, rows.size());
-    assertTrue(rows.get(1).endsWith("\t8\tTCP\tDISCONNECT\tEXCEPTION"));
-    assertTrue(rows.get(2).endsWith("\t9\tTCP\tRECONNECT\tresumed"));
-    assertEquals(0, history.droppedExports());
-  }
 }

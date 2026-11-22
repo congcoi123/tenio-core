@@ -9,12 +9,11 @@
         <!-- The server id (module name) -->
         <Property name="server-id">tenio-core</Property>
         <!-- The server address -->
-        <Property name="server-address">localhost</Property>
+        <Property name="server-address">0.0.0.0</Property>
         <!-- The current version code of your server in integer type (comparable) -->
         <Property name="version-code">1</Property>
         <!-- The current version name of your server in string type -->
         <Property name="version-name">1.0</Property>
-
     </Properties>
 
     <Network>

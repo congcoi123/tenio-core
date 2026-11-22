@@ -29,7 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.tenio.core.utility.CommandUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,8 +56,7 @@ class InfoCommandTest {
   @Test
   @DisplayName("getDescription returns the info command description")
   void testGetDescription() {
-    assertEquals("Provides brief information about players and rooms on the server",
-        infoCommand.getDescription());
+    assertEquals("Provides brief information about players and rooms on the server", infoCommand.getDescription());
   }
 
   @Test
@@ -86,11 +88,11 @@ class InfoCommandTest {
   void testExecuteUnknownActionDoesNotThrow() {
     assertDoesNotThrow(() -> infoCommand.execute(List.of("unknown")));
   }
+
   @Test
   void missingArgumentShowsUsage() {
-    var output = new java.util.ArrayList<String>();
-    com.tenio.core.utility.CommandUtility.INSTANCE.withOutput(output::add,
-        () -> infoCommand.execute(List.of()));
+    var output = new ArrayList<String>();
+    CommandUtility.INSTANCE.withOutput(output::add, () -> infoCommand.execute(List.of()));
     assertEquals(List.of("Usage: info player [all] | info room [all]"), output);
   }
 }

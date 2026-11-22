@@ -24,25 +24,30 @@ THE SOFTWARE.
 
 package com.tenio.core.command.client;
 
-import static org.junit.jupiter.api.Assertions.*;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.IntStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 class CommandLimitsTest {
-  @Test
-  void concurrentBurstRefillAndSessionIsolation() {
-    var time = new AtomicLong();
-    var limits = new CommandLimits(time::get);
-    short chat = 1;
-    limits.configure(chat, 2, 4);
-    assertEquals(4, IntStream.range(0, 64).parallel().filter(i -> limits.allow(chat, "1")).count());
-    assertTrue(limits.allowSession(chat, 1));
-    assertTrue(limits.allow((short) 2, "1"));
-    time.set(500_000_000L);
-    assertTrue(limits.allow(chat, "1"));
-    assertFalse(limits.allow(chat, "1"));
-    time.set(2_500_000_000L);
-    assertTrue(limits.allow(chat, "1"));
-  }
+
+    @Test
+    void concurrentBurstRefillAndSessionIsolation() {
+        var time = new AtomicLong();
+        var limits = new CommandLimits(time::get);
+        short chat = 1;
+        limits.configure(chat, 2, 4);
+        assertEquals(4, IntStream.range(0, 64).parallel().filter(i -> limits.allow(chat, "1")).count());
+        assertTrue(limits.allowSession(chat, 1));
+        assertTrue(limits.allow((short) 2, "1"));
+        time.set(500_000_000L);
+        assertTrue(limits.allow(chat, "1"));
+        assertFalse(limits.allow(chat, "1"));
+        time.set(2_500_000_000L);
+        assertTrue(limits.allow(chat, "1"));
+    }
 }

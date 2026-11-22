@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.utility;
 
 import java.util.function.Consumer;
+
 /**
  * The class provides utility methods to work with commands.
  *

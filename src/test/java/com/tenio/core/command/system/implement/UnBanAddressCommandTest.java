@@ -31,6 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.Collections;
 import java.util.List;
+
+import com.tenio.core.network.security.filter.DefaultConnectionFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -74,7 +76,7 @@ class UnBanAddressCommandTest {
   @Test
   @DisplayName("execute removes only the requested address")
   void testExecuteWithAddressDoesNotThrow() {
-    var filter = new com.tenio.core.network.security.filter.DefaultConnectionFilter();
+    var filter = new DefaultConnectionFilter();
     filter.addBannedAddress("192.168.1.1");
     filter.addBannedAddress("192.168.1.2");
     new UnBanAddressCommand(() -> filter).execute(List.of("192.168.1.1"));

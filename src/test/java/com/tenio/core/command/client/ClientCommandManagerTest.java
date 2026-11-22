@@ -138,6 +138,7 @@ class ClientCommandManagerTest {
     assertNotNull(manager.getHandlers());
     assertTrue(manager.getHandlers().isEmpty());
   }
+
   @Test
   void omittedRateLeavesCommandUnrestrictedEvenWithAnExplicitBurst() {
     var handler = new BurstOnlyCommand();
@@ -206,5 +207,4 @@ class ClientCommandManagerTest {
     manager.invoke((short) 1, second, message);
     assertEquals(new CommandLimits.Counts(2, 1), manager.getLimits().counts().get((short) 1));
   }
-
 }

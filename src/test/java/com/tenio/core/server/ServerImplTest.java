@@ -73,7 +73,6 @@ class ServerImplTest {
         ServerImpl.commandListing(java.util.List.of((short) 10, (short) 2, (short) 1)));
   }
 
-
   @Test
   @DisplayName("getInstance returns a non-null server")
   void testGetInstanceReturnsNonNull() {
