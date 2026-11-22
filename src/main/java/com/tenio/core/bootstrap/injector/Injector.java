@@ -274,8 +274,7 @@ public final class Injector extends SystemLogger {
         if (classBeansMap.containsKey(beanClass)) {
           throw new DuplicatedBeanCreationException(beanClass.clazz(), beanClass.name());
         }
-        var bean = clazz == SystemCommandManager.class
-            ? systemCommandManager : clazz.getDeclaredConstructor().newInstance();
+        var bean = clazz.getDeclaredConstructor().newInstance();
         classBeansMap.put(beanClass, bean);
 
         // create beans manually
