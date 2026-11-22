@@ -53,11 +53,13 @@ public final class OutboundQueueImpl implements OutboundQueue {
     long policyDrops;
     boolean pressured;
     long pressureSince;
+    final boolean diagnostics;
     final OperationalHistory history;
     final long id;
     final String transport;
 
-    Monitor(OperationalHistory history, long id, String transport) {
+    Monitor(boolean diagnostics, OperationalHistory history, long id, String transport) {
+      this.diagnostics = diagnostics;
       this.history = history;
       this.id = id;
       this.transport = transport;
@@ -66,13 +68,18 @@ public final class OutboundQueueImpl implements OutboundQueue {
 
   /** Configure before publishing the session. */
   public void enableMonitoring(OperationalHistory history, long id, String transport) {
-    monitor = new Monitor(history, id, transport);
+    enableMonitoring(true, history, id, transport);
+  }
+
+  /** Enables diagnostics or history recording before the queue is published. */
+  public void enableMonitoring(boolean diagnostics, OperationalHistory history, long id, String transport) {
+    monitor = diagnostics || history != null ? new Monitor(diagnostics, history, id, transport) : null;
   }
 
   @Override
   public Statistics statistics() {
     synchronized (queue) {
-      if (monitor == null) {
+      if (monitor == null || !monitor.diagnostics) {
         return new Statistics(snapshotSize, maxSize, -1, -1, -1, 0);
       }
       long age = monitor.pressured ? (System.nanoTime() - monitor.pressureSince) / 1_000_000 : 0;
@@ -84,7 +91,9 @@ public final class OutboundQueueImpl implements OutboundQueue {
     boolean next = maxSize > 0 && snapshotSize * 100L >= maxSize * 80L;
     if (next != monitor.pressured) {
       monitor.pressured = next;
-      monitor.pressureSince = next ? System.nanoTime() : 0;
+      if (monitor.diagnostics) {
+        monitor.pressureSince = next ? System.nanoTime() : 0;
+      }
       if (monitor.history != null) {
         monitor.history.record(monitor.id, monitor.transport, next ? OperationalHistory.Kind.PRESSURE_START
             : OperationalHistory.Kind.PRESSURE_END, "outbound queue 80% threshold");
@@ -189,7 +198,7 @@ public final class OutboundQueueImpl implements OutboundQueue {
     synchronized (queue) {
       snapshotSize = queue.size();
       if (isSnapshotFull()) {
-        if (monitor != null) {
+        if (monitor != null && monitor.diagnostics) {
           monitor.fullDrops++;
         }
         throw new OutboundQueueFullException(snapshotSize);
@@ -197,12 +206,12 @@ public final class OutboundQueueImpl implements OutboundQueue {
       try {
         outboundQueuePolicy.applyPolicy(this, packet);
       } catch (OutboundQueuePolicyViolationException rejected) {
-        if (monitor != null) {
+        if (monitor != null && monitor.diagnostics) {
           monitor.policyDrops++;
         }
         throw rejected;
       } catch (OutboundQueueFullException full) {
-        if (monitor != null) {
+        if (monitor != null && monitor.diagnostics) {
           monitor.fullDrops++;
         }
         throw full;
@@ -210,7 +219,9 @@ public final class OutboundQueueImpl implements OutboundQueue {
       queue.add(packet);
       snapshotSize = queue.size();
       if (monitor != null) {
-        monitor.highWater = Math.max(monitor.highWater, snapshotSize);
+        if (monitor.diagnostics) {
+          monitor.highWater = Math.max(monitor.highWater, snapshotSize);
+        }
         updatePressure();
       }
     }

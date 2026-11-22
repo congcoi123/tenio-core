@@ -333,8 +333,11 @@ public final class SessionManagerImpl extends AbstractManager implements Session
 
   private OutboundQueue configureNewOutboundQueue(Session session) {
     var outboundQueue = OutboundQueueImpl.newInstance();
-    if (monitoring) {
-      outboundQueue.enableMonitoring(history, session.getId(), String.valueOf(session.getTransportType()));
+    var operationalHistory = history;
+    boolean diagnostics = monitoring;
+    if (diagnostics || operationalHistory != null) {
+      outboundQueue.enableMonitoring(diagnostics, operationalHistory, session.getId(),
+          String.valueOf(session.getTransportType()));
     }
     outboundQueue.configureMaxSize(outboundQueueSize);
     outboundQueue.configureOutboundQueuePolicy(outboundQueuePolicy);
@@ -344,6 +347,9 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private void configureSession(Session session) {
     session.configureSessionManager(this);
     session.configureMaxInboundQueueSize(inboundQueueSize);
+    if (monitoring) {
+      session.enableInboundQueueMonitoring();
+    }
     session.configureOutboundQueue(configureNewOutboundQueue(session));
     session.configureSlowConsumingInboundQueueWarningThreshold(slowConsumingInboundQueueWarningThreshold);
     session.configureSlowConsumingOutboundQueueWarningThreshold(slowConsumingOutboundQueueWarningThreshold);

@@ -34,6 +34,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -47,10 +48,16 @@ public final class ServerInspection {
             DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss.SSS XXX", Locale.ROOT);
     private final Server server;
     private final Network network;
+    private final boolean queueDiagnostics;
 
     public ServerInspection(Server server, Network network) {
+        this(server, network, false);
+    }
+
+    public ServerInspection(Server server, Network network, boolean queueDiagnostics) {
         this.server = server;
         this.network = network;
+        this.queueDiagnostics = queueDiagnostics;
     }
 
     public OperationalHistory history() {
@@ -109,14 +116,8 @@ public final class ServerInspection {
                     rows.add("Last reliable TCP read age (ms)", age(session.getLastReliableReadTime()));
                 }
                 rows.add("Last write age (ms)", age(session.getLastWriteTime()));
-                var queue = session.fetchOutboundQueue();
-                if (queue != null) {
-                    var stats = queue.statistics();
-                    rows.add("Outbound depth", stats.depth());
-                    rows.add("Outbound capacity", stats.capacity());
-                    rows.add("High-water mark", stats.highWater());
-                    rows.add("Full drops", stats.fullDrops());
-                    rows.add("Policy drops", stats.policyDrops());
+                if (queueDiagnostics) {
+                    addQueueDetails(rows, session);
                 }
             }
         } else if (input.equals("stats") || input.equals("server stats")) {
@@ -131,24 +132,13 @@ public final class ServerInspection {
             var writer = network.getNetworkWriterStatistic();
             rows.add("Bytes written", writer.getWrittenBytes());
             rows.add("Packets written", writer.getWrittenPackets());
-            rows.add("Full drops", writer.getWrittenDroppedPacketsByFull());
-            rows.add("Policy drops", writer.getWrittenDroppedPacketsByPolicy());
+            rows.add("Outbound packets dropped due to congestion", writer.getWrittenDroppedPacketsByFull());
+            rows.add("Outbound packets rejected by queue policy", writer.getWrittenDroppedPacketsByPolicy());
         } else if (input.equals("network pressure")) {
-            int underPressure = 0;
-            for (Session session : sessions.getSnapshotSessionsList()) {
-                var queue = session.fetchOutboundQueue();
-                if (queue != null) {
-                    var stats = queue.statistics();
-                    if (stats.capacity() > 0 && stats.depth() * 100L >= stats.capacity() * 80L) {
-                        underPressure++;
-                        if (rows.size() < MAX_ROWS) {
-                            rows.add("Session " + session.getId(), stats.depth() + "/" + stats.capacity()
-                                    + " for " + stats.pressureAgeMillis() + " ms");
-                        }
-                    }
-                }
+            if (!queueDiagnostics) {
+                return InspectionResult.message("Network pressure requires the monitor profile.");
             }
-            rows.add("Sessions under pressure", underPressure);
+            addNetworkPressure(rows, sessions.getSnapshotSessionsList());
         } else if (input.equals("limits")) {
             var commands = server.getClientCommandManager();
             if (commands == null || !commands.hasLimits()) {
@@ -203,6 +193,57 @@ public final class ServerInspection {
             return InspectionResult.message("Commands: " + AdminCommands.shortcuts());
         }
         return rows.result();
+    }
+
+    private static void addQueueDetails(Rows rows, Session session) {
+        var inbound = session.inboundQueueStatistics();
+        rows.add("Inbound depth", inbound == null ? "unavailable" : inbound.depth());
+        rows.add("Inbound capacity", inbound == null ? "unavailable"
+                : inbound.capacity() <= 0 ? "unlimited" : inbound.capacity());
+        rows.add("Inbound messages rejected (queue full)", inbound == null ? "unavailable" : inbound.fullRejections());
+
+        var queue = session.fetchOutboundQueue();
+        var outbound = queue == null ? null : queue.statistics();
+        rows.add("Outbound depth", outbound == null ? "unavailable" : outbound.depth());
+        rows.add("Outbound capacity", outbound == null || outbound.capacity() < 0
+                ? "unavailable" : outbound.capacity() == Integer.MAX_VALUE ? "unlimited" : outbound.capacity());
+        rows.add("Outbound high-water mark", outbound == null || outbound.highWater() < 0
+                ? "unavailable" : outbound.highWater());
+        rows.add("Outbound packets dropped (queue full)", outbound == null || outbound.fullDrops() < 0
+                ? "unavailable" : outbound.fullDrops());
+        rows.add("Outbound packets dropped (queue policy)", outbound == null || outbound.policyDrops() < 0
+                ? "unavailable" : outbound.policyDrops());
+    }
+
+    private static void addNetworkPressure(Rows rows, List<Session> sessions) {
+        int inboundCount = 0;
+        int outboundCount = 0;
+        for (Session session : sessions) {
+            var inbound = session.inboundQueueStatistics();
+            if (inbound != null && underPressure(inbound.depth(), inbound.capacity())) {
+                inboundCount++;
+                if (rows.size() < MAX_ROWS) {
+                    rows.add("Session " + session.getId() + " inbound", inbound.depth() + "/" + inbound.capacity());
+                }
+            }
+            var queue = session.fetchOutboundQueue();
+            if (queue != null) {
+                var outbound = queue.statistics();
+                if (outbound.capacity() != Integer.MAX_VALUE && underPressure(outbound.depth(), outbound.capacity())) {
+                    outboundCount++;
+                    if (rows.size() < MAX_ROWS) {
+                        rows.add("Session " + session.getId() + " outbound", outbound.depth() + "/" + outbound.capacity()
+                                + " for " + outbound.pressureAgeMillis() + " ms");
+                    }
+                }
+            }
+        }
+        rows.add("Sessions under inbound pressure", inboundCount);
+        rows.add("Sessions under outbound pressure", outboundCount);
+    }
+
+    private static boolean underPressure(int depth, int capacity) {
+        return capacity > 0 && depth * 100L >= capacity * 80L;
     }
 
     static String formatUptime(long milliseconds) {

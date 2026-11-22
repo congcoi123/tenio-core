@@ -57,7 +57,10 @@ class ServerInspectionTest {
     when(network.getNetworkReaderStatistic()).thenReturn(reader);
     when(server.getUptime()).thenReturn(120000L);
     when(rooms.getSnapshotRoomCount()).thenReturn(1203);
-    when(network.getNetworkWriterStatistic()).thenReturn(NetworkWriterStatistic.newInstance());
+    var writer = NetworkWriterStatistic.newInstance();
+    writer.updateWrittenDroppedPacketsByFull(12);
+    writer.updateWrittenDroppedPacketsByPolicy(3);
+    when(network.getNetworkWriterStatistic()).thenReturn(writer);
     when(sessions.getSnapshotSessionCount()).thenReturn(23);
 
     var result = new ServerInspection(server, network).query("stats");
@@ -65,6 +68,8 @@ class ServerInspectionTest {
     assertEquals("1,203", result.values().get(result.labels().indexOf("Rooms")));
     assertEquals("120,302", result.values().get(result.labels().indexOf("Bytes read")));
     assertEquals("2 minutes", result.values().get(result.labels().indexOf("Uptime")));
+    assertEquals("12", result.values().get(result.labels().indexOf("Outbound packets dropped due to congestion")));
+    assertEquals("3", result.values().get(result.labels().indexOf("Outbound packets rejected by queue policy")));
     verify(sessions, never()).getSnapshotSessionsList();
     verify(rooms, never()).getSnapshotRoomsList();
     verify(players, never()).getSnapshotPlayersList();
@@ -81,6 +86,9 @@ class ServerInspectionTest {
     assertEquals(InspectionResult.message("Session no longer exists"), inspection.query("session 7"));
     assertTrue(inspection.query("server stop").values().getFirst().startsWith("Commands"));
     assertTrue(inspection.query("history 7").values().getFirst().contains("restart TenIO"));
+    assertEquals(InspectionResult.message("Network pressure requires the monitor profile."),
+        inspection.query("network pressure"));
+    verify(sessions, never()).getSnapshotSessionsList();
     verifyNoInteractions(server);
   }
   @Test
@@ -101,20 +109,27 @@ class ServerInspectionTest {
       when(sessions.getSessionById(7)).thenReturn(session);
       when(sessions.getSnapshotSessionsList()).thenReturn(List.of(session));
       when(session.getId()).thenReturn(7L);
+      when(session.inboundQueueStatistics()).thenReturn(new Session.InboundQueueStatistics(8, 10, 3));
       when(session.fetchOutboundQueue()).thenReturn(queue);
       when(queue.statistics()).thenReturn(new OutboundQueue.Statistics(8, 10, 8, 0, 0, 12));
       when(sessions.getOperationalHistory()).thenReturn(history);
       history.record(7, "TCP", OperationalHistory.Kind.DISCONNECT, "EXCEPTION");
       history.record(8, "TCP", OperationalHistory.Kind.RECONNECT, "resumed");
 
-      var inspection = new ServerInspection(server, network);
+      var inspection = new ServerInspection(server, network, true);
       assertEquals("help | stats | room <id> | session <id> | network pressure | limits | history [id] | clear",
           AdminCommands.shortcuts());
       assertEquals(List.of("stats", "room <id>", "session <id>", "network pressure", "limits",
           "history [id]", "clear"), inspection.query("help").labels());
       assertTrue(inspection.query("ROOM  42").labels().contains("Room ID"));
-      assertTrue(inspection.query("session 7").labels().contains("Outbound depth"));
-      assertTrue(inspection.query("network pressure").labels().contains("Session 7"));
+      var details = inspection.query("session 7");
+      assertEquals("3", details.values().get(details.labels().indexOf("Inbound messages rejected (queue full)")));
+      assertEquals("0", details.values().get(details.labels().indexOf("Outbound packets dropped (queue full)")));
+      assertEquals("0", details.values().get(details.labels().indexOf("Outbound packets dropped (queue policy)")));
+      var pressure = inspection.query("network pressure");
+      assertEquals(List.of("Session 7 inbound", "Session 7 outbound", "Sessions under inbound pressure",
+          "Sessions under outbound pressure"), pressure.labels());
+      assertEquals(List.of("8/10", "8/10 for 12 ms", "1", "1"), pressure.values());
       assertEquals(2, inspection.query("history").labels().size());
       var result = inspection.query("history 7");
       assertTrue(result.labels().getFirst().matches(

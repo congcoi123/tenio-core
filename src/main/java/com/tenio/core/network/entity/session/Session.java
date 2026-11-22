@@ -207,6 +207,22 @@ public interface Session {
    */
   void configureMaxInboundQueueSize(int queueSize);
 
+  /** Snapshot of the inbound message queue. Non-positive capacity means unlimited. */
+  record InboundQueueStatistics(int depth, int capacity, long fullRejections) {}
+
+  /** Enables per-session inbound queue diagnostics before the session is published. */
+  default void enableInboundQueueMonitoring() {
+  }
+
+  /**
+   * Returns inbound queue diagnostics when available.
+   *
+   * @return the current snapshot, or {@code null} if diagnostics are unavailable
+   */
+  default InboundQueueStatistics inboundQueueStatistics() {
+    return null;
+  }
+
   /**
    * Sets the threshold for warning of slow consuming inbound queue.
    *

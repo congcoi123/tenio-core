@@ -152,8 +152,8 @@ leaves the server running.
 | --- | --- |
 | `help` | List inspection commands and registered system commands. |
 | `stats` | Refresh the Statistics tab. |
-| `session <id>`, `room <id>` | Inspect one session or room. |
-| `network pressure` | List sessions whose outbound queues are at least 80% full. |
+| `session <id>`, `room <id>` | Inspect one session or room. Session details include inbound full rejections and outbound queue drops by reason. |
+| `network pressure` | List sessions whose inbound or outbound queues are at least 80% full. |
 | `limits` | Show accepted and rejected requests for rate-limited client commands. |
 | `history [id]` | Show recent operational events, optionally for a single session. Requires `history`. |
 | `clear` | Clear the monitor's console output. |

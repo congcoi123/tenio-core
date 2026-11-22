@@ -40,7 +40,7 @@ final class AdminCommands {
             new Command("stats", "Refresh the statistics table."),
             new Command("room <id>", "Show room details. Example: room 42"),
             new Command("session <id>", "Show connection and queue details. Example: session 7"),
-            new Command("network pressure", "List sessions with outbound queues at least 80% full."),
+            new Command("network pressure", "List sessions with inbound or outbound queues at least 80% full."),
             new Command("limits", "Show accepted and rejected requests for rate-limited commands."),
             new Command("history [id]", "Show recent events, optionally for one session. Requires the history profile."),
             new Command("clear", "Clear the local console output."));

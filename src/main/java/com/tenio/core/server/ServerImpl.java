@@ -219,12 +219,14 @@ public final class ServerImpl extends SystemLogger implements Server {
       sessions.onSessionRemoved(clientCommandManager::releaseSession);
     }
     boolean historyEnabled = profiles != null && profiles.contains(CoreConstant.HISTORY_PROFILE);
-    boolean windowEnabled = profiles != null && profiles.contains(CoreConstant.MONITOR_PROFILE)
-        && !java.awt.GraphicsEnvironment.isHeadless();
-    if (windowEnabled || historyEnabled) {
-      inspection = new ServerInspection(this, network);
+    boolean monitorEnabled = profiles != null && profiles.contains(CoreConstant.MONITOR_PROFILE);
+    boolean windowEnabled = monitorEnabled && !java.awt.GraphicsEnvironment.isHeadless();
+    if (monitorEnabled || historyEnabled) {
+      inspection = new ServerInspection(this, network, monitorEnabled);
       if (network.getSessionManager() instanceof SessionManagerImpl sessions) {
-        sessions.enableQueueMonitoring();
+        if (monitorEnabled) {
+          sessions.enableQueueMonitoring();
+        }
         if (historyEnabled) {
           var history = windowEnabled ? new OperationalHistory(1024)
               : OperationalHistory.toFile(java.nio.file.Path.of("logs", "history"));

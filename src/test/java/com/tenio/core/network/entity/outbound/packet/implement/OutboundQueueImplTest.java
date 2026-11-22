@@ -181,6 +181,23 @@ class OutboundQueueImplTest {
   }
 
   @Test
+  void historyOnlyRecordsPressureWithoutCollectingDiagnostics() {
+    try (var history = new com.tenio.core.admin.OperationalHistory(4)) {
+      queue.enableMonitoring(false, history, 7, "TCP");
+      queue.configureMaxSize(1);
+      var packet = mock(Packet.class);
+      queue.put(packet);
+      assertThrows(OutboundQueueFullException.class, () -> queue.put(packet));
+      queue.take();
+      var stats = queue.statistics();
+      assertEquals(-1, stats.highWater());
+      assertEquals(-1, stats.fullDrops());
+      assertEquals(-1, stats.policyDrops());
+      assertEquals(2, history.snapshot().size());
+    }
+  }
+
+  @Test
   void unmonitoredQueueDoesNotCollectHighWater() {
     queue.put(mock(Packet.class));
     assertEquals(-1, queue.statistics().highWater());

@@ -85,6 +85,7 @@ public class SessionImpl extends AbstractLogger implements Session {
   private final AtomicInteger inboundQueueCount;
 
   private int maxInboundQueueSize;
+  private AtomicLong inboundFullRejections;
   private int slowConsumingInboundQueueWarningThreshold;
   private int slowConsumingOutboundQueueWarningThreshold;
   private OutboundQueue outboundQueue;
@@ -249,6 +250,9 @@ public class SessionImpl extends AbstractLogger implements Session {
         }
       }
       if (maxInboundQueueSize > 0 && remaining >= maxInboundQueueSize) {
+        if (inboundFullRejections != null) {
+          inboundFullRejections.incrementAndGet();
+        }
         var exception = new InboundQueueFullException(remaining);
         if (isErrorEnabled()) {
           error(exception, exception.getMessage(), " > ", this);
@@ -258,6 +262,18 @@ public class SessionImpl extends AbstractLogger implements Session {
       inboundQueue.add(message);
       inboundQueueCount.incrementAndGet();
     }
+  }
+
+  @Override
+  public void enableInboundQueueMonitoring() {
+    inboundFullRejections = new AtomicLong();
+  }
+
+  @Override
+  public InboundQueueStatistics inboundQueueStatistics() {
+    var rejections = inboundFullRejections;
+    return rejections == null ? null : new InboundQueueStatistics(
+        Math.max(0, inboundQueueCount.get()), maxInboundQueueSize, rejections.get());
   }
 
   @Override
