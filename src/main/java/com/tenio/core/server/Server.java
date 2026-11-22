@@ -58,9 +58,10 @@ public interface Server {
    */
   void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception;
 
-  /** Starts with XML already read by the application launcher. */
-  default void start(BootstrapHandler bootstrapHandler, String[] params, ConfigurationSource source)
-      throws Exception {
+  /**
+   * Starts with XML already read by the application launcher.
+   */
+  default void start(BootstrapHandler bootstrapHandler, String[] params, ConfigurationSource source) throws Exception {
     start(bootstrapHandler, params);
   }
 
@@ -69,7 +70,9 @@ public interface Server {
    */
   void shutdown();
 
-  /** Returns the active TCP and WebSocket connection filter. */
+  /**
+   * Returns the active TCP and WebSocket connection filter.
+   */
   default ConnectionFilter getConnectionFilter() {
     return null;
   }
@@ -147,7 +150,9 @@ public interface Server {
    */
   long getUptime();
 
-  /** Available when the local admin window or operational history is enabled. */
+  /**
+   * Available when the local admin window or operational history is enabled.
+   */
   default ServerInspection getInspection() {
     return null;
   }

@@ -97,27 +97,17 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final ChannelManager channelManager;
   private final DatagramChannelManager datagramChannelManager;
   private final ZeroProcessor zeroProcessor;
-  private ScheduledJobs scheduledJobs;
-  private ServerInspection inspection;
-  private AdminWindow adminWindow;
-
-  @Override
-  public ServerInspection getInspection() {
-    return inspection;
-  }
   private final Network network;
-  private volatile ConnectionFilter connectionFilter;
-
-  @Override
-  public ConnectionFilter getConnectionFilter() {
-    return connectionFilter;
-  }
   private final ServerApi serverApi;
   private final AtomicBoolean stopping;
   private final CountDownLatch stopped;
+  private ScheduledJobs scheduledJobs;
+  private ServerInspection inspection;
+  private volatile ConnectionFilter connectionFilter;
   private ClientCommandManager clientCommandManager;
   private SystemCommandManager systemCommandManager;
   private Configuration configuration;
+  private AdminWindow adminWindow;
   private long startedTime;
   private String serverName;
 
@@ -545,6 +535,16 @@ public final class ServerImpl extends SystemLogger implements Server {
   @Override
   public long getUptime() {
     return TimeUtility.currentTimeMillis() - startedTime;
+  }
+
+  @Override
+  public ConnectionFilter getConnectionFilter() {
+    return connectionFilter;
+  }
+
+  @Override
+  public ServerInspection getInspection() {
+    return inspection;
   }
 
   @Override
