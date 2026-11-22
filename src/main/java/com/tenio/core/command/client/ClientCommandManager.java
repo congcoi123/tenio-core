@@ -27,7 +27,6 @@ package com.tenio.core.command.client;
 import com.tenio.core.bootstrap.annotation.ClientCommand;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.logger.SystemLogger;
-import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.entity.Player;
 import com.tenio.core.exception.AddedDuplicatedClientCommandException;
 import java.util.HashMap;
@@ -40,15 +39,13 @@ import java.util.Map;
  *
  * @since 0.5.0
  */
-@Component
 public final class ClientCommandManager extends SystemLogger {
 
   private final Map<Short, AbstractClientCommandHandler<Player, DataCollection>> commands = new HashMap<>();
   private final Map<Short, CommandMetadata> metadata = new HashMap<>();
   private volatile CommandLimits limits;
 
-  private record CommandMetadata(Class<?> handlerClass,
-                                 String name, String description) {
+  private record CommandMetadata(Class<?> handlerClass, String name, String description) {
   }
 
   /**
@@ -80,8 +77,7 @@ public final class ClientCommandManager extends SystemLogger {
     metadata.put(code, display);
   }
 
-  private static CommandMetadata commandMetadata(
-      AbstractClientCommandHandler<Player, DataCollection> handler, ClientCommand binding) {
+  private static CommandMetadata commandMetadata(AbstractClientCommandHandler<Player, DataCollection> handler, ClientCommand binding) {
     var type = handler.getClass();
     String name = binding == null ? "" : binding.name().strip();
     if (name.isEmpty()) {

@@ -129,7 +129,7 @@ public final class CoreConstant {
   public static final String HISTORY_PROFILE = "history";
 
   /**
-   * Enables desktop administration and system command registration.
+   * Enables desktop administration and monitor-profile system commands.
    */
   public static final String MONITOR_PROFILE = "monitor";
 

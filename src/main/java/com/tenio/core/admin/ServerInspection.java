@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Read-only views. Only an explicit pressure query scans the session snapshot.
@@ -201,7 +202,7 @@ public final class ServerInspection {
                     case PRESSURE_END -> "Outbound queue recovered";
                 };
                 String reason = "EXCEPTION".equals(event.reason()) ? "Connection error"
-                        : java.util.Objects.toString(event.reason(), "").replace('_', ' ').toLowerCase(Locale.ROOT);
+                        : Objects.toString(event.reason(), "").replace('_', ' ').toLowerCase(Locale.ROOT);
                 String detail = description + " (" + event.transport() + ")";
                 rows.add(label, reason.isBlank() ? detail : detail + " — " + reason);
             }
@@ -302,8 +303,9 @@ public final class ServerInspection {
     }
 
     private static final class Rows {
-        private final ArrayList<String> labels = new ArrayList<>();
-        private final ArrayList<String> values = new ArrayList<>();
+
+        private final List<String> labels = new ArrayList<>();
+        private final List<String> values = new ArrayList<>();
 
         void add(String key, Object value) {
             labels.add(key);

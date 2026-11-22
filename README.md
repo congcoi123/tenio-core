@@ -101,7 +101,7 @@ comma-separated, and selected at startup.
 | --- | --- |
 | `default` | Conventional baseline label used by the bundled configuration and examples. Selects application code explicitly annotated with this name. Unrestricted components and baseline server maintenance run under any profile. |
 | `metrics` | Runs scheduled samples of connected players, traffic, and JVM metrics, plus a JVM deadlock scan. |
-| `monitor` | Registers built-in and application system commands and opens the local admin window on a graphical desktop. A headless JVM skips the window. |
+| `monitor` | Registers built-in system commands and opens the local admin window on a graphical desktop. A headless JVM skips the window. |
 | `history` | Records session disconnects, reconnect outcomes, and outbound queue pressure transitions for investigation. |
 
 Application-defined profiles can be combined with these names. Annotation profile lists match any
@@ -164,16 +164,19 @@ leaves the server running.
 To add a system command, place a public handler in a scanned package. Extend
 `AbstractSystemCommandHandler` and annotate it with `@SystemCommand`. The label is the first word
 of the command, and the remaining words are passed to `execute`. Use `CommandUtility` to send text
-back to the window. The injector creates these handlers only with `monitor`. An optional
-`profile` restriction on the annotation further narrows when that command is available.
+back to the window. The system command manager is available in every profile. Set
+`profile = CoreConstant.MONITOR_PROFILE` to create an application command only when `monitor`
+is active. A command with no profile is created whenever its package is scanned.
 
 ```java
 import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.command.system.AbstractSystemCommandHandler;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.utility.CommandUtility;
 import java.util.List;
 
-@SystemCommand(label = "ping", description = "Check that the console is responding")
+@SystemCommand(label = "ping", profile = CoreConstant.MONITOR_PROFILE,
+    description = "Check that the console is responding")
 public final class PingCommand extends AbstractSystemCommandHandler {
   @Override
   public void execute(List<String> arguments) {

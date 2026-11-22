@@ -26,6 +26,7 @@ package com.tenio.core.command.system.implement;
 
 import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.command.system.AbstractSystemCommandHandler;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.utility.CommandUtility;
 import java.util.Arrays;
 import java.util.Locale;
@@ -36,7 +37,9 @@ import java.util.List;
  *
  * @since 0.4.0
  */
-@SystemCommand(label = "help", usage = {"[name]", "all"}, description = "Shows all supporting commands")
+@SystemCommand(label = "help", profile = CoreConstant.MONITOR_PROFILE,
+    usage = {"[name]", "all"},
+    description = "Shows all supporting commands")
 public final class HelpCommand extends AbstractSystemCommandHandler {
 
   private void showDetails(AbstractSystemCommandHandler command) {

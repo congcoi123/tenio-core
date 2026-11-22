@@ -29,6 +29,7 @@ import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.server.ServerImpl;
 import com.tenio.core.command.system.AbstractSystemCommandHandler;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.utility.CommandUtility;
 import java.util.Arrays;
 import java.util.List;
@@ -39,7 +40,8 @@ import java.util.function.Supplier;
  *
  * @since 0.4.0
  */
-@SystemCommand(label = "unban", usage = {"<ip-address>"},
+@SystemCommand(label = "unban", profile = CoreConstant.MONITOR_PROFILE,
+    usage = {"<ip-address>"},
     description = "Removes an IP address from the ban list")
 public final class UnBanAddressCommand extends AbstractSystemCommandHandler {
   private final Supplier<ConnectionFilter> filter;

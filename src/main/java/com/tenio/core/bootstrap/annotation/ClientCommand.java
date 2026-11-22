@@ -24,13 +24,14 @@ THE SOFTWARE.
 
 package com.tenio.core.bootstrap.annotation;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.tenio.core.command.client.AbstractClientCommandHandler;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Annotation used to mark classes that implement client command handlers. Classes annotated with
@@ -81,34 +82,42 @@ import java.lang.annotation.Target;
 @Documented
 public @interface ClientCommand {
 
-  /**
-   * Startup profiles allowing this annotated element to participate. An empty array or blank
-   * restriction is unrestricted. Values are trimmed, case-sensitive OR alternatives; each entry may
-   * also contain comma-separated names. Java supports a single string shorthand or an array, but
-   * annotation defaults cannot be null. Selection precedes construction, factory invocation,
-   * registration and injection and does not replace bean qualifiers.
-   *
-   * @return accepted startup names, or an empty array for every profile
-   */
-  String[] profile() default {};
+    /**
+     * Startup profiles allowing this annotated element to participate. An empty array or blank
+     * restriction is unrestricted. Values are trimmed, case-sensitive OR alternatives; each entry may
+     * also contain comma-separated names. Java supports a single string shorthand or an array, but
+     * annotation defaults cannot be null. Selection precedes construction, factory invocation,
+     * registration and injection and does not replace bean qualifiers.
+     *
+     * @return accepted startup names, or an empty array for every profile
+     */
+    String[] profile() default {};
 
-  /**
-   * The value used to identify and invoke the client command. This value must be unique across all
-   * registered client commands.
-   *
-   * @return the command value
-   */
-  short value();
+    /**
+     * The value used to identify and invoke the client command. This value must be unique across all
+     * registered client commands.
+     *
+     * @return the command value
+     */
+    short value();
 
-  /** Optional display name. The handler class name is used when this is blank. */
-  String name() default "";
+    /**
+     * Optional display name. The handler class name is used when this is blank.
+     */
+    String name() default "";
 
-  /** Optional description shown in the startup command list. */
-  String description() default "";
+    /**
+     * Optional description shown in the startup command list.
+     */
+    String description() default "";
 
-  /** Sustained requests per second per player. Zero disables limiting. */
-  int requestsPerSecond() default 0;
+    /**
+     * Sustained requests per second per player. Zero disables limiting.
+     */
+    int requestsPerSecond() default 0;
 
-  /** Token bucket capacity. Zero uses the sustained rate when limiting is enabled. */
-  int burst() default 0;
+    /**
+     * Token bucket capacity. Zero uses the sustained rate when limiting is enabled.
+     */
+    int burst() default 0;
 }

@@ -251,16 +251,13 @@ class BootstrapperTest {
     var client = assertInstanceOf(BootstrapClientCommand.class,
         handler.getClientCommandManager().getHandler(CLIENT_COMMAND_CODE));
     var manager = handler.getSystemCommandManager();
-    if (handler.getActiveProfiles().contains("monitor")) {
-      assertNotNull(manager);
-      var system = assertInstanceOf(BootstrapSystemCommand.class, manager.getHandler(SYSTEM_COMMAND_LABEL));
-      assertSame(manager, system.getCommandManager());
-      assertSame(handler.getEventHandler(), system.eventHandler);
-      assertEquals(Set.of(SYSTEM_COMMAND_LABEL), manager.getHandlers().keySet());
-      assertEquals(Set.of(SYSTEM_COMMAND_LABEL), manager.getAnnotations().keySet());
-    } else {
-      assertNull(manager);
-    }
+    assertNotNull(manager);
+    var system = assertInstanceOf(BootstrapSystemCommand.class,
+        manager.getHandler(SYSTEM_COMMAND_LABEL));
+    assertSame(manager, system.getCommandManager());
+    assertSame(handler.getEventHandler(), system.eventHandler);
+    assertEquals(Set.of(SYSTEM_COMMAND_LABEL), manager.getHandlers().keySet());
+    assertEquals(Set.of(SYSTEM_COMMAND_LABEL), manager.getAnnotations().keySet());
     var controller = handler.getBeanByClazz(BootstrapRestController.class, CONTROLLER_PATH);
     assertNotNull(controller);
     assertNotNull(handler.getServletMap().get(SERVLET_PATH));
@@ -328,8 +325,7 @@ class BootstrapperTest {
   }
 
   private static BootstrapSystemCommand systemCommand(BootstrapHandler handler) {
-    var manager = handler.getSystemCommandManager();
-    return manager == null ? null : (BootstrapSystemCommand) manager.getHandler(SYSTEM_COMMAND_LABEL);
+    return (BootstrapSystemCommand) handler.getSystemCommandManager().getHandler(SYSTEM_COMMAND_LABEL);
   }
 
   private record ContextSnapshot(BootstrapHandler handler, EventHandler eventHandler,

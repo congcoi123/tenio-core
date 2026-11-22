@@ -26,6 +26,7 @@ package com.tenio.core.command.system.implement;
 
 import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.command.system.AbstractSystemCommandHandler;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.utility.CommandUtility;
 import java.util.List;
 import java.util.Locale;
@@ -35,10 +36,9 @@ import java.util.Locale;
  *
  * @since 0.4.0
  */
-@SystemCommand(label = "info", usage = {
-    "player [all]",
-    "room [all]"
-}, description = "Provides brief information about players and rooms on the server")
+@SystemCommand(label = "info", profile = CoreConstant.MONITOR_PROFILE,
+    usage = {"player [all]", "room [all]"},
+    description = "Provides brief information about players and rooms on the server")
 public final class InfoCommand extends AbstractSystemCommandHandler {
 
   @Override
