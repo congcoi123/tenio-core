@@ -28,40 +28,44 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-/** Usage and routing for built-in inspection commands. */
+/**
+ * Usage and routing for built-in inspection commands.
+ */
 final class AdminCommands {
-  private record Command(String usage, String description) {}
 
-  private static final List<Command> COMMANDS = List.of(
-      new Command("stats", "Refresh the statistics table."),
-      new Command("room <id>", "Show room details. Example: room 42"),
-      new Command("session <id>", "Show connection and queue details. Example: session 7"),
-      new Command("network pressure", "List sessions with outbound queues at least 80% full."),
-      new Command("limits", "Show accepted and rejected requests for rate-limited commands."),
-      new Command("history [id]", "Show recent events, optionally for one session. Requires the history profile."),
-      new Command("clear", "Clear the local console output."));
+    private record Command(String usage, String description) {
+    }
 
-  private AdminCommands() {
-  }
+    private static final List<Command> COMMANDS = List.of(
+            new Command("stats", "Refresh the statistics table."),
+            new Command("room <id>", "Show room details. Example: room 42"),
+            new Command("session <id>", "Show connection and queue details. Example: session 7"),
+            new Command("network pressure", "List sessions with outbound queues at least 80% full."),
+            new Command("limits", "Show accepted and rejected requests for rate-limited commands."),
+            new Command("history [id]", "Show recent events, optionally for one session. Requires the history profile."),
+            new Command("clear", "Clear the local console output."));
 
-  static String shortcuts() {
-    return "help | " + COMMANDS.stream().map(Command::usage).collect(Collectors.joining(" | "));
-  }
+    private AdminCommands() {
+    }
 
-  static InspectionResult help() {
-    return new InspectionResult(COMMANDS.stream().map(Command::usage).toList(),
-        COMMANDS.stream().map(Command::description).toList());
-  }
+    static String shortcuts() {
+        return "help | " + COMMANDS.stream().map(Command::usage).collect(Collectors.joining(" | "));
+    }
 
-  static boolean handles(String input) {
-    String normalized = normalize(input);
-    return normalized.equals("server stats") || COMMANDS.stream().anyMatch(command -> {
-      String name = command.usage().split(" [<\\[]", 2)[0];
-      return normalized.equals(name) || normalized.startsWith(name + " ");
-    });
-  }
+    static InspectionResult help() {
+        return new InspectionResult(COMMANDS.stream().map(Command::usage).toList(),
+                COMMANDS.stream().map(Command::description).toList());
+    }
 
-  static String normalize(String input) {
-    return input.strip().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
-  }
+    static boolean handles(String input) {
+        String normalized = normalize(input);
+        return normalized.equals("server stats") || COMMANDS.stream().anyMatch(command -> {
+            String name = command.usage().split(" [<\\[]", 2)[0];
+            return normalized.equals(name) || normalized.startsWith(name + " ");
+        });
+    }
+
+    static String normalize(String input) {
+        return input.strip().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+    }
 }

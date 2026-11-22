@@ -43,34 +43,8 @@ import java.util.Map;
 @Component
 public final class ClientCommandManager extends SystemLogger {
 
+  private final Map<Short, AbstractClientCommandHandler<Player, DataCollection>> commands = new HashMap<>();
   private volatile CommandLimits limits;
-
-  public Map<Short, CommandLimits.Counts> limitCounts() {
-    var active = limits;
-    return active == null ? Map.of() : active.counts();
-  }
-
-  public boolean hasLimits() {
-    var active = limits;
-    return active != null && active.enabled();
-  }
-
-  public void releaseSession(long sessionId) {
-    var active = limits;
-    if (active != null && active.enabled()) {
-      active.releaseSession(sessionId);
-    }
-  }
-
-  public synchronized CommandLimits getLimits() {
-    if (limits == null) {
-      limits = new CommandLimits();
-    }
-    return limits;
-  }
-
-  private final Map<Short, AbstractClientCommandHandler<Player, DataCollection>> commands =
-      new HashMap<>();
 
   /**
    * Registers a command handler.
@@ -78,8 +52,7 @@ public final class ClientCommandManager extends SystemLogger {
    * @param code    The command code
    * @param command The command handler
    */
-  public void registerCommand(Short code,
-                                           AbstractClientCommandHandler<Player, DataCollection> command) {
+  public void registerCommand(Short code, AbstractClientCommandHandler<Player, DataCollection> command) {
     if (isDebugEnabled()) {
       debug("CLIENT_COMMAND", "Registered command > ", code);
     }
@@ -130,6 +103,52 @@ public final class ClientCommandManager extends SystemLogger {
    */
   public AbstractClientCommandHandler<Player, DataCollection> getHandler(Short code) {
     return commands.get(code);
+  }
+
+  /**
+   * Returns an immutable snapshot of accepted and rejected requests by command code.
+   *
+   * @return counts for configured commands, or an empty map if no limits are configured
+   */
+  public Map<Short, CommandLimits.Counts> limitCounts() {
+    var active = limits;
+    return active == null ? Map.of() : active.counts();
+  }
+
+  /**
+   * Checks whether any client command has a configured rate limit.
+   *
+   * @return {@code true} if at least one rate limit is configured
+   */
+  public boolean hasLimits() {
+    var active = limits;
+    return active != null && active.enabled();
+  }
+
+  /**
+   * Removes the session-scoped rate-limit state when a session closes.
+   *
+   * @param sessionId the ID used by {@link CommandLimits#allowSession(short, long)}
+   */
+  public void releaseSession(long sessionId) {
+    var active = limits;
+    if (active != null && active.enabled()) {
+      active.releaseSession(sessionId);
+    }
+  }
+
+  /**
+   * Returns the rate limiter, creating it on first access.
+   * Configure application-defined rules during startup through
+   * {@link CommandLimits#configure(short, int, int)}.
+   *
+   * @return the rate limiter owned by this command manager
+   */
+  public synchronized CommandLimits getLimits() {
+    if (limits == null) {
+      limits = new CommandLimits();
+    }
+    return limits;
   }
 
   /**

@@ -30,112 +30,121 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.LongSupplier;
 
-/** Per-manager token buckets. Call configure during command registration. */
+/**
+ * Per-manager token buckets. Call configure during command registration.
+ */
 public final class CommandLimits {
-  public record Counts(long accepted, long rejected) {}
 
-  private final Map<Short, Rule> rules = new ConcurrentHashMap<>();
-  private final LongSupplier clock;
-  private volatile boolean enabled;
-
-  boolean enabled() {
-    return enabled;
-  }
-
-  public CommandLimits() {
-    this(System::nanoTime);
-  }
-
-  CommandLimits(LongSupplier clock) {
-    this.clock = clock;
-  }
-
-  public void configure(short code, int perSecond, int burst) {
-    if (perSecond <= 0 || burst <= 0) {
-      throw new IllegalArgumentException("Rate and burst must both be positive");
-    }
-    if (rules.putIfAbsent(code, new Rule(perSecond, burst)) != null) {
-      throw new IllegalArgumentException("Duplicate command limit for " + code);
-    }
-    enabled = true;
-  }
-
-  public boolean allow(short code, String identity) {
-    var rule = rules.get(code);
-    return rule == null || rule.allow(identity, clock);
-  }
-
-  /** Optional pre-login allowance shared only by requests on this session. */
-  public boolean allowSession(short code, long sessionId) {
-    var rule = rules.get(code);
-    return rule == null || rule.allow(sessionId, clock);
-  }
-
-  public void releaseSession(long sessionId) {
-    rules.values().forEach(rule -> rule.release(sessionId));
-  }
-
-  public Map<Short, Counts> counts() {
-    var result = new HashMap<Short, Counts>();
-    rules.forEach((code, rule) -> result.put(code, rule.counts()));
-    return Map.copyOf(result);
-  }
-
-  public void clear() {
-    rules.clear();
-    enabled = false;
-  }
-
-  private record Bucket(long time, double tokens) {}
-
-  private static final class Rule {
-    private static final int MAX_IDENTITIES = 65536;
-    private final LinkedHashMap<Object, Bucket> buckets = new LinkedHashMap<>(16, 0.75f, true);
-    private final int rate;
-    private final int burst;
-    private final long refillNanos;
-    private long accepted;
-    private long rejected;
-
-    Rule(int rate, int burst) {
-      this.rate = rate;
-      this.burst = burst;
-      refillNanos = (long) Math.ceil(burst * 1_000_000_000.0 / rate);
+    public record Counts(long accepted, long rejected) {
     }
 
-    synchronized boolean allow(Object identity, LongSupplier clock) {
-      long now = clock.getAsLong();
-      // Once full, a bucket is equivalent to a new identity.
-      // Bound cleanup work per request after a quiet period.
-      for (int i = 0; i < 8 && !buckets.isEmpty(); i++) {
-        if (now - buckets.firstEntry().getValue().time() < refillNanos) {
-          break;
+    private final Map<Short, Rule> rules = new ConcurrentHashMap<>();
+    private final LongSupplier clock;
+    private volatile boolean enabled;
+
+    boolean enabled() {
+        return enabled;
+    }
+
+    public CommandLimits() {
+        this(System::nanoTime);
+    }
+
+    CommandLimits(LongSupplier clock) {
+        this.clock = clock;
+    }
+
+    public void configure(short code, int perSecond, int burst) {
+        if (perSecond <= 0 || burst <= 0) {
+            throw new IllegalArgumentException("Rate and burst must both be positive");
         }
-        buckets.pollFirstEntry();
-      }
-      var previous = buckets.get(identity);
-      if (identity == null || (previous == null && buckets.size() >= MAX_IDENTITIES)) {
-        rejected++;
-        return false;
-      }
-      double tokens = previous == null ? burst : Math.min(burst,
-          previous.tokens() + (now - previous.time()) * (double) rate / 1_000_000_000);
-      if (tokens < 1) {
-        buckets.put(identity, new Bucket(now, tokens));
-        rejected++;
-        return false;
-      }
-      buckets.put(identity, new Bucket(now, tokens - 1));
-      accepted++;
-      return true;
+        if (rules.putIfAbsent(code, new Rule(perSecond, burst)) != null) {
+            throw new IllegalArgumentException("Duplicate command limit for " + code);
+        }
+        enabled = true;
     }
 
-    synchronized void release(long sessionId) {
-      buckets.remove(sessionId);
+    public boolean allow(short code, String identity) {
+        var rule = rules.get(code);
+        return rule == null || rule.allow(identity, clock);
     }
 
-    synchronized Counts counts() {
-      return new Counts(accepted, rejected);
+    /**
+     * Optional pre-login allowance shared only by requests on this session.
+     */
+    public boolean allowSession(short code, long sessionId) {
+        var rule = rules.get(code);
+        return rule == null || rule.allow(sessionId, clock);
     }
-  }
+
+    public void releaseSession(long sessionId) {
+        rules.values().forEach(rule -> rule.release(sessionId));
+    }
+
+    public Map<Short, Counts> counts() {
+        var result = new HashMap<Short, Counts>();
+        rules.forEach((code, rule) -> result.put(code, rule.counts()));
+        return Map.copyOf(result);
+    }
+
+    public void clear() {
+        rules.clear();
+        enabled = false;
+    }
+
+    private record Bucket(long time, double tokens) {
+    }
+
+    private static final class Rule {
+
+        private static final int MAX_IDENTITIES = 65536;
+
+        private final LinkedHashMap<Object, Bucket> buckets = new LinkedHashMap<>(16, 0.75f, true);
+        private final int rate;
+        private final int burst;
+        private final long refillNanos;
+        private long accepted;
+        private long rejected;
+
+        Rule(int rate, int burst) {
+            this.rate = rate;
+            this.burst = burst;
+            refillNanos = (long) Math.ceil(burst * 1_000_000_000.0 / rate);
+        }
+
+        synchronized boolean allow(Object identity, LongSupplier clock) {
+            long now = clock.getAsLong();
+            // Once full, a bucket is equivalent to a new identity.
+            // Bound cleanup work per request after a quiet period.
+            for (int i = 0; i < 8 && !buckets.isEmpty(); i++) {
+                if (now - buckets.firstEntry().getValue().time() < refillNanos) {
+                    break;
+                }
+                buckets.pollFirstEntry();
+            }
+            var previous = buckets.get(identity);
+            if (identity == null || (previous == null && buckets.size() >= MAX_IDENTITIES)) {
+                rejected++;
+                return false;
+            }
+            double tokens = previous == null ? burst : Math.min(burst,
+                    previous.tokens() + (now - previous.time()) * (double) rate / 1_000_000_000);
+            if (tokens < 1) {
+                buckets.put(identity, new Bucket(now, tokens));
+                rejected++;
+                return false;
+            }
+            buckets.put(identity, new Bucket(now, tokens - 1));
+            accepted++;
+            return true;
+        }
+
+        synchronized void release(long sessionId) {
+            buckets.remove(sessionId);
+        }
+
+        synchronized Counts counts() {
+            return new Counts(accepted, rejected);
+        }
+    }
 }

@@ -24,57 +24,63 @@ THE SOFTWARE.
 
 package com.tenio.core.admin;
 
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.io.Serial;
 import java.util.ArrayList;
-import javax.swing.AbstractAction;
-import javax.swing.JTextField;
-import javax.swing.KeyStroke;
 
-/** In-memory command recall for the current console window. */
+/**
+ * In-memory command recall for the current console window.
+ */
 final class CommandHistory {
-  private static final int LIMIT = 100;
-  private final ArrayList<String> entries = new ArrayList<>();
-  private final JTextField input;
-  private int position;
-  private String draft = "";
 
-  CommandHistory(JTextField input) {
-    this.input = input;
-    bind(KeyEvent.VK_UP, "previous-command", -1);
-    bind(KeyEvent.VK_DOWN, "next-command", 1);
-  }
+    private static final int LIMIT = 100;
+    private final ArrayList<String> entries = new ArrayList<>();
+    private final JTextField input;
+    private int position;
+    private String draft = "";
 
-  void record(String command) {
-    if (entries.isEmpty() || !entries.getLast().equals(command)) {
-      if (entries.size() == LIMIT) {
-        entries.removeFirst();
-      }
-      entries.add(command);
+    CommandHistory(JTextField input) {
+        this.input = input;
+        bind(KeyEvent.VK_UP, "previous-command", -1);
+        bind(KeyEvent.VK_DOWN, "next-command", 1);
     }
-    position = entries.size();
-    draft = "";
-  }
 
-  private void bind(int key, String name, int direction) {
-    input.getInputMap().put(KeyStroke.getKeyStroke(key, 0), name);
-    input.getActionMap().put(name, new AbstractAction() {
-      @Override
-      public void actionPerformed(ActionEvent event) {
-        if (!input.isEditable()) {
-          return;
+    void record(String command) {
+        if (entries.isEmpty() || !entries.getLast().equals(command)) {
+            if (entries.size() == LIMIT) {
+                entries.removeFirst();
+            }
+            entries.add(command);
         }
-        int next = position + direction;
-        if (next < 0 || next > entries.size()) {
-          return;
-        }
-        if (position == entries.size()) {
-          draft = input.getText();
-        }
-        position = next;
-        input.setText(position == entries.size() ? draft : entries.get(position));
-        input.setCaretPosition(input.getDocument().getLength());
-      }
-    });
-  }
+        position = entries.size();
+        draft = "";
+    }
+
+    private void bind(int key, String name, int direction) {
+        input.getInputMap().put(KeyStroke.getKeyStroke(key, 0), name);
+        input.getActionMap().put(name, new AbstractAction() {
+
+            @Serial
+            private static final long serialVersionUID = 2013527878408300821L;
+
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                if (!input.isEditable()) {
+                    return;
+                }
+                int next = position + direction;
+                if (next < 0 || next > entries.size()) {
+                    return;
+                }
+                if (position == entries.size()) {
+                    draft = input.getText();
+                }
+                position = next;
+                input.setText(position == entries.size() ? draft : entries.get(position));
+                input.setCaretPosition(input.getDocument().getLength());
+            }
+        });
+    }
 }

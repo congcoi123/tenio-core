@@ -26,17 +26,20 @@ package com.tenio.core.admin;
 
 import java.util.List;
 
-/** Immutable two-column view for local server inspection. */
+/**
+ * Immutable two-column view for local server inspection.
+ */
 public record InspectionResult(List<String> labels, List<String> values) {
-  public InspectionResult {
-    labels = List.copyOf(labels);
-    values = List.copyOf(values);
-    if (labels.size() != values.size()) {
-      throw new IllegalArgumentException("Mismatched row count");
-    }
-  }
 
-  public static InspectionResult message(String text) {
-    return new InspectionResult(List.of("Result"), List.of(text));
-  }
+    public InspectionResult {
+        labels = List.copyOf(labels);
+        values = List.copyOf(values);
+        if (labels.size() != values.size()) {
+            throw new IllegalArgumentException("Mismatched row count");
+        }
+    }
+
+    public static InspectionResult message(String text) {
+        return new InspectionResult(List.of("Result"), List.of(text));
+    }
 }
