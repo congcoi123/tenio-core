@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.LongConsumer;
 
 /**
  * The implementation for session manager.
@@ -52,38 +53,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @see SessionManager
  */
 public final class SessionManagerImpl extends AbstractManager implements SessionManager {
-
-  private java.util.function.LongConsumer onSessionRemoved;
-
-  public void onSessionRemoved(java.util.function.LongConsumer listener) {
-    onSessionRemoved = listener;
-  }
-
-  private volatile boolean monitoring;
-  private volatile OperationalHistory history;
-
-  public void enableQueueMonitoring() {
-    monitoring = true;
-  }
-
-  public void setOperationalHistory(OperationalHistory history) {
-    this.history = history;
-  }
-
-  @Override
-  public OperationalHistory getOperationalHistory() {
-    return history;
-  }
-
-  @Override
-  public Session getSessionById(long id) {
-    lock.readLock().lock();
-    try {
-      return sessionByIds.get(id);
-    } finally {
-      lock.readLock().unlock();
-    }
-  }
 
   private final Map<Long, Session> sessionByIds;
   private final Map<SocketChannel, Session> sessionBySockets;
@@ -99,6 +68,9 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private int slowConsumingInboundQueueWarningThreshold;
   private int slowConsumingOutboundQueueWarningThreshold;
   private int maxIdleTimeInSeconds;
+  private volatile boolean monitoring;
+  private volatile OperationalHistory history;
+  private LongConsumer onSessionRemoved;
 
   private SessionManagerImpl(EventManager eventManager) {
     super(eventManager);
@@ -189,6 +161,16 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     lock.readLock().lock();
     try {
       return sessionByDatagrams.get(udpConvey);
+    } finally {
+      lock.readLock().unlock();
+    }
+  }
+
+  @Override
+  public Session getSessionById(long id) {
+    lock.readLock().lock();
+    try {
+      return sessionByIds.get(id);
     } finally {
       lock.readLock().unlock();
     }
@@ -319,6 +301,26 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   @Override
   public void configureMaxIdleTimeInSeconds(int seconds) {
     maxIdleTimeInSeconds = seconds;
+  }
+
+  @Override
+  public void onSessionRemoved(LongConsumer listener) {
+    onSessionRemoved = listener;
+  }
+
+  @Override
+  public void enableQueueMonitoring() {
+    monitoring = true;
+  }
+
+  @Override
+  public void setOperationalHistory(OperationalHistory history) {
+    this.history = history;
+  }
+
+  @Override
+  public OperationalHistory getOperationalHistory() {
+    return history;
   }
 
   @Override

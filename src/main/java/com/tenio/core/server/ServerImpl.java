@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.Set;
-import com.tenio.core.network.entity.session.manager.SessionManagerImpl;
 import com.tenio.core.admin.ServerInspection;
 import com.tenio.core.admin.AdminWindow;
 import com.tenio.core.admin.OperationalHistory;
@@ -215,8 +214,8 @@ public final class ServerImpl extends SystemLogger implements Server {
     setupNetworkService(configuration, bootstrapHandler);
     setupInternalProcessorService(configuration, bootstrapHandler);
     var profiles = bootstrapHandler.getActiveProfiles();
-    if (clientCommandManager != null && clientCommandManager.hasLimits()
-        && network.getSessionManager() instanceof SessionManagerImpl sessions) {
+    var sessions = network.getSessionManager();
+    if (clientCommandManager != null && clientCommandManager.hasLimits()) {
       sessions.onSessionRemoved(clientCommandManager::releaseSession);
     }
     boolean historyEnabled = profiles != null && profiles.contains(CoreConstant.HISTORY_PROFILE);
@@ -224,17 +223,15 @@ public final class ServerImpl extends SystemLogger implements Server {
     boolean windowEnabled = monitorEnabled && !java.awt.GraphicsEnvironment.isHeadless();
     if (monitorEnabled || historyEnabled) {
       inspection = new ServerInspection(this, network, monitorEnabled);
-      if (network.getSessionManager() instanceof SessionManagerImpl sessions) {
-        if (monitorEnabled) {
-          sessions.enableQueueMonitoring();
-        }
-        if (historyEnabled) {
-          var history = windowEnabled ? new OperationalHistory(1024)
-              : OperationalHistory.toFile(java.nio.file.Path.of("logs", "history"));
-          sessions.setOperationalHistory(history);
-          if (history.file() != null && isInfoEnabled()) {
-            info("HISTORY", "Writing operational history to ", history.file().toAbsolutePath());
-          }
+      if (monitorEnabled) {
+        sessions.enableQueueMonitoring();
+      }
+      if (historyEnabled) {
+        var history = windowEnabled ? new OperationalHistory(1024)
+            : OperationalHistory.toFile(java.nio.file.Path.of("logs", "history"));
+        sessions.setOperationalHistory(history);
+        if (history.file() != null && isInfoEnabled()) {
+          info("HISTORY", "Writing operational history to ", history.file().toAbsolutePath());
         }
       }
     }
