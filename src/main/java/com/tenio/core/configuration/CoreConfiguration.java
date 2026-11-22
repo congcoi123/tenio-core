@@ -27,14 +27,10 @@ package com.tenio.core.configuration;
 import com.tenio.common.configuration.CommonConfiguration;
 import com.tenio.common.utility.XmlUtility;
 import com.tenio.core.bootstrap.injector.ProfileSelection;
-import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.define.TransportType;
-import java.io.File;
-import java.io.InputStream;
 import java.util.HashMap;
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 /**
@@ -58,6 +54,18 @@ import org.w3c.dom.Node;
  */
 public abstract class CoreConfiguration extends CommonConfiguration {
 
+  private ConfigurationSource startupSource;
+
+  /** Applies the prepared XML through the application's normal load override. */
+  public final void loadPrepared(String file, ConfigurationSource source) throws Exception {
+    startupSource = source;
+    try {
+      load(file);
+    } finally {
+      startupSource = null;
+    }
+  }
+
   /**
    * Reads file content and converts it to configuration values.
    *
@@ -67,28 +75,14 @@ public abstract class CoreConfiguration extends CommonConfiguration {
    */
   @Override
   public void load(String file) throws Exception {
-    // 1. Check external file (user-provided)
-    File externalFile = file == null ? null : new File(file);
-    Document document;
-
-    if (file != null && externalFile.exists()) {
-      if (isInfoEnabled()) {
-        info("CONFIGURATION", buildgen("The external configuration file: ", file));
-      }
-      document = XmlUtility.parseFile(externalFile);
-    } else {
-      // 2. Fallback to embedded default
-      if (isInfoEnabled()) {
-        info("CONFIGURATION", buildgen("The external configuration file is not found, use the default: ", CoreConstant.DEFAULT_CONFIGURATION_FILE));
-      }
-      try (InputStream configStream = getClass().getClassLoader().getResourceAsStream(CoreConstant.DEFAULT_CONFIGURATION_FILE)) {
-        document = XmlUtility.parseStream(configStream);
-      } catch (Exception exception) {
-        throw new Exception(exception);
-      }
+    var source = startupSource;
+    if (source == null) {
+      source = ConfigurationSource.read(file, getClass().getClassLoader());
     }
-
-    Node root = document.getFirstChild();
+    if (isInfoEnabled()) {
+      info("CONFIGURATION", source.description());
+    }
+    Node root = source.document().getDocumentElement();
 
     // Server Properties
     String configuredProfiles = null;
@@ -103,7 +97,9 @@ public abstract class CoreConfiguration extends CommonConfiguration {
     }
 
     // Validate the actual XML value; a reused configuration cannot retain a previous selection.
-    ProfileSelection.parseRequired(configuredProfiles);
+    if (configuredProfiles == null || !configuredProfiles.isBlank()) {
+      ProfileSelection.parseRequired(configuredProfiles);
+    }
 
     // Network Properties
     var attrNetworkProperties = XmlUtility.getNodeList(root, "//Server/Network/Properties/Property");
@@ -143,14 +139,6 @@ public abstract class CoreConfiguration extends CommonConfiguration {
         XmlUtility.getNodeList(root, "//Server/Configuration/Workers/Worker");
     for (int j = 0; j < attrConfigurationWorkers.getLength(); j++) {
       var dataNode = attrConfigurationWorkers.item(j);
-      var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
-      push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
-    }
-    // Configured Schedules
-    var attrConfigurationSchedules =
-        XmlUtility.getNodeList(root, "//Server/Configuration/Schedules/Task");
-    for (int j = 0; j < attrConfigurationSchedules.getLength(); j++) {
-      var dataNode = attrConfigurationSchedules.item(j);
       var paramName = dataNode.getAttributes().getNamedItem("name").getTextContent();
       push(CoreConfigurationType.getByValue(paramName), dataNode.getTextContent());
     }

@@ -207,7 +207,8 @@ class InjectorCollisionDiagnosticsTest {
 
   @Test
   void duplicateClientAndSystemCommandRegistrationsStillWarn() throws Exception {
-    scan("duplicate-commands");
+    injector.setProfiles(Set.of("duplicate-commands", "monitor"));
+    injector.scanPackages(CollisionDiagnosticsFixtures.class);
 
     assertDiagnostic("[PROFILE COLLISION]", "duplicate-commands", "client-command:84",
         FirstClient.class.getName(), SecondClient.class.getName());

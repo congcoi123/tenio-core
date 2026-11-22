@@ -421,6 +421,21 @@ class SessionImplTest {
     DataCollection msg2 = mock(DataCollection.class);
     session.enqueueInbound(msg1);
     assertThrows(InboundQueueFullException.class, () -> session.enqueueInbound(msg2));
+    assertNull(session.inboundQueueStatistics());
+  }
+
+  @Test
+  void reportsInboundFullRejectionsOnlyWhenMonitoringIsEnabled() {
+    var session = SessionImpl.newInstance();
+    session.configureMaxInboundQueueSize(1);
+    session.configureOutboundQueue(OutboundQueueImpl.newInstance());
+    session.enableInboundQueueMonitoring();
+    var message = mock(DataCollection.class);
+
+    assertEquals(new Session.InboundQueueStatistics(0, 1, 0), session.inboundQueueStatistics());
+    session.enqueueInbound(message);
+    assertThrows(InboundQueueFullException.class, () -> session.enqueueInbound(message));
+    assertEquals(new Session.InboundQueueStatistics(1, 1, 1), session.inboundQueueStatistics());
   }
 
   @Test

@@ -46,8 +46,7 @@ class CoreKeepaliveConfigurationTest {
 
     assertEquals(0, configuration.getInt(
         CoreConfigurationType.PROP_MAIN_CONNECTION_KEEPALIVE_TIMEOUT_SECONDS));
-    assertEquals(0, configuration.getInt(
-        CoreConfigurationType.INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN));
+    assertFalse(configuration.isDefined(CoreConfigurationType.INTERVAL_MAIN_CONNECTION_KEEPALIVE_SCAN));
   }
 
   @Test
@@ -57,8 +56,8 @@ class CoreKeepaliveConfigurationTest {
         <Server>
           <Properties><Property name="profile">test</Property></Properties>
           <Configuration>
-            <Schedules><Task name="main-connection-keepalive-scan-interval">7</Task></Schedules>
             <Properties>
+              <Property name="main-connection-keepalive-scan-interval">7</Property>
               <Property name="main-connection-keepalive-timeout-seconds">45</Property>
             </Properties>
           </Configuration>

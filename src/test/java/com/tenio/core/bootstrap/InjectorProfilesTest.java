@@ -309,10 +309,13 @@ class InjectorProfilesTest {
     assertEquals(1, injector.getClientCommandManager().getHandlers().size());
     assertEquals(1, injector.getSystemCommandManager().getHandlers().size());
 
+    var previousManager = injector.getSystemCommandManager();
     scan(CommandFixtures.class, "unrelated");
     assertTrue(injector.getClientCommandManager().getHandlers().isEmpty());
     assertTrue(injector.getSystemCommandManager().getHandlers().isEmpty());
-    assertTrue(injector.getSystemCommandManager().getAnnotations().isEmpty());
+    assertTrue(previousManager.getHandlers().isEmpty());
+    assertTrue(previousManager.getAnnotations().isEmpty());
+    assertEquals(2, CommandFixtures.worldConstructions);
   }
 
   private void scan(Class<?> fixtures, String... profiles) throws Exception {

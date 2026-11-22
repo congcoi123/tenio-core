@@ -54,6 +54,8 @@ import com.tenio.core.bootstrap.test.impl.TestClassDCopy;
 import com.tenio.core.bootstrap.test.inf.TestInterfaceA;
 import com.tenio.core.bootstrap.test.inf.TestInterfaceC;
 import com.tenio.core.bootstrap.test.inf.TestInterfaceD;
+import com.tenio.core.command.system.implement.HelpCommand;
+import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.exception.DuplicatedBeanCreationException;
 import com.tenio.core.exception.MultipleImplementedClassForInterfaceException;
 import com.tenio.core.exception.NoImplementedClassFoundException;
@@ -86,7 +88,7 @@ class InjectorTest {
   }
 
   @Test
-  @DisplayName("getClassesMap, getClassBeansMap, getServletBeansMap, getSystemCommandManager, getClientCommandManager should not be null")
+  @DisplayName("Registries exist before scanning")
   void testGettersNotNull() {
     Injector injector = new Injector();
     assertNotNull(injector.getClassesMap());
@@ -240,6 +242,30 @@ class InjectorTest {
   void scanPackageWithSystemCommandRegistersCommand() throws Exception {
     injector.scanPackages(null, "com.tenio.core.bootstrap.command");
     assertNotNull(injector.getSystemCommandManager().getHandler("test-sys"));
+  }
+
+  @Test
+  @DisplayName("Built-in system commands are created only with the monitor profile")
+  void builtInSystemCommandsRequireMonitorProfile() throws Exception {
+    injector.scanPackages(HelpCommand.class);
+
+    assertTrue(injector.getSystemCommandManager().getHandlers().isEmpty());
+    assertFalse(injector.getClassBeansMap().containsKey(new BeanClass(HelpCommand.class, "help")));
+
+    injector.setProfiles(Set.of(CoreConstant.MONITOR_PROFILE));
+    injector.scanPackages(HelpCommand.class);
+
+    var manager = injector.getSystemCommandManager();
+    assertSame(manager, manager.getHandler("help").getCommandManager());
+    assertEquals(Set.of("help", "info", "server", "unban"), manager.getHandlers().keySet());
+    assertSame(manager.getHandler("help"),
+        injector.getClassBeansMap().get(new BeanClass(HelpCommand.class, "help")));
+
+    injector.setProfiles(Set.of("world"));
+    injector.scanPackages(HelpCommand.class);
+
+    assertTrue(injector.getSystemCommandManager().getHandlers().isEmpty());
+    assertTrue(manager.getHandlers().isEmpty());
   }
 
   @Test
@@ -448,7 +474,7 @@ class InjectorTest {
         () -> assertTrue(injector.getClassesMap().isEmpty()),
         () -> assertTrue(injector.getClassBeansMap().isEmpty()),
         () -> assertTrue(injector.getServletBeansMap().isEmpty()),
-        () -> assertNull(injector.getSystemCommandManager().getHandler("test-sys")),
+        () -> assertTrue(injector.getSystemCommandManager().getHandlers().isEmpty()),
         () -> assertNull(injector.getClientCommandManager().getHandler((short) 42)),
         () -> assertNull(injector.getBean(TestInterfaceA.class)),
         () -> assertNull(injector.getBean(BootstrapComponentTwo.class)));
@@ -466,7 +492,7 @@ class InjectorTest {
         () -> assertTrue(injector.getClassesMap().isEmpty()),
         () -> assertTrue(injector.getClassBeansMap().isEmpty()),
         () -> assertTrue(injector.getServletBeansMap().isEmpty()),
-        () -> assertNull(injector.getSystemCommandManager().getHandler("test-sys")),
+        () -> assertTrue(injector.getSystemCommandManager().getHandlers().isEmpty()),
         () -> assertNull(injector.getClientCommandManager().getHandler((short) 42)));
   }
   @Test

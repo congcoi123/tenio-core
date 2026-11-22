@@ -27,11 +27,9 @@ package com.tenio.core;
 import com.tenio.common.logger.LoggerBootstrap;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.bootstrap.Bootstrapper;
-import com.tenio.core.bootstrap.injector.ProfileSelection;
-import com.tenio.core.configuration.DefaultCoreConfiguration;
+import com.tenio.core.configuration.ConfigurationSource;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.constant.Trademark;
-import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.monitoring.system.SystemInfo;
 import com.tenio.core.monitoring.system.SystemMonitoring;
 import com.tenio.core.server.Server;
@@ -127,17 +125,19 @@ public final class ApplicationLauncher extends SystemLogger {
     systemInfo.logDiskInfo();
 
     Bootstrapper bootstrap = null;
+    ConfigurationSource source = null;
     if (entryClass != null) {
       bootstrap = new Bootstrapper();
       try {
-        var selectionConfiguration = new DefaultCoreConfiguration();
-        selectionConfiguration.load(params == null || params.length == 0 ? null : params[0]);
+        source = ConfigurationSource.read(params == null || params.length == 0 ? null : params[0],
+            entryClass.getClassLoader());
         bootstrap.runWithProfiles(
             entryClass,
-            ProfileSelection.parseRequired(selectionConfiguration.getString(CoreConfigurationType.PROFILE)),
+            source.profiles(),
             CoreConstant.DEFAULT_BOOTSTRAP_PACKAGE,
             CoreConstant.DEFAULT_EVENT_PACKAGE,
             CoreConstant.DEFAULT_COMMAND_PACKAGE,
+            CoreConstant.DEFAULT_SCHEDULER_PACKAGE,
             CoreConstant.DEFAULT_REST_CONTROLLER_PACKAGE
         );
       } catch (Exception exception) {
@@ -152,7 +152,7 @@ public final class ApplicationLauncher extends SystemLogger {
     var server = ServerImpl.getInstance();
     try {
       assert bootstrap != null;
-      server.start(bootstrap.getBootstrapHandler(), params);
+      server.start(bootstrap.getBootstrapHandler(), params, source);
     } catch (Exception exception) {
       if (isErrorEnabled()) {
         error(exception, "The application started with exceptions occurred: ", exception.getMessage());

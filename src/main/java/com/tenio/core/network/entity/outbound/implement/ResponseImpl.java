@@ -289,12 +289,12 @@ public final class ResponseImpl extends SystemLogger implements Response {
   @Override
   public String toString() {
     return "Response{" +
-        "content=" + content +
-        ", players=" + players +
-        ", nonSessionPlayers=" + nonSessionPlayers +
-        ", socketSessions=" + socketSessions +
-        ", datagramSessions=" + datagramSessions +
-        ", webSocketSessions=" + webSocketSessions +
+        "contentType=" + (content == null ? null : content.getClass().getName()) +
+        ", playersCount=" + (players == null ? 0 : players.size()) +
+        ", nonSessionPlayersCount=" + (nonSessionPlayers == null ? 0 : nonSessionPlayers.size()) +
+        ", socketSessionsCount=" + (socketSessions == null ? 0 : socketSessions.size()) +
+        ", datagramSessionsCount=" + (datagramSessions == null ? 0 : datagramSessions.size()) +
+        ", webSocketSessionsCount=" + (webSocketSessions == null ? 0 : webSocketSessions.size()) +
         ", guarantee=" + guarantee +
         ", prioritizedUdp=" + prioritizedUdp +
         ", onlyUdp=" + onlyUdp +

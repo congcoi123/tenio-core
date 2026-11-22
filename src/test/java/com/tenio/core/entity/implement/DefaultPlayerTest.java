@@ -301,4 +301,17 @@ class DefaultPlayerTest {
     DefaultPlayer player = new DefaultPlayer(null);
     assertEquals(0, player.hashCode());
   }
+
+  @Test
+  void describesRoomAndOwnerWithCyclicProperties() {
+    var player = DefaultPlayer.newInstance("TEST");
+    var room = DefaultRoom.newInstance();
+    room.setOwner(player);
+    player.setCurrentRoom(room);
+    player.setProperty("self", player);
+    room.setProperty("self", room);
+
+    assertTrue(player.toString().contains("currentRoomId=" + room.getId()));
+    assertTrue(room.toString().contains("ownerIdentity=TEST"));
+  }
 }

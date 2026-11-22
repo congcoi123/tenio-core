@@ -38,7 +38,7 @@ import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
-import com.tenio.core.scheduler.task.core.AutoCleanOrphanSessionTask;
+import com.tenio.core.scheduler.task.AutoCleanOrphanSessionTask;
 import io.netty.channel.Channel;
 import java.io.IOException;
 import java.net.SocketAddress;
@@ -206,6 +206,18 @@ public interface Session {
    * @since 0.7.0
    */
   void configureMaxInboundQueueSize(int queueSize);
+
+  /**
+   * Enables inbound queue diagnostics for this session. Call this method before making the
+   * session available to other threads.
+   *
+   * <p>Implementations that support diagnostics override this method. The default implementation
+   * leaves diagnostics disabled.
+   *
+   * @see #inboundQueueStatistics()
+   */
+  default void enableInboundQueueMonitoring() {
+  }
 
   /**
    * Sets the threshold for warning of slow consuming inbound queue.
@@ -611,6 +623,27 @@ public interface Session {
    */
   default void close() throws IOException {
     close(ConnectionDisconnectMode.EXCEPTION, PlayerDisconnectMode.EXCEPTION);
+  }
+
+  /**
+   * A snapshot of inbound message queue occupancy and rejections.
+   *
+   * @param depth the number of messages waiting in the queue
+   * @param capacity the maximum number of messages the queue can hold, or a non-positive value
+   *     if the queue is unbounded
+   * @param fullRejections the number of inbound messages rejected because the queue was full
+   */
+  record InboundQueueStatistics(int depth, int capacity, long fullRejections) {
+  }
+
+  /**
+   * Returns a snapshot of the session's inbound queue diagnostics, when available.
+   * The default implementation returns {@code null}.
+   *
+   * @return the current snapshot, or {@code null} if diagnostics are disabled or unsupported
+   */
+  default InboundQueueStatistics inboundQueueStatistics() {
+    return null;
   }
 
   /**

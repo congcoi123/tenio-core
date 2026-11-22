@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.session.manager;
 
+import com.tenio.core.admin.OperationalHistory;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.manager.AbstractManager;
@@ -44,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.LongConsumer;
 
 /**
  * The implementation for session manager.
@@ -66,6 +68,9 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private int slowConsumingInboundQueueWarningThreshold;
   private int slowConsumingOutboundQueueWarningThreshold;
   private int maxIdleTimeInSeconds;
+  private volatile boolean monitoring;
+  private volatile OperationalHistory history;
+  private LongConsumer onSessionRemoved;
 
   private SessionManagerImpl(EventManager eventManager) {
     super(eventManager);
@@ -162,6 +167,16 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   }
 
   @Override
+  public Session getSessionById(long id) {
+    lock.readLock().lock();
+    try {
+      return sessionByIds.get(id);
+    } finally {
+      lock.readLock().unlock();
+    }
+  }
+
+  @Override
   public void configureConnectionFilter(ConnectionFilter connectionFilter) {
     this.connectionFilter = connectionFilter;
   }
@@ -248,6 +263,9 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     } finally {
       lock.writeLock().unlock();
     }
+    if (onSessionRemoved != null) {
+      onSessionRemoved.accept(session.getId());
+    }
   }
 
   @Override
@@ -286,6 +304,26 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   }
 
   @Override
+  public void onSessionRemoved(LongConsumer listener) {
+    onSessionRemoved = listener;
+  }
+
+  @Override
+  public void enableQueueMonitoring() {
+    monitoring = true;
+  }
+
+  @Override
+  public void setOperationalHistory(OperationalHistory history) {
+    this.history = history;
+  }
+
+  @Override
+  public OperationalHistory getOperationalHistory() {
+    return history;
+  }
+
+  @Override
   public void emitEvent(ServerEvent event, Object... params) {
     eventManager.emit(event, params);
   }
@@ -295,8 +333,13 @@ public final class SessionManagerImpl extends AbstractManager implements Session
     snapshotSessionCount = snapshotSessionsList.size();
   }
 
-  private OutboundQueue configureNewOutboundQueue() {
-    OutboundQueue outboundQueue = OutboundQueueImpl.newInstance();
+  private OutboundQueue configureNewOutboundQueue(Session session) {
+    var outboundQueue = OutboundQueueImpl.newInstance();
+    var operationalHistory = history;
+    boolean diagnostics = monitoring;
+    if (diagnostics || operationalHistory != null) {
+      outboundQueue.enableMonitoring(diagnostics, operationalHistory, session.getId(), String.valueOf(session.getTransportType()));
+    }
     outboundQueue.configureMaxSize(outboundQueueSize);
     outboundQueue.configureOutboundQueuePolicy(outboundQueuePolicy);
     return outboundQueue;
@@ -305,7 +348,10 @@ public final class SessionManagerImpl extends AbstractManager implements Session
   private void configureSession(Session session) {
     session.configureSessionManager(this);
     session.configureMaxInboundQueueSize(inboundQueueSize);
-    session.configureOutboundQueue(configureNewOutboundQueue());
+    if (monitoring) {
+      session.enableInboundQueueMonitoring();
+    }
+    session.configureOutboundQueue(configureNewOutboundQueue(session));
     session.configureSlowConsumingInboundQueueWarningThreshold(slowConsumingInboundQueueWarningThreshold);
     session.configureSlowConsumingOutboundQueueWarningThreshold(slowConsumingOutboundQueueWarningThreshold);
     session.configureConnectionFilter(connectionFilter);

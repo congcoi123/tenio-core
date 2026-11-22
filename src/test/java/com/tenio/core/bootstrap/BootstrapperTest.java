@@ -64,13 +64,13 @@ class BootstrapperTest {
   @Test
   @DisplayName("Constructed bootstrappers should own independent application contexts")
   void constructedBootstrappersShouldOwnIndependentContexts() throws Exception {
-    bootstrapper.runWithProfiles(BootstrapApplication.class, Set.of("world"), EVENT_HANDLERS);
+    bootstrapper.runWithProfiles(BootstrapApplication.class, Set.of("world", "monitor"), EVENT_HANDLERS);
     var first = snapshot(bootstrapper);
 
     var other = new Bootstrapper();
     assertNull(other.getBootstrapHandler());
     assertContextUnchanged(bootstrapper, first);
-    other.runWithProfiles(BootstrapApplication.class, Set.of("game"), EVENT_HANDLERS);
+    other.runWithProfiles(BootstrapApplication.class, Set.of("game", "monitor"), EVENT_HANDLERS);
     var second = snapshot(other);
 
     assertAll(
@@ -247,12 +247,17 @@ class BootstrapperTest {
     assertNotNull(handler.getEventHandler());
     assertNotNull(handler.getConfigurationHandler());
     assertNotNull(handler.getClientCommandManager());
-    assertNotNull(handler.getSystemCommandManager());
     assertNotNull(handler.getServletMap());
     var client = assertInstanceOf(BootstrapClientCommand.class,
         handler.getClientCommandManager().getHandler(CLIENT_COMMAND_CODE));
+    var manager = handler.getSystemCommandManager();
+    assertNotNull(manager);
     var system = assertInstanceOf(BootstrapSystemCommand.class,
-        handler.getSystemCommandManager().getHandler(SYSTEM_COMMAND_LABEL));
+        manager.getHandler(SYSTEM_COMMAND_LABEL));
+    assertSame(manager, system.getCommandManager());
+    assertSame(handler.getEventHandler(), system.eventHandler);
+    assertEquals(Set.of(SYSTEM_COMMAND_LABEL), manager.getHandlers().keySet());
+    assertEquals(Set.of(SYSTEM_COMMAND_LABEL), manager.getAnnotations().keySet());
     var controller = handler.getBeanByClazz(BootstrapRestController.class, CONTROLLER_PATH);
     assertNotNull(controller);
     assertNotNull(handler.getServletMap().get(SERVLET_PATH));
@@ -262,17 +267,11 @@ class BootstrapperTest {
         () -> assertSame(handler.getConfigurationHandler(),
             handler.getBeanByClazz(ConfigurationHandler.class)),
         () -> assertSame(handler.getClientCommandManager(), client.getCommandManager()),
-        () -> assertSame(handler.getSystemCommandManager(), system.getCommandManager()),
         () -> assertSame(handler.getEventHandler(), client.eventHandler),
-        () -> assertSame(handler.getEventHandler(), system.eventHandler),
         () -> assertSame(handler.getEventHandler(), controller.eventHandler),
         () -> assertSame(controller.status(), handler.getServletMap().get(SERVLET_PATH)),
         () -> assertEquals(Set.of(CLIENT_COMMAND_CODE),
             handler.getClientCommandManager().getHandlers().keySet()),
-        () -> assertEquals(Set.of(SYSTEM_COMMAND_LABEL),
-            handler.getSystemCommandManager().getHandlers().keySet()),
-        () -> assertEquals(Set.of(SYSTEM_COMMAND_LABEL),
-            handler.getSystemCommandManager().getAnnotations().keySet()),
         () -> assertEquals(Set.of(SERVLET_PATH), handler.getServletMap().keySet()));
   }
 
@@ -283,11 +282,8 @@ class BootstrapperTest {
         () -> assertNull(previous.getBeanByClazz(EventHandler.class)),
         () -> assertNull(previous.getBeanByClazz(ConfigurationHandler.class)),
         () -> assertNull(previous.getClientCommandManager().getHandler(CLIENT_COMMAND_CODE)),
-        () -> assertNull(previous.getSystemCommandManager().getHandler(SYSTEM_COMMAND_LABEL)),
         () -> assertNull(previous.getBeanByClazz(BootstrapRestController.class, CONTROLLER_PATH)),
         () -> assertTrue(previous.getClientCommandManager().getHandlers().isEmpty()),
-        () -> assertTrue(previous.getSystemCommandManager().getHandlers().isEmpty()),
-        () -> assertTrue(previous.getSystemCommandManager().getAnnotations().isEmpty()),
         () -> assertTrue(previous.getServletMap().isEmpty()));
   }
 
@@ -297,7 +293,7 @@ class BootstrapperTest {
     return new ContextSnapshot(handler, handler.getEventHandler(),
         handler.getConfigurationHandler(),
         (BootstrapClientCommand) handler.getClientCommandManager().getHandler(CLIENT_COMMAND_CODE),
-        (BootstrapSystemCommand) handler.getSystemCommandManager().getHandler(SYSTEM_COMMAND_LABEL),
+        systemCommand(handler),
         handler.getServletMap().get(SERVLET_PATH), handler.getActiveProfiles());
   }
 
@@ -310,8 +306,6 @@ class BootstrapperTest {
         () -> assertNotSame(previous.configurationHandler(), handler.getConfigurationHandler()),
         () -> assertNotSame(previous.clientCommand(),
             handler.getClientCommandManager().getHandler(CLIENT_COMMAND_CODE)),
-        () -> assertNotSame(previous.systemCommand(),
-            handler.getSystemCommandManager().getHandler(SYSTEM_COMMAND_LABEL)),
         () -> assertNotSame(previous.servlet(), handler.getServletMap().get(SERVLET_PATH)));
   }
 
@@ -325,10 +319,13 @@ class BootstrapperTest {
             handler.getBeanByClazz(ConfigurationHandler.class)),
         () -> assertSame(expected.clientCommand(),
             handler.getClientCommandManager().getHandler(CLIENT_COMMAND_CODE)),
-        () -> assertSame(expected.systemCommand(),
-            handler.getSystemCommandManager().getHandler(SYSTEM_COMMAND_LABEL)),
+        () -> assertSame(expected.systemCommand(), systemCommand(handler)),
         () -> assertSame(expected.servlet(), handler.getServletMap().get(SERVLET_PATH)),
         () -> assertEquals(expected.profiles(), handler.getActiveProfiles()));
+  }
+
+  private static BootstrapSystemCommand systemCommand(BootstrapHandler handler) {
+    return (BootstrapSystemCommand) handler.getSystemCommandManager().getHandler(SYSTEM_COMMAND_LABEL);
   }
 
   private record ContextSnapshot(BootstrapHandler handler, EventHandler eventHandler,

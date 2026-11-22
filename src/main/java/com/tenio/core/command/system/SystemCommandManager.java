@@ -24,9 +24,9 @@ THE SOFTWARE.
 
 package com.tenio.core.command.system;
 
+import java.util.function.Consumer;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.tenio.common.logger.SystemLogger;
-import com.tenio.core.bootstrap.annotation.Component;
 import com.tenio.core.bootstrap.annotation.SystemCommand;
 import com.tenio.core.exception.AddedDuplicatedCommandException;
 import com.tenio.core.utility.CommandUtility;
@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,7 +47,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @since 0.4.0
  */
-@Component
 public final class SystemCommandManager extends SystemLogger {
 
   private final Map<String, AbstractSystemCommandHandler> commands = new HashMap<>();
@@ -58,8 +58,7 @@ public final class SystemCommandManager extends SystemLogger {
    * Constructor.
    */
   public SystemCommandManager() {
-    var threadFactoryWorker =
-        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("system-command-worker-%d").build();
+    var threadFactoryWorker = new ThreadFactoryBuilder().setDaemon(true).setNameFormat("system-command-worker-%d").build();
     executors = Executors.newCachedThreadPool(threadFactoryWorker);
     stopping = new AtomicBoolean(false);
   }
@@ -71,10 +70,6 @@ public final class SystemCommandManager extends SystemLogger {
    * @param command The command handler
    */
   public void registerCommand(String label, AbstractSystemCommandHandler command) {
-    if (isDebugEnabled()) {
-      debug("SYSTEM_COMMAND", "Registered command > ", label);
-    }
-
     label = label.toLowerCase();
 
     // checks availability
@@ -142,6 +137,10 @@ public final class SystemCommandManager extends SystemLogger {
    * @param rawMessage The messaged used to invoke the command
    */
   public void invoke(String rawMessage) {
+    invoke(rawMessage, null);
+  }
+
+  public void invoke(String rawMessage, Consumer<String> output) {
     if (stopping.get()) {
       return;
     }
@@ -152,9 +151,9 @@ public final class SystemCommandManager extends SystemLogger {
     }
 
     // parses message
-    var split = rawMessage.split(" ");
+    var split = rawMessage.split("\\s+");
     var args = new LinkedList<>(Arrays.asList(split));
-    var label = args.remove(0).toLowerCase();
+    var label = args.remove(0).toLowerCase(Locale.ROOT);
 
     // gets command handler
     var handler = getHandler(label);
@@ -168,10 +167,21 @@ public final class SystemCommandManager extends SystemLogger {
     var annotation = annotations.get(label);
 
     // invokes execute method for handler
-    Runnable runnable = () -> handler.execute(args);
+    Runnable runnable = output == null ? () -> handler.execute(args)
+        : () -> CommandUtility.INSTANCE.withOutput(output, () -> {
+          try {
+            handler.execute(args);
+          } catch (RuntimeException failure) {
+            output.accept(failure.toString());
+          }
+        });
     if (annotation.isBackgroundRunning()) {
       executors.execute(runnable);
-      CommandUtility.INSTANCE.showConsoleMessage("The process is running in background.");
+      if (output == null) {
+        CommandUtility.INSTANCE.showConsoleMessage("The process is running in background.");
+      } else {
+        output.accept("The process is running in background.");
+      }
     } else {
       runnable.run();
     }

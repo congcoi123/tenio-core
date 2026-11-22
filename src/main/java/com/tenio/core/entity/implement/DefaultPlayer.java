@@ -374,12 +374,15 @@ public class DefaultPlayer implements Player {
 
   @Override
   public String toString() {
+    var currentState = state.get();
+    var activeSession = session;
+    var room = currentRoom;
     return "DefaultPlayer{" +
         "identity='" + identity + '\'' +
-        ", properties=" + properties +
-        ", session=" + session +
-        ", currentRoom=" + currentRoom +
-        ", state=" + state.get() +
+        ", propertyCount=" + properties.size() +
+        ", sessionId=" + (activeSession == null ? null : activeSession.getId()) +
+        ", currentRoomId=" + (room == null ? null : room.getId()) +
+        ", stateType=" + (currentState == null ? null : currentState.getClass().getName()) +
         ", roleInRoom=" + roleInRoom.get() +
         ", lastLoginTime=" + lastLoginTime +
         ", lastJoinedRoomTime=" + lastJoinedRoomTime +
