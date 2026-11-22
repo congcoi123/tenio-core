@@ -189,8 +189,12 @@ leaves a command unrestricted, even if `burst` is set. A positive rate enables l
 per player and command. A zero `burst` uses the rate as the bucket capacity.
 
 ```java
-@ClientCommand(value = 42, requestsPerSecond = 2, burst = 4)
+@ClientCommand(value = 42, name = "join-room", description = "Joins a room using an invite code",
+    requestsPerSecond = 2, burst = 4)
 ```
+
+The optional `name` and `description` appear in the startup command list. The
+`limits` view shows the code and name. Omit the name to display the handler class name.
 
 Dispatch via `ClientCommandManager.invoke` so the limit applies before the handler executes.
 A rejected invocation skips the handler. The `limits` command shows per-code counters

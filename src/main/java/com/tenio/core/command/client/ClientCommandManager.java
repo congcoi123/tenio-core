@@ -44,7 +44,12 @@ import java.util.Map;
 public final class ClientCommandManager extends SystemLogger {
 
   private final Map<Short, AbstractClientCommandHandler<Player, DataCollection>> commands = new HashMap<>();
+  private final Map<Short, CommandMetadata> metadata = new HashMap<>();
   private volatile CommandLimits limits;
+
+  private record CommandMetadata(Class<?> handlerClass,
+                                 String name, String description) {
+  }
 
   /**
    * Registers a command handler.
@@ -70,7 +75,46 @@ public final class ClientCommandManager extends SystemLogger {
         getLimits().configure(code, rate, burst == 0 ? rate : burst);
       }
     }
+    var display = commandMetadata(command, binding);
     commands.put(code, command);
+    metadata.put(code, display);
+  }
+
+  private static CommandMetadata commandMetadata(
+      AbstractClientCommandHandler<Player, DataCollection> handler, ClientCommand binding) {
+    var type = handler.getClass();
+    String name = binding == null ? "" : binding.name().strip();
+    if (name.isEmpty()) {
+      name = type.getSimpleName();
+      if (name.isEmpty()) {
+        name = type.getName();
+      }
+    }
+    String description = binding == null ? "" : binding.description().strip();
+    return new CommandMetadata(type, name.replaceAll("\\s+", " "), description.replaceAll("\\s+", " "));
+  }
+
+  /**
+   * Formats a command code and its display metadata for diagnostics.
+   *
+   * @param code the command code
+   * @param includeDescription whether to include the optional description
+   * @return the code and available display metadata
+   */
+  public String describeCommand(Short code, boolean includeDescription) {
+    var handler = commands.get(code);
+    if (handler == null) {
+      return String.valueOf(code);
+    }
+
+    var display = metadata.get(code);
+    if (display == null || display.handlerClass() != handler.getClass()) {
+      // The live handler map can be updated directly by application code.
+      display = commandMetadata(handler, handler.getClass().getAnnotation(ClientCommand.class));
+    }
+    String label = code + " | " + display.name();
+    return includeDescription && !display.description().isEmpty()
+        ? label + " | " + display.description() : label;
   }
 
   /**
@@ -176,6 +220,7 @@ public final class ClientCommandManager extends SystemLogger {
    */
   public void clear() {
     commands.clear();
+    metadata.clear();
     if (limits != null) {
       limits.clear();
       limits = null;

@@ -100,6 +100,12 @@ public @interface ClientCommand {
    */
   short value();
 
+  /** Optional display name. The handler class name is used when this is blank. */
+  String name() default "";
+
+  /** Optional description shown in the startup command list. */
+  String description() default "";
+
   /** Sustained requests per second per player. Zero disables limiting. */
   int requestsPerSecond() default 0;
 

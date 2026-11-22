@@ -80,6 +80,7 @@ import com.tenio.core.server.core.ZeroProcessorImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 /**
  * This class manages the workflow of the current server. The instruction's orders are important,
@@ -297,18 +298,26 @@ public final class ServerImpl extends SystemLogger implements Server {
     if (isInfoEnabled()) {
       info("SERVER COMMANDS", commandListing(
           systemCommandManager == null ? Set.of() : systemCommandManager.getHandlers().keySet()));
-      info("CLIENT COMMANDS", commandListing(
-          clientCommandManager == null ? Set.of() : clientCommandManager.getHandlers().keySet()));
+      String clientListing = clientCommandManager == null
+          ? commandListing(Set.<Short>of())
+          : commandListing(clientCommandManager.getHandlers().keySet(),
+              code -> clientCommandManager.describeCommand(code, true));
+      info("CLIENT COMMANDS", clientListing);
     }
   }
 
   static <T extends Comparable<? super T>> String commandListing(Collection<T> commands) {
+    return commandListing(commands, String::valueOf);
+  }
+
+  private static <T extends Comparable<? super T>> String commandListing(Collection<T> commands,
+      Function<T, String> format) {
     var entries = new StringBuilder("[\n");
     if (commands.isEmpty()) {
       entries.append("<empty>\n");
     } else {
       commands.stream().sorted(Comparator.nullsLast(Comparator.naturalOrder()))
-          .forEach(command -> entries.append("  - ").append(command).append('\n'));
+          .forEach(command -> entries.append("  - ").append(format.apply(command)).append('\n'));
     }
     return entries.append(']').toString();
   }

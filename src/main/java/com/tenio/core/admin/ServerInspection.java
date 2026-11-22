@@ -162,7 +162,7 @@ public final class ServerInspection {
             }
             var counts = commands.limitCounts();
             counts.entrySet().stream().sorted(Map.Entry.comparingByKey())
-                    .limit(rowLimit).forEach(e -> rows.add("Command " + e.getKey(),
+                    .limit(rowLimit).forEach(e -> rows.add("Command " + commands.describeCommand(e.getKey(), false),
                             e.getValue().accepted() + " accepted, " + e.getValue().rejected() + " rejected"));
             if (counts.size() > rowLimit) {
                 rows.add("Counters shown", shown(rowLimit, counts.size(), "counters", "limits all"));

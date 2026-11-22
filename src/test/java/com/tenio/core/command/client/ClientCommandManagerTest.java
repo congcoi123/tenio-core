@@ -158,6 +158,21 @@ class ClientCommandManagerTest {
     assertEquals(new CommandLimits.Counts(1, 0), manager.limitCounts().get((short) 11));
   }
 
+  @Test
+  void describesNamedCommandsAndFallsBackToTheHandlerClassName() {
+    manager.registerCommand((short) 10, new BurstOnlyCommand());
+    manager.registerCommand((short) 11, new RateOnlyCommand());
+
+    assertEquals("10 | BurstOnlyCommand", manager.describeCommand((short) 10, true));
+    assertEquals("11 | join-room | Joins a room using an invite code", manager.describeCommand((short) 11, true));
+    assertEquals("11 | join-room", manager.describeCommand((short) 11, false));
+
+    manager.getHandlers().put((short) 11, new BurstOnlyCommand());
+    assertEquals("11 | BurstOnlyCommand", manager.describeCommand((short) 11, true));
+    manager.clear();
+    assertEquals("11", manager.describeCommand((short) 11, true));
+  }
+
   @ClientCommand(value = 10, burst = 2)
   private static final class BurstOnlyCommand extends AbstractClientCommandHandler<Player, DataCollection> {
     private int invocations;
@@ -168,7 +183,8 @@ class ClientCommandManagerTest {
     }
   }
 
-  @ClientCommand(value = 11, requestsPerSecond = 2)
+  @ClientCommand(value = 11, name = "join-room", description = "Joins a room using an invite code",
+      requestsPerSecond = 2)
   private static final class RateOnlyCommand extends AbstractClientCommandHandler<Player, DataCollection> {
     @Override
     public void execute(Player player, DataCollection data) {
