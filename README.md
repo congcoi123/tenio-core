@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/congcoi123/tenio">
-    <img src="https://raw.githubusercontent.com/congcoi123/tenio/master/assets/tenio-github-logo.png" width="360" alt="TenIO — multiplayer game server framework">
+    <img src="https://raw.githubusercontent.com/congcoi123/tenio/master/assets/tenio-github-logo.png" alt="TenIO — multiplayer game server framework">
   </a>
 </p>
 
