@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.server;
 
+import java.awt.*;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Locale;
@@ -203,29 +205,31 @@ public final class ServerImpl extends SystemLogger implements Server {
     setupEntitiesManagementService(configuration);
     setupNetworkService(configuration, bootstrapHandler);
     setupInternalProcessorService(configuration, bootstrapHandler);
+    setupScheduledJobs(bootstrapHandler);
+
+    // admin monitoring tools
     var profiles = bootstrapHandler.getActiveProfiles();
-    var sessions = network.getSessionManager();
+    var sessionManager = network.getSessionManager();
     if (clientCommandManager != null && clientCommandManager.hasLimits()) {
-      sessions.onSessionRemoved(clientCommandManager::releaseSession);
+      sessionManager.onSessionRemoved(clientCommandManager::releaseSession);
     }
     boolean historyEnabled = profiles != null && profiles.contains(CoreConstant.HISTORY_PROFILE);
     boolean monitorEnabled = profiles != null && profiles.contains(CoreConstant.MONITOR_PROFILE);
-    boolean windowEnabled = monitorEnabled && !java.awt.GraphicsEnvironment.isHeadless();
+    boolean windowEnabled = monitorEnabled && !GraphicsEnvironment.isHeadless();
     if (monitorEnabled || historyEnabled) {
       inspection = new ServerInspection(this, network, monitorEnabled);
       if (monitorEnabled) {
-        sessions.enableQueueMonitoring();
+        sessionManager.enableQueueMonitoring();
       }
       if (historyEnabled) {
-        var history = windowEnabled ? new OperationalHistory(1024)
-            : OperationalHistory.toFile(java.nio.file.Path.of("logs", "history"));
-        sessions.setOperationalHistory(history);
+        var history = windowEnabled ? new OperationalHistory(CoreConstant.DEFAULT_OPERATIONAL_HISTORY_CAPACITY)
+            : OperationalHistory.toFile(Path.of("logs", "history"));
+        sessionManager.setOperationalHistory(history);
         if (history.file() != null && isInfoEnabled()) {
           info("HISTORY", "Writing operational history to ", history.file().toAbsolutePath());
         }
       }
     }
-    setupScheduledJobs(bootstrapHandler);
 
     initializeServices();
     startServices();
@@ -246,8 +250,9 @@ public final class ServerImpl extends SystemLogger implements Server {
     // emit "server initialization" event
     eventManager.emit(ServerEvent.SERVER_INITIALIZATION, serverName);
 
+    // show admin tool when enabled
     if (windowEnabled) {
-      adminWindow = new AdminWindow("TenIO | " + serverName,
+      adminWindow = new AdminWindow(serverName,
           inspection::query, (command, output) -> {
             var manager = bootstrapHandler.getSystemCommandManager();
             if (manager == null || manager.getHandler(command.split("\\s+", 2)[0].toLowerCase(Locale.ROOT)) == null) {
@@ -258,6 +263,7 @@ public final class ServerImpl extends SystemLogger implements Server {
           });
     }
 
+    // keep the application alive
     startLifecycleThread();
   }
 
@@ -282,6 +288,7 @@ public final class ServerImpl extends SystemLogger implements Server {
   private void setupCommands(ClientCommandManager clientCommandManager, SystemCommandManager systemCommandManager) {
     this.clientCommandManager = clientCommandManager;
     this.systemCommandManager = systemCommandManager;
+
     if (isInfoEnabled()) {
       info("SERVER COMMANDS", commandListing(
           systemCommandManager == null ? Set.of() : systemCommandManager.getHandlers().keySet()));
@@ -316,14 +323,14 @@ public final class ServerImpl extends SystemLogger implements Server {
 
   private void setupNetworkService(Configuration configuration, BootstrapHandler bootstrapHandler)
       throws IllegalArgumentException, SecurityException {
-
     ConnectionFilter connectionFilter = bootstrapHandler.getBeanByClazz(ConnectionFilter.class);
     if (connectionFilter == null) {
       connectionFilter = new DefaultConnectionFilter();
     }
     network.setConnectionFilterClass(
         connectionFilter,
-        configuration.getInt(CoreConfigurationType.NETWORK_PROP_MAX_CONNECTIONS_PER_IP));
+        configuration.getInt(CoreConfigurationType.NETWORK_PROP_MAX_CONNECTIONS_PER_IP)
+    );
     this.connectionFilter = connectionFilter;
 
     var servletMap = bootstrapHandler.getServletMap();
@@ -477,9 +484,9 @@ public final class ServerImpl extends SystemLogger implements Server {
       scheduledJobs.shutdown();
     }
     network.shutdown();
-    var sessions = network.getSessionManager();
-    if (sessions != null && sessions.getOperationalHistory() != null) {
-      sessions.getOperationalHistory().close();
+    var sessionManager = network.getSessionManager();
+    if (sessionManager != null && sessionManager.getOperationalHistory() != null) {
+      sessionManager.getOperationalHistory().close();
     }
     zeroProcessor.shutdown();
     if (systemCommandManager != null) {

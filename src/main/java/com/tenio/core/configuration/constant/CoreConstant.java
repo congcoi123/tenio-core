@@ -184,6 +184,13 @@ public final class CoreConstant {
   public static final int DEFAULT_NUMBER_HTTP_WORKERS = 8;
 
   /**
+   * The default capacity of operation history when the profile enabled.
+   *
+   * @since 1.0.0
+   */
+  public static final int DEFAULT_OPERATIONAL_HISTORY_CAPACITY = 1024;
+
+  /**
    * Private constructor to prevent instantiation.
    * This class should not be instantiated as it contains only constants.
    */
