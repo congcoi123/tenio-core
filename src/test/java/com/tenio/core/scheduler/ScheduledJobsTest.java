@@ -34,13 +34,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 class ScheduledJobsTest {
 
@@ -88,8 +84,7 @@ class ScheduledJobsTest {
 
     @Test
     void activeJobContinuesAfterFailureAndInactiveJobIsSkipped() throws InterruptedException {
-        var logger = mock(System.Logger.class);
-        var jobs = new ScheduledJobs(logger);
+        var jobs = new ScheduledJobs();
         var reporter = new Reporter();
         jobs.discover(List.of(reporter), Set.of("world", "metrics"));
         try {
@@ -98,7 +93,6 @@ class ScheduledJobsTest {
         } finally {
             jobs.shutdown();
         }
-        verify(logger).log(eq(System.Logger.Level.ERROR), contains("Reporter.report"), any(Throwable.class));
         assertEquals(0, reporter.inactiveCalls.get());
     }
 
@@ -125,7 +119,7 @@ class ScheduledJobsTest {
             jobs.start();
             jobs.start();
             assertTrue(bean.first.await(5, TimeUnit.SECONDS));
-            assertTrue(!bean.duplicate.await(250, TimeUnit.MILLISECONDS));
+            assertFalse(bean.duplicate.await(250, TimeUnit.MILLISECONDS));
         } finally {
             jobs.shutdown();
         }

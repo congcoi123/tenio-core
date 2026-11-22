@@ -66,7 +66,6 @@ public abstract class CoreConfiguration extends CommonConfiguration {
     }
   }
 
-
   /**
    * Reads file content and converts it to configuration values.
    *

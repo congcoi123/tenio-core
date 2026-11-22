@@ -47,19 +47,10 @@ import java.util.function.Consumer;
  */
 public final class ScheduledJobs extends SystemLogger {
 
-    private final System.Logger failureLogger;
     private final List<Consumer<ScheduledThreadPoolExecutor>> plans = new ArrayList<>();
     private final List<String> taskNames = new ArrayList<>();
     private boolean started;
     private ScheduledThreadPoolExecutor workers;
-
-    public ScheduledJobs() {
-        this(System.getLogger(ScheduledJobs.class.getName()));
-    }
-
-    ScheduledJobs(System.Logger failureLogger) {
-        this.failureLogger = failureLogger;
-    }
 
     public void discover(Collection<?> beans, Set<String> names) {
         var profiles = new ProfileSelection(names);
@@ -129,7 +120,9 @@ public final class ScheduledJobs extends SystemLogger {
             try {
                 job.run();
             } catch (RuntimeException exception) {
-                failureLogger.log(System.Logger.Level.ERROR, "Scheduled job failed: " + name, exception);
+                if (isErrorEnabled()) {
+                    error(exception, "Scheduled job failed: ", name);
+                }
             }
         };
     }
