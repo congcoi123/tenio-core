@@ -65,6 +65,16 @@ import org.mockito.Mockito;
 class ServerImplTest {
 
   @Test
+  void commandListingMatchesTheScheduledTaskLogFormat() {
+    assertEquals("[\n<empty>\n]", ServerImpl.commandListing(java.util.List.<Short>of()));
+    assertEquals("[\n  - help\n  - info\n  - server\n]",
+        ServerImpl.commandListing(java.util.List.of("server", "help", "info")));
+    assertEquals("[\n  - 1\n  - 2\n  - 10\n]",
+        ServerImpl.commandListing(java.util.List.of((short) 10, (short) 2, (short) 1)));
+  }
+
+
+  @Test
   @DisplayName("getInstance returns a non-null server")
   void testGetInstanceReturnsNonNull() {
     assertNotNull(ServerImpl.getInstance());

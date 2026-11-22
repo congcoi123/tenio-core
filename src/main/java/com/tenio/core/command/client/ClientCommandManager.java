@@ -53,10 +53,6 @@ public final class ClientCommandManager extends SystemLogger {
    * @param command The command handler
    */
   public void registerCommand(Short code, AbstractClientCommandHandler<Player, DataCollection> command) {
-    if (isDebugEnabled()) {
-      debug("CLIENT_COMMAND", "Registered command > ", code);
-    }
-
     // checks availability
     if (commands.containsKey(code)) {
       throw new AddedDuplicatedClientCommandException(code, commands.get(code));

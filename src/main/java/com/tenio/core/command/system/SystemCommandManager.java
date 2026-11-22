@@ -73,10 +73,6 @@ public final class SystemCommandManager extends SystemLogger {
    * @param command The command handler
    */
   public void registerCommand(String label, AbstractSystemCommandHandler command) {
-    if (isDebugEnabled()) {
-      debug("SYSTEM_COMMAND", "Registered command > ", label);
-    }
-
     label = label.toLowerCase();
 
     // checks availability

@@ -24,7 +24,10 @@ THE SOFTWARE.
 
 package com.tenio.core.server;
 
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.Locale;
+import java.util.Set;
 import com.tenio.core.network.entity.session.manager.SessionManagerImpl;
 import com.tenio.core.admin.ServerInspection;
 import com.tenio.core.admin.AdminWindow;
@@ -289,6 +292,23 @@ public final class ServerImpl extends SystemLogger implements Server {
   private void setupCommands(ClientCommandManager clientCommandManager, SystemCommandManager systemCommandManager) {
     this.clientCommandManager = clientCommandManager;
     this.systemCommandManager = systemCommandManager;
+    if (isInfoEnabled()) {
+      info("SERVER COMMANDS", commandListing(
+          systemCommandManager == null ? Set.of() : systemCommandManager.getHandlers().keySet()));
+      info("CLIENT COMMANDS", commandListing(
+          clientCommandManager == null ? Set.of() : clientCommandManager.getHandlers().keySet()));
+    }
+  }
+
+  static <T extends Comparable<? super T>> String commandListing(Collection<T> commands) {
+    var entries = new StringBuilder("[\n");
+    if (commands.isEmpty()) {
+      entries.append("<empty>\n");
+    } else {
+      commands.stream().sorted(Comparator.nullsLast(Comparator.naturalOrder()))
+          .forEach(command -> entries.append("  - ").append(command).append('\n'));
+    }
+    return entries.append(']').toString();
   }
 
   private void setupEntitiesManagementService(Configuration configuration) {
