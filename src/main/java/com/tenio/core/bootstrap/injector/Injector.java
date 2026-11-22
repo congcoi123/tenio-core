@@ -805,6 +805,7 @@ public final class Injector extends SystemLogger {
     manualClassesSet.clear();
     servletBeansMap.clear();
     systemCommandManager.clear();
+    systemCommandManager.shutdown();
     clientCommandManager.clear();
     scheduledJobs.shutdown();
   }

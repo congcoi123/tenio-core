@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.session.implement;
 
+import com.tenio.core.admin.OperationalHistory;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.logger.AbstractLogger;
 import com.tenio.common.utility.TimeUtility;
@@ -84,6 +85,7 @@ public class SessionImpl extends AbstractLogger implements Session {
   private final AtomicInteger inboundQueueCount;
 
   private int maxInboundQueueSize;
+  private AtomicLong inboundFullRejections;
   private int slowConsumingInboundQueueWarningThreshold;
   private int slowConsumingOutboundQueueWarningThreshold;
   private OutboundQueue outboundQueue;
@@ -248,6 +250,9 @@ public class SessionImpl extends AbstractLogger implements Session {
         }
       }
       if (maxInboundQueueSize > 0 && remaining >= maxInboundQueueSize) {
+        if (inboundFullRejections != null) {
+          inboundFullRejections.incrementAndGet();
+        }
         var exception = new InboundQueueFullException(remaining);
         if (isErrorEnabled()) {
           error(exception, exception.getMessage(), " > ", this);
@@ -257,6 +262,18 @@ public class SessionImpl extends AbstractLogger implements Session {
       inboundQueue.add(message);
       inboundQueueCount.incrementAndGet();
     }
+  }
+
+  @Override
+  public void enableInboundQueueMonitoring() {
+    inboundFullRejections = new AtomicLong();
+  }
+
+  @Override
+  public InboundQueueStatistics inboundQueueStatistics() {
+    var rejections = inboundFullRejections;
+    return rejections == null ? null : new InboundQueueStatistics(
+        Math.max(0, inboundQueueCount.get()), maxInboundQueueSize, rejections.get());
   }
 
   @Override
@@ -578,6 +595,11 @@ public class SessionImpl extends AbstractLogger implements Session {
     // Once the session is terminated, it cannot be reused
     if (transitionState(State.INITIALIZED, State.TERMINATED) || transitionState(State.ACTIVATED, State.TERMINATED)) {
       inactivatedTime = now();
+      var history = sessionManager == null ? null : sessionManager.getOperationalHistory();
+      if (history != null) {
+        history.record(id, String.valueOf(transportType), OperationalHistory.Kind.DISCONNECT,
+            String.valueOf(connectionDisconnectMode));
+      }
 
       if (connectionFilter != null && socketRemoteAddress != null) {
         connectionFilter.removeAddress(socketRemoteAddress.getAddress().getHostAddress());

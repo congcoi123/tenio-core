@@ -114,6 +114,26 @@ public final class CoreConstant {
       ".controller";
 
   /**
+   * Conventional baseline label used by the bundled configuration.
+   */
+  public static final String DEFAULT_PROFILE = "default";
+
+  /**
+   * Enables scheduled metrics reporting and JVM deadlock checks.
+   */
+  public static final String METRICS_PROFILE = "metrics";
+
+  /**
+   * Enables operational history recording.
+   */
+  public static final String HISTORY_PROFILE = "history";
+
+  /**
+   * Enables desktop administration and monitor-profile system commands.
+   */
+  public static final String MONITOR_PROFILE = "monitor";
+
+  /**
    * Default key for UDP convey ID in packet data.
    * Used for UDP packet identification and routing.
    */
@@ -162,6 +182,13 @@ public final class CoreConstant {
    * @since 0.7.0
    */
   public static final int DEFAULT_NUMBER_HTTP_WORKERS = 8;
+
+  /**
+   * The default capacity of operation history when the profile enabled.
+   *
+   * @since 1.0.0
+   */
+  public static final int DEFAULT_OPERATIONAL_HISTORY_CAPACITY = 1024;
 
   /**
    * Private constructor to prevent instantiation.

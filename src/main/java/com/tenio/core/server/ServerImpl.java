@@ -24,6 +24,15 @@ THE SOFTWARE.
 
 package com.tenio.core.server;
 
+import java.awt.*;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Locale;
+import java.util.Set;
+import com.tenio.core.admin.ServerInspection;
+import com.tenio.core.admin.AdminWindow;
+import com.tenio.core.admin.OperationalHistory;
 import com.tenio.common.configuration.Configuration;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.common.utility.TimeUtility;
@@ -70,15 +79,9 @@ import com.tenio.core.scheduler.job.MaintenanceJob;
 import com.tenio.core.server.core.ZeroProcessor;
 import com.tenio.core.server.core.ZeroProcessorImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
-import com.tenio.core.utility.CommandUtility;
-import java.io.IOError;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.jline.reader.EndOfFileException;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.reader.UserInterruptException;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
+import java.util.function.Function;
 
 /**
  * This class manages the workflow of the current server. The instruction's orders are important,
@@ -96,14 +99,17 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final ChannelManager channelManager;
   private final DatagramChannelManager datagramChannelManager;
   private final ZeroProcessor zeroProcessor;
-  private ScheduledJobs scheduledJobs;
   private final Network network;
   private final ServerApi serverApi;
   private final AtomicBoolean stopping;
   private final CountDownLatch stopped;
+  private ScheduledJobs scheduledJobs;
+  private ServerInspection inspection;
+  private volatile ConnectionFilter connectionFilter;
   private ClientCommandManager clientCommandManager;
   private SystemCommandManager systemCommandManager;
   private Configuration configuration;
+  private AdminWindow adminWindow;
   private long startedTime;
   private String serverName;
 
@@ -201,6 +207,30 @@ public final class ServerImpl extends SystemLogger implements Server {
     setupInternalProcessorService(configuration, bootstrapHandler);
     setupScheduledJobs(bootstrapHandler);
 
+    // admin monitoring tools
+    var profiles = bootstrapHandler.getActiveProfiles();
+    var sessionManager = network.getSessionManager();
+    if (clientCommandManager != null && clientCommandManager.hasLimits()) {
+      sessionManager.onSessionRemoved(clientCommandManager::releaseSession);
+    }
+    boolean historyEnabled = profiles != null && profiles.contains(CoreConstant.HISTORY_PROFILE);
+    boolean monitorEnabled = profiles != null && profiles.contains(CoreConstant.MONITOR_PROFILE);
+    boolean windowEnabled = monitorEnabled && !GraphicsEnvironment.isHeadless();
+    if (monitorEnabled || historyEnabled) {
+      inspection = new ServerInspection(this, network, monitorEnabled);
+      if (monitorEnabled) {
+        sessionManager.enableQueueMonitoring();
+      }
+      if (historyEnabled) {
+        var history = windowEnabled ? new OperationalHistory(CoreConstant.DEFAULT_OPERATIONAL_HISTORY_CAPACITY)
+            : OperationalHistory.toFile(Path.of("logs", "history"));
+        sessionManager.setOperationalHistory(history);
+        if (history.file() != null && isInfoEnabled()) {
+          info("HISTORY", "Writing operational history to ", history.file().toAbsolutePath());
+        }
+      }
+    }
+
     initializeServices();
     startServices();
 
@@ -220,10 +250,20 @@ public final class ServerImpl extends SystemLogger implements Server {
     // emit "server initialization" event
     eventManager.emit(ServerEvent.SERVER_INITIALIZATION, serverName);
 
-    if (configuration.getBoolean(CoreConfigurationType.ENABLE_TERMINAL_COMMAND)) {
-      startConsole(bootstrapHandler.getSystemCommandManager());
+    // show admin tool when enabled
+    if (windowEnabled) {
+      adminWindow = new AdminWindow("[TenIO] Monitoring | " + serverName,
+          inspection::query, (command, output) -> {
+            var manager = bootstrapHandler.getSystemCommandManager();
+            if (manager == null || manager.getHandler(command.split("\\s+", 2)[0].toLowerCase(Locale.ROOT)) == null) {
+              return false;
+            }
+            manager.invoke(command, output);
+            return true;
+          });
     }
 
+    // keep the application alive
     startLifecycleThread();
   }
 
@@ -248,6 +288,32 @@ public final class ServerImpl extends SystemLogger implements Server {
   private void setupCommands(ClientCommandManager clientCommandManager, SystemCommandManager systemCommandManager) {
     this.clientCommandManager = clientCommandManager;
     this.systemCommandManager = systemCommandManager;
+
+    if (isInfoEnabled()) {
+      info("SERVER COMMANDS", commandListing(
+          systemCommandManager == null ? Set.of() : systemCommandManager.getHandlers().keySet()));
+      String clientListing = clientCommandManager == null
+          ? commandListing(Set.<Short>of())
+          : commandListing(clientCommandManager.getHandlers().keySet(),
+              code -> clientCommandManager.describeCommand(code, true));
+      info("CLIENT COMMANDS", clientListing);
+    }
+  }
+
+  static <T extends Comparable<? super T>> String commandListing(Collection<T> commands) {
+    return commandListing(commands, String::valueOf);
+  }
+
+  private static <T extends Comparable<? super T>> String commandListing(Collection<T> commands,
+      Function<T, String> format) {
+    var entries = new StringBuilder("[\n");
+    if (commands.isEmpty()) {
+      entries.append("<empty>\n");
+    } else {
+      commands.stream().sorted(Comparator.nullsLast(Comparator.naturalOrder()))
+          .forEach(command -> entries.append("  - ").append(format.apply(command)).append('\n'));
+    }
+    return entries.append(']').toString();
   }
 
   private void setupEntitiesManagementService(Configuration configuration) {
@@ -257,14 +323,15 @@ public final class ServerImpl extends SystemLogger implements Server {
 
   private void setupNetworkService(Configuration configuration, BootstrapHandler bootstrapHandler)
       throws IllegalArgumentException, SecurityException {
-
     ConnectionFilter connectionFilter = bootstrapHandler.getBeanByClazz(ConnectionFilter.class);
     if (connectionFilter == null) {
       connectionFilter = new DefaultConnectionFilter();
     }
     network.setConnectionFilterClass(
         connectionFilter,
-        configuration.getInt(CoreConfigurationType.NETWORK_PROP_MAX_CONNECTIONS_PER_IP));
+        configuration.getInt(CoreConfigurationType.NETWORK_PROP_MAX_CONNECTIONS_PER_IP)
+    );
+    this.connectionFilter = connectionFilter;
 
     var servletMap = bootstrapHandler.getServletMap();
     var httpConfiguration = configuration.get(CoreConfigurationType.NETWORK_HTTP);
@@ -371,50 +438,6 @@ public final class ServerImpl extends SystemLogger implements Server {
     }
   }
 
-  private void startConsole(SystemCommandManager systemCommandManager) {
-    Terminal terminal = null;
-    try {
-      terminal = TerminalBuilder.builder().jna(true).build();
-    } catch (Exception exception) {
-      try {
-        // fallback to a dumb jLine terminal
-        terminal = TerminalBuilder.builder().dumb(true).build();
-      } catch (Exception exception1) {
-        // when dumb is true, build() never throws, ignore it
-      }
-    }
-    var consoleLineReader = LineReaderBuilder.builder().terminal(terminal).build();
-
-    String input = null;
-    boolean isLastInterrupted = false;
-    while (true) {
-      try {
-        input = consoleLineReader.readLine("$ ");
-      } catch (UserInterruptException exception) {
-        if (!isLastInterrupted) {
-          isLastInterrupted = true;
-          CommandUtility.INSTANCE.showConsoleMessage("Press Ctrl-C again to shutdown.");
-          continue;
-        } else {
-          Runtime.getRuntime().exit(0);
-        }
-      } catch (EndOfFileException exception) {
-        CommandUtility.INSTANCE.showConsoleMessage("EOF detected.");
-        continue;
-      } catch (IOError exception) {
-        CommandUtility.INSTANCE.showConsoleMessage("An IO error occurred.");
-        continue;
-      }
-
-      isLastInterrupted = false;
-      try {
-        systemCommandManager.invoke(input);
-      } catch (Exception exception) {
-        CommandUtility.INSTANCE.showConsoleMessage("Exception > " + exception.getMessage());
-      }
-    }
-  }
-
   @Override
   public void shutdown() {
     if (!stopping.compareAndSet(false, true)) {
@@ -454,10 +477,17 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   private void shutdownServices() {
+    if (adminWindow != null) {
+      adminWindow.close();
+    }
     if (scheduledJobs != null) {
       scheduledJobs.shutdown();
     }
     network.shutdown();
+    var sessionManager = network.getSessionManager();
+    if (sessionManager != null && sessionManager.getOperationalHistory() != null) {
+      sessionManager.getOperationalHistory().close();
+    }
     zeroProcessor.shutdown();
     if (systemCommandManager != null) {
       systemCommandManager.shutdown();
@@ -512,6 +542,16 @@ public final class ServerImpl extends SystemLogger implements Server {
   @Override
   public long getUptime() {
     return TimeUtility.currentTimeMillis() - startedTime;
+  }
+
+  @Override
+  public ConnectionFilter getConnectionFilter() {
+    return connectionFilter;
+  }
+
+  @Override
+  public ServerInspection getInspection() {
+    return inspection;
   }
 
   @Override
