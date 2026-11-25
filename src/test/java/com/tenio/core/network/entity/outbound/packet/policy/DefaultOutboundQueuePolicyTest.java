@@ -28,15 +28,19 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.tenio.core.exception.OutboundQueueFullException;
 import com.tenio.core.exception.OutboundQueuePolicyViolationException;
-import com.tenio.core.network.define.ResponseGuarantee;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.implement.OutboundQueueImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 
 class DefaultOutboundQueuePolicyTest {
 
@@ -65,59 +69,99 @@ class DefaultOutboundQueuePolicyTest {
   }
 
   @Test
-  void testBetween75And90PercentWithNonGuaranteedThrowsPolicyViolation() {
+  void testBetween75And90PercentWithLowPriorityThrowsPolicyViolation() {
     OutboundQueue queue = mock(OutboundQueue.class);
     Packet packet = mock(Packet.class);
     when(queue.isSnapshotFull()).thenReturn(false);
     when(queue.getPercentageUsed()).thenReturn(80.0f);
-    when(packet.getGuarantee()).thenReturn(ResponseGuarantee.NON_GUARANTEED);
+    when(packet.getDeliveryOptions()).thenReturn(DeliveryOptions.bestEffort(java.time.Duration.ZERO));
 
     assertThrows(OutboundQueuePolicyViolationException.class,
         () -> policy.applyPolicy(queue, packet));
   }
 
   @Test
-  void testBetween75And90PercentWithNormalGuaranteeDoesNotThrow() {
+  void testBetween75And90PercentWithNormalPriorityDoesNotThrow() {
     OutboundQueue queue = mock(OutboundQueue.class);
     Packet packet = mock(Packet.class);
     when(queue.isSnapshotFull()).thenReturn(false);
     when(queue.getPercentageUsed()).thenReturn(80.0f);
-    when(packet.getGuarantee()).thenReturn(ResponseGuarantee.NORMAL);
+    when(packet.getDeliveryOptions()).thenReturn(null);
 
     assertDoesNotThrow(() -> policy.applyPolicy(queue, packet));
   }
 
   @Test
-  void testAt90PercentOrAboveWithNormalGuaranteeThrowsPolicyViolation() {
+  void testAt90PercentOrAboveWithNormalPriorityThrowsPolicyViolation() {
     OutboundQueue queue = mock(OutboundQueue.class);
     Packet packet = mock(Packet.class);
     when(queue.isSnapshotFull()).thenReturn(false);
     when(queue.getPercentageUsed()).thenReturn(92.0f);
-    when(packet.getGuarantee()).thenReturn(ResponseGuarantee.NORMAL);
+    when(packet.getDeliveryOptions()).thenReturn(null);
 
     assertThrows(OutboundQueuePolicyViolationException.class,
         () -> policy.applyPolicy(queue, packet));
   }
 
   @Test
-  void testAt90PercentOrAboveWithGuaranteedDoesNotThrow() {
+  void testAt90PercentOrAboveWithHighPriorityDoesNotThrow() {
     OutboundQueue queue = mock(OutboundQueue.class);
     Packet packet = mock(Packet.class);
     when(queue.isSnapshotFull()).thenReturn(false);
     when(queue.getPercentageUsed()).thenReturn(92.0f);
-    when(packet.getGuarantee()).thenReturn(ResponseGuarantee.GUARANTEED);
+    when(packet.getDeliveryOptions()).thenReturn(DeliveryOptions.important());
 
     assertDoesNotThrow(() -> policy.applyPolicy(queue, packet));
   }
 
   @Test
-  void testBelow75PercentWithNonGuaranteedDoesNotThrow() {
+  void testBelow75PercentWithLowPriorityDoesNotThrow() {
     OutboundQueue queue = mock(OutboundQueue.class);
     Packet packet = mock(Packet.class);
     when(queue.isSnapshotFull()).thenReturn(false);
     when(queue.getPercentageUsed()).thenReturn(50.0f);
-    when(packet.getGuarantee()).thenReturn(ResponseGuarantee.NON_GUARANTEED);
+    when(packet.getDeliveryOptions()).thenReturn(DeliveryOptions.bestEffort(java.time.Duration.ZERO));
 
     assertDoesNotThrow(() -> policy.applyPolicy(queue, packet));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+      "LOW,0,false", "LOW,74.9,false", "LOW,75,true", "LOW,89.9,true", "LOW,90,true",
+      "LOW,99.9,true", "NORMAL,0,false", "NORMAL,74.9,false", "NORMAL,75,false",
+      "NORMAL,89.9,false", "NORMAL,90,true", "NORMAL,99.9,true", "HIGH,0,false",
+      "HIGH,74.9,false", "HIGH,75,false", "HIGH,89.9,false", "HIGH,90,false", "HIGH,99.9,false"
+  })
+  void congestionBoundariesUseOnlyTheSelectedDeliveryPriority(DeliveryOptions.Priority priority,
+                                                              float occupancy, boolean rejected) {
+    var queue = mock(OutboundQueue.class);
+    var packet = mock(Packet.class);
+    when(queue.getPercentageUsed()).thenReturn(occupancy);
+    when(packet.getDeliveryOptions()).thenReturn(
+        DeliveryOptions.replaceable("state", java.time.Duration.ZERO).withPriority(priority));
+    if (rejected) {
+      assertThrows(OutboundQueuePolicyViolationException.class, () -> policy.applyPolicy(queue, packet));
+    } else {
+      assertDoesNotThrow(() -> policy.applyPolicy(queue, packet));
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(DeliveryOptions.Priority.class)
+  void noPriorityBypassesFullQueues(DeliveryOptions.Priority priority) {
+    var queue = mock(OutboundQueue.class);
+    var packet = mock(Packet.class);
+    when(queue.isSnapshotFull()).thenReturn(true);
+    when(packet.getDeliveryOptions()).thenReturn(DeliveryOptions.important().withPriority(priority));
+    assertThrows(OutboundQueueFullException.class, () -> policy.applyPolicy(queue, packet));
+  }
+
+  @Test
+  void uncongestedQueuesDoNotInspectOrAllocatePacketDeliverySettings() {
+    var queue = mock(OutboundQueue.class);
+    var packet = mock(Packet.class);
+    when(queue.getPercentageUsed()).thenReturn(50.0f);
+    policy.applyPolicy(queue, packet);
+    verifyNoInteractions(packet);
   }
 }

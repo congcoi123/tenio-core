@@ -176,4 +176,53 @@ class DeliveryPolicyTest {
     q.take();
     assertEquals(0, q.deliveryStatistics().queuedBytes());
   }
+
+  @Test
+  void defaultImportantAdmissionAtNinetyPercentKeepsFifoAndHardLimits() {
+    var q = queue(10);
+    var original = new java.util.ArrayList<Packet>();
+    for (int i = 0; i < 9; i++) {
+      var entry = packet(1, null);
+      original.add(entry);
+      q.put(entry);
+    }
+    var important = packet(1, DeliveryOptions.important());
+    assertEquals(com.tenio.core.network.entity.outbound.packet.OutboundQueue.Admission.ENQUEUED,
+        q.putWithDelivery(important));
+    assertThrows(OutboundQueueFullException.class, () -> q.put(packet(1, DeliveryOptions.important())));
+    for (var entry : original) {
+      assertSame(entry, q.take());
+    }
+    assertSame(important, q.take());
+  }
+
+  @Test
+  void rejectedLowPriorityReplacementRestoresTheOriginalOrderAndByteAccounting() {
+    var q = queue(10);
+    var original = new java.util.ArrayList<Packet>();
+    for (int i = 0; i < 9; i++) {
+      var entry = packet(1, i == 1 ? DeliveryOptions.replaceable("state", Duration.ZERO) : null);
+      original.add(entry);
+      q.put(entry);
+    }
+    var replacement = packet(2, DeliveryOptions.replaceable("state", Duration.ZERO)
+        .withPriority(DeliveryOptions.Priority.LOW));
+    assertThrows(com.tenio.core.exception.OutboundQueuePolicyViolationException.class,
+        () -> q.putWithDelivery(replacement));
+    assertEquals(9, q.deliveryStatistics().queuedBytes());
+    assertEquals(0, q.deliveryStatistics().replaced());
+    assertEquals(1, q.statistics().policyDrops());
+    for (var entry : original) {
+      assertSame(entry, q.take());
+    }
+  }
+
+  @Test
+  void copiesRetainSelectedPriorityAndTheOriginalExpiryDeadline() {
+    var original = packet(1, DeliveryOptions.bestEffort(Duration.ofSeconds(5))
+        .withPriority(DeliveryOptions.Priority.HIGH));
+    var copy = original.deepCopy();
+    assertEquals(DeliveryOptions.Priority.HIGH, copy.getDeliveryOptions().priority());
+    assertEquals(original.getDeliveryDeadlineNanos(), copy.getDeliveryDeadlineNanos());
+  }
 }

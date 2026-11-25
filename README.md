@@ -95,7 +95,7 @@ selected explicitly on `InitialRoomSetting.Builder` and are created per room ins
 | Interface | Built-in behavior when no override is supplied | How to change it |
 | --- | --- | --- |
 | `ConnectionFilter` | `DefaultConnectionFilter` rejects banned IPs and connections above `max-connections-per-ip`. The configured limit is applied at startup. | Register a filter bean implementing the complete admission/counting/ban contract. |
-| `OutboundQueuePolicy` | `DefaultOutboundQueuePolicy`: reject a full queue; at 75% occupancy reject guarantees below `NORMAL`; at 90% reject guarantees below `GUARANTEED`. This is the legacy guarantee policy, separate from `DeliveryOptions`. | Register a policy bean; keep queue bounds appropriate to the workload. |
+| `OutboundQueuePolicy` | `DefaultOutboundQueuePolicy` reads `DeliveryOptions.priority()`: reject a full queue, reject `LOW` at 75% occupancy and `NORMAL` at 90%; `HIGH` remains eligible until full. Missing options mean `NORMAL`. Priority does not reorder packets or promise delivery. | Register a policy bean using delivery settings; hard packet/byte bounds still apply. |
 | `DatagramPacketPolicy` | `DefaultDatagramPacketPolicy`: `ZeroMap`/`MsgPackMap` use integer `u` (convey ID) and nested `d` (payload). `ZeroArray` takes its last integer as convey ID and removes that element from the payload. Missing/unsupported content is not routed as a player command. | Register a policy bean matching your client's UDP envelope. It does not extract application command codes. |
 | `RequestPolicy` | No extra preprocessing of queued connection/UDP-access requests. This is not the gameplay command router. | Register a policy bean to preprocess those requests. |
 | `BinaryPacketCompressor` | No application compressor is installed. | Register a compressor bean and implement the matching client codec. |
@@ -271,15 +271,30 @@ Responses without delivery options retain their configured queue policy and FIFO
 
 | Delivery mode | Behavior |
 | --- | --- |
-| `DeliveryOptions.important()` | Preserve queued order without expiry or replacement; queue bounds still apply. |
-| `DeliveryOptions.replaceable(key, lifetime)` | Replace an unclaimed queued update with the same key and transport; expire stale updates. |
-| `DeliveryOptions.bestEffort(lifetime)` | Allow expiry and dropping when queue capacity admission fails. |
+| `DeliveryOptions.important()` | `HIGH` priority; preserve queued order without expiry or replacement. Queue bounds and custom policies still apply. |
+| `DeliveryOptions.replaceable(key, lifetime)` | `NORMAL` priority; replace an unclaimed queued update with the same key and transport, and expire stale updates. |
+| `DeliveryOptions.bestEffort(lifetime)` | `LOW` priority; allow expiry and dropping when queue capacity admission fails. Policy rejection is recorded separately from a full queue. |
 
 ```java
 response().setContent(position).setRecipientPlayer(player)
     .delivery(DeliveryOptions.replaceable("position:" + entityId, Duration.ofMillis(150)))
     .write();
 ```
+
+`DeliveryOptions` is the single configuration for admission priority, replacement and lifetime.
+Override a factory's priority without changing its mode, key or lifetime:
+
+```java
+var options = DeliveryOptions.replaceable("position:" + entityId, Duration.ofMillis(150))
+    .withPriority(DeliveryOptions.Priority.HIGH);
+response().setContent(position).setRecipientPlayer(player).delivery(options).write();
+```
+
+Priority affects congestion admission, never send order. The default policy rejects `LOW` at 75%
+and `NORMAL` at 90% occupancy; `HIGH` never bypasses full queues or byte limits. Custom policies can
+reject any priority. Policy rejections remain explicit even for best-effort messages; capacity
+failures return a dropped admission result for best-effort. Responses without options retain
+implicit `NORMAL` priority and do not allocate delivery options or enhanced queue state.
 
 These modes govern queue admission, not end-to-end acknowledgement or durable storage. Writer-claimed
 packets cannot be replaced. The current direct Netty WebSocket output bypasses these queue semantics.

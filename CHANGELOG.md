@@ -204,3 +204,10 @@ and replicated state. No existing Zero/MessagePack type codes or application ope
 ### Response API cleanup
 - Remove the blocking `Response.writeInDelay(long)` API and its implementation. Applications needing delayed sends should schedule application jobs and call `write()` when due. Existing callers must be updated and recompiled.
 - Remove the response implementation's now-unused sleep import and logger inheritance.
+
+### Unified response delivery settings
+- Remove `ResponseGuarantee`, response guarantee methods and packet guarantee fields without compatibility adapters.
+- Add `DeliveryOptions.Priority` (LOW/NORMAL/HIGH), with factory defaults HIGH for important, NORMAL for replaceable and LOW for best-effort. `withPriority` preserves mode, key and lifetime.
+- Apply congestion admission through the existing outbound queue policy: LOW is rejected at 75%, NORMAL at 90%, and HIGH remains eligible until full. All packet/byte bounds, custom policies and FIFO ordering remain effective.
+- Keep responses without delivery settings at implicit NORMAL priority without allocating options or enhanced queue bookkeeping. Preserve distinct policy/full drop accounting and packet-copy deadlines.
+- Update JavaDocs, guides and regression coverage. Delivery priority stays server-side; wire formats are unchanged.

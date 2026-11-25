@@ -27,9 +27,7 @@ package com.tenio.core.network.entity.outbound;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataType;
 import com.tenio.core.entity.Player;
-import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
-import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
 
@@ -163,23 +161,6 @@ public interface Response {
   Response encrypted();
 
   /**
-   * Sets guarantee level for the response.
-   *
-   * @param guarantee the {@link ResponseGuarantee}
-   * @return the pointer of response
-   * @see OutboundQueuePolicy
-   */
-  Response guarantee(ResponseGuarantee guarantee);
-
-  /**
-   * Retrieves the guarantee level of response.
-   *
-   * @return the current {@link ResponseGuarantee} of response
-   * @see OutboundQueuePolicy
-   */
-  ResponseGuarantee getGuarantee();
-
-  /**
    * Determines whether the response's content needs to be encrypted.
    *
    * @return {@code true} if the response's content is encrypted, otherwise returns {@code false}
@@ -200,7 +181,7 @@ public interface Response {
   void writeThenClose();
 
   /**
-   * Selects an optional queued-delivery policy before write(). Default implementations reject it.
+   * Selects queued-delivery mode, priority and lifetime before write(). Default implementations reject it.
    * Never use replaceable/best-effort for results or transactions that must be retained.
    *
    * @param options explicit application policy
@@ -211,7 +192,7 @@ public interface Response {
   }
 
   /**
-   * @return optional queued-delivery policy, or null for existing behavior
+   * @return delivery settings, or null for implicit NORMAL priority without expiry or replacement
    */
   default DeliveryOptions getDeliveryOptions() {
     return null;

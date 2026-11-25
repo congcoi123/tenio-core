@@ -25,7 +25,6 @@ THE SOFTWARE.
 package com.tenio.core.network.entity.outbound.packet;
 
 import com.tenio.common.data.DataType;
-import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
 import com.tenio.core.network.entity.session.Session;
@@ -52,7 +51,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * @see OutboundQueue
  * @see OutboundQueuePolicy
  * @see TransportType
- * @see ResponseGuarantee
  * @see Session
  */
 public interface Packet {
@@ -112,20 +110,6 @@ public interface Packet {
    * @param transportType the {@link TransportType} using by the packet
    */
   void setTransportType(TransportType transportType);
-
-  /**
-   * Retrieves the guarantee level of packet.
-   *
-   * @return the {@link ResponseGuarantee} set for the packet
-   */
-  ResponseGuarantee getGuarantee();
-
-  /**
-   * Sets guarantee level of the packet.
-   *
-   * @param guarantee the {@link ResponseGuarantee} set for the packet
-   */
-  void setGuarantee(ResponseGuarantee guarantee);
 
   /**
    * Determines whether the packet data is encrypted.
@@ -254,7 +238,7 @@ public interface Packet {
   Packet deepCopy();
 
   /**
-   * @return optional admission policy, or null for legacy FIFO admission
+   * @return delivery settings, or null for implicit NORMAL priority without expiry or replacement
    */
   default DeliveryOptions getDeliveryOptions() {
     return null;

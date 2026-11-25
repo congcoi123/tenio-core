@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import com.tenio.common.data.DataType;
-import com.tenio.core.network.define.ResponseGuarantee;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
@@ -56,7 +56,7 @@ class PacketImplTest {
     Packet actualNewInstanceResult = PacketImpl.newInstance();
     assertFalse(actualNewInstanceResult.needsEncrypted());
     assertEquals(TransportType.UNKNOWN, actualNewInstanceResult.getTransportType());
-    assertEquals(ResponseGuarantee.NORMAL, actualNewInstanceResult.getGuarantee());
+    assertNull(actualNewInstanceResult.getDeliveryOptions());
   }
 
   @Test
@@ -108,9 +108,9 @@ class PacketImplTest {
   }
 
   @Test
-  void testSetAndGetGuarantee() {
-    packet.setGuarantee(ResponseGuarantee.GUARANTEED);
-    assertEquals(ResponseGuarantee.GUARANTEED, packet.getGuarantee());
+  void testSetAndGetDeliveryOptions() {
+    packet.setDeliveryOptions(DeliveryOptions.important());
+    assertEquals(DeliveryOptions.important(), packet.getDeliveryOptions());
   }
 
   @Test
@@ -153,7 +153,7 @@ class PacketImplTest {
     packet.setData(data);
     packet.setDataType(DataType.MSG_PACK);
     packet.setTransportType(TransportType.TCP);
-    packet.setGuarantee(ResponseGuarantee.GUARANTEED);
+    packet.setDeliveryOptions(DeliveryOptions.important());
     packet.needsEncrypted(true);
     packet.hasLengthPrefixed(true);
     packet.setMarkedAsLast(true);
@@ -164,7 +164,7 @@ class PacketImplTest {
     assertArrayEquals(data, copy.getData());
     assertEquals(DataType.MSG_PACK, copy.getDataType());
     assertEquals(TransportType.TCP, copy.getTransportType());
-    assertEquals(ResponseGuarantee.GUARANTEED, copy.getGuarantee());
+    assertEquals(DeliveryOptions.important(), copy.getDeliveryOptions());
     assertTrue(copy.needsEncrypted());
     assertTrue(copy.hasLengthPrefixed());
     assertTrue(copy.isMarkedAsLast());

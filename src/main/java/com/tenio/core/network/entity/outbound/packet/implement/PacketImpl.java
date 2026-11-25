@@ -26,7 +26,6 @@ package com.tenio.core.network.entity.outbound.packet.implement;
 
 import com.tenio.common.data.DataType;
 import com.tenio.common.utility.TimeUtility;
-import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.outbound.packet.Packet;
@@ -44,7 +43,6 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   private final long createdTime;
   private byte[] data;
   private DataType dataType;
-  private ResponseGuarantee guarantee;
   private boolean encrypted;
   private boolean lengthPrefixed;
   private TransportType transportType;
@@ -82,7 +80,6 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
     id = ID_COUNTER.getAndIncrement();
     createdTime = TimeUtility.currentTimeMillis();
     transportType = TransportType.UNKNOWN;
-    guarantee = ResponseGuarantee.NORMAL;
   }
 
   /**
@@ -128,16 +125,6 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   @Override
   public void setTransportType(TransportType type) {
     transportType = type;
-  }
-
-  @Override
-  public ResponseGuarantee getGuarantee() {
-    return guarantee;
-  }
-
-  @Override
-  public void setGuarantee(ResponseGuarantee guarantee) {
-    this.guarantee = guarantee;
   }
 
   @Override
@@ -245,7 +232,6 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
         ", createdTime=" + createdTime +
         ", data(bytes)=" + (data != null ? data.length : "null") +
         ", dataType=" + dataType +
-        ", guarantee=" + guarantee +
         ", encrypted=" + encrypted +
         ", lengthPrefixed=" + lengthPrefixed +
         ", transportType=" + transportType +
@@ -261,7 +247,6 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
     packet.setDataType(dataType);
     packet.setData(data);
     packet.setFragmentBuffer(fragmentBuffer);
-    packet.setGuarantee(guarantee);
     packet.needsEncrypted(encrypted);
     packet.hasLengthPrefixed(lengthPrefixed);
     packet.setRecipients(recipients);

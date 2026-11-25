@@ -27,7 +27,6 @@ package com.tenio.core.network.entity.outbound.implement;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataType;
 import com.tenio.core.entity.Player;
-import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.session.Session;
@@ -56,7 +55,6 @@ public final class ResponseImpl implements Response {
    * prevents an already-created response from following a player to a replacement connection.
    */
   private Map<Player, Session> addressedPlayerSessions;
-  private ResponseGuarantee guarantee;
   private boolean prioritizedUdp;
   private boolean onlyUdp;
   private boolean encrypted;
@@ -81,7 +79,6 @@ public final class ResponseImpl implements Response {
     webSocketSessions = null;
     nonSessionPlayers = null;
     addressedPlayerSessions = new IdentityHashMap<>();
-    guarantee = ResponseGuarantee.NORMAL;
     prioritizedUdp = false;
     onlyUdp = false;
     encrypted = false;
@@ -186,19 +183,8 @@ public final class ResponseImpl implements Response {
   }
 
   @Override
-  public Response guarantee(ResponseGuarantee guarantee) {
-    this.guarantee = guarantee;
-    return this;
-  }
-
-  @Override
   public boolean needsEncrypted() {
     return encrypted;
-  }
-
-  @Override
-  public ResponseGuarantee getGuarantee() {
-    return guarantee;
   }
 
   @Override
@@ -297,7 +283,6 @@ public final class ResponseImpl implements Response {
         ", socketSessionsCount=" + (socketSessions == null ? 0 : socketSessions.size()) +
         ", datagramSessionsCount=" + (datagramSessions == null ? 0 : datagramSessions.size()) +
         ", webSocketSessionsCount=" + (webSocketSessions == null ? 0 : webSocketSessions.size()) +
-        ", guarantee=" + guarantee +
         ", prioritizedUdp=" + prioritizedUdp +
         ", onlyUdp=" + onlyUdp +
         ", encrypted=" + encrypted +

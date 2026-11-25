@@ -38,7 +38,7 @@ import static org.mockito.Mockito.when;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataType;
 import com.tenio.core.entity.Player;
-import com.tenio.core.network.define.ResponseGuarantee;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.server.Server;
@@ -84,8 +84,8 @@ class ResponseImplTest {
   }
 
   @Test
-  void testDefaultGuaranteeIsNormal() {
-    assertEquals(ResponseGuarantee.NORMAL, response.getGuarantee());
+  void testDefaultDeliveryOptionsAreAbsent() {
+    assertNull(response.getDeliveryOptions());
   }
 
   @Test
@@ -118,9 +118,9 @@ class ResponseImplTest {
   }
 
   @Test
-  void testGuaranteeSetterAndGetter() {
-    response.guarantee(ResponseGuarantee.GUARANTEED);
-    assertEquals(ResponseGuarantee.GUARANTEED, response.getGuarantee());
+  void testDeliveryOptionsSetterAndGetter() {
+    response.delivery(DeliveryOptions.important());
+    assertEquals(DeliveryOptions.important(), response.getDeliveryOptions());
   }
 
   @Test

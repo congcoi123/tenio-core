@@ -26,12 +26,13 @@ package com.tenio.core.network.entity.outbound.packet.policy;
 
 import com.tenio.core.exception.OutboundQueueFullException;
 import com.tenio.core.exception.OutboundQueuePolicyViolationException;
-import com.tenio.core.network.define.ResponseGuarantee;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 
 /**
- * The default implementation of the outbound queue policy.
+ * The default congestion admission policy. Missing delivery settings use NORMAL priority.
+ * Priority never reorders packets or bypasses a full queue.
  *
  * @see OutboundQueuePolicy
  */
@@ -47,15 +48,14 @@ public class DefaultOutboundQueuePolicy implements OutboundQueuePolicy {
     }
 
     float percentageUsed = outboundQueue.getPercentageUsed();
-
-    if (percentageUsed >= THREE_QUARTERS_FULL && percentageUsed < NINETY_PERCENT_FULL) {
-      if (packet.getGuarantee().getValue() < ResponseGuarantee.NORMAL.getValue()) {
-        throw new OutboundQueuePolicyViolationException(packet, percentageUsed);
-      }
-    } else if (percentageUsed >= NINETY_PERCENT_FULL) {
-      if (packet.getGuarantee().getValue() < ResponseGuarantee.GUARANTEED.getValue()) {
-        throw new OutboundQueuePolicyViolationException(packet, percentageUsed);
-      }
+    if (percentageUsed < THREE_QUARTERS_FULL) {
+      return;
+    }
+    var options = packet.getDeliveryOptions();
+    var priority = options == null ? DeliveryOptions.Priority.NORMAL : options.priority();
+    if ((priority == DeliveryOptions.Priority.LOW && percentageUsed >= THREE_QUARTERS_FULL)
+        || (priority == DeliveryOptions.Priority.NORMAL && percentageUsed >= NINETY_PERCENT_FULL)) {
+      throw new OutboundQueuePolicyViolationException(packet, percentageUsed);
     }
   }
 }

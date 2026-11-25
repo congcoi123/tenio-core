@@ -392,7 +392,6 @@ public final class NetworkImpl extends AbstractManager implements Network {
     }
     packet.setData(response.getContent().toBinaries());
     packet.needsEncrypted(response.needsEncrypted());
-    packet.setGuarantee(response.getGuarantee());
     packet.setRecipients(recipients);
     packet.setTransportType(transportType);
 
