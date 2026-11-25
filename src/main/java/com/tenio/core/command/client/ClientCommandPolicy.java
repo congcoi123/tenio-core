@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.command.client;
 
 import com.tenio.common.data.DataCollection;
+
 import java.util.Objects;
 
 /**
@@ -36,31 +37,33 @@ import java.util.Objects;
 @FunctionalInterface
 public interface ClientCommandPolicy {
 
-  /**
-   * A resolved command and its application payload.
-   *
-   * @param code registered command code
-   * @param content non-null payload passed to the command handler
-   */
-  record CommandRequest(short code, DataCollection content) {
-    /** Validates the resolved payload. */
-    public CommandRequest {
-      Objects.requireNonNull(content, "content");
+    /**
+     * A resolved command and its application payload.
+     *
+     * @param code    registered command code
+     * @param content non-null payload passed to the command handler
+     */
+    record CommandRequest(short code, DataCollection content) {
+        /**
+         * Validates the resolved payload.
+         */
+        public CommandRequest {
+            Objects.requireNonNull(content, "content");
+        }
     }
-  }
 
-  /**
-   * Resolves one associated player's message after transport envelope processing.
-   *
-   * <p>Return {@code null} or throw an exception to reject missing or malformed command intent.
-   * Unknown resolved codes are also rejected. Command mode never emits
-   * RECEIVED_MESSAGE_FROM_PLAYER, including on rejection. Resolved commands go through the
-   * manager's rate limits and execution mode. Without a policy or registered commands at startup,
-   * event mode remains active instead. This method may run concurrently across sessions;
-   * implementations must be thread-safe and should not mutate data.
-   *
-   * @param message decoded application message, with the UDP envelope already removed
-   * @return resolved command, or {@code null} to reject the message
-   */
-  CommandRequest applyPolicy(DataCollection message);
+    /**
+     * Resolves one associated player's message after transport envelope processing.
+     *
+     * <p>Return {@code null} or throw an exception to reject missing or malformed command intent.
+     * Unknown resolved codes are also rejected. Command mode never emits
+     * RECEIVED_MESSAGE_FROM_PLAYER, including on rejection. Resolved commands go through the
+     * manager's rate limits and execution mode. Without a policy or registered commands at startup,
+     * event mode remains active instead. This method may run concurrently across sessions;
+     * implementations must be thread-safe and should not mutate data.
+     *
+     * @param message decoded application message, with the UDP envelope already removed
+     * @return resolved command, or {@code null} to reject the message
+     */
+    CommandRequest applyPolicy(DataCollection message);
 }

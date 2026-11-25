@@ -24,14 +24,24 @@ THE SOFTWARE.
 
 package com.tenio.core.command.client;
 
-/** Selects how an annotated command executes. Existing handlers remain inline by default. */
+/**
+ * Selects how an annotated command executes. Existing handlers remain inline by default.
+ */
 public enum ExecutionMode {
-  /** Execute immediately on the caller, preserving existing behavior. */
-  INLINE,
-  /** Serialize all opted-in commands for the addressed session. */
-  SESSION,
-  /** Serialize all opted-in commands for the addressed room. Requires room membership. */
-  ROOM,
-  /** Execute independent work concurrently, subject to admission limits. */
-  CONCURRENT
+    /**
+     * Execute immediately on the caller, preserving existing behavior.
+     */
+    INLINE,
+    /**
+     * Serialize all opted-in commands for the addressed session.
+     */
+    SESSION,
+    /**
+     * Serialize all opted-in commands for the addressed room. Requires room membership.
+     */
+    ROOM,
+    /**
+     * Execute independent work concurrently, subject to admission limits.
+     */
+    CONCURRENT
 }

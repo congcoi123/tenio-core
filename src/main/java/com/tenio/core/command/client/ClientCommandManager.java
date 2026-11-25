@@ -24,16 +24,18 @@ THE SOFTWARE.
 
 package com.tenio.core.command.client;
 
-import com.tenio.core.bootstrap.annotation.ClientCommand;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataUtility;
 import com.tenio.common.logger.SystemLogger;
+import com.tenio.core.bootstrap.annotation.ClientCommand;
 import com.tenio.core.entity.Player;
 import com.tenio.core.exception.AddedDuplicatedClientCommandException;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * The commands' management class.
@@ -42,318 +44,325 @@ import java.util.Map;
  */
 public final class ClientCommandManager extends SystemLogger {
 
-  private final Map<Short, AbstractClientCommandHandler<Player, DataCollection>> commands = new HashMap<>();
-  private final Map<Short, CommandMetadata> metadata = new HashMap<>();
-  private volatile CommandLimits limits;
-
-  private volatile CommandDispatcher dispatcher;
-  private volatile CommandTiming timing;
-  private volatile boolean executionFeatures;
-
-  /** Coarse lifetime duration diagnostics; p95 is the upper bound of a power-of-two bucket. */
-  public record ExecutionStatistics(
-      long completed,
-      long failures,
-      long averageNanos,
-      long p95UpperBoundNanos,
-      long maximumNanos,
-      int outstanding) {}
-
-  /** Enables optional command timing before accepting requests; does not start a thread. */
-  public void enableExecutionMonitoring() {
-    timing = new CommandTiming();
-    executionFeatures = true;
-  }
-
-  /**
-   * @return lifetime timing snapshot, or zero durations when diagnostics are disabled
-   */
-  public ExecutionStatistics executionStatistics() {
-    var active = timing;
-    return active == null
-        ? new ExecutionStatistics(0, 0, 0, 0, 0, outstandingCommands())
-        : active.snapshot(outstandingCommands());
-  }
-
-  private static final int DISPATCH_CAPACITY = 1024;
-  private static final int DISPATCH_CONCURRENCY = 128;
-
-  private record Lane(ExecutionMode mode, long id) {}
-
-  private record CommandMetadata(Class<?> handlerClass, String name, String description) {
-  }
-
-  /**
-   * Registers a command handler.
-   *
-   * @param code    The command code
-   * @param command The command handler
-   */
-  public void registerCommand(Short code, AbstractClientCommandHandler<Player, DataCollection> command) {
-    // checks availability
-    if (commands.containsKey(code)) {
-      throw new AddedDuplicatedClientCommandException(code, commands.get(code));
+    /**
+     * Coarse lifetime duration diagnostics; p95 is the upper bound of a power-of-two bucket.
+     */
+    public record ExecutionStatistics(
+            long completed,
+            long failures,
+            long averageNanos,
+            long p95UpperBoundNanos,
+            long maximumNanos,
+            int outstanding) {
     }
 
-    // gets command data
-    var binding = command.getClass().getAnnotation(ClientCommand.class);
-    if (binding != null) {
-      if (binding.mailboxCapacity() <= 0) {
-        throw new IllegalArgumentException("Command mailbox capacity must be positive");
-      }
-      if (binding.execution() != ExecutionMode.INLINE && dispatcher == null) {
-        dispatcher = new CommandDispatcher(DISPATCH_CAPACITY, DISPATCH_CONCURRENCY);
-        executionFeatures = true;
-      }
-      int rate = binding.requestsPerSecond();
-      int burst = binding.burst();
-      if (rate < 0 || burst < 0) {
-        throw new IllegalArgumentException("Command rate and burst cannot be negative");
-      }
-      if (rate > 0) {
-        getLimits().configure(code, rate, burst == 0 ? rate : burst);
-      }
-    }
-    var display = commandMetadata(command, binding);
-    commands.put(code, command);
-    metadata.put(code, display);
-  }
-
-  private static CommandMetadata commandMetadata(AbstractClientCommandHandler<Player, DataCollection> handler, ClientCommand binding) {
-    var type = handler.getClass();
-    String name = binding == null ? "" : binding.name().strip();
-    if (name.isEmpty()) {
-      name = type.getSimpleName();
-      if (name.isEmpty()) {
-        name = type.getName();
-      }
-    }
-    String description = binding == null ? "" : binding.description().strip();
-    return new CommandMetadata(type, name.replaceAll("\\s+", " "), description.replaceAll("\\s+", " "));
-  }
-
-  /**
-   * Formats a command code and its display metadata for diagnostics.
-   *
-   * @param code the command code
-   * @param includeDescription whether to include the optional description
-   * @return the code and available display metadata
-   */
-  public String describeCommand(Short code, boolean includeDescription) {
-    var handler = commands.get(code);
-    if (handler == null) {
-      return String.valueOf(code);
+    private record Lane(ExecutionMode mode, long id) {
     }
 
-    var display = metadata.get(code);
-    if (display == null || display.handlerClass() != handler.getClass()) {
-      // The live handler map can be updated directly by application code.
-      display = commandMetadata(handler, handler.getClass().getAnnotation(ClientCommand.class));
-    }
-    String label = code + " | " + display.name();
-    return includeDescription && !display.description().isEmpty()
-        ? label + " | " + display.description() : label;
-  }
-
-  /**
-   * Returns a list of all registered commands.
-   *
-   * @return all command handlers as a list
-   */
-  public List<AbstractClientCommandHandler<Player, DataCollection>> getHandlersAsList() {
-    return new LinkedList<>(commands.values());
-  }
-
-  /**
-   * Retrieves a map of all registered commands.
-   *
-   * @return a {@link Map} of all registered commands
-   */
-  public Map<Short, AbstractClientCommandHandler<Player, DataCollection>> getHandlers() {
-    return commands;
-  }
-
-  /**
-   * Returns a handler by its code
-   *
-   * @param code The command code
-   * @return the command handler
-   */
-  public AbstractClientCommandHandler<Player, DataCollection> getHandler(Short code) {
-    return commands.get(code);
-  }
-
-  /**
-   * Returns an immutable snapshot of accepted and rejected requests by command code.
-   *
-   * @return counts for configured commands, or an empty map if no limits are configured
-   */
-  public Map<Short, CommandLimits.Counts> limitCounts() {
-    var active = limits;
-    return active == null ? Map.of() : active.counts();
-  }
-
-  /**
-   * Checks whether any client command has a configured rate limit.
-   *
-   * @return {@code true} if at least one rate limit is configured
-   */
-  public boolean hasLimits() {
-    var active = limits;
-    return active != null && active.enabled();
-  }
-
-  /**
-   * Removes the session-scoped rate-limit state when a session closes.
-   *
-   * @param sessionId the ID used by {@link CommandLimits#allowSession(short, long)}
-   */
-  public void releaseSession(long sessionId) {
-    var active = limits;
-    if (active != null && active.enabled()) {
-      active.releaseSession(sessionId);
-    }
-  }
-
-  /**
-   * Returns the rate limiter, creating it on first access.
-   * Configure application-defined rules during startup through
-   * {@link CommandLimits#configure(short, int, int)}.
-   *
-   * @return the rate limiter owned by this command manager
-   */
-  public synchronized CommandLimits getLimits() {
-    if (limits == null) {
-      limits = new CommandLimits();
-    }
-    return limits;
-  }
-
-  /**
-   * Invokes a command handler with given arguments.
-   *
-   * @param code    The messaged used to invoke the command
-   * @param player  The receiver which gets command from its client
-   * @param message The message as command
-   */
-  public void invoke(Short code, Player player, DataCollection message) {
-    // gets command handler
-    var handler = getHandler(code);
-
-    // checks if the handler is null
-    if (handler == null) {
-      return;
+    private record CommandMetadata(Class<?> handlerClass, String name, String description) {
     }
 
-    // invokes execute method for handler
-    var activeLimits = limits;
-    if (activeLimits == null || !activeLimits.enabled()
-        || activeLimits.allow(code, player == null ? null : player.getIdentity())) {
-      if (executionFeatures) {
-        dispatch(handler, player, message);
-      } else {
-        handler.execute(player, message);
-      }
-    }
-  }
+    private static final int DISPATCH_CAPACITY = 1024;
+    private static final int DISPATCH_CONCURRENCY = 128;
 
-  /**
-   * @return opted-in queued plus running invocations, or zero when dispatch is disabled
-   */
-  public int outstandingCommands() {
-    var active = dispatcher;
-    return active == null ? 0 : active.outstanding();
-  }
+    private final Map<Short, AbstractClientCommandHandler<Player, DataCollection>> commands = new HashMap<>();
+    private final Map<Short, CommandMetadata> metadata = new HashMap<>();
+    private volatile CommandLimits limits;
 
-  private void execute(
-      AbstractClientCommandHandler<Player, DataCollection> handler,
-      Player player,
-      DataCollection message) {
-    var monitor = timing;
-    if (monitor == null) {
-      handler.execute(player, message);
-      return;
-    }
-    long started = System.nanoTime();
-    boolean successful = false;
-    try {
-      handler.execute(player, message);
-      successful = true;
-    } finally {
-      monitor.record(System.nanoTime() - started, successful);
-    }
-  }
+    private volatile CommandDispatcher dispatcher;
+    private volatile CommandTiming timing;
+    private volatile boolean executionFeatures;
 
-  private void dispatch(
-      AbstractClientCommandHandler<Player, DataCollection> handler,
-      Player player,
-      DataCollection message) {
-    var active = dispatcher;
-    var binding = active == null ? null : handler.getClass().getAnnotation(ClientCommand.class);
-    if (active == null || binding == null || binding.execution() == ExecutionMode.INLINE) {
-      execute(handler, player, message);
-      return;
+    /**
+     * Registers a command handler.
+     *
+     * @param code    The command code
+     * @param command The command handler
+     */
+    public void registerCommand(Short code, AbstractClientCommandHandler<Player, DataCollection> command) {
+        // checks availability
+        if (commands.containsKey(code)) {
+            throw new AddedDuplicatedClientCommandException(code, commands.get(code));
+        }
+
+        // gets command data
+        var binding = command.getClass().getAnnotation(ClientCommand.class);
+        if (binding != null) {
+            if (binding.mailboxCapacity() <= 0) {
+                throw new IllegalArgumentException("Command mailbox capacity must be positive");
+            }
+            if (binding.execution() != ExecutionMode.INLINE && dispatcher == null) {
+                dispatcher = new CommandDispatcher(DISPATCH_CAPACITY, DISPATCH_CONCURRENCY);
+                executionFeatures = true;
+            }
+            int rate = binding.requestsPerSecond();
+            int burst = binding.burst();
+            if (rate < 0 || burst < 0) {
+                throw new IllegalArgumentException("Command rate and burst cannot be negative");
+            }
+            if (rate > 0) {
+                getLimits().configure(code, rate, burst == 0 ? rate : burst);
+            }
+        }
+        var display = commandMetadata(command, binding);
+        commands.put(code, command);
+        metadata.put(code, display);
     }
-    var session = player == null ? null : player.getSession().orElse(null);
-    var room = player == null ? null : player.getCurrentRoom().orElse(null);
-    var mode = binding.execution();
-    if ((mode == ExecutionMode.SESSION && session == null)
-        || (mode == ExecutionMode.ROOM && (room == null || session == null))) {
-      throw new IllegalStateException("Ordered command requires an associated session/room");
+
+    private static CommandMetadata commandMetadata(AbstractClientCommandHandler<Player, DataCollection> handler, ClientCommand binding) {
+        var type = handler.getClass();
+        String name = binding == null ? "" : binding.name().strip();
+        if (name.isEmpty()) {
+            name = type.getSimpleName();
+            if (name.isEmpty()) {
+                name = type.getName();
+            }
+        }
+        String description = binding == null ? "" : binding.description().strip();
+        return new CommandMetadata(type, name.replaceAll("\\s+", " "), description.replaceAll("\\s+", " "));
     }
-    Object key =
-        switch (mode) {
-          case SESSION -> new Lane(mode, session.getId());
-          case ROOM -> new Lane(mode, room.getId());
-          default -> null;
+
+    /**
+     * Formats a command code and its display metadata for diagnostics.
+     *
+     * @param code               the command code
+     * @param includeDescription whether to include the optional description
+     * @return the code and available display metadata
+     */
+    public String describeCommand(Short code, boolean includeDescription) {
+        var handler = commands.get(code);
+        if (handler == null) {
+            return String.valueOf(code);
+        }
+
+        var display = metadata.get(code);
+        if (display == null || display.handlerClass() != handler.getClass()) {
+            // The live handler map can be updated directly by application code.
+            display = commandMetadata(handler, handler.getClass().getAnnotation(ClientCommand.class));
+        }
+        String label = code + " | " + display.name();
+        return includeDescription && !display.description().isEmpty()
+                ? label + " | " + display.description() : label;
+    }
+
+    /**
+     * Returns a list of all registered commands.
+     *
+     * @return all command handlers as a list
+     */
+    public List<AbstractClientCommandHandler<Player, DataCollection>> getHandlersAsList() {
+        return new LinkedList<>(commands.values());
+    }
+
+    /**
+     * Retrieves a map of all registered commands.
+     *
+     * @return a {@link Map} of all registered commands
+     */
+    public Map<Short, AbstractClientCommandHandler<Player, DataCollection>> getHandlers() {
+        return commands;
+    }
+
+    /**
+     * Returns a handler by its code
+     *
+     * @param code The command code
+     * @return the command handler
+     */
+    public AbstractClientCommandHandler<Player, DataCollection> getHandler(Short code) {
+        return commands.get(code);
+    }
+
+    /**
+     * Returns an immutable snapshot of accepted and rejected requests by command code.
+     *
+     * @return counts for configured commands, or an empty map if no limits are configured
+     */
+    public Map<Short, CommandLimits.Counts> limitCounts() {
+        var active = limits;
+        return active == null ? Map.of() : active.counts();
+    }
+
+    /**
+     * Checks whether any client command has a configured rate limit.
+     *
+     * @return {@code true} if at least one rate limit is configured
+     */
+    public boolean hasLimits() {
+        var active = limits;
+        return active != null && active.enabled();
+    }
+
+    /**
+     * Removes the session-scoped rate-limit state when a session closes.
+     *
+     * @param sessionId the ID used by {@link CommandLimits#allowSession(short, long)}
+     */
+    public void releaseSession(long sessionId) {
+        var active = limits;
+        if (active != null && active.enabled()) {
+            active.releaseSession(sessionId);
+        }
+    }
+
+    /**
+     * Returns the rate limiter, creating it on first access.
+     * Configure application-defined rules during startup through
+     * {@link CommandLimits#configure(short, int, int)}.
+     *
+     * @return the rate limiter owned by this command manager
+     */
+    public synchronized CommandLimits getLimits() {
+        if (limits == null) {
+            limits = new CommandLimits();
+        }
+        return limits;
+    }
+
+    /**
+     * Invokes a command handler with given arguments.
+     *
+     * @param code    The messaged used to invoke the command
+     * @param player  The receiver which gets command from its client
+     * @param message The message as command
+     */
+    public void invoke(Short code, Player player, DataCollection message) {
+        // gets command handler
+        var handler = getHandler(code);
+
+        // checks if the handler is null
+        if (handler == null) {
+            return;
+        }
+
+        // invokes execute method for handler
+        var activeLimits = limits;
+        if (activeLimits == null || !activeLimits.enabled()
+                || activeLimits.allow(code, player == null ? null : player.getIdentity())) {
+            if (executionFeatures) {
+                dispatch(handler, player, message);
+            } else {
+                handler.execute(player, message);
+            }
+        }
+    }
+
+    /**
+     * @return opted-in queued plus running invocations, or zero when dispatch is disabled
+     */
+    public int outstandingCommands() {
+        var active = dispatcher;
+        return active == null ? 0 : active.outstanding();
+    }
+
+    private void execute(
+            AbstractClientCommandHandler<Player, DataCollection> handler,
+            Player player,
+            DataCollection message
+    ) {
+        var monitor = timing;
+        if (monitor == null) {
+            handler.execute(player, message);
+            return;
+        }
+        long started = System.nanoTime();
+        boolean successful = false;
+        try {
+            handler.execute(player, message);
+            successful = true;
+        } finally {
+            monitor.record(System.nanoTime() - started, successful);
+        }
+    }
+
+    private void dispatch(
+            AbstractClientCommandHandler<Player, DataCollection> handler,
+            Player player,
+            DataCollection message) {
+        var active = dispatcher;
+        var binding = active == null ? null : handler.getClass().getAnnotation(ClientCommand.class);
+        if (active == null || binding == null || binding.execution() == ExecutionMode.INLINE) {
+            execute(handler, player, message);
+            return;
+        }
+        var session = player == null ? null : player.getSession().orElse(null);
+        var room = player == null ? null : player.getCurrentRoom().orElse(null);
+        var mode = binding.execution();
+        if ((mode == ExecutionMode.SESSION && session == null)
+                || (mode == ExecutionMode.ROOM && (room == null || session == null))) {
+            throw new IllegalStateException("Ordered command requires an associated session/room");
+        }
+        Object key = switch (mode) {
+            case SESSION -> new Lane(mode, session.getId());
+            case ROOM -> new Lane(mode, room.getId());
+            default -> null;
         };
-    // Detach the input before it crosses threads; retain its wire type.
-    var detached =
-        message == null
-            ? null
-            : DataUtility.binariesToCollection(message.getType(), message.toBinaries());
-    boolean accepted =
-        active.submit(
-            key,
-            binding.mailboxCapacity(),
-            () -> {
-              // A replacement connection or room change invalidates previously admitted mutations.
-              if (player != null
-                  && ((session != null
-                          && (!session.isActivated()
-                              || player.getSession().orElse(null) != session))
-                      || (mode == ExecutionMode.ROOM
-                          && player.getCurrentRoom().orElse(null) != room))) {
-                return;
-              }
-              execute(handler, player, detached);
-            });
-    if (!accepted) {
-      throw new java.util.concurrent.RejectedExecutionException("Client command mailbox is full");
+        // Detach the input before it crosses threads; retain its wire type.
+        var detached = message == null
+                ? null
+                : DataUtility.binariesToCollection(message.getType(), message.toBinaries());
+        boolean accepted = active.submit(
+                key,
+                binding.mailboxCapacity(),
+                () -> {
+                    // A replacement connection or room change invalidates previously admitted mutations.
+                    if (player != null
+                            && ((session != null
+                            && (!session.isActivated()
+                            || player.getSession().orElse(null) != session))
+                            || (mode == ExecutionMode.ROOM
+                            && player.getCurrentRoom().orElse(null) != room))) {
+                        return;
+                    }
+                    execute(handler, player, detached);
+                }
+        );
+        if (!accepted) {
+            throw new RejectedExecutionException("Client command mailbox is full");
+        }
     }
-  }
 
-  /** Stops opted-in admission/work before application teardown; inline behavior is unchanged. */
-  public void stopDispatching() {
-    var active = dispatcher;
-    if (active != null) {
-      active.close();
+    /**
+     * Enables optional command timing before accepting requests; does not start a thread.
+     */
+    public void enableExecutionMonitoring() {
+        timing = new CommandTiming();
+        executionFeatures = true;
     }
-  }
 
-  /**
-   * Clears all the list of commands.
-   */
-  public void clear() {
-    stopDispatching();
-    dispatcher = null;
-    timing = null;
-    executionFeatures = false;
-    commands.clear();
-    metadata.clear();
-    if (limits != null) {
-      limits.clear();
-      limits = null;
+    /**
+     * @return lifetime timing snapshot, or zero durations when diagnostics are disabled
+     */
+    public ExecutionStatistics executionStatistics() {
+        var active = timing;
+        return active == null
+                ? new ExecutionStatistics(0, 0, 0, 0, 0, outstandingCommands())
+                : active.snapshot(outstandingCommands());
     }
-  }
+
+    /**
+     * Stops opted-in admission/work before application teardown; inline behavior is unchanged.
+     */
+    public void stopDispatching() {
+        var active = dispatcher;
+        if (active != null) {
+            active.close();
+        }
+    }
+
+    /**
+     * Clears all the list of commands.
+     */
+    public void clear() {
+        stopDispatching();
+        dispatcher = null;
+        timing = null;
+        executionFeatures = false;
+        commands.clear();
+        metadata.clear();
+        if (limits != null) {
+            limits.clear();
+            limits = null;
+        }
+    }
 }

@@ -398,7 +398,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     public RecoveryManager getRecoveryManager() {
         return server.getRecoveryManager();
     }
-    
+
     private void refreshDiscovery(Room room) {
         var directory = getRoomDirectory();
         if (directory != null && room != null) {

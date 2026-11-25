@@ -28,45 +28,48 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.LongAdder;
 
-/** Optional fixed-size duration histogram; never allocated for unmonitored dispatch. */
+/**
+ * Optional fixed-size duration histogram; never allocated for unmonitored dispatch.
+ */
 final class CommandTiming {
-  private final LongAdder completed = new LongAdder();
-  private final LongAdder failures = new LongAdder();
-  private final LongAdder total = new LongAdder();
-  private final AtomicLong maximum = new AtomicLong();
-  private final AtomicLongArray buckets = new AtomicLongArray(64);
 
-  void record(long nanos, boolean successful) {
-    long duration = Math.max(0, nanos);
-    int bucket = duration == 0 ? 0 : 63 - Long.numberOfLeadingZeros(duration);
-    buckets.incrementAndGet(bucket);
-    total.add(duration);
-    maximum.accumulateAndGet(duration, Math::max);
-    if (!successful) {
-      failures.increment();
-    }
-    completed.increment();
-  }
+    private final LongAdder completed = new LongAdder();
+    private final LongAdder failures = new LongAdder();
+    private final LongAdder total = new LongAdder();
+    private final AtomicLong maximum = new AtomicLong();
+    private final AtomicLongArray buckets = new AtomicLongArray(64);
 
-  ClientCommandManager.ExecutionStatistics snapshot(int outstanding) {
-    long count = completed.sum();
-    long target = (long) Math.ceil(count * 0.95);
-    long seen = 0, p95 = 0;
-    if (count > 0) {
-      for (int i = 0; i < buckets.length(); i++) {
-        seen += buckets.get(i);
-        if (seen >= target) {
-          p95 = i >= 62 ? Long.MAX_VALUE : 1L << (i + 1);
-          break;
+    void record(long nanos, boolean successful) {
+        long duration = Math.max(0, nanos);
+        int bucket = duration == 0 ? 0 : 63 - Long.numberOfLeadingZeros(duration);
+        buckets.incrementAndGet(bucket);
+        total.add(duration);
+        maximum.accumulateAndGet(duration, Math::max);
+        if (!successful) {
+            failures.increment();
         }
-      }
+        completed.increment();
     }
-    return new ClientCommandManager.ExecutionStatistics(
-        count,
-        failures.sum(),
-        count == 0 ? 0 : total.sum() / count,
-        p95,
-        maximum.get(),
-        outstanding);
-  }
+
+    ClientCommandManager.ExecutionStatistics snapshot(int outstanding) {
+        long count = completed.sum();
+        long target = (long) Math.ceil(count * 0.95);
+        long seen = 0, p95 = 0;
+        if (count > 0) {
+            for (int i = 0; i < buckets.length(); i++) {
+                seen += buckets.get(i);
+                if (seen >= target) {
+                    p95 = i >= 62 ? Long.MAX_VALUE : 1L << (i + 1);
+                    break;
+                }
+            }
+        }
+        return new ClientCommandManager.ExecutionStatistics(
+                count,
+                failures.sum(),
+                count == 0 ? 0 : total.sum() / count,
+                p95,
+                maximum.get(),
+                outstanding);
+    }
 }
