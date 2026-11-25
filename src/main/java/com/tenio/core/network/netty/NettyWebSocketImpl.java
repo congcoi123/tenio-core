@@ -66,6 +66,7 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
   private static final int DEFAULT_PRODUCER_WORKER_SIZE = 2;
   private static final int DEFAULT_CONSUMER_WORKER_SIZE = Runtime.getRuntime().availableProcessors() * 2;
 
+  private String serverAddress = "0.0.0.0";
   private final Object lifecycleLock;
   private ServerBootstrap bootstrap;
   private EventLoopGroup webSocketAcceptors;
@@ -137,10 +138,6 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
         .childOption(ChannelOption.SO_KEEPALIVE, true)
         .childHandler(NettyWsInitializer.newInstance(eventManager, sessionManager,
             connectionFilter, binaryPacketDecoder, networkReaderStatistic, sslContext, usingSsl));
-
-    if (isInfoEnabled()) {
-      info("WEB SOCKET", buildgen("Started at port: ", socketConfiguration.port()));
-    }
   }
 
   private void attemptToShutdown() {
@@ -175,19 +172,7 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
       return;
     }
 
-    try {
-      channel.close().sync().addListener(future -> {
-        if (!future.isSuccess()) {
-          if (isErrorEnabled()) {
-            error(future.cause());
-          }
-        }
-      });
-    } catch (InterruptedException exception) {
-      if (isErrorEnabled()) {
-        error(exception);
-      }
-    }
+    channel.close().awaitUninterruptibly();
   }
 
   @Override
@@ -207,8 +192,12 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
         attemptToStart();
         started = true;
       } catch (InterruptedException exception) {
+        attemptToShutdown();
         Thread.currentThread().interrupt();
         throw new ServiceRuntimeException(exception.getMessage());
+      } catch (RuntimeException exception) {
+        attemptToShutdown();
+        throw exception;
       }
     }
   }
@@ -232,22 +221,26 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
         return;
       }
 
-      ChannelFuture channelFuture;
+      if (!serverWebSockets.isEmpty()) {
+        return;
+      }
       try {
-        channelFuture = bootstrap.bind(socketConfiguration.port()).sync()
-            .addListener(future -> {
-              if (!future.isSuccess()) {
-                if (isErrorEnabled()) {
-                  error(future.cause());
-                }
-                throw new IOException(String.valueOf(socketConfiguration.port()));
-              }
-            });
+        var channelFuture = bootstrap.bind(serverAddress, socketConfiguration.port()).sync();
+        serverWebSockets.add(channelFuture.channel());
+        if (isInfoEnabled()) {
+          info("WEB SOCKET", buildgen("Started at address: ", serverAddress,
+              ", port: ", socketConfiguration.port()));
+        }
       } catch (InterruptedException exception) {
+        attemptToShutdown();
+        started = false;
         Thread.currentThread().interrupt();
         throw new RuntimeException(exception);
+      } catch (Exception exception) {
+        attemptToShutdown();
+        started = false;
+        throw new IllegalStateException("Unable to bind WebSocket listener", exception);
       }
-      serverWebSockets.add(channelFuture.channel());
     }
   }
 
@@ -269,6 +262,11 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
   @Override
   public boolean isActivated() {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void setServerAddress(String serverAddress) {
+    this.serverAddress = serverAddress;
   }
 
   @Override

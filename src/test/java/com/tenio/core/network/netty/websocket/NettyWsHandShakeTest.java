@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -100,8 +101,8 @@ class NettyWsHandShakeTest {
   }
 
   @Test
-  @DisplayName("channelRead with HTTP Upgrade request replaces pipeline handler and sends unsupported version response")
-  void testChannelReadWithUpgradeRequestReplacesPipelineHandler() {
+  @DisplayName("Unsupported WebSocket versions do not install the application handler")
+  void testUnsupportedVersionDoesNotInstallApplicationHandler() {
     ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
     Channel channel = mock(Channel.class);
     ChannelPipeline pipeline = mock(ChannelPipeline.class);
@@ -112,17 +113,18 @@ class NettyWsHandShakeTest {
     request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE);
     request.headers().set(HttpHeaderNames.UPGRADE, "WebSocket");
     request.headers().set(HttpHeaderNames.HOST, "localhost:8080");
+    request.headers().set(HttpHeaderNames.SEC_WEBSOCKET_KEY, "dGhlIHNhbXBsZSBub25jZQ==");
     // Use unrecognized WS version so newHandshaker returns null -> sendUnsupportedVersionResponse
     request.headers().set(io.netty.handler.codec.http.HttpHeaderNames.SEC_WEBSOCKET_VERSION, "99");
 
     when(ctx.channel()).thenReturn(channel);
     when(ctx.pipeline()).thenReturn(pipeline);
     when(channel.alloc()).thenReturn(UnpooledByteBufAllocator.DEFAULT);
-    when(channel.writeAndFlush(any())).thenReturn(future);
+    when(channel.writeAndFlush(any(), any())).thenReturn(future);
 
     assertDoesNotThrow(() -> handShake.channelRead(ctx, request));
 
-    verify(pipeline).replace(any(io.netty.channel.ChannelHandler.class), eq("handler"),
+    verify(pipeline, never()).replace(any(io.netty.channel.ChannelHandler.class), eq("handler"),
         any(io.netty.channel.ChannelHandler.class));
   }
 

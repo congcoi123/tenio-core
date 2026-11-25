@@ -29,6 +29,7 @@ import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -39,7 +40,9 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.util.ReferenceCountUtil;
+import java.util.Base64;
 
 /**
  * <a href="https://en.wikipedia.org/wiki/WebSocket">WebSocket</a> is distinct
@@ -91,33 +94,42 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object raw) {
-    // check the request for handshake
-    if (raw instanceof HttpRequest httpRequest) {
-      var headers = httpRequest.headers();
-
-      boolean validUpgrade = httpRequest.method().equals(HttpMethod.GET)
-          && headers.containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE, true)
-          && headers.contains(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET, true)
-          && headers.contains(HttpHeaderNames.HOST);
-
-      if (validUpgrade) {
-
-        // add new handler to the existing pipeline to handle HandShake-WebSocket
-        // Messages
-        ctx.pipeline().replace(this, "handler",
-            NettyWsHandler.newInstance(eventManager, sessionManager, connectionFilter,
-                binaryPacketDecoder, networkReaderStatistic));
-
-        // do the Handshake to upgrade connection from HTTP to WebSocket protocol
+    try {
+      if (raw instanceof HttpRequest httpRequest) {
+        var headers = httpRequest.headers();
+        boolean validUpgrade = httpRequest.decoderResult().isSuccess()
+            && httpRequest.method().equals(HttpMethod.GET)
+            && httpRequest.protocolVersion().equals(HttpVersion.HTTP_1_1)
+            && headers.containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE, true)
+            && headers.contains(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET, true)
+            && headers.contains(HttpHeaderNames.HOST)
+            && validKey(headers.get(HttpHeaderNames.SEC_WEBSOCKET_KEY));
+        if (!validUpgrade) {
+          ctx.writeAndFlush(new DefaultFullHttpResponse(
+              HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST))
+              .addListener(ChannelFutureListener.CLOSE);
+          return;
+        }
         handleHandshake(ctx, httpRequest);
-      } else {
-        ReferenceCountUtil.release(raw);
-        ctx.writeAndFlush(new DefaultFullHttpResponse(
-            HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST))
-            .addListener(future -> ctx.close());
       }
-    } else {
+    } finally {
       ReferenceCountUtil.release(raw);
+    }
+  }
+
+  @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+    ctx.close();
+  }
+
+  private boolean validKey(String key) {
+    if (key == null) {
+      return false;
+    }
+    try {
+      return Base64.getDecoder().decode(key).length == 16;
+    } catch (IllegalArgumentException exception) {
+      return false;
     }
   }
 
@@ -128,7 +140,8 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
    * @param req the request, see {@link HttpRequest}
    */
   private void handleHandshake(ChannelHandlerContext ctx, HttpRequest req) {
-    var wsFactory = new WebSocketServerHandshakerFactory(getWebSocketUrl(req), null, true);
+    var wsFactory = new WebSocketServerHandshakerFactory(getWebSocketUrl(ctx, req), null, false,
+        NettyWsInitializer.MAX_FRAME_PAYLOAD_LENGTH);
     /*
      The handshake starts with an HTTP request/response, allowing servers to
      handle HTTP connections as well as WebSocket connections on the same port.
@@ -137,13 +150,24 @@ public final class NettyWsHandShake extends ChannelInboundHandlerAdapter {
      */
     var handshake = wsFactory.newHandshaker(req);
     if (handshake == null) {
-      WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
+      WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel())
+          .addListener(ChannelFutureListener.CLOSE);
     } else {
-      handshake.handshake(ctx.channel(), req);
+      ctx.pipeline().replace(this, "handler",
+          NettyWsHandler.newInstance(eventManager, sessionManager, connectionFilter,
+              binaryPacketDecoder, networkReaderStatistic));
+      handshake.handshake(ctx.channel(), req).addListener(future -> {
+        if (!future.isSuccess()) {
+          ctx.close();
+        } else if (ctx.pipeline().get("handshake-timeout") != null) {
+          ctx.pipeline().remove("handshake-timeout");
+        }
+      });
     }
   }
 
-  private String getWebSocketUrl(HttpRequest req) {
-    return "ws://" + req.headers().get(HttpHeaderNames.HOST) + req.uri();
+  private String getWebSocketUrl(ChannelHandlerContext ctx, HttpRequest req) {
+    var scheme = ctx.pipeline().get(SslHandler.class) == null ? "ws://" : "wss://";
+    return scheme + req.headers().get(HttpHeaderNames.HOST) + req.uri();
   }
 }

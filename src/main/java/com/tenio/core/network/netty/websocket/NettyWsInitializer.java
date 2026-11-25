@@ -33,6 +33,9 @@ import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.websocketx.WebSocketFrameAggregator;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.ssl.SslHandler;
 import javax.net.ssl.SSLEngine;
 
@@ -40,6 +43,11 @@ import javax.net.ssl.SSLEngine;
  * An initialization for the Netty websockets.
  */
 public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> {
+
+  static final int MAX_HTTP_CONTENT_LENGTH = 16 * 1024;
+  static final int MAX_FRAME_PAYLOAD_LENGTH = 64 * 1024;
+  static final int MAX_MESSAGE_LENGTH = 1024 * 1024;
+  private static final int HANDSHAKE_TIMEOUT_SECONDS = 10;
 
   private final EventManager eventManager;
   private final SessionManager sessionManager;
@@ -96,8 +104,13 @@ public final class NettyWsInitializer extends ChannelInitializer<SocketChannel> 
       pipeline.addLast("ssl", new SslHandler(engine));
     }
 
+    pipeline.addLast("handshake-timeout", new ReadTimeoutHandler(HANDSHAKE_TIMEOUT_SECONDS));
+
     // add http-codec for TCP handshake
     pipeline.addLast("httpServerCodec", new HttpServerCodec());
+
+    pipeline.addLast("http-aggregator", new HttpObjectAggregator(MAX_HTTP_CONTENT_LENGTH));
+    pipeline.addLast("frame-aggregator", new WebSocketFrameAggregator(MAX_MESSAGE_LENGTH));
 
     // the logic handler
     pipeline.addLast("http-handshake",

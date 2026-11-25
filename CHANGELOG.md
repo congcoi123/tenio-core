@@ -160,7 +160,7 @@
 - Accepted an explicitly empty XML profile for deployments using unrestricted components.
 - Removed the unused JLine dependencies and the unfilled security policy template.
 
-## Unreleased — Framework services
+## 1.1.0 2026-11-25 Framework services
 
 - Add opt-in SESSION/ROOM ordered and bounded concurrent client command execution; preserve INLINE defaults, detach async inputs, fence stale sessions/room changes, and stop admitted work before application teardown.
 - Add optional command duration/failure diagnostics for monitor/performance using a bounded histogram.
@@ -211,3 +211,10 @@ and replicated state. No existing Zero/MessagePack type codes or application ope
 - Apply congestion admission through the existing outbound queue policy: LOW is rejected at 75%, NORMAL at 90%, and HIGH remains eligible until full. All packet/byte bounds, custom policies and FIFO ordering remain effective.
 - Keep responses without delivery settings at implicit NORMAL priority without allocating options or enhanced queue bookkeeping. Preserve distinct policy/full drop accounting and packet-copy deadlines.
 - Update JavaDocs, guides and regression coverage. Delivery priority stays server-side; wire formats are unchanged.
+
+### WebSocket transport
+- Aggregate fragmented binary messages within bounded frame/message limits; support ping/pong and close replies, record peer close as a client request, and reject text and empty packets.
+- Bound HTTP upgrade content and handshake read time, validate upgrade keys, release HTTP requests, close unsupported versions and failed handshakes, and disable unimplemented WebSocket extensions.
+- Apply the configured server bind address to WebSocket, make activation idempotent, report listener readiness after a successful bind and clean up startup failures.
+- Add protocol and WS/WSS integration regressions; document transport defaults and TLS setup.
+- Release core as 1.1.0 while retaining tenio-common 1.0.0.

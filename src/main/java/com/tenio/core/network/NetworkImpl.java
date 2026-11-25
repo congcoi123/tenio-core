@@ -222,6 +222,7 @@ public final class NetworkImpl extends AbstractManager implements Network {
   @Override
   public void setSocketAcceptorServerAddress(String serverAddress) {
     socketService.setAcceptorServerAddress(serverAddress);
+    webSocketService.setServerAddress(serverAddress);
   }
 
   @Override

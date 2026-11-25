@@ -459,13 +459,55 @@ Please check out the [changelog](./CHANGELOG.md) for more details.
 ## Contributing
 Please check out the [checklist](./CHECKLIST.md) and [contributing guideline](./CONTRIBUTING.md) for more details.
 
+## WebSocket transport
+
+Declare a WebSocket port and choose the bind address in XML:
+
+```xml
+<Properties>
+  <Property name="server-address">127.0.0.1</Property>
+</Properties>
+<Network>
+  <Sockets>
+    <Port name="websocket" type="websocket">8033</Port>
+  </Sockets>
+  <Properties>
+    <Property name="websocket-using-ssl">false</Property>
+  </Properties>
+</Network>
+```
+
+These sections belong inside the existing `Server` element. `server-address` applies to
+TCP and WebSocket listeners; use `0.0.0.0` when remote clients must connect over IPv4.
+Any HTTP upgrade path is accepted, so clients may use `ws://localhost:8033/websocket`.
+The WebSocket listener is started only when its port is configured.
+
+| Behavior | Default |
+| --- | --- |
+| Payload | One unprefixed TenIO binary packet per complete WebSocket message; ZeroMap or MessagePack according to the TenIO header. Text messages close with status 1003. |
+| Fragmentation | Binary continuation frames are aggregated before decoding; each frame is limited to 64 KiB and a complete message to 1 MiB. |
+| HTTP handshake | 16 KiB maximum HTTP body and a 10-second read timeout until upgrade succeeds. Invalid upgrades are rejected and closed. |
+| Control frames | Ping receives a pong with the same payload; close receives a close reply. These frames do not create player sessions. |
+| Extensions | WebSocket compression extensions are not negotiated. TenIO packet compression is separate and must match the application codec. |
+| Application lifecycle | The first binary packet requests a connection; subsequent packets use the normal logged-in session processing. Ping frames do not replace an application heartbeat for idle-player checks. |
+| Delivery options | Direct WebSocket writes do not use the TCP outbound queue's replacement, expiry or priority semantics. |
+
+For WSS, set `websocket-using-ssl` to `true`, point `-Dkeystore.file.path` to a JKS
+keystore containing the server certificate and private key, and supply its password through
+`TENIO_KEYSTORE_PASSWORD` (or `-Dkeystore.file.password`). The certificate must match the
+hostname used by clients and be trusted by them. Missing or invalid TLS configuration fails
+startup. Do not use test keys or disable certificate verification in deployed clients.
+Application login and authorization remain required; an HTTP upgrade is not a player login.
+
+Example 7 includes a JDK WebSocket test client for login, fragmented movement, ping and close.
+
 ## Installation
 Maven Central
 ```xml
 <dependency>
     <groupId>io.github.congcoi123</groupId>
     <artifactId>tenio-core</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 GitHub

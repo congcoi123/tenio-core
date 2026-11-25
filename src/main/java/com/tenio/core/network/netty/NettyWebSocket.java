@@ -41,6 +41,13 @@ import java.nio.ByteBuffer;
 public interface NettyWebSocket extends Service {
 
   /**
+   * Sets the local address to bind before the service starts.
+   *
+   * @param serverAddress a local IP address or hostname; use {@code 0.0.0.0} for all IPv4 interfaces
+   */
+  void setServerAddress(String serverAddress);
+
+  /**
    * Sets size of {@link ByteBuffer} using for the WebSocket to write binaries data down.
    *
    * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for writing

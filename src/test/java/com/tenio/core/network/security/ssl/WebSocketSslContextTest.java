@@ -41,11 +41,12 @@ class WebSocketSslContextTest {
   @Test
   @DisplayName("constructor uses custom algorithm from Security property when set")
   void testConstructorUsesCustomAlgorithmFromSecurityProperty() {
+    var originalAlgorithm = java.security.Security.getProperty("ssl.KeyManagerFactory.algorithm");
     java.security.Security.setProperty("ssl.KeyManagerFactory.algorithm", "SunX509");
     try {
       assertThrows(IllegalStateException.class, WebSocketSslContext::new);
     } finally {
-      java.security.Security.setProperty("ssl.KeyManagerFactory.algorithm", "");
+      java.security.Security.setProperty("ssl.KeyManagerFactory.algorithm", originalAlgorithm);
     }
   }
 }

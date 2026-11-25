@@ -10,7 +10,6 @@ This is a synthetic comparison, not a full-server load test or a performance gua
 
 ## Method
 
-- Baseline: the uploaded `tenio-core(20261123-184744).zip`; its original ClientCommandManager, OutboundQueueImpl and PacketImpl were compiled separately.
 - Candidate: the modified classes. Both variants used the same harness, remaining core classes and dependency classpath to isolate these paths.
 - JDK: Eclipse Temurin 21.0.13+2 on the shared Linux execution host; heap `-Xms256m -Xmx256m`.
 - Five fresh JVM forks per variant, alternating variant order. Four warmup rounds and seven measured rounds per path, two million operations each. The table reports the median of the per-fork medians.
