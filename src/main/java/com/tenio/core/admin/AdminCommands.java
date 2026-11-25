@@ -40,9 +40,16 @@ final class AdminCommands {
             new Command("stats", "Refresh the statistics table."),
             new Command("room <id>", "Show room details and up to 50 members. Use room <id> all for the full table."),
             new Command("session <id>", "Show connection and queue details. Example: session 7"),
-            new Command("network pressure", "Show up to 50 queues at least 80% full. Use network pressure all for the full table."),
+            new Command("network pressure",
+              "Show up to 50 queues at least 80% full. Use network pressure all for the full"
+                  + " table."),
             new Command("limits", "Show up to 50 rate-limit counters. Use limits all for the full table."),
-            new Command("history [id]", "Show up to 50 recent events. Use history all or history <id> all for the full table. Requires history."),
+            new Command("history [id]",
+              "Show up to 50 recent events. Use history all or history <id> all for the full table."
+                  + " Requires history."),
+          new Command(
+              "performance [minutes]",
+              "Show retained performance samples (1–10080 minutes). Requires performance."),
             new Command("clear", "Clear the local console output."));
 
     private AdminCommands() {

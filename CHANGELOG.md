@@ -159,3 +159,48 @@
 - Added readable operational history, disk archives for deployments without the monitor window, and arrow-key command recall.
 - Accepted an explicitly empty XML profile for deployments using unrestricted components.
 - Removed the unused JLine dependencies and the unfilled security policy template.
+
+## Unreleased — Framework services
+
+- Add opt-in SESSION/ROOM ordered and bounded concurrent client command execution; preserve INLINE defaults, detach async inputs, fence stale sessions/room changes, and stop admitted work before application teardown.
+- Add optional command duration/failure diagnostics for monitor/performance using a bounded histogram.
+- Add application-defined authenticated recovery with single-use rotating tokens, bounded grace and replay retention, snapshot/replay strategies, shared TCP/WebSocket processing, and an inbound recovery barrier.
+- Add queued message delivery options for unclaimed update replacement, monotonic expiry and best-effort admission, with a default enhanced byte bound and protected in-flight/final packets. Preserve existing response defaults and custom queue policies.
+- Add the optional performance profile, Injector-scheduled samples, bounded rotating TSV archives, range queries, export-loss reporting and native historical charts. No metrics task cadence is added to XML.
+- Add explicitly published public room discovery, group-indexed bounded queries, versioned pages, bounded subscriptions and overflow reset signals, with final logout/room removal cleanup.
+- Add explicitly registered typed player/room state, visibility scopes, owner-authorized writes, atomic revisioned batches, bounded snapshot/delta subscriptions and lifecycle cleanup. Existing entity property maps remain local.
+- Add concurrency, authorization, queue safety, profile selection, archive and compatibility regressions, plus application examples and a disabled-path benchmark harness.
+
+Application adapters and coordinated client support are required for recovery envelopes, lobby deltas
+and replicated state. No existing Zero/MessagePack type codes or application operation codes change.
+
+### Automatic client command envelopes and defaults
+- Added an injected `ClientCommandPolicy` for common TCP/UDP/WebSocket command extraction after login.
+- Cache command routing availability at startup. No policy or no registered commands retains the event path without per-message registry checks.
+- Command mode is exclusive: missing, malformed, unknown and overloaded commands never fall back to `RECEIVED_MESSAGE_FROM_PLAYER`. Valid commands retain rate limits and execution policies.
+- Log the chosen mode once at startup, with explicit warnings for mixed handlers or incomplete routing setup.
+- Document extension defaults and Java interface fallbacks in README tables; add command routing regression tests.
+- Fix a TCP reader selection stall exposed by burst command traffic: process selected keys instead of relying on the count of newly selected keys, and remove the second selection that could leave readiness unconsumed. Add a regression that drains one write across multiple reader iterations.
+
+### Dispatcher test cleanup
+- Wait for both active lanes and their queued invocation to complete before closing the admission-test dispatcher. This prevents expected shutdown interruption from appearing as uncaught assertion errors in IntelliJ.
+- Collect worker failures and assert them on the JUnit thread so a background assertion cannot leave this test green.
+
+### Documentation
+- Integrate command execution, recovery, response delivery, performance history, room discovery and replicated state into the main framework documentation.
+- Replace the separate optional-capabilities presentation with feature sections, service usage, defaults and a framework-services walkthrough in example 13.
+- Rename the service guide and implementation document to `framework-services.md` and `framework-services-implementation.md`, updating their references.
+- Move the runnable disabled-path benchmark into test sources, with IntelliJ, Linux/macOS and Windows PowerShell instructions; normal unit tests do not run the benchmark workload.
+
+### Startup extension-point diagnostics
+- Log selected server extension implementations and override registration guidance at INFO.
+- Log a bracketed WARN list when configured UDP uses the default datagram policy or client commands lack a command policy; keep warnings visible when INFO is disabled.
+
+### Network engine shutdown
+- Interrupt blocked engine workers before waiting for termination, avoiding the ten-second idle writer shutdown delay.
+- Suppress expected TCP/UDP selector-closure errors only after shutdown begins; keep reporting unexpected selector closures and unrelated failures.
+- Add shutdown regressions for blocked writers, reader close races, interrupt preservation and repeated shutdown.
+
+### Response API cleanup
+- Remove the blocking `Response.writeInDelay(long)` API and its implementation. Applications needing delayed sends should schedule application jobs and call `write()` when due. Existing callers must be updated and recompiled.
+- Remove the response implementation's now-unused sleep import and logger inheritance.

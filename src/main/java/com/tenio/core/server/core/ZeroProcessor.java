@@ -25,12 +25,16 @@ THE SOFTWARE.
 package com.tenio.core.server.core;
 
 import com.tenio.core.processor.Processor;
+import com.tenio.core.command.client.ClientCommandManager;
+import com.tenio.core.command.client.ClientCommandPolicy;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.inbound.policy.RequestPolicy;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.recovery.RecoveryManager;
+import com.tenio.core.recovery.RecoveryPolicy;
 
 /**
  * The internal processor service, the heart of the server.
@@ -102,4 +106,21 @@ public interface ZeroProcessor extends Processor {
    * @param networkWriterStatistic a {@link NetworkWriterStatistic} instance
    */
   void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic);
+
+  /**
+   * Configures automatic command routing before processing begins. Implementations must cache
+   * whether routing is enabled from the startup command registrations and optional policy.
+   *
+   * @param commands the startup command registry
+   * @param policy the application envelope policy
+   */
+  default void configureClientCommands(ClientCommandManager commands, ClientCommandPolicy policy) {
+    throw new UnsupportedOperationException(
+        "Automatic command routing is not supported by this processor");
+  }
+
+  /** Installs optional recovery before processing begins. */
+  default void configureRecovery(RecoveryManager manager, RecoveryPolicy policy) {
+    throw new UnsupportedOperationException("Recovery is not supported by this processor");
+  }
 }

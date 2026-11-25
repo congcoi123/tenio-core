@@ -133,6 +133,9 @@ public final class CoreConstant {
    */
   public static final String MONITOR_PROFILE = "monitor";
 
+  /** Enables bounded persistent performance samples and optional local historical charts. */
+  public static final String PERFORMANCE_PROFILE = "performance";
+
   /**
    * Default key for UDP convey ID in packet data.
    * Used for UDP packet identification and routing.

@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.server;
 
+import com.tenio.core.admin.PerformanceHistory;
+
 import com.tenio.core.admin.ServerInspection;
 import com.tenio.common.configuration.Configuration;
 import com.tenio.core.api.ServerApi;
@@ -34,10 +36,12 @@ import com.tenio.core.configuration.ConfigurationSource;
 import com.tenio.core.entity.manager.ChannelManager;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
+import com.tenio.core.entity.replication.StateReplication;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
+import com.tenio.core.recovery.RecoveryManager;
 import io.netty.bootstrap.Bootstrap;
 
 /**
@@ -164,4 +168,33 @@ public interface Server {
    * @param markedAsLast marks as this writing is the last one
    */
   void write(Response response, boolean markedAsLast);
+
+  /**
+   * Returns the optional recovery authority configured through a RecoveryPolicy bean.
+   *
+   * @return authority, or null when recovery is not enabled
+   */
+  default RecoveryManager getRecoveryManager() {
+    return null;
+  }
+
+  /**
+   * @return optional persistent performance recorder, or null when disabled
+   */
+  default PerformanceHistory getPerformanceHistory() {
+    return null;
+  }
+
+  /** Enables explicitly replicated state during startup; never copies existing property maps. */
+  default StateReplication enableStateReplication(
+      int maximumEntities, int maximumBytes, int maximumSubscribers) {
+    throw new UnsupportedOperationException("State replication is not supported");
+  }
+
+  /**
+   * @return enabled replication service, or null
+   */
+  default StateReplication getStateReplication() {
+    return null;
+  }
 }

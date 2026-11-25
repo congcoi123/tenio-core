@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.bootstrap.annotation;
 
 import com.tenio.core.command.client.AbstractClientCommandHandler;
+import com.tenio.core.command.client.ExecutionMode;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -100,6 +101,16 @@ public @interface ClientCommand {
      * @return the command value
      */
     short value();
+
+    /**
+     * @return optional dispatch policy; inline preserves existing execution
+     */
+    ExecutionMode execution() default ExecutionMode.INLINE;
+
+    /**
+     * @return maximum outstanding requests for this session/room lane; must be positive
+     */
+    int mailboxCapacity() default 128;
 
     /**
      * Optional display name. The handler class name is used when this is blank.

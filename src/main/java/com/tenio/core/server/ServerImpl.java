@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.Set;
+import com.tenio.core.admin.PerformanceHistory;
 import com.tenio.core.admin.ServerInspection;
 import com.tenio.core.admin.AdminWindow;
 import com.tenio.core.admin.OperationalHistory;
@@ -41,6 +42,7 @@ import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.bootstrap.injector.ProfileSelection;
 import com.tenio.core.command.client.ClientCommandManager;
+import com.tenio.core.command.client.ClientCommandPolicy;
 import com.tenio.core.command.system.SystemCommandManager;
 import com.tenio.core.configuration.ConfigurationSource;
 import com.tenio.core.configuration.CoreConfiguration;
@@ -48,12 +50,15 @@ import com.tenio.core.configuration.DefaultCoreConfiguration;
 import com.tenio.core.configuration.constant.CoreConstant;
 import com.tenio.core.configuration.define.CoreConfigurationType;
 import com.tenio.core.configuration.define.ServerEvent;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.entity.manager.ChannelManager;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.manager.implement.ChannelManagerImpl;
 import com.tenio.core.entity.manager.implement.PlayerManagerImpl;
 import com.tenio.core.entity.manager.implement.RoomManagerImpl;
+import com.tenio.core.entity.replication.StateReplication;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.Network;
 import com.tenio.core.network.NetworkImpl;
@@ -73,9 +78,12 @@ import com.tenio.core.network.security.filter.DefaultConnectionFilter;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import com.tenio.core.network.zero.engine.reader.policy.DefaultDatagramPacketPolicy;
+import com.tenio.core.recovery.RecoveryManager;
+import com.tenio.core.recovery.RecoveryPolicy;
 import com.tenio.core.scheduler.ScheduledJobs;
 import com.tenio.core.scheduler.job.MetricReportJob;
 import com.tenio.core.scheduler.job.MaintenanceJob;
+import com.tenio.core.scheduler.job.PerformanceJob;
 import com.tenio.core.server.core.ZeroProcessor;
 import com.tenio.core.server.core.ZeroProcessorImpl;
 import com.tenio.core.server.setting.ConfigurationAssessment;
@@ -104,6 +112,35 @@ public final class ServerImpl extends SystemLogger implements Server {
   private final AtomicBoolean stopping;
   private final CountDownLatch stopped;
   private ScheduledJobs scheduledJobs;
+  private RecoveryManager recoveryManager;
+  private PerformanceHistory performanceHistory;
+  private volatile StateReplication stateReplication;
+
+  @Override
+  public synchronized StateReplication enableStateReplication(
+      int maximumEntities, int maximumBytes, int maximumSubscribers) {
+    if (stateReplication != null) {
+      throw new IllegalStateException("State replication already enabled");
+    }
+    stateReplication = new StateReplication(maximumEntities, maximumBytes, maximumSubscribers);
+    return stateReplication;
+  }
+
+  @Override
+  public StateReplication getStateReplication() {
+    return stateReplication;
+  }
+
+  @Override
+  public PerformanceHistory getPerformanceHistory() {
+    return performanceHistory;
+  }
+
+  @Override
+  public RecoveryManager getRecoveryManager() {
+    return recoveryManager;
+  }
+
   private ServerInspection inspection;
   private volatile ConnectionFilter connectionFilter;
   private ClientCommandManager clientCommandManager;
@@ -151,7 +188,9 @@ public final class ServerImpl extends SystemLogger implements Server {
     Configuration configuration = bootstrapHandler.getConfigurationHandler().getConfiguration();
     if (configuration == null) {
       if (isInfoEnabled()) {
-        info("CONFIGURATION", "No custom configuration class found. Use default configuration (DefaultCoreConfiguration).");
+        info("CONFIGURATION",
+            "No custom configuration class found. Use default configuration"
+                + " (DefaultCoreConfiguration).");
       }
 
       configuration = new DefaultCoreConfiguration();
@@ -206,6 +245,19 @@ public final class ServerImpl extends SystemLogger implements Server {
     setupNetworkService(configuration, bootstrapHandler);
     setupInternalProcessorService(configuration, bootstrapHandler);
     setupScheduledJobs(bootstrapHandler);
+    var recoveryPolicy = bootstrapHandler.getBeanByClazz(RecoveryPolicy.class);
+    if (recoveryPolicy != null) {
+      recoveryManager =
+          new RecoveryManager(
+              recoveryPolicy,
+              player ->
+                  serverApi.logout(
+                      player, ConnectionDisconnectMode.IDLE, PlayerDisconnectMode.IDLE));
+      zeroProcessor.configureRecovery(recoveryManager, recoveryPolicy);
+      scheduledJobs.registerInterval("EXPIRE_RECOVERY_WINDOWS", recoveryManager::expire, 1);
+    }
+
+    new ServerExtensionPointLogger().log(configuration, bootstrapHandler, clientCommandManager);
 
     // admin monitoring tools
     var profiles = bootstrapHandler.getActiveProfiles();
@@ -216,7 +268,15 @@ public final class ServerImpl extends SystemLogger implements Server {
     boolean historyEnabled = profiles != null && profiles.contains(CoreConstant.HISTORY_PROFILE);
     boolean monitorEnabled = profiles != null && profiles.contains(CoreConstant.MONITOR_PROFILE);
     boolean windowEnabled = monitorEnabled && !GraphicsEnvironment.isHeadless();
-    if (monitorEnabled || historyEnabled) {
+    var performance = bootstrapHandler.getBeanByClazz(PerformanceJob.class);
+    if (clientCommandManager != null && (monitorEnabled || performance != null)) {
+      clientCommandManager.enableExecutionMonitoring();
+    }
+    if (performance != null) {
+      performanceHistory = new PerformanceHistory(Path.of("logs", "performance"), windowEnabled);
+      performance.configure(this, network, performanceHistory);
+    }
+    if (monitorEnabled || historyEnabled || performanceHistory != null) {
       inspection = new ServerInspection(this, network, monitorEnabled);
       if (monitorEnabled) {
         sessionManager.enableQueueMonitoring();
@@ -260,7 +320,8 @@ public final class ServerImpl extends SystemLogger implements Server {
             }
             manager.invoke(command, output);
             return true;
-          });
+          },
+              performanceHistory);
     }
 
     // keep the application alive
@@ -416,6 +477,32 @@ public final class ServerImpl extends SystemLogger implements Server {
   private void setupInternalProcessorService(Configuration configuration, BootstrapHandler bootstrapHandler) {
     RequestPolicy requestPolicy = bootstrapHandler.getBeanByClazz(RequestPolicy.class);
     zeroProcessor.setRequestPolicy(requestPolicy);
+    var commandPolicy = bootstrapHandler.getBeanByClazz(ClientCommandPolicy.class);
+    if (commandPolicy != null) {
+      zeroProcessor.configureClientCommands(clientCommandManager, commandPolicy);
+    }
+    boolean registeredCommands =
+        clientCommandManager != null && !clientCommandManager.getHandlers().isEmpty();
+    boolean commandMode = commandPolicy != null && registeredCommands;
+    if (isInfoEnabled()) {
+      info(
+          "CLIENT MESSAGE ROUTING",
+          commandMode
+              ? "COMMAND: ClientCommandPolicy -> ClientCommandHandler; EventReceivedMessageFromPlayer is"
+                    + " disabled"
+              : "EVENT: EventReceivedMessageFromPlayer; automatic command routing is disabled");
+      if (commandMode && eventManager.hasSubscriber(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER)) {
+        info(
+            "CLIENT MESSAGE ROUTING WARNING",
+            "Both handlers are registered. COMMAND mode takes precedence; "
+                + "EventReceivedMessageFromPlayer will not receive gameplay messages");
+      } else if (commandPolicy != null && !registeredCommands) {
+        info(
+            "CLIENT MESSAGE ROUTING WARNING",
+            "No client commands are registered. EVENT mode remains active; the policy is not"
+                + " invoked");
+      }
+    }
     zeroProcessor.setMaxNumberPlayers(configuration.getInt(CoreConfigurationType.PROP_MAX_NUMBER_PLAYERS));
     zeroProcessor.setSessionManager(network.getSessionManager());
     zeroProcessor.setPlayerManager(playerManager);
@@ -468,9 +555,15 @@ public final class ServerImpl extends SystemLogger implements Server {
   }
 
   private void stopServer() {
+    if (clientCommandManager != null) {
+      clientCommandManager.stopDispatching();
+    }
     // emit "server shutdown" event
-    eventManager.emit(ServerEvent.SERVER_TEARDOWN, serverName);
-    shutdownServices();
+    try {
+      eventManager.emit(ServerEvent.SERVER_TEARDOWN, serverName);
+    } finally {
+      shutdownServices();
+    }
     if (isInfoEnabled()) {
       info(serverName, "STATE", "STOPPED");
     }
@@ -483,12 +576,31 @@ public final class ServerImpl extends SystemLogger implements Server {
     if (scheduledJobs != null) {
       scheduledJobs.shutdown();
     }
+    if (recoveryManager != null) {
+      recoveryManager.close();
+      recoveryManager = null;
+    }
+    if (performanceHistory != null) {
+      performanceHistory.close();
+      performanceHistory = null;
+    }
+    var directory = roomManager.getDirectory();
+    if (directory != null) {
+      directory.close();
+    }
+    if (stateReplication != null) {
+      stateReplication.close();
+      stateReplication = null;
+    }
     network.shutdown();
     var sessionManager = network.getSessionManager();
     if (sessionManager != null && sessionManager.getOperationalHistory() != null) {
       sessionManager.getOperationalHistory().close();
     }
     zeroProcessor.shutdown();
+    if (clientCommandManager != null) {
+      clientCommandManager.clear();
+    }
     if (systemCommandManager != null) {
       systemCommandManager.shutdown();
     }

@@ -1,0 +1,67 @@
+/*
+The MIT License
+
+Copyright (c) 2016-2026 kong <congcoi123@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+package com.tenio.core.network.zero.engine.implement;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
+import com.tenio.core.network.entity.outbound.packet.Packet;
+import com.tenio.core.network.entity.outbound.packet.implement.OutboundQueueImpl;
+import com.tenio.core.network.entity.outbound.packet.implement.PacketImpl;
+import com.tenio.core.network.entity.outbound.packet.policy.DefaultOutboundQueuePolicy;
+import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import java.time.Duration;
+import org.junit.jupiter.api.Test;
+
+class DeliveryAdmissionTest {
+  @Test
+  void bestEffortCapacityDropsReachSessionAndNetworkTotals() throws Exception {
+    var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
+    var stats = mock(NetworkWriterStatistic.class);
+    writer.setNetworkWriterStatistic(stats);
+    var queue = OutboundQueueImpl.newInstance();
+    queue.configureMaxSize(1);
+    queue.configureOutboundQueuePolicy(new DefaultOutboundQueuePolicy());
+    var first = PacketImpl.newInstance();
+    first.setData(new byte[] {1});
+    queue.put(first);
+    var session = mock(Session.class);
+    when(session.isActivated()).thenReturn(true);
+    when(session.fetchOutboundQueue()).thenReturn(queue);
+    var dropped = PacketImpl.newInstance();
+    dropped.setData(new byte[] {2});
+    dropped.setDeliveryOptions(DeliveryOptions.bestEffort(Duration.ZERO));
+    var method =
+        ZeroWriterImpl.class.getDeclaredMethod("enqueuePacket", Session.class, Packet.class);
+    method.setAccessible(true);
+    method.invoke(writer, session, dropped);
+    assertEquals(1, queue.getSize());
+    verify(session).addDroppedPackets(1);
+    verify(stats).updateWrittenDroppedPacketsByFull(1);
+  }
+}

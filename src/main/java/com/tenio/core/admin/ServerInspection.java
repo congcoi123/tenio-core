@@ -151,7 +151,17 @@ public final class ServerInspection {
             rows.add("Packets written", writer.getWrittenPackets());
             rows.add("Outbound packets dropped due to congestion", writer.getWrittenDroppedPacketsByFull());
             rows.add("Outbound packets rejected by queue policy", writer.getWrittenDroppedPacketsByPolicy());
-        } else if (input.equals("network pressure")) {
+      var commands = server.getClientCommandManager();
+      if (commands != null) {
+        var execution = commands.executionStatistics();
+        if (execution != null) {
+          rows.add("Commands executing or queued", execution.outstanding());
+          rows.add("Command execution failures", execution.failures());
+          rows.add("Command execution p95 upper bound (µs)", execution.p95UpperBoundNanos() / 1000);
+          rows.add("Command execution maximum (µs)", execution.maximumNanos() / 1000);
+        }
+      }
+    } else if (input.equals("network pressure")) {
             if (!queueDiagnostics) {
                 return InspectionResult.message("Network pressure requires the monitor profile.");
             }
@@ -168,7 +178,52 @@ public final class ServerInspection {
             if (counts.size() > rowLimit) {
                 rows.add("Counters shown", shown(rowLimit, counts.size(), "counters", "limits all"));
             }
-        } else if (words[0].equals("history")) {
+        } else if (words[0].equals("performance")) {
+      var performance = server.getPerformanceHistory();
+      if (performance == null) {
+        return InspectionResult.message(
+            "Performance history is disabled. Add performance to the startup profile.");
+      }
+      int minutes = 60;
+      try {
+        if (words.length > 2) {
+          throw new IllegalArgumentException();
+        }
+        if (words.length == 2) {
+          minutes = Integer.parseInt(words[1]);
+        }
+        if (minutes < 1 || minutes > 10080) {
+          throw new IllegalArgumentException();
+        }
+      } catch (IllegalArgumentException invalid) {
+        return InspectionResult.message("Usage: performance [minutes], range 1–10080");
+      }
+      var end = Instant.now();
+      try {
+        var samples = performance.query(end.minusSeconds(minutes * 60L), end, 50);
+        for (var sample : samples) {
+          rows.add(
+              EVENT_TIME
+                  .withZone(ZoneId.systemDefault())
+                  .format(Instant.ofEpochMilli(sample.timestamp())),
+              "players="
+                  + sample.players()
+                  + ", rooms="
+                  + sample.rooms()
+                  + ", CPU="
+                  + String.format(Locale.ROOT, "%.1f%%", sample.cpuPercent())
+                  + ", read="
+                  + sample.readBytesPerSecond()
+                  + " B/s, written="
+                  + sample.writtenBytesPerSecond()
+                  + " B/s");
+        }
+        rows.add("Performance archive", performance.directory());
+        rows.add("Samples lost during export", performance.droppedExports());
+      } catch (java.io.IOException failure) {
+        return InspectionResult.message("Cannot read performance history: " + failure.getMessage());
+      }
+    } else if (words[0].equals("history")) {
             if (words.length > 2) {
                 return InspectionResult.message("Usage: history [id] [all]");
             }
@@ -180,7 +235,9 @@ public final class ServerInspection {
             }
             var history = sessions.getOperationalHistory();
             if (history == null) {
-                return InspectionResult.message("History is disabled. Add history to the configuration profile (for example, monitor,history) and restart TenIO.");
+                return InspectionResult.message(
+            "History is disabled. Add history to the configuration profile (for example,"
+                + " monitor,history) and restart TenIO.");
             }
             if (history.file() != null) {
                 return InspectionResult.message("History is written to " + history.file().toAbsolutePath());
@@ -227,7 +284,16 @@ public final class ServerInspection {
         rows.add("Inbound messages rejected (queue full)", inbound == null ? "unavailable" : inbound.fullRejections());
 
         var queue = session.fetchOutboundQueue();
-        var outbound = queue == null ? null : queue.statistics();
+    if (queue != null) {
+      var delivery = queue.deliveryStatistics();
+      if (delivery != null && delivery.queuedBytes() >= 0) {
+        rows.add("Outbound serialized bytes queued", delivery.queuedBytes());
+        rows.add("Outbound updates discarded (expired)", delivery.expired());
+        rows.add("Outbound updates superseded (newer state)", delivery.replaced());
+        rows.add("Outbound best-effort updates dropped (capacity)", delivery.bestEffortDrops());
+      }
+    }
+    var outbound = queue == null ? null : queue.statistics();
         rows.add("Outbound depth", outbound == null ? "unavailable" : outbound.depth());
         rows.add("Outbound capacity", outbound == null || outbound.capacity() < 0
                 ? "unavailable" : outbound.capacity() == Integer.MAX_VALUE ? "unlimited" : outbound.capacity());

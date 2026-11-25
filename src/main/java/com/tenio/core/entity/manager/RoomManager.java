@@ -26,6 +26,7 @@ package com.tenio.core.entity.manager;
 
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
+import com.tenio.core.entity.discovery.RoomDirectory;
 import com.tenio.core.entity.setting.InitialRoomSetting;
 import com.tenio.core.entity.setting.strategy.RoomCredentialValidatedStrategy;
 import com.tenio.core.exception.AddedDuplicatedRoomException;
@@ -223,5 +224,33 @@ public interface RoomManager extends Manager {
    */
   default void clear() {
     throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Enables an explicitly published public room directory before accepting application requests.
+   *
+   * @param fields public application attribute allowlist
+   * @param maximumRooms published room bound
+   * @param maximumSubscriptions total subscription bound
+   * @return the newly enabled directory
+   */
+  default RoomDirectory enableDiscovery(
+      java.util.Set<String> fields, int maximumRooms, int maximumSubscriptions) {
+    throw new UnsupportedOperationException("Room discovery is not supported");
+  }
+
+  /**
+   * @return enabled directory, or null when discovery is disabled
+   */
+  default RoomDirectory getDirectory() {
+    return null;
+  }
+
+  /** Refreshes an already published room after an application mutation. */
+  default void refreshDiscovery(Room room) {
+    var directory = getDirectory();
+    if (directory != null) {
+      directory.refresh(room);
+    }
   }
 }

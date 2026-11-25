@@ -1,0 +1,212 @@
+[
+  {
+    "fork": 0,
+    "variant": "baseline",
+    "path": "packet-creation",
+    "ns_per_op": 33.812,
+    "bytes_per_op": 64.0
+  },
+  {
+    "fork": 0,
+    "variant": "baseline",
+    "path": "fifo",
+    "ns_per_op": 34.05,
+    "bytes_per_op": 24.0
+  },
+  {
+    "fork": 0,
+    "variant": "baseline",
+    "path": "inline",
+    "ns_per_op": 2.496,
+    "bytes_per_op": 0.0
+  },
+  {
+    "fork": 0,
+    "variant": "candidate",
+    "path": "packet-creation",
+    "ns_per_op": 34.913,
+    "bytes_per_op": 64.0
+  },
+  {
+    "fork": 0,
+    "variant": "candidate",
+    "path": "fifo",
+    "ns_per_op": 34.497,
+    "bytes_per_op": 24.0
+  },
+  {
+    "fork": 0,
+    "variant": "candidate",
+    "path": "inline",
+    "ns_per_op": 2.492,
+    "bytes_per_op": 0.0
+  },
+  {
+    "fork": 1,
+    "variant": "candidate",
+    "path": "packet-creation",
+    "ns_per_op": 34.16,
+    "bytes_per_op": 64.0
+  },
+  {
+    "fork": 1,
+    "variant": "candidate",
+    "path": "fifo",
+    "ns_per_op": 33.346,
+    "bytes_per_op": 24.0
+  },
+  {
+    "fork": 1,
+    "variant": "candidate",
+    "path": "inline",
+    "ns_per_op": 2.639,
+    "bytes_per_op": 0.0
+  },
+  {
+    "fork": 1,
+    "variant": "baseline",
+    "path": "packet-creation",
+    "ns_per_op": 35.764,
+    "bytes_per_op": 64.0
+  },
+  {
+    "fork": 1,
+    "variant": "baseline",
+    "path": "fifo",
+    "ns_per_op": 34.629,
+    "bytes_per_op": 24.0
+  },
+  {
+    "fork": 1,
+    "variant": "baseline",
+    "path": "inline",
+    "ns_per_op": 2.398,
+    "bytes_per_op": 0.0
+  },
+  {
+    "fork": 2,
+    "variant": "baseline",
+    "path": "packet-creation",
+    "ns_per_op": 32.873,
+    "bytes_per_op": 64.0
+  },
+  {
+    "fork": 2,
+    "variant": "baseline",
+    "path": "fifo",
+    "ns_per_op": 32.366,
+    "bytes_per_op": 24.0
+  },
+  {
+    "fork": 2,
+    "variant": "baseline",
+    "path": "inline",
+    "ns_per_op": 2.353,
+    "bytes_per_op": 0.0
+  },
+  {
+    "fork": 2,
+    "variant": "candidate",
+    "path": "packet-creation",
+    "ns_per_op": 34.292,
+    "bytes_per_op": 64.0
+  },
+  {
+    "fork": 2,
+    "variant": "candidate",
+    "path": "fifo",
+    "ns_per_op": 33.541,
+    "bytes_per_op": 24.0
+  },
+  {
+    "fork": 2,
+    "variant": "candidate",
+    "path": "inline",
+    "ns_per_op": 2.417,
+    "bytes_per_op": 0.0
+  },
+  {
+    "fork": 3,
+    "variant": "candidate",
+    "path": "packet-creation",
+    "ns_per_op": 35.77,
+    "bytes_per_op": 64.0
+  },
+  {
+    "fork": 3,
+    "variant": "candidate",
+    "path": "fifo",
+    "ns_per_op": 35.992,
+    "bytes_per_op": 24.0
+  },
+  {
+    "fork": 3,
+    "variant": "candidate",
+    "path": "inline",
+    "ns_per_op": 2.442,
+    "bytes_per_op": 0.0
+  },
+  {
+    "fork": 3,
+    "variant": "baseline",
+    "path": "packet-creation",
+    "ns_per_op": 34.777,
+    "bytes_per_op": 64.0
+  },
+  {
+    "fork": 3,
+    "variant": "baseline",
+    "path": "fifo",
+    "ns_per_op": 35.996,
+    "bytes_per_op": 24.0
+  },
+  {
+    "fork": 3,
+    "variant": "baseline",
+    "path": "inline",
+    "ns_per_op": 2.586,
+    "bytes_per_op": 0.0
+  },
+  {
+    "fork": 4,
+    "variant": "baseline",
+    "path": "packet-creation",
+    "ns_per_op": 34.517,
+    "bytes_per_op": 64.0
+  },
+  {
+    "fork": 4,
+    "variant": "baseline",
+    "path": "fifo",
+    "ns_per_op": 32.156,
+    "bytes_per_op": 24.0
+  },
+  {
+    "fork": 4,
+    "variant": "baseline",
+    "path": "inline",
+    "ns_per_op": 2.3,
+    "bytes_per_op": 0.0
+  },
+  {
+    "fork": 4,
+    "variant": "candidate",
+    "path": "packet-creation",
+    "ns_per_op": 37.522,
+    "bytes_per_op": 64.0
+  },
+  {
+    "fork": 4,
+    "variant": "candidate",
+    "path": "fifo",
+    "ns_per_op": 31.4,
+    "bytes_per_op": 24.0
+  },
+  {
+    "fork": 4,
+    "variant": "candidate",
+    "path": "inline",
+    "ns_per_op": 2.343,
+    "bytes_per_op": 0.0
+  }
+]

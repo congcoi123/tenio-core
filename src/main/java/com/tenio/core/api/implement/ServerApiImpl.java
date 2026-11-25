@@ -38,9 +38,11 @@ import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 import com.tenio.core.entity.define.result.PlayerLeftRoomResult;
 import com.tenio.core.entity.define.result.RoomCreatedResult;
+import com.tenio.core.entity.discovery.RoomDirectory;
 import com.tenio.core.entity.manager.ChannelManager;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
+import com.tenio.core.entity.replication.StateReplication;
 import com.tenio.core.entity.setting.InitialRoomSetting;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.AddedDuplicatedPlayerException;
@@ -48,6 +50,7 @@ import com.tenio.core.exception.CreatedRoomException;
 import com.tenio.core.exception.PlayerJoinedRoomException;
 import com.tenio.core.exception.RemovedNonExistentPlayerException;
 import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.recovery.RecoveryManager;
 import com.tenio.core.server.Server;
 import java.io.IOException;
 import java.util.Iterator;
@@ -78,6 +81,36 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
+  public StateReplication enableStateReplication(
+      int maximumEntities, int maximumBytes, int maximumSubscribers) {
+    return server.enableStateReplication(maximumEntities, maximumBytes, maximumSubscribers);
+  }
+
+  @Override
+  public StateReplication getStateReplication() {
+    return server.getStateReplication();
+  }
+
+  @Override
+  public RoomDirectory enableRoomDiscovery(
+      java.util.Set<String> fields, int maximumRooms, int maximumSubscriptions) {
+    return getRoomManager().enableDiscovery(fields, maximumRooms, maximumSubscriptions);
+  }
+
+  @Override
+  public RoomDirectory getRoomDirectory() {
+    var manager = getRoomManager();
+    return manager == null ? null : manager.getDirectory();
+  }
+
+  private void refreshDiscovery(Room room) {
+    var directory = getRoomDirectory();
+    if (directory != null && room != null) {
+      directory.refresh(room);
+    }
+  }
+
+  @Override
   public void login(String playerName) {
     Player player = getPlayerManager().createPlayer(playerName);
     getEventManager().emit(ServerEvent.PLAYER_LOGIN, player);
@@ -96,10 +129,20 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
   }
 
   @Override
+  public RecoveryManager getRecoveryManager() {
+    return server.getRecoveryManager();
+  }
+
+  @Override
   public void logout(Player player, ConnectionDisconnectMode connectionDisconnectMode,
                      PlayerDisconnectMode playerDisconnectMode) {
     if (player == null) {
       return;
+    }
+
+    var recovery = server.getRecoveryManager();
+    if (recovery != null) {
+      recovery.revoke(player);
     }
 
     try {
@@ -114,6 +157,14 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       // An explicit API logout must always remove the logical player.
       // If ZeroProcessor already removed it, this prevents duplicate cleanup.
       if (getPlayerManager().getPlayerByIdentity(player.getIdentity()) == player) {
+        var replication = getStateReplication();
+        if (replication != null) {
+          replication.removePlayer(player.getIdentity());
+        }
+        var directory = getRoomDirectory();
+        if (directory != null) {
+          directory.release(player.getIdentity());
+        }
         unsubscribeFromAllChannels(player);
 
         if (player.isInRoom()) {
@@ -228,6 +279,7 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     try {
       room.addPlayer(player, roomPassword, asSpectator, slotInRoom);
       player.setCurrentRoom(room);
+      refreshDiscovery(room);
       getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
           PlayerJoinedRoomResult.SUCCESS);
     } catch (PlayerJoinedRoomException exception) {
@@ -269,6 +321,9 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
       if (room != null) {
         room.removePlayer(player);
       }
+      if (room != null) {
+        refreshDiscovery(room);
+      }
       getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,
           leaveRoomMode, PlayerLeftRoomResult.SUCCESS);
     } catch (RemovedNonExistentPlayerException exception) {
@@ -294,6 +349,10 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     });
 
     long roomId = room.getId();
+    var replication = getStateReplication();
+    if (replication != null) {
+      replication.removeRoom(roomId);
+    }
     getRoomManager().removeRoomById(roomId);
     if (isDebugEnabled()) {
       debug("REMOVED ROOM", "Room ", roomId, " was removed");

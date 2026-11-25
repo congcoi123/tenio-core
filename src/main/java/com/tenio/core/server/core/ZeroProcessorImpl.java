@@ -28,6 +28,8 @@ import com.tenio.core.admin.OperationalHistory;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.api.ServerApi;
+import com.tenio.core.command.client.ClientCommandManager;
+import com.tenio.core.command.client.ClientCommandPolicy;
 import com.tenio.core.configuration.define.ServerEvent;
 import com.tenio.core.network.entity.inbound.implement.DatagramRequest;
 import com.tenio.core.network.entity.inbound.implement.SessionRequest;
@@ -47,10 +49,13 @@ import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
+import com.tenio.core.recovery.RecoveryManager;
+import com.tenio.core.recovery.RecoveryPolicy;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.util.Optional;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * The implementation for the processor service.
@@ -66,6 +71,26 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
   private RequestPolicy requestPolicy;
   private int maxNumberPlayers;
   private boolean keepPlayerOnDisconnection;
+  private RecoveryManager recovery;
+  private RecoveryPolicy recoveryPolicy;
+  private ClientCommandManager clientCommands;
+  private ClientCommandPolicy clientCommandPolicy;
+  // Established once before worker publication. No registry queries on the disabled receive path.
+  private boolean automaticClientCommands;
+
+  @Override
+  public void configureClientCommands(ClientCommandManager commands, ClientCommandPolicy policy) {
+    clientCommands = commands;
+    clientCommandPolicy = policy;
+    automaticClientCommands =
+        commands != null && policy != null && !commands.getHandlers().isEmpty();
+  }
+
+  @Override
+  public void configureRecovery(RecoveryManager manager, RecoveryPolicy policy) {
+    recovery = manager;
+    recoveryPolicy = policy;
+  }
 
   private ZeroProcessorImpl(EventManager eventManager, ServerApi serverApi,
                             DatagramChannelManager datagramChannelManager) {
@@ -184,12 +209,41 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
 
     // When it gets disconnected from client side, the server may not recognize it. In this
     // case, the player is remained on the server side, so we should always check this event
+    RecoveryManager.Claim recoveryClaim = null;
     Object reconnectedObject = null;
     try {
-      reconnectedObject = eventManager.emit(ServerEvent.PLAYER_CONNECTION_RETRY, session, message);
+      var credentials =
+          recoveryPolicy == null ? null : recoveryPolicy.credentials(session, message);
+      if (credentials != null) {
+        recoveryClaim = recovery.claim(credentials);
+        if (recoveryClaim == null) {
+          session.close(
+              ConnectionDisconnectMode.REFUSED_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
+          return;
+        }
+        reconnectedObject = Optional.of(recoveryClaim.player());
+      } else {
+        reconnectedObject =
+            eventManager.emit(ServerEvent.PLAYER_CONNECTION_RETRY, session, message);
+      }
     } catch (Exception exception) {
       if (isErrorEnabled()) {
-        error(exception, request);
+        if (recoveryPolicy == null) {
+          error(exception, request);
+        } else {
+          error(exception, "Recovery handshake rejected");
+        }
+      }
+      if (recoveryPolicy != null) {
+        try {
+          session.close(
+              ConnectionDisconnectMode.REFUSED_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
+        } catch (IOException closeFailure) {
+          if (isErrorEnabled()) {
+            error(closeFailure);
+          }
+        }
+        return;
       }
     }
 
@@ -237,7 +291,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
         // player should be removed from his current room
         // In case the server wants to keep this player, all the current information (room
         // related data) has to be sent to client to get up-to-date
-        if (!keepPlayerOnDisconnection) {
+        if (!keepPlayerOnDisconnection && recoveryClaim == null) {
           // player should leave room (if applicable) first
           if (player.isInRoom()) {
             serverApi.leaveRoom(player, PlayerLeaveRoomMode.RECONNECTION);
@@ -253,10 +307,28 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
               OperationalHistory.Kind.RECONNECT, attached ? "resumed" : "attachment failed");
         }
         if (!attached) {
+          if (recoveryClaim != null) {
+            recovery.revoke(player);
+          }
           return;
         }
         player.setLastReadTime(now());
         player.setLastWriteTime(now());
+        if (recoveryClaim != null) {
+          try {
+            var claim = recoveryClaim;
+            recoveryPolicy.recover(player, session, () -> recovery.complete(claim));
+            recovery.finish(claim);
+          } catch (RuntimeException failure) {
+            recovery.revoke(player);
+            serverApi.logout(
+                player, ConnectionDisconnectMode.EXCEPTION, PlayerDisconnectMode.CONNECTION_LOST);
+            if (isErrorEnabled()) {
+              error(failure, "Recovery delivery failed");
+            }
+            return;
+          }
+        }
         eventManager.emit(ServerEvent.PLAYER_CONNECTION_RESUMED, player, session);
       } else {
         establishNewPlayerConnection(session, message);
@@ -300,7 +372,9 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
           // A reconnect may have bound a newer session already. A stale close must not
           // unsubscribe, remove, or clear that player.
           if (player.getSession().orElse(null) == session) {
-            if (shouldKeepPlayerOnDisconnection(keepPlayerOnDisconnection, connectionDisconnectMode,
+            if (recovery != null
+                ? recovery.disconnected(player, connectionDisconnectMode)
+                : shouldKeepPlayerOnDisconnection(keepPlayerOnDisconnection, connectionDisconnectMode,
                     playerDisconnectMode)) {
               // Retain room and channel state for reconnection, but detach the closed session.
               player.setSession(null);
@@ -313,6 +387,14 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
               eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
 
               player.setSession(null);
+              var replication = serverApi.getStateReplication();
+              if (replication != null) {
+                replication.removePlayer(player.getIdentity());
+              }
+              var directory = serverApi.getRoomDirectory();
+              if (directory != null) {
+                directory.release(player.getIdentity());
+              }
               playerManager.removePlayerByIdentity(player.getIdentity());
               player.clean();
             }
@@ -376,7 +458,57 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
       if (player.getSession().orElse(null) != session) {
         return;
       }
+      if (recovery != null && recovery.isRecovering(player)) {
+        if (!recovery.awaitReady(player)) {
+          recovery.revoke(player);
+          try {
+            session.close(
+                ConnectionDisconnectMode.REFUSED_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
+          } catch (IOException failure) {
+            if (isErrorEnabled()) {
+              error(failure);
+            }
+          }
+          return;
+        }
+        if (!session.isActivated() || player.getSession().orElse(null) != session) {
+          return;
+        }
+      }
+      if (automaticClientCommands) {
+        routeClientCommand(player, message);
+        return;
+      }
       eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
+    }
+  }
+
+  private void routeClientCommand(Player player, DataCollection message) {
+    final ClientCommandPolicy.CommandRequest command;
+    try {
+      command = clientCommandPolicy.applyPolicy(message);
+    } catch (RuntimeException malformed) {
+      // Do not log an untrusted payload or exception text that could contain credentials.
+      if (isDebugEnabled()) {
+        debug("CLIENT_COMMAND", "Rejected malformed command envelope");
+      }
+      return;
+    }
+    if (command == null) {
+      return;
+    }
+    if (clientCommands.getHandler(command.code()) == null) {
+      if (isDebugEnabled()) {
+        debug("CLIENT_COMMAND", "Rejected unknown command code: " + command.code());
+      }
+      return;
+    }
+    try {
+      clientCommands.invoke(command.code(), player, command.content());
+    } catch (RejectedExecutionException full) {
+      if (isDebugEnabled()) {
+        debug("CLIENT_COMMAND", "Rejected command: execution mailbox is full");
+      }
     }
   }
 
@@ -491,6 +623,10 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
 
   @Override
   public void onDestroyed() {
-    // Do nothing
+    automaticClientCommands = false;
+    clientCommands = null;
+    clientCommandPolicy = null;
+    recovery = null;
+    recoveryPolicy = null;
   }
 }

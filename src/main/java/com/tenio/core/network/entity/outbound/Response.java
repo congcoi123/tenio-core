@@ -28,6 +28,7 @@ import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataType;
 import com.tenio.core.entity.Player;
 import com.tenio.core.network.define.ResponseGuarantee;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
@@ -191,17 +192,28 @@ public interface Response {
   void write();
 
   /**
-   * Writes down the content data to sessions for sending to client sides.
-   *
-   * @param delayInMilliseconds allows delaying in the number of milliseconds
-   */
-  void writeInDelay(long delayInMilliseconds);
-
-  /**
    * Writes down the content data to sessions for sending to client sides then disconnect them
    * (close sessions).
    *
    * @since 0.5.0
    */
   void writeThenClose();
+
+  /**
+   * Selects an optional queued-delivery policy before write(). Default implementations reject it.
+   * Never use replaceable/best-effort for results or transactions that must be retained.
+   *
+   * @param options explicit application policy
+   * @return this response
+   */
+  default Response delivery(DeliveryOptions options) {
+    throw new UnsupportedOperationException("Delivery options are not supported");
+  }
+
+  /**
+   * @return optional queued-delivery policy, or null for existing behavior
+   */
+  default DeliveryOptions getDeliveryOptions() {
+    return null;
+  }
 }

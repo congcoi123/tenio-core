@@ -27,6 +27,7 @@ package com.tenio.core.entity.manager.implement;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
 import com.tenio.core.entity.define.result.RoomCreatedResult;
+import com.tenio.core.entity.discovery.RoomDirectory;
 import com.tenio.core.entity.implement.DefaultRoom;
 import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.setting.InitialRoomSetting;
@@ -50,6 +51,25 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
 
   private final Map<Long, Room> rooms;
   private final Object roomsLock;
+  private volatile RoomDirectory directory;
+
+  @Override
+  public RoomDirectory enableDiscovery(
+      java.util.Set<String> fields, int maximumRooms, int maximumSubscriptions) {
+    synchronized (roomsLock) {
+      if (directory != null) {
+        throw new IllegalStateException("Room discovery already enabled");
+      }
+      directory = new RoomDirectory(fields, maximumRooms, maximumSubscriptions);
+      return directory;
+    }
+  }
+
+  @Override
+  public RoomDirectory getDirectory() {
+    return directory;
+  }
+
   private volatile List<Room> snapshotRoomsList;
   private volatile int snapshotRoomCount;
   private volatile int maxRooms;
@@ -180,6 +200,9 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   public void removeRoomById(long roomId) {
     synchronized (roomsLock) {
       rooms.remove(roomId);
+      if (directory != null) {
+        directory.remove(roomId);
+      }
       snapshotRoomsList = rooms.values().stream().toList();
       snapshotRoomCount = rooms.size();
     }
@@ -188,6 +211,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   @Override
   public void changeRoomName(Room room, String roomName) {
     room.setName(roomName);
+    refreshDiscovery(room);
   }
 
   @Override
@@ -198,6 +222,7 @@ public final class RoomManagerImpl extends AbstractManager implements RoomManage
   @Override
   public void changeRoomCapacity(Room room, int maxParticipants, int maxSpectators) {
     room.changeCapacity(maxParticipants, maxSpectators);
+    refreshDiscovery(room);
   }
 
   @Override

@@ -34,14 +34,17 @@ import com.tenio.core.entity.define.mode.PlayerBanMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerLeaveRoomMode;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
+import com.tenio.core.entity.discovery.RoomDirectory;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
+import com.tenio.core.entity.replication.StateReplication;
 import com.tenio.core.entity.setting.InitialRoomSetting;
 import com.tenio.core.exception.AddedDuplicatedRoomException;
 import com.tenio.core.exception.CreatedDuplicatedChannelException;
 import com.tenio.core.handler.event.EventPlayerLogin;
 import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.recovery.RecoveryManager;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -480,4 +483,39 @@ public interface ServerApi {
    * @since 0.3.1
    */
   long getUptime();
+
+  /**
+   * Returns the optional recovery authority configured through a RecoveryPolicy bean.
+   *
+   * @return authority, or null when recovery is not enabled
+   */
+  default RecoveryManager getRecoveryManager() {
+    return null;
+  }
+
+  /** Enables explicit public room discovery; invoke during application initialization. */
+  default RoomDirectory enableRoomDiscovery(
+      java.util.Set<String> fields, int maximumRooms, int maximumSubscriptions) {
+    throw new UnsupportedOperationException("Room discovery is not supported");
+  }
+
+  /**
+   * @return public room directory, or null when disabled
+   */
+  default RoomDirectory getRoomDirectory() {
+    return null;
+  }
+
+  /** Enables explicitly replicated state during startup; never copies existing property maps. */
+  default StateReplication enableStateReplication(
+      int maximumEntities, int maximumBytes, int maximumSubscribers) {
+    throw new UnsupportedOperationException("State replication is not supported");
+  }
+
+  /**
+   * @return enabled replication service, or null
+   */
+  default StateReplication getStateReplication() {
+    return null;
+  }
 }

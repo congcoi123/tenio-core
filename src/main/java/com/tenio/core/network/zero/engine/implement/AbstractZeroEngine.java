@@ -89,7 +89,8 @@ public abstract class AbstractZeroEngine extends AbstractManager implements Zero
 
     onShutdown();
 
-    executorService.shutdown();
+    // Wake workers blocked on queue reads before waiting for termination.
+    executorService.shutdownNow();
 
     try {
       if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {

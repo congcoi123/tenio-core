@@ -28,6 +28,7 @@ import com.tenio.core.exception.OutboundQueuePolicyViolationException;
 import com.tenio.core.admin.OperationalHistory;
 import com.tenio.core.exception.OutboundQueueFullException;
 import com.tenio.core.network.entity.outbound.packet.Packet;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
 
@@ -46,6 +47,186 @@ public final class OutboundQueueImpl implements OutboundQueue {
   private OutboundQueuePolicy outboundQueuePolicy;
   private int maxSize;
   private Monitor monitor;
+  private Packet claimed;
+  private Delivery delivery;
+
+  private static final class Delivery {
+    final java.util.IdentityHashMap<Packet, Integer> sizes = new java.util.IdentityHashMap<>();
+    final java.util.IdentityHashMap<Packet, Integer> references = new java.util.IdentityHashMap<>();
+    long maximumBytes = 1024 * 1024;
+    long bytes;
+    long expired;
+    long replaced;
+    long bestEffortDrops;
+  }
+
+  @Override
+  public void configureDeliveryByteLimit(long maximumBytes) {
+    if (maximumBytes < 0) {
+      throw new IllegalArgumentException("Negative byte limit");
+    }
+    synchronized (queue) {
+      activateDelivery();
+      delivery.maximumBytes = maximumBytes;
+    }
+  }
+
+  private void activateDelivery() {
+    if (delivery == null) {
+      delivery = new Delivery();
+      for (var packet : queue) {
+        remember(packet);
+      }
+    }
+  }
+
+  private void remember(Packet packet) {
+    int size = packet.getData() == null ? 0 : packet.getData().length;
+    delivery.sizes.put(packet, size);
+    delivery.references.merge(packet, 1, Integer::sum);
+    delivery.bytes += size;
+  }
+
+  private void forget(Packet packet) {
+    Integer references = delivery.references.get(packet);
+    if (references == null) {
+      return;
+    }
+    delivery.bytes -= delivery.sizes.get(packet);
+    if (references == 1) {
+      delivery.references.remove(packet);
+      delivery.sizes.remove(packet);
+    } else {
+      delivery.references.put(packet, references - 1);
+    }
+  }
+
+  private boolean removable(Packet packet) {
+    return packet != claimed && !packet.isFragmented() && !packet.isMarkedAsLast();
+  }
+
+  private void purgeExpired() {
+    long now = System.nanoTime();
+    var iterator = queue.iterator();
+    while (iterator.hasNext()) {
+      var packet = iterator.next();
+      long deadline = packet.getDeliveryDeadlineNanos();
+      if (removable(packet) && deadline != 0 && now - deadline >= 0) {
+        iterator.remove();
+        forget(packet);
+        if (monitor != null && monitor.diagnostics) {
+          delivery.expired++;
+        }
+      }
+    }
+    snapshotSize = queue.size();
+    if (monitor != null) {
+      updatePressure();
+    }
+  }
+
+  private Admission enhancedPut(Packet packet) {
+    activateDelivery();
+    purgeExpired();
+    var options = packet.getDeliveryOptions();
+    if (options != null
+        && packet.getDeliveryDeadlineNanos() != 0
+        && System.nanoTime() - packet.getDeliveryDeadlineNanos() >= 0
+        && !packet.isMarkedAsLast()
+        && !packet.isFragmented()) {
+      if (monitor != null && monitor.diagnostics) {
+        delivery.expired++;
+      }
+      return Admission.EXPIRED;
+    }
+    Packet replacement = null;
+    if (options != null
+        && options.mode() == DeliveryOptions.Mode.REPLACEABLE
+        && !packet.isMarkedAsLast()) {
+      for (var pending : queue) {
+        var previous = pending.getDeliveryOptions();
+        if (removable(pending)
+            && previous != null
+            && previous.mode() == options.mode()
+            && options.key().equals(previous.key())
+            && packet.getTransportType() == pending.getTransportType()) {
+          replacement = pending;
+          break;
+        }
+      }
+    }
+    int packetBytes = packet.getData() == null ? 0 : packet.getData().length;
+    long replacedBytes = replacement == null ? 0 : delivery.sizes.get(replacement);
+    int finalSize = queue.size() + (replacement == null ? 1 : 0);
+    if (finalSize > maxSize
+        || (delivery.maximumBytes > 0
+            && delivery.bytes - replacedBytes + packetBytes > delivery.maximumBytes)) {
+      if (monitor != null && monitor.diagnostics) {
+        monitor.fullDrops++;
+      }
+      if (options != null
+          && options.mode() == DeliveryOptions.Mode.BEST_EFFORT
+          && !packet.isMarkedAsLast()) {
+        if (monitor != null && monitor.diagnostics) {
+          delivery.bestEffortDrops++;
+        }
+        return Admission.DROPPED;
+      }
+      throw new OutboundQueueFullException(snapshotSize);
+    }
+    int position = replacement == null ? -1 : ((LinkedList<Packet>) queue).indexOf(replacement);
+    if (replacement != null) {
+      queue.remove(replacement);
+      snapshotSize = queue.size();
+    }
+    try {
+      outboundQueuePolicy.applyPolicy(this, packet);
+    } catch (RuntimeException rejected) {
+      if (replacement != null) {
+        ((LinkedList<Packet>) queue).add(position, replacement);
+      }
+      snapshotSize = queue.size();
+      if (monitor != null && monitor.diagnostics) {
+        if (rejected instanceof OutboundQueueFullException) {
+          monitor.fullDrops++;
+        } else if (rejected instanceof OutboundQueuePolicyViolationException) {
+          monitor.policyDrops++;
+        }
+      }
+      throw rejected;
+    }
+    if (replacement != null) {
+      forget(replacement);
+      if (monitor != null && monitor.diagnostics) {
+        delivery.replaced++;
+      }
+    }
+    queue.add(packet);
+    remember(packet);
+    snapshotSize = queue.size();
+    if (monitor != null) {
+      if (monitor.diagnostics) {
+        monitor.highWater = Math.max(monitor.highWater, snapshotSize);
+      }
+      updatePressure();
+    }
+    return Admission.ENQUEUED;
+  }
+
+  @Override
+  public DeliveryStatistics deliveryStatistics() {
+    synchronized (queue) {
+      if (delivery == null) {
+        return new DeliveryStatistics(-1, -1, -1, -1);
+      }
+      boolean diagnostics = monitor != null && monitor.diagnostics;
+      return new DeliveryStatistics(
+          delivery.bytes,
+          diagnostics ? delivery.expired : -1,
+          diagnostics ? delivery.replaced : -1,
+          diagnostics ? delivery.bestEffortDrops : -1);
+    }
+  }
 
   /**
    * Constructor.
@@ -66,7 +247,12 @@ public final class OutboundQueueImpl implements OutboundQueue {
   @Override
   public Packet peek() {
     synchronized (queue) {
-      return queue.peek();
+      if (delivery == null) {
+        return queue.peek();
+      }
+      purgeExpired();
+      claimed = queue.peek();
+      return claimed;
     }
   }
 
@@ -74,6 +260,12 @@ public final class OutboundQueueImpl implements OutboundQueue {
   public Packet take() {
     synchronized (queue) {
       Packet packet = queue.poll();
+      if (delivery != null && packet != null) {
+        forget(packet);
+      }
+      if (packet == claimed) {
+        claimed = null;
+      }
       snapshotSize = queue.size();
       if (monitor != null) {
         updatePressure();
@@ -146,7 +338,16 @@ public final class OutboundQueueImpl implements OutboundQueue {
 
   @Override
   public void put(Packet packet) {
+    putWithDelivery(packet);
+  }
+
+  @Override
+  public Admission putWithDelivery(Packet packet) {
+    java.util.Objects.requireNonNull(packet, "packet");
     synchronized (queue) {
+      if (delivery != null || packet.getDeliveryOptions() != null) {
+        return enhancedPut(packet);
+      }
       snapshotSize = queue.size();
       if (isSnapshotFull()) {
         if (monitor != null && monitor.diagnostics) {
@@ -175,6 +376,7 @@ public final class OutboundQueueImpl implements OutboundQueue {
         }
         updatePressure();
       }
+      return Admission.ENQUEUED;
     }
   }
 
@@ -182,6 +384,12 @@ public final class OutboundQueueImpl implements OutboundQueue {
   public void clear() {
     synchronized (queue) {
       queue.clear();
+      claimed = null;
+      if (delivery != null) {
+        delivery.sizes.clear();
+        delivery.references.clear();
+        delivery.bytes = 0;
+      }
       snapshotSize = 0;
       if (monitor != null) {
         updatePressure();

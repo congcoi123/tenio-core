@@ -26,6 +26,7 @@ package com.tenio.core.command.client;
 
 import com.tenio.core.bootstrap.annotation.ClientCommand;
 import com.tenio.common.data.DataCollection;
+import com.tenio.common.data.DataUtility;
 import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.entity.Player;
 import com.tenio.core.exception.AddedDuplicatedClientCommandException;
@@ -45,6 +46,40 @@ public final class ClientCommandManager extends SystemLogger {
   private final Map<Short, CommandMetadata> metadata = new HashMap<>();
   private volatile CommandLimits limits;
 
+  private volatile CommandDispatcher dispatcher;
+  private volatile CommandTiming timing;
+  private volatile boolean executionFeatures;
+
+  /** Coarse lifetime duration diagnostics; p95 is the upper bound of a power-of-two bucket. */
+  public record ExecutionStatistics(
+      long completed,
+      long failures,
+      long averageNanos,
+      long p95UpperBoundNanos,
+      long maximumNanos,
+      int outstanding) {}
+
+  /** Enables optional command timing before accepting requests; does not start a thread. */
+  public void enableExecutionMonitoring() {
+    timing = new CommandTiming();
+    executionFeatures = true;
+  }
+
+  /**
+   * @return lifetime timing snapshot, or zero durations when diagnostics are disabled
+   */
+  public ExecutionStatistics executionStatistics() {
+    var active = timing;
+    return active == null
+        ? new ExecutionStatistics(0, 0, 0, 0, 0, outstandingCommands())
+        : active.snapshot(outstandingCommands());
+  }
+
+  private static final int DISPATCH_CAPACITY = 1024;
+  private static final int DISPATCH_CONCURRENCY = 128;
+
+  private record Lane(ExecutionMode mode, long id) {}
+
   private record CommandMetadata(Class<?> handlerClass, String name, String description) {
   }
 
@@ -63,6 +98,13 @@ public final class ClientCommandManager extends SystemLogger {
     // gets command data
     var binding = command.getClass().getAnnotation(ClientCommand.class);
     if (binding != null) {
+      if (binding.mailboxCapacity() <= 0) {
+        throw new IllegalArgumentException("Command mailbox capacity must be positive");
+      }
+      if (binding.execution() != ExecutionMode.INLINE && dispatcher == null) {
+        dispatcher = new CommandDispatcher(DISPATCH_CAPACITY, DISPATCH_CONCURRENCY);
+        executionFeatures = true;
+      }
       int rate = binding.requestsPerSecond();
       int burst = binding.burst();
       if (rate < 0 || burst < 0) {
@@ -207,7 +249,95 @@ public final class ClientCommandManager extends SystemLogger {
     var activeLimits = limits;
     if (activeLimits == null || !activeLimits.enabled()
         || activeLimits.allow(code, player == null ? null : player.getIdentity())) {
+      if (executionFeatures) {
+        dispatch(handler, player, message);
+      } else {
+        handler.execute(player, message);
+      }
+    }
+  }
+
+  /**
+   * @return opted-in queued plus running invocations, or zero when dispatch is disabled
+   */
+  public int outstandingCommands() {
+    var active = dispatcher;
+    return active == null ? 0 : active.outstanding();
+  }
+
+  private void execute(
+      AbstractClientCommandHandler<Player, DataCollection> handler,
+      Player player,
+      DataCollection message) {
+    var monitor = timing;
+    if (monitor == null) {
       handler.execute(player, message);
+      return;
+    }
+    long started = System.nanoTime();
+    boolean successful = false;
+    try {
+      handler.execute(player, message);
+      successful = true;
+    } finally {
+      monitor.record(System.nanoTime() - started, successful);
+    }
+  }
+
+  private void dispatch(
+      AbstractClientCommandHandler<Player, DataCollection> handler,
+      Player player,
+      DataCollection message) {
+    var active = dispatcher;
+    var binding = active == null ? null : handler.getClass().getAnnotation(ClientCommand.class);
+    if (active == null || binding == null || binding.execution() == ExecutionMode.INLINE) {
+      execute(handler, player, message);
+      return;
+    }
+    var session = player == null ? null : player.getSession().orElse(null);
+    var room = player == null ? null : player.getCurrentRoom().orElse(null);
+    var mode = binding.execution();
+    if ((mode == ExecutionMode.SESSION && session == null)
+        || (mode == ExecutionMode.ROOM && (room == null || session == null))) {
+      throw new IllegalStateException("Ordered command requires an associated session/room");
+    }
+    Object key =
+        switch (mode) {
+          case SESSION -> new Lane(mode, session.getId());
+          case ROOM -> new Lane(mode, room.getId());
+          default -> null;
+        };
+    // Detach the input before it crosses threads; retain its wire type.
+    var detached =
+        message == null
+            ? null
+            : DataUtility.binariesToCollection(message.getType(), message.toBinaries());
+    boolean accepted =
+        active.submit(
+            key,
+            binding.mailboxCapacity(),
+            () -> {
+              // A replacement connection or room change invalidates previously admitted mutations.
+              if (player != null
+                  && ((session != null
+                          && (!session.isActivated()
+                              || player.getSession().orElse(null) != session))
+                      || (mode == ExecutionMode.ROOM
+                          && player.getCurrentRoom().orElse(null) != room))) {
+                return;
+              }
+              execute(handler, player, detached);
+            });
+    if (!accepted) {
+      throw new java.util.concurrent.RejectedExecutionException("Client command mailbox is full");
+    }
+  }
+
+  /** Stops opted-in admission/work before application teardown; inline behavior is unchanged. */
+  public void stopDispatching() {
+    var active = dispatcher;
+    if (active != null) {
+      active.close();
     }
   }
 
@@ -215,6 +345,10 @@ public final class ClientCommandManager extends SystemLogger {
    * Clears all the list of commands.
    */
   public void clear() {
+    stopDispatching();
+    dispatcher = null;
+    timing = null;
+    executionFeatures = false;
     commands.clear();
     metadata.clear();
     if (limits != null) {

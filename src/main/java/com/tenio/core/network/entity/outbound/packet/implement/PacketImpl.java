@@ -28,6 +28,7 @@ import com.tenio.common.data.DataType;
 import com.tenio.common.utility.TimeUtility;
 import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.define.TransportType;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
 import java.util.Collection;
@@ -51,6 +52,31 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
   private Collection<Session> recipients;
   private byte[] fragmentBuffer;
   private boolean last;
+  private Delivery delivery;
+
+  private record Delivery(DeliveryOptions options, long deadline) {}
+
+  @Override
+  public DeliveryOptions getDeliveryOptions() {
+    return delivery == null ? null : delivery.options();
+  }
+
+  @Override
+  public void setDeliveryOptions(DeliveryOptions options) {
+    delivery =
+        options == null
+            ? null
+            : new Delivery(
+                options,
+                options.timeToLive().isZero()
+                    ? 0
+                    : System.nanoTime() + options.timeToLive().toNanos());
+  }
+
+  @Override
+  public long getDeliveryDeadlineNanos() {
+    return delivery == null ? 0 : delivery.deadline();
+  }
 
   private PacketImpl() {
     id = ID_COUNTER.getAndIncrement();
@@ -241,6 +267,7 @@ public final class PacketImpl implements Packet, Comparable<Packet> {
     packet.setRecipients(recipients);
     packet.setTransportType(transportType);
     packet.setMarkedAsLast(last);
+    ((PacketImpl) packet).delivery = delivery;
     return packet;
   }
 }

@@ -180,7 +180,21 @@ public final class ZeroWriterImpl extends AbstractZeroEngine implements ZeroWrit
         }
 
         // put new item into the queue
-        outboundQueue.put(packet);
+        if (packet.getDeliveryOptions() == null) {
+          outboundQueue.put(packet);
+        } else {
+          var result = outboundQueue.putWithDelivery(packet);
+          if (result
+              == com.tenio.core.network.entity.outbound.packet.OutboundQueue.Admission.DROPPED) {
+            session.addDroppedPackets(1);
+            networkWriterStatistic.updateWrittenDroppedPacketsByFull(1);
+          }
+          if (result
+              != com.tenio.core.network.entity.outbound.packet.OutboundQueue.Admission.ENQUEUED) {
+            packet.setRecipients(null);
+            return;
+          }
+        }
 
         // duplicated entries are expected
         sessionTicketsQueueManager.getQueueByElementId(session.getId()).add(session);

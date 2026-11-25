@@ -252,4 +252,25 @@ public interface Packet {
    * @return the {@link Packet}'s clone instance
    */
   Packet deepCopy();
+
+  /**
+   * @return optional admission policy, or null for legacy FIFO admission
+   */
+  default DeliveryOptions getDeliveryOptions() {
+    return null;
+  }
+
+  /** Sets delivery policy before publishing this packet to writers. */
+  default void setDeliveryOptions(DeliveryOptions options) {
+    if (options != null) {
+      throw new UnsupportedOperationException("Delivery options are not supported");
+    }
+  }
+
+  /**
+   * @return monotonic expiry deadline, or zero for no expiry
+   */
+  default long getDeliveryDeadlineNanos() {
+    return 0;
+  }
 }

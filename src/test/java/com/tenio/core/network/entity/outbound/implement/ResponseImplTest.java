@@ -342,11 +342,4 @@ class ResponseImplTest {
     assertDoesNotThrow(() -> response.writeThenClose());
     verify(mockServer).write(response, true);
   }
-
-  @Test
-  @DisplayName("writeInDelay(0) sleeps 0ms then calls write()")
-  void testWriteInDelayCallsWriteAfterDelay() {
-    assertDoesNotThrow(() -> response.writeInDelay(0));
-    verify(mockServer).write(response, false);
-  }
 }

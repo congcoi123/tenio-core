@@ -387,6 +387,9 @@ public final class NetworkImpl extends AbstractManager implements Network {
                               TransportType transportType) {
     var packet = PacketImpl.newInstance();
     packet.setDataType(response.getDataType());
+    if (response.getDeliveryOptions() != null) {
+      packet.setDeliveryOptions(response.getDeliveryOptions());
+    }
     packet.setData(response.getContent().toBinaries());
     packet.needsEncrypted(response.needsEncrypted());
     packet.setGuarantee(response.getGuarantee());

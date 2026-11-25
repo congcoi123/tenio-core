@@ -26,10 +26,10 @@ package com.tenio.core.network.entity.outbound.implement;
 
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataType;
-import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.entity.Player;
 import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.entity.outbound.Response;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.server.ServerImpl;
 import java.util.ArrayList;
@@ -37,14 +37,13 @@ import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * The implementation for response.
  *
  * @see Response
  */
-public final class ResponseImpl extends SystemLogger implements Response {
+public final class ResponseImpl implements Response {
 
   private DataCollection content;
   private Collection<Player> players;
@@ -61,6 +60,19 @@ public final class ResponseImpl extends SystemLogger implements Response {
   private boolean prioritizedUdp;
   private boolean onlyUdp;
   private boolean encrypted;
+
+  private DeliveryOptions deliveryOptions;
+
+  @Override
+  public Response delivery(DeliveryOptions options) {
+    deliveryOptions = java.util.Objects.requireNonNull(options);
+    return this;
+  }
+
+  @Override
+  public DeliveryOptions getDeliveryOptions() {
+    return deliveryOptions;
+  }
 
   private ResponseImpl() {
     players = null;
@@ -193,16 +205,6 @@ public final class ResponseImpl extends SystemLogger implements Response {
   public void write() {
     constructRecipientPlayers();
     ServerImpl.getInstance().write(this, false);
-  }
-
-  @Override
-  public void writeInDelay(long delayInMilliseconds) {
-    try {
-      TimeUnit.MILLISECONDS.sleep(delayInMilliseconds);
-      write();
-    } catch (InterruptedException exception) {
-      error(exception);
-    }
   }
 
   @Override

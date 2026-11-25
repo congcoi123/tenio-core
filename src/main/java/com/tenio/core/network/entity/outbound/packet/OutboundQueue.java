@@ -27,7 +27,6 @@ package com.tenio.core.network.entity.outbound.packet;
 import com.tenio.core.admin.OperationalHistory;
 import com.tenio.core.exception.OutboundQueueFullException;
 import com.tenio.core.exception.OutboundQueuePolicyViolationException;
-import com.tenio.core.network.entity.outbound.packet.implement.OutboundQueueImpl;
 import com.tenio.core.network.entity.outbound.packet.policy.DefaultOutboundQueuePolicy;
 import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
 
@@ -214,5 +213,47 @@ public interface OutboundQueue {
    */
   default Statistics statistics() {
     return new Statistics(getSnapshotSize(), -1, -1, -1, -1, 0);
+  }
+
+  /**
+   * Enables a serialized-payload byte bound in addition to the existing packet bound. Configure
+   * before publishing the queue; zero disables the byte bound.
+   *
+   * @param maximumBytes positive bound or zero
+   */
+  default void configureDeliveryByteLimit(long maximumBytes) {
+    throw new UnsupportedOperationException("Delivery byte limits are not supported");
+  }
+
+  /** Queued bytes and additional policy outcomes; counters are -1 without monitor diagnostics. */
+  record DeliveryStatistics(long queuedBytes, long expired, long replaced, long bestEffortDrops) {}
+
+  /**
+   * @return enhanced delivery diagnostics, or unavailable values when disabled
+   */
+  default DeliveryStatistics deliveryStatistics() {
+    return new DeliveryStatistics(-1, -1, -1, -1);
+  }
+
+  /** Outcome of optional enhanced queue admission. */
+  enum Admission {
+    /** Queued successfully. */
+    ENQUEUED,
+    /** Deadline elapsed before admission. */
+    EXPIRED,
+    /** Best-effort message discarded at the queue capacity bound. */
+    DROPPED
+  }
+
+  /**
+   * Admits a packet and reports an intentional drop to network/session counters. Alternate queue
+   * implementations retain their existing put() behavior.
+   *
+   * @param packet packet selected for optional enhanced delivery
+   * @return admission outcome
+   */
+  default Admission putWithDelivery(Packet packet) {
+    put(packet);
+    return Admission.ENQUEUED;
   }
 }

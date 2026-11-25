@@ -125,10 +125,13 @@ class ServerInspectionTest {
             history.record(8, "TCP", OperationalHistory.Kind.RECONNECT, "resumed");
 
             var inspection = new ServerInspection(server, network, true);
-            assertEquals("help | stats | room <id> | session <id> | network pressure | limits | history [id] | clear",
+            assertEquals(
+          "help | stats | room <id> | session <id> | network pressure | limits | history [id] |"
+              + " performance [minutes] | clear",
                     AdminCommands.shortcuts());
             assertEquals(List.of("stats", "room <id>", "session <id>", "network pressure", "limits",
-                    "history [id]", "clear"), inspection.query("help").labels());
+                    "history [id]",
+              "performance [minutes]", "clear"), inspection.query("help").labels());
             assertTrue(inspection.query("ROOM  42").labels().contains("Room ID"));
             assertEquals(inspection.query("room 42"), inspection.query("room 42 all"));
             assertEquals(inspection.query("history"), inspection.query("history all"));
@@ -144,7 +147,8 @@ class ServerInspectionTest {
             assertEquals(2, inspection.query("history").labels().size());
             var result = inspection.query("history 7");
             assertTrue(result.labels().getFirst().matches(
-                    "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3} (Z|[+-]\\d{2}:\\d{2}) \\| Session #7"));
+                  "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3} (Z|[+-]\\d{2}:\\d{2}) \\|"
+                      + " Session #7"));
             assertEquals(List.of("Disconnected (TCP) — Connection error"), result.values());
             assertEquals(List.of("No events recorded for session #99."), inspection.query("history 99").values());
         }
