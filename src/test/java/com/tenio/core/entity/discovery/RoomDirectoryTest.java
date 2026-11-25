@@ -55,6 +55,81 @@ class RoomDirectoryTest {
     }
 
     @Test
+    void firstPublicationEmitsAddAndIdenticalPublicationKeepsRevision() {
+        try (var directory = new RoomDirectory(Set.of(), 1, 1)) {
+            var subscription = directory.subscribe("alice", "pong");
+            var room = room(1);
+
+            directory.publish(room, "pong", "duel", "waiting", Map.of());
+
+            var added = subscription.poll();
+            assertNotNull(added);
+            assertEquals(RoomDirectory.Kind.ADD, added.kind());
+            assertEquals(1, added.roomId());
+            assertEquals(1, added.revision());
+            assertEquals("pong", added.summary().group());
+            assertEquals(1, directory.query(RoomDirectory.Query.group("pong")).total());
+
+            directory.publish(room, "pong", "duel", "waiting", Map.of());
+
+            assertNull(subscription.poll());
+            assertEquals(added.revision(), directory.query(RoomDirectory.Query.group("pong")).revision());
+        }
+    }
+
+    @Test
+    void changedSummaryInTheSameGroupEmitsUpdateAtCapacity() {
+        try (var directory = new RoomDirectory(Set.of(), 1, 1)) {
+            var subscription = directory.subscribe("alice", "pong");
+            var room = room(1);
+            directory.publish(room, "pong", "duel", "waiting", Map.of());
+            var added = subscription.poll();
+
+            directory.publish(room, "pong", "duel", "playing", Map.of());
+
+            var updated = subscription.poll();
+            assertNotNull(updated);
+            assertEquals(RoomDirectory.Kind.UPDATE, updated.kind());
+            assertEquals(added.revision() + 1, updated.revision());
+            assertEquals(1, updated.roomId());
+            assertEquals("playing", updated.summary().state());
+            assertEquals(1, directory.query(RoomDirectory.Query.group("pong")).total());
+            assertNull(subscription.poll());
+        }
+    }
+
+    @Test
+    void movingBetweenGroupsEmitsRemoveThenAddAndUpdatesBothIndexes() {
+        try (var directory = new RoomDirectory(Set.of(), 1, 2)) {
+            var oldGroup = directory.subscribe("alice", "pong");
+            var newGroup = directory.subscribe("bob", "chess");
+            var room = room(1);
+            directory.publish(room, "pong", "duel", "waiting", Map.of());
+            var initial = oldGroup.poll();
+            assertNull(newGroup.poll());
+
+            directory.publish(room, "chess", "duel", "waiting", Map.of());
+
+            var removed = oldGroup.poll();
+            var added = newGroup.poll();
+            assertNotNull(removed);
+            assertNotNull(added);
+            assertEquals(RoomDirectory.Kind.REMOVE, removed.kind());
+            assertEquals(RoomDirectory.Kind.ADD, added.kind());
+            assertEquals(1, removed.roomId());
+            assertEquals(1, added.roomId());
+            assertNull(removed.summary());
+            assertEquals("chess", added.summary().group());
+            assertEquals(initial.revision() + 1, removed.revision());
+            assertEquals(removed.revision() + 1, added.revision());
+            assertEquals(0, directory.query(RoomDirectory.Query.group("pong")).total());
+            assertEquals(1, directory.query(RoomDirectory.Query.group("chess")).total());
+            assertNull(oldGroup.poll());
+            assertNull(newGroup.poll());
+        }
+    }
+
+    @Test
     void groupIndexPaginationAndAllowlistedFiltersWork() {
         try (var directory = new RoomDirectory(Set.of("rank"), 20, 5)) {
             for (long i = 0; i < 6; i++) {

@@ -218,3 +218,7 @@ and replicated state. No existing Zero/MessagePack type codes or application ope
 - Apply the configured server bind address to WebSocket, make activation idempotent, report listener readiness after a successful bind and clean up startup failures.
 - Add protocol and WS/WSS integration regressions; document transport defaults and TLS setup.
 - Release core as 1.1.0 while retaining tenio-common 1.0.0.
+
+### Room discovery publication fix
+- Guard the previous summary before comparing groups so publishing a room for the first time does not throw NullPointerException.
+- Add regressions for first publication, unchanged summaries, updates at capacity, and ordered removal/addition when changing groups.

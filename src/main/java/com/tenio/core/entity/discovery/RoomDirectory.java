@@ -198,8 +198,8 @@ public final class RoomDirectory implements AutoCloseable {
         if (summary.equals(old)) {
             return;
         }
-        boolean oldGroup = !old.group().equals(summary.group());
-        if (old != null && oldGroup) {
+        boolean groupChanged = old != null && !old.group().equals(summary.group());
+        if (groupChanged) {
             remove(summary.id());
         }
         rooms.put(summary.id(), summary);
@@ -208,7 +208,7 @@ public final class RoomDirectory implements AutoCloseable {
         emit(summary.group(),
                 new Change(
                         ++revision,
-                        old == null || oldGroup ? Kind.ADD : Kind.UPDATE,
+                        old == null || groupChanged ? Kind.ADD : Kind.UPDATE,
                         summary.id(),
                         summary
                 )
