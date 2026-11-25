@@ -83,6 +83,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface ClientCommand {
 
+    int DEFAULT_MAILBOX_CAPACITY = 128;
+
     /**
      * Startup profiles allowing this annotated element to participate. An empty array or blank
      * restriction is unrestricted. Values are trimmed, case-sensitive OR alternatives; each entry may
@@ -110,7 +112,7 @@ public @interface ClientCommand {
     /**
      * @return maximum outstanding requests for this session/room lane; must be positive
      */
-    int mailboxCapacity() default 128;
+    int mailboxCapacity() default DEFAULT_MAILBOX_CAPACITY;
 
     /**
      * Optional display name. The handler class name is used when this is blank.
