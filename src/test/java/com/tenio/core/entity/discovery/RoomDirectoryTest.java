@@ -24,151 +24,163 @@ THE SOFTWARE.
 
 package com.tenio.core.entity.discovery;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import com.tenio.core.entity.Room;
-import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 class RoomDirectoryTest {
-  static Room room(long id) {
-    Room room = mock(Room.class);
-    when(room.getId()).thenReturn(id);
-    when(room.getName()).thenReturn("Room " + id);
-    when(room.getMaxParticipants()).thenReturn(2);
-    when(room.getSnapshotParticipantCount()).thenReturn(1);
-    when(room.isActivated()).thenReturn(true);
-    return room;
-  }
 
-  @Test
-  void groupIndexPaginationAndAllowlistedFiltersWork() {
-    try (var directory = new RoomDirectory(Set.of("rank"), 20, 5)) {
-      for (long i = 0; i < 6; i++) {
-        directory.publish(room(i), i < 5 ? "pong" : "chess", "duel", "waiting", Map.of("rank", 3));
-      }
-      var query = new RoomDirectory.Query("pong", "duel", "waiting", 1, Map.of("rank", 3), 2, 2);
-      var page = directory.query(query);
-      assertEquals(5, page.total());
-      assertEquals(2, page.rooms().size());
-      assertTrue(page.rooms().stream().allMatch(r -> r.group().equals("pong")));
-      assertThrows(
-          IllegalArgumentException.class,
-          () ->
-              directory.query(
-                  new RoomDirectory.Query("pong", null, null, 0, Map.of("secret", 1), 0, 10)));
+    static Room room(long id) {
+        Room room = mock(Room.class);
+        when(room.getId()).thenReturn(id);
+        when(room.getName()).thenReturn("Room " + id);
+        when(room.getMaxParticipants()).thenReturn(2);
+        when(room.getSnapshotParticipantCount()).thenReturn(1);
+        when(room.isActivated()).thenReturn(true);
+        return room;
     }
-  }
 
-  @Test
-  void roomPropertiesAreNeverCopiedAndSubscribersReceiveOnlyTheirGroup() {
-    try (var directory = new RoomDirectory(Set.of("public"), 20, 5)) {
-      var subscription = directory.subscribe("alice", "pong");
-      var room = room(1);
-      directory.publish(room, "chess", "duel", "waiting", Map.of());
-      assertNull(subscription.poll());
-      directory.publish(room, "pong", "duel", "waiting", Map.of("public", true));
-      var change = subscription.poll();
-      assertEquals(RoomDirectory.Kind.ADD, change.kind());
-      assertEquals(Map.of("public", true), change.summary().attributes());
-      verify(room, never()).getProperty(anyString());
-      assertThrows(
-          UnsupportedOperationException.class, () -> change.summary().attributes().put("x", 1));
-      directory.remove(1);
-      assertEquals(RoomDirectory.Kind.REMOVE, subscription.poll().kind());
+    @Test
+    void groupIndexPaginationAndAllowlistedFiltersWork() {
+        try (var directory = new RoomDirectory(Set.of("rank"), 20, 5)) {
+            for (long i = 0; i < 6; i++) {
+                directory.publish(room(i), i < 5 ? "pong" : "chess", "duel", "waiting", Map.of("rank", 3));
+            }
+            var query = new RoomDirectory.Query("pong", "duel", "waiting", 1, Map.of("rank", 3), 2, 2);
+            var page = directory.query(query);
+            assertEquals(5, page.total());
+            assertEquals(2, page.rooms().size());
+            assertTrue(page.rooms().stream().allMatch(r -> r.group().equals("pong")));
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> directory.query(new RoomDirectory.Query("pong", null, null, 0, Map.of("secret", 1), 0, 10))
+            );
+        }
     }
-  }
 
-  @Test
-  void refreshIsExplicitAndSkipsUnpublishedRooms() {
-    try (var directory = new RoomDirectory(Set.of(), 5, 5)) {
-      Room room = room(1);
-      directory.refresh(room);
-      assertEquals(0, directory.query(RoomDirectory.Query.group("pong")).total());
-      directory.publish(room, "pong", "duel", "waiting", Map.of());
-      when(room.getSnapshotParticipantCount()).thenReturn(2);
-      directory.refresh(room);
-      assertEquals(
-          0,
-          directory.query(RoomDirectory.Query.group("pong")).rooms().getFirst().availableSlots());
+    @Test
+    void roomPropertiesAreNeverCopiedAndSubscribersReceiveOnlyTheirGroup() {
+        try (var directory = new RoomDirectory(Set.of("public"), 20, 5)) {
+            var subscription = directory.subscribe("alice", "pong");
+            var room = room(1);
+            directory.publish(room, "chess", "duel", "waiting", Map.of());
+            assertNull(subscription.poll());
+            directory.publish(room, "pong", "duel", "waiting", Map.of("public", true));
+            var change = subscription.poll();
+            assertEquals(RoomDirectory.Kind.ADD, change.kind());
+            assertEquals(Map.of("public", true), change.summary().attributes());
+            verify(room, never()).getProperty(anyString());
+            assertThrows(UnsupportedOperationException.class, () -> change.summary().attributes().put("x", 1));
+            directory.remove(1);
+            assertEquals(RoomDirectory.Kind.REMOVE, subscription.poll().kind());
+        }
     }
-  }
 
-  @Test
-  void overflowRequiresResnapshotAndAcknowledgementPreservesNewerChanges() {
-    try (var directory = new RoomDirectory(Set.of(), 5, 5)) {
-      var subscription = directory.subscribe("alice", "pong");
-      var room = room(1);
-      for (int i = 0; i < 150; i++) {
-        directory.publish(room, "pong", "duel", "phase" + i, Map.of());
-      }
-      assertEquals(RoomDirectory.Kind.RESET, subscription.poll().kind());
-      var page = directory.query(RoomDirectory.Query.group("pong"));
-      directory.publish(room, "pong", "duel", "newest", Map.of());
-      subscription.acknowledgeSnapshot(page.revision());
-      var change = subscription.poll();
-      assertNotNull(change);
-      assertTrue(change.revision() > page.revision());
-      directory.release("alice");
-      directory.remove(1);
-      assertNull(subscription.poll());
+    @Test
+    void refreshIsExplicitAndSkipsUnpublishedRooms() {
+        try (var directory = new RoomDirectory(Set.of(), 5, 5)) {
+            Room room = room(1);
+            directory.refresh(room);
+            assertEquals(0, directory.query(RoomDirectory.Query.group("pong")).total());
+            directory.publish(room, "pong", "duel", "waiting", Map.of());
+            when(room.getSnapshotParticipantCount()).thenReturn(2);
+            directory.refresh(room);
+            assertEquals(
+                    0,
+                    directory.query(RoomDirectory.Query.group("pong")).rooms().getFirst().availableSlots()
+            );
+        }
     }
-  }
 
-  @Test
-  void resourceBoundsRejectUnboundedSubscriptionsAndFields() {
-    try (var directory = new RoomDirectory(Set.of("safe"), 1, 1)) {
-      directory.publish(room(1), "group", "game", "waiting", Map.of());
-      assertThrows(
-          IllegalStateException.class,
-          () -> directory.publish(room(2), "group", "game", "waiting", Map.of()));
-      directory.subscribe("alice", "group");
-      assertThrows(IllegalStateException.class, () -> directory.subscribe("bob", "group"));
-      assertThrows(
-          IllegalArgumentException.class,
-          () ->
-              directory.publish(room(1), "group", "game", "waiting", Map.of("safe", new Object())));
+    @Test
+    void overflowRequiresResnapshotAndAcknowledgementPreservesNewerChanges() {
+        try (var directory = new RoomDirectory(Set.of(), 5, 5)) {
+            var subscription = directory.subscribe("alice", "pong");
+            var room = room(1);
+            for (int i = 0; i < 150; i++) {
+                directory.publish(room, "pong", "duel", "phase" + i, Map.of());
+            }
+            assertEquals(RoomDirectory.Kind.RESET, subscription.poll().kind());
+            var page = directory.query(RoomDirectory.Query.group("pong"));
+            directory.publish(room, "pong", "duel", "newest", Map.of());
+            subscription.acknowledgeSnapshot(page.revision());
+            var change = subscription.poll();
+            assertNotNull(change);
+            assertTrue(change.revision() > page.revision());
+            directory.release("alice");
+            directory.remove(1);
+            assertNull(subscription.poll());
+        }
     }
-  }
 
-  @Test
-  void roomGettersRunOutsideTheDirectoryMonitor() {
-    try (var directory = new RoomDirectory(Set.of(), 5, 5)) {
-      Room room = room(1);
-      when(room.getName())
-          .thenAnswer(
-              call -> {
-                assertFalse(Thread.holdsLock(directory));
-                return "safe";
-              });
-      directory.publish(room, "group", "game", "waiting", Map.of());
-      directory.refresh(room);
+    @Test
+    void resourceBoundsRejectUnboundedSubscriptionsAndFields() {
+        try (var directory = new RoomDirectory(Set.of("safe"), 1, 1)) {
+            directory.publish(room(1), "group", "game", "waiting", Map.of());
+            assertThrows(
+                    IllegalStateException.class,
+                    () -> directory.publish(room(2), "group", "game", "waiting", Map.of())
+            );
+            directory.subscribe("alice", "group");
+            assertThrows(IllegalStateException.class, () -> directory.subscribe("bob", "group"));
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> directory.publish(room(1), "group", "game", "waiting", Map.of("safe", new Object()))
+            );
+        }
     }
-  }
 
-  @Test
-  void refreshCannotResurrectARemovedRoom() throws Exception {
-    try (var directory = new RoomDirectory(Set.of(), 5, 5);
-        var workers = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
-      Room room = room(1);
-      directory.publish(room, "group", "game", "waiting", Map.of());
-      var reading = new java.util.concurrent.CountDownLatch(1);
-      var proceed = new java.util.concurrent.CountDownLatch(1);
-      when(room.getName())
-          .thenAnswer(
-              call -> {
-                reading.countDown();
-                assertTrue(proceed.await(5, java.util.concurrent.TimeUnit.SECONDS));
-                return "updated";
-              });
-      var refreshed = workers.submit(() -> directory.refresh(room));
-      assertTrue(reading.await(5, java.util.concurrent.TimeUnit.SECONDS));
-      directory.remove(1);
-      proceed.countDown();
-      refreshed.get(5, java.util.concurrent.TimeUnit.SECONDS);
-      assertEquals(0, directory.query(RoomDirectory.Query.group("group")).total());
+    @Test
+    void roomGettersRunOutsideTheDirectoryMonitor() {
+        try (var directory = new RoomDirectory(Set.of(), 5, 5)) {
+            Room room = room(1);
+            when(room.getName())
+                    .thenAnswer(
+                            call -> {
+                                assertFalse(Thread.holdsLock(directory));
+                                return "safe";
+                            }
+                    );
+            directory.publish(room, "group", "game", "waiting", Map.of());
+            directory.refresh(room);
+        }
     }
-  }
+
+    @Test
+    void refreshCannotResurrectARemovedRoom() throws Exception {
+        try (var directory = new RoomDirectory(Set.of(), 5, 5);
+             var workers = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+            Room room = room(1);
+            directory.publish(room, "group", "game", "waiting", Map.of());
+            var reading = new java.util.concurrent.CountDownLatch(1);
+            var proceed = new java.util.concurrent.CountDownLatch(1);
+            when(room.getName()).thenAnswer(
+                    call -> {
+                        reading.countDown();
+                        assertTrue(proceed.await(5, java.util.concurrent.TimeUnit.SECONDS));
+                        return "updated";
+                    }
+            );
+            var refreshed = workers.submit(() -> directory.refresh(room));
+            assertTrue(reading.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            directory.remove(1);
+            proceed.countDown();
+            refreshed.get(5, java.util.concurrent.TimeUnit.SECONDS);
+            assertEquals(0, directory.query(RoomDirectory.Query.group("group")).total());
+        }
+    }
 }
