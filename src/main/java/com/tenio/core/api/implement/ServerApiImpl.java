@@ -101,11 +101,6 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
     }
 
     @Override
-    public RecoveryManager getRecoveryManager() {
-        return server.getRecoveryManager();
-    }
-
-    @Override
     public void logout(Player player, ConnectionDisconnectMode connectionDisconnectMode, PlayerDisconnectMode playerDisconnectMode) {
         if (player == null) {
             return;
@@ -399,6 +394,11 @@ public final class ServerApiImpl extends SystemLogger implements ServerApi {
         return manager == null ? null : manager.getDirectory();
     }
 
+    @Override
+    public RecoveryManager getRecoveryManager() {
+        return server.getRecoveryManager();
+    }
+    
     private void refreshDiscovery(Room room) {
         var directory = getRoomDirectory();
         if (directory != null && room != null) {
