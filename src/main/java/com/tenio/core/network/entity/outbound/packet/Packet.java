@@ -240,7 +240,7 @@ public interface Packet {
 
     /**
      * @return delivery settings, or null for no expiry/replacement and implicit LOW priority for
-     *         UDP or NORMAL for other transports under the default queue policy
+     * UDP or NORMAL for other transports under the default queue policy
      */
     DeliveryOptions getDeliveryOptions();
 

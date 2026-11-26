@@ -187,24 +187,6 @@ public interface OutboundQueue {
     void clear();
 
     /**
-     * A snapshot of outbound queue occupancy, packet drops, and pressure.
-     *
-     * @param depth             the last recorded number of packets in the queue
-     * @param capacity          the maximum number of packets the queue can hold, or {@code -1} if unavailable
-     * @param highWater         the highest recorded queue depth since diagnostics began, or {@code -1}
-     *                          if unavailable
-     * @param fullDrops         the number of packets rejected because the queue was full, or {@code -1}
-     *                          if unavailable
-     * @param policyDrops       the number of packets rejected for violating the outbound queue policy,
-     *                          or {@code -1} if unavailable
-     * @param pressureAgeMillis the elapsed time in milliseconds since the current period of queue
-     *                          pressure began, or {@code 0} if the queue is below the pressure threshold or pressure
-     *                          tracking is unavailable
-     */
-    record Statistics(int depth, int capacity, int highWater, long fullDrops, long policyDrops, long pressureAgeMillis) {
-    }
-
-    /**
      * Returns a snapshot of outbound queue statistics.
      *
      * <p>The default implementation uses {@link #getSnapshotSize()} for depth, returns {@code -1}
@@ -225,16 +207,22 @@ public interface OutboundQueue {
     void configureDeliveryByteLimit(long maximumBytes);
 
     /**
-     * Queued bytes and additional policy outcomes; counters are -1 without monitor diagnostics.
-     */
-    record DeliveryStatistics(long queuedBytes, long expired, long replaced, long bestEffortDrops) {
-    }
-
-    /**
      * @return enhanced delivery diagnostics, or unavailable values when disabled
      */
     default DeliveryStatistics deliveryStatistics() {
         return new DeliveryStatistics(-1, -1, -1, -1);
+    }
+
+    /**
+     * Admits a packet and reports an intentional drop to network/session counters. Alternate queue
+     * implementations retain their existing put() behavior.
+     *
+     * @param packet packet selected for optional enhanced delivery
+     * @return admission outcome
+     */
+    default Admission putWithDelivery(Packet packet) {
+        put(packet);
+        return Admission.ENQUEUED;
     }
 
     /**
@@ -256,14 +244,26 @@ public interface OutboundQueue {
     }
 
     /**
-     * Admits a packet and reports an intentional drop to network/session counters. Alternate queue
-     * implementations retain their existing put() behavior.
+     * A snapshot of outbound queue occupancy, packet drops, and pressure.
      *
-     * @param packet packet selected for optional enhanced delivery
-     * @return admission outcome
+     * @param depth             the last recorded number of packets in the queue
+     * @param capacity          the maximum number of packets the queue can hold, or {@code -1} if unavailable
+     * @param highWater         the highest recorded queue depth since diagnostics began, or {@code -1}
+     *                          if unavailable
+     * @param fullDrops         the number of packets rejected because the queue was full, or {@code -1}
+     *                          if unavailable
+     * @param policyDrops       the number of packets rejected for violating the outbound queue policy,
+     *                          or {@code -1} if unavailable
+     * @param pressureAgeMillis the elapsed time in milliseconds since the current period of queue
+     *                          pressure began, or {@code 0} if the queue is below the pressure threshold or pressure
+     *                          tracking is unavailable
      */
-    default Admission putWithDelivery(Packet packet) {
-        put(packet);
-        return Admission.ENQUEUED;
+    record Statistics(int depth, int capacity, int highWater, long fullDrops, long policyDrops, long pressureAgeMillis) {
+    }
+
+    /**
+     * Queued bytes and additional policy outcomes; counters are -1 without monitor diagnostics.
+     */
+    record DeliveryStatistics(long queuedBytes, long expired, long replaced, long bestEffortDrops) {
     }
 }

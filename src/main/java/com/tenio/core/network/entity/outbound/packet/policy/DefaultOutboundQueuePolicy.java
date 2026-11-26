@@ -27,8 +27,8 @@ package com.tenio.core.network.entity.outbound.packet.policy;
 import com.tenio.core.exception.OutboundQueueFullException;
 import com.tenio.core.exception.OutboundQueuePolicyViolationException;
 import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
-import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
+import com.tenio.core.network.entity.outbound.packet.Packet;
 
 /**
  * The default congestion admission policy. Without delivery options, UDP uses LOW priority
@@ -40,26 +40,26 @@ import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
  */
 public class DefaultOutboundQueuePolicy implements OutboundQueuePolicy {
 
-  private static final float THREE_QUARTERS_FULL = 75.0f;
-  private static final float NINETY_PERCENT_FULL = 90.0f;
+    private static final float THREE_QUARTERS_FULL = 75.0f;
+    private static final float NINETY_PERCENT_FULL = 90.0f;
 
-  @Override
-  public void applyPolicy(OutboundQueue outboundQueue, Packet packet) {
-    if (outboundQueue.isSnapshotFull()) {
-      throw new OutboundQueueFullException(outboundQueue.getSnapshotSize());
-    }
+    @Override
+    public void applyPolicy(OutboundQueue outboundQueue, Packet packet) {
+        if (outboundQueue.isSnapshotFull()) {
+            throw new OutboundQueueFullException(outboundQueue.getSnapshotSize());
+        }
 
-    float percentageUsed = outboundQueue.getPercentageUsed();
-    if (percentageUsed < THREE_QUARTERS_FULL) {
-      return;
+        float percentageUsed = outboundQueue.getPercentageUsed();
+        if (percentageUsed < THREE_QUARTERS_FULL) {
+            return;
+        }
+        var options = packet.getDeliveryOptions();
+        var priority = options == null
+                ? (packet.isUdp() ? DeliveryOptions.Priority.LOW : DeliveryOptions.Priority.NORMAL)
+                : options.priority();
+        if ((priority == DeliveryOptions.Priority.LOW && percentageUsed >= THREE_QUARTERS_FULL)
+                || (priority == DeliveryOptions.Priority.NORMAL && percentageUsed >= NINETY_PERCENT_FULL)) {
+            throw new OutboundQueuePolicyViolationException(packet, percentageUsed);
+        }
     }
-    var options = packet.getDeliveryOptions();
-    var priority = options == null
-        ? (packet.isUdp() ? DeliveryOptions.Priority.LOW : DeliveryOptions.Priority.NORMAL)
-        : options.priority();
-    if ((priority == DeliveryOptions.Priority.LOW && percentageUsed >= THREE_QUARTERS_FULL)
-        || (priority == DeliveryOptions.Priority.NORMAL && percentageUsed >= NINETY_PERCENT_FULL)) {
-      throw new OutboundQueuePolicyViolationException(packet, percentageUsed);
-    }
-  }
 }
