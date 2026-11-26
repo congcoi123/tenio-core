@@ -200,8 +200,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
         var session = (Session) request.getSender();
 
         // We only consider the fresh session
-        if (!session.isActivated() || !session.transitionAssociatedState(Session.AssociatedState.NONE,
-                Session.AssociatedState.DOING)) {
+        if (!session.isActivated() || !session.transitionAssociatedState(Session.AssociatedState.NONE, Session.AssociatedState.DOING)) {
             return;
         }
 
@@ -212,19 +211,16 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
         RecoveryManager.Claim recoveryClaim = null;
         Object reconnectedObject = null;
         try {
-            var credentials =
-                    recoveryPolicy == null ? null : recoveryPolicy.credentials(session, message);
+            var credentials = recoveryPolicy == null ? null : recoveryPolicy.credentials(session, message);
             if (credentials != null) {
                 recoveryClaim = recoveryManager.claim(credentials);
                 if (recoveryClaim == null) {
-                    session.close(
-                            ConnectionDisconnectMode.REFUSED_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
+                    session.close(ConnectionDisconnectMode.REFUSED_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
                     return;
                 }
                 reconnectedObject = Optional.of(recoveryClaim.player());
             } else {
-                reconnectedObject =
-                        eventManager.emit(ServerEvent.PLAYER_CONNECTION_RETRY, session, message);
+                reconnectedObject = eventManager.emit(ServerEvent.PLAYER_CONNECTION_RETRY, session, message);
             }
         } catch (Exception exception) {
             if (isErrorEnabled()) {
@@ -236,8 +232,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
             }
             if (recoveryPolicy != null) {
                 try {
-                    session.close(
-                            ConnectionDisconnectMode.REFUSED_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
+                    session.close(ConnectionDisconnectMode.REFUSED_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
                 } catch (IOException closeFailure) {
                     if (isErrorEnabled()) {
                         error(closeFailure);
@@ -263,12 +258,10 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
                             // before the application sends its final handover notification.
                             currentSession.prepareForReplacement();
                             try {
-                                eventManager.emit(ServerEvent.PLAYER_CONNECTION_REPLACING, player, currentSession,
-                                        session);
+                                eventManager.emit(ServerEvent.PLAYER_CONNECTION_REPLACING, player, currentSession, session);
                             } catch (Exception exception) {
                                 if (isErrorEnabled()) {
-                                    error(exception, "Error while notifying about connection replacement: ",
-                                            currentSession);
+                                    error(exception, "Error while notifying about connection replacement: ", currentSession);
                                 }
                             }
                             // A duplicate-login handler may have queued a final notification with
@@ -276,8 +269,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
                             // the stale session; otherwise the client misses the duplicate-login code and
                             // starts reconnecting again.
                             if (!currentSession.isCloseAfterPendingWriteMarked()) {
-                                currentSession.close(ConnectionDisconnectMode.RECONNECTION,
-                                        PlayerDisconnectMode.RECONNECTION);
+                                currentSession.close(ConnectionDisconnectMode.RECONNECTION, PlayerDisconnectMode.RECONNECTION);
                             }
                         } catch (IOException exception) {
                             if (isErrorEnabled()) {
@@ -303,8 +295,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
                 boolean attached = attachPlayerToSession(player, session);
                 var history = sessionManager == null ? null : sessionManager.getOperationalHistory();
                 if (history != null) {
-                    history.record(session.getId(), String.valueOf(session.getTransportType()),
-                            OperationalHistory.Kind.RECONNECT, attached ? "resumed" : "attachment failed");
+                    history.record(session.getId(), String.valueOf(session.getTransportType()), OperationalHistory.Kind.RECONNECT, attached ? "resumed" : "attachment failed");
                 }
                 if (!attached) {
                     if (recoveryClaim != null) {
@@ -321,8 +312,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
                         recoveryManager.finish(claim);
                     } catch (RuntimeException failure) {
                         recoveryManager.revoke(player);
-                        serverApi.logout(
-                                player, ConnectionDisconnectMode.EXCEPTION, PlayerDisconnectMode.CONNECTION_LOST);
+                        serverApi.logout(player, ConnectionDisconnectMode.EXCEPTION, PlayerDisconnectMode.CONNECTION_LOST);
                         if (isErrorEnabled()) {
                             error(failure, "Recovery delivery failed");
                         }
@@ -341,8 +331,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
     private void establishNewPlayerConnection(Session session, DataCollection message) {
         // check the number of current players
         if (playerManager.getSnapshotPlayerCount() >= maxNumberPlayers) {
-            eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
-                    ConnectionEstablishedResult.REACHED_MAX_CONNECTION);
+            eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message, ConnectionEstablishedResult.REACHED_MAX_CONNECTION);
             try {
                 if (session.isActivated()) {
                     session.close(ConnectionDisconnectMode.REACHED_MAX_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
@@ -353,8 +342,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
                 }
             }
         } else {
-            eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
-                    ConnectionEstablishedResult.SUCCESS);
+            eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message, ConnectionEstablishedResult.SUCCESS);
         }
     }
 
@@ -402,8 +390,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
                 }
             } else {
                 if (isDebugEnabled()) {
-                    debug("SESSION WILL BE REMOVED", "The player ", session.getName(),
-                            " should be presented, but it was not");
+                    debug("SESSION WILL BE REMOVED", "The player ", session.getName(), " should be presented, but it was not");
                 }
             }
         }
@@ -431,7 +418,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
 
     /**
      * Invalidates a session that is either being associated or already associated. CLOSING is a
-     * terminal association state, so an attach cannot resurrect a session once close has started.
+     * terminal association state, so an attachment cannot resurrect a session once close has started.
      */
     private boolean releaseSessionAssociation(Session session) {
         return session.beginPlayerAssociationClose();
@@ -462,8 +449,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
                 if (!recoveryManager.awaitReady(player)) {
                     recoveryManager.revoke(player);
                     try {
-                        session.close(
-                                ConnectionDisconnectMode.REFUSED_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
+                        session.close(ConnectionDisconnectMode.REFUSED_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
                     } catch (IOException failure) {
                         if (isErrorEnabled()) {
                             error(failure);
