@@ -112,16 +112,24 @@ response().setContent(position).setRecipientPlayer(player)
 `DeliveryOptions` holds mode, congestion priority, replacement key and queued lifetime. Factories
 select HIGH for `important()`, NORMAL for `replaceable(key, lifetime)` and LOW for
 `bestEffort(lifetime)`. Use `withPriority(DeliveryOptions.Priority.HIGH)` to override only priority.
-The default queue policy rejects LOW at 75% occupancy and NORMAL at 90%; HIGH remains eligible
-until full. Priority does not reorder FIFO output, bypass hard packet/byte bounds or override a
+Without delivery options, the default queue policy treats UDP as LOW and other transports as
+NORMAL. Explicit delivery priority overrides either default, including for UDP. LOW is rejected
+at 75% current occupancy, NORMAL at 90%, and HIGH remains eligible until full. Queued UDP is not evicted and FIFO order
+is preserved. This reserves headroom for TCP in the shared session queue. Current direct Netty
+WebSocket writes bypass these queue rules. Priority does not reorder FIFO output, bypass hard packet/byte bounds or override a
 custom OutboundQueuePolicy. Explicitly lowering important-message priority also lowers its admission
 eligibility. None of these settings acknowledges delivery or provides durable storage.
 
 BEST_EFFORT drops on capacity admission failure. Queue-policy rejections remain explicit and are
-counted separately from full-queue drops. Never use replaceable/best-effort for purchases or final
+counted separately from full-queue drops. The network writer handles policy drops silently; full
+queues produce at most one concise WARN per 30 seconds for each standard session/direction.
+Inbound full queues use the same rate limit. Expected rejection warnings omit stack traces, while
+unexpected failures retain normal error reporting. Direct queue calls retain their exception
+contracts. Never use replaceable/best-effort for purchases or final
 match results.
 
-Responses with no delivery metadata use implicit NORMAL priority and retain their allocation-free
+Responses with no delivery metadata use implicit NORMAL priority for non-UDP packets; UDP still
+uses the 75% cutoff. Both retain their allocation-free
 basic queue path. The first explicitly
 annotated packet activates enhanced queue bookkeeping and a default 1 MiB serialized-payload byte
 bound. Packet count limits and existing queue policies remain effective. Customize per session:

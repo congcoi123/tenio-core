@@ -225,4 +225,122 @@ class DeliveryPolicyTest {
     assertEquals(DeliveryOptions.Priority.HIGH, copy.getDeliveryOptions().priority());
     assertEquals(original.getDeliveryDeadlineNanos(), copy.getDeliveryDeadlineNanos());
   }
+
+  @Test
+  void udpLeavesReservedHeadroomForTcpWithoutEvictingOrReorderingQueuedPackets() {
+    var q = queue(100);
+    var original = new java.util.ArrayList<Packet>();
+    for (int i = 0; i < 75; i++) {
+      var entry = packet(1, null);
+      entry.setTransportType(com.tenio.core.network.define.TransportType.UDP);
+      original.add(entry);
+      q.put(entry);
+    }
+    var udp = packet(1, null);
+    udp.setTransportType(com.tenio.core.network.define.TransportType.UDP);
+    assertThrows(com.tenio.core.exception.OutboundQueuePolicyViolationException.class, () -> q.put(udp));
+    assertEquals(75, q.getSize());
+    assertEquals(1, q.statistics().policyDrops());
+    for (int i = 75; i < 100; i++) {
+      var entry = packet(1, i < 90 ? null : DeliveryOptions.important());
+      entry.setTransportType(com.tenio.core.network.define.TransportType.TCP);
+      original.add(entry);
+      q.put(entry);
+    }
+    assertEquals(100, q.getSize());
+    assertThrows(OutboundQueueFullException.class, () -> q.put(udp));
+    assertEquals(1, q.statistics().policyDrops());
+    assertEquals(1, q.statistics().fullDrops());
+    for (var entry : original) {
+      assertSame(entry, q.take());
+    }
+    assertEquals(0, q.getSize());
+  }
+
+  @Test
+  void rejectedLowPriorityUdpReplacementRestoresItsOriginalPositionAndByteAccounting() {
+    var q = queue(100);
+    var original = new java.util.ArrayList<Packet>();
+    for (int i = 0; i < 76; i++) {
+      var entry = packet(1, i == 1 ? DeliveryOptions.replaceable("position", Duration.ZERO) : null);
+      entry.setTransportType(i == 1 ? com.tenio.core.network.define.TransportType.UDP
+          : com.tenio.core.network.define.TransportType.TCP);
+      original.add(entry);
+      q.put(entry);
+    }
+    var replacement = packet(2, DeliveryOptions.replaceable("position", Duration.ZERO)
+        .withPriority(DeliveryOptions.Priority.LOW));
+    replacement.setTransportType(com.tenio.core.network.define.TransportType.UDP);
+    assertThrows(com.tenio.core.exception.OutboundQueuePolicyViolationException.class,
+        () -> q.putWithDelivery(replacement));
+    assertEquals(76, q.getSize());
+    assertEquals(76, q.deliveryStatistics().queuedBytes());
+    assertEquals(0, q.deliveryStatistics().replaced());
+    assertEquals(1, q.statistics().policyDrops());
+    for (var entry : original) {
+      assertSame(entry, q.take());
+    }
+  }
+
+  @Test
+  void nonGrowingUdpReplacementAtTheCutoffDoesNotConsumeReservedSlots() {
+    var q = queue(100);
+    for (int i = 0; i < 75; i++) {
+      var entry = packet(1, i == 0 ? DeliveryOptions.replaceable("position", Duration.ZERO) : null);
+      entry.setTransportType(i == 0 ? com.tenio.core.network.define.TransportType.UDP
+          : com.tenio.core.network.define.TransportType.TCP);
+      q.put(entry);
+    }
+    var replacement = packet(2, DeliveryOptions.replaceable("position", Duration.ZERO));
+    replacement.setTransportType(com.tenio.core.network.define.TransportType.UDP);
+    q.put(replacement);
+    assertEquals(75, q.getSize());
+    assertEquals(1, q.deliveryStatistics().replaced());
+    for (int i = 1; i < 75; i++) {
+      assertTrue(q.take().isTcp());
+    }
+    assertSame(replacement, q.take());
+  }
+
+  @Test
+  void aCustomPolicyCanChooseDifferentUdpAdmissionButCannotExceedQueueCapacity() {
+    var q = queue(4);
+    q.configureOutboundQueuePolicy((queue, packet) -> {});
+    for (int i = 0; i < 4; i++) {
+      var udp = packet(1, null);
+      udp.setTransportType(com.tenio.core.network.define.TransportType.UDP);
+      q.put(udp);
+    }
+    var extra = packet(1, null);
+    extra.setTransportType(com.tenio.core.network.define.TransportType.UDP);
+    assertThrows(OutboundQueueFullException.class, () -> q.put(extra));
+  }
+
+  @Test
+  void explicitNormalAndHighUdpPrioritiesOverrideTheLowTransportDefault() {
+    var q = queue(20);
+    for (int i = 0; i < 16; i++) {
+      var tcp = packet(1, null);
+      tcp.setTransportType(com.tenio.core.network.define.TransportType.TCP);
+      q.put(tcp);
+    }
+    var normal = packet(1, DeliveryOptions.replaceable("udp-state", Duration.ZERO));
+    normal.setTransportType(com.tenio.core.network.define.TransportType.UDP);
+    q.put(normal);
+    var high = packet(1, DeliveryOptions.important());
+    high.setTransportType(com.tenio.core.network.define.TransportType.UDP);
+    q.put(high);
+    assertEquals(18, q.getSize());
+    var moreNormal = packet(1, DeliveryOptions.replaceable("another-state", Duration.ZERO));
+    moreNormal.setTransportType(com.tenio.core.network.define.TransportType.UDP);
+    assertThrows(com.tenio.core.exception.OutboundQueuePolicyViolationException.class,
+        () -> q.put(moreNormal));
+    for (int i = 0; i < 2; i++) {
+      var moreHigh = packet(1, DeliveryOptions.important());
+      moreHigh.setTransportType(com.tenio.core.network.define.TransportType.UDP);
+      q.put(moreHigh);
+    }
+    assertEquals(20, q.getSize());
+    assertThrows(OutboundQueueFullException.class, () -> q.put(high));
+  }
 }

@@ -222,7 +222,7 @@ public interface Session {
   /**
    * Sets the threshold for warning of slow consuming inbound queue.
    *
-   * @param threshold the {@code integer} value of threshold
+   * @param threshold queued message count that triggers a warning; non-positive disables warnings
    * @since 0.7.0
    */
   void configureSlowConsumingInboundQueueWarningThreshold(int threshold);
@@ -230,7 +230,7 @@ public interface Session {
   /**
    * Sets the threshold for warning of slow consuming outbound queue.
    *
-   * @param threshold the {@code integer} value of threshold
+   * @param threshold queued message count that triggers a warning; non-positive disables warnings
    * @since 0.7.0
    */
   void configureSlowConsumingOutboundQueueWarningThreshold(int threshold);
@@ -259,6 +259,36 @@ public interface Session {
    * @since 0.7.0
    */
   int getRemainingSlowConsumingOutboundQueue();
+
+  /**
+   * Returns the outbound backlog when a slow-queue warning is due, consuming that warning slot.
+   * Call only when the writer's WARN logging is enabled. The standard session warns on the first
+   * observed backlog at or above its threshold, then at most once every 30 seconds while it stays
+   * congested. An observation below the threshold rearms the next warning immediately.
+   *
+   * <p>The default delegates to the backlog getter for custom sessions. Override this method to
+   * provide warning suppression without changing the getter's diagnostic behavior.
+   *
+   * @return the queued message count when a warning is due, otherwise {@code 0}
+   */
+  default int pollSlowConsumingOutboundQueueWarning() {
+    return getRemainingSlowConsumingOutboundQueue();
+  }
+
+  /**
+   * Reserves an outbound full-queue warning slot. Call only after a capacity rejection and when
+   * WARN logging is enabled. The standard session permits the first warning immediately, then at
+   * most one per 30 seconds, independently of inbound capacity and slow-queue warnings.
+   *
+   * <p>Custom sessions should override this method to rate-limit their own full-queue reporting;
+   * the default allows the writer to report capacity failures.
+   *
+   * @return {@code true} when the writer should log this full-queue warning
+   */
+  default boolean pollOutboundQueueFullWarning() {
+    return true;
+  }
+
 
   /**
    * Retrieves the transportation type of session.

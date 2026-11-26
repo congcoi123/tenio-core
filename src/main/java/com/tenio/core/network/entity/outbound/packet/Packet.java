@@ -239,7 +239,8 @@ public interface Packet {
     Packet deepCopy();
 
     /**
-     * @return delivery settings, or null for implicit NORMAL priority without expiry or replacement
+     * @return delivery settings, or null for no expiry/replacement and implicit LOW priority for
+     *         UDP or NORMAL for other transports under the default queue policy
      */
     DeliveryOptions getDeliveryOptions();
 

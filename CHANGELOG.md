@@ -222,3 +222,19 @@ and replicated state. No existing Zero/MessagePack type codes or application ope
 ### Room discovery publication fix
 - Guard the previous summary before comparing groups so publishing a room for the first time does not throw NullPointerException.
 - Add regressions for first publication, unchanged summaries, updates at capacity, and ordered removal/addition when changing groups.
+
+### Slow queue warning suppression
+- Warn once on the first observed inbound/outbound backlog at the configured threshold, then at most every 30 seconds during sustained congestion, independently for each session and direction. Observing recovery below the threshold rearms the next warning.
+- Disable warning gates for non-positive thresholds; skip clocks and warning formatting while WARN logging is disabled. Keep outbound backlog inspection independent of warning suppression and preserve queue admission/drop behavior.
+- Add deterministic timing, concurrent admission and logging regressions for both queue directions.
+
+### UDP outbound congestion admission
+- Default UDP without delivery options to LOW priority in DefaultOutboundQueuePolicy; reject it at 75% or greater queue occupancy to retain headroom for TCP. Respect explicit DeliveryOptions.priority() overrides, including NORMAL/HIGH for UDP. Preserve FIFO order, existing queued packets, non-UDP priority thresholds and hard queue bounds.
+- Keep congestion policy-drop accounting distinct from full-capacity drops; custom policies remain authoritative and direct Netty WebSocket output still bypasses the shared queue.
+- Add UDP boundary, explicit-priority, mixed-transport, replacement rollback and writer accounting regressions; update API docs and guides.
+
+### Queue rejection logging
+- Keep UDP congestion-policy drops silent at the network writer while preserving counters. Report inbound/outbound full queues with independent per-session WARN gates: first rejection immediately, then at most every 30 seconds, without expected-exception stack traces.
+- Allocate full-queue warning state only on the first WARN-enabled rejection; keep it independent of slow-queue thresholds and retain normal reporting for unexpected failures.
+- Preserve direct queue exception contracts and separate policy/full-drop accounting, including best-effort capacity drops.
+- Apply the same full-capacity warning gate to direct WebSocket drops when Netty marks the channel non-writable.

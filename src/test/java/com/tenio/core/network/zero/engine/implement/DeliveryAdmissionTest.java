@@ -89,4 +89,37 @@ class DeliveryAdmissionTest {
     verify(stats).updateWrittenDroppedPacketsByPolicy(1);
     verify(stats, never()).updateWrittenDroppedPacketsByFull(anyInt());
   }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+  void udpDefaultAndExplicitLowCongestionRejectionsReachPolicyDropTotals(boolean explicitOptions)
+      throws Exception {
+    var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
+    var stats = mock(NetworkWriterStatistic.class);
+    writer.setNetworkWriterStatistic(stats);
+    var queue = OutboundQueueImpl.newInstance();
+    queue.configureMaxSize(4);
+    queue.configureOutboundQueuePolicy(new DefaultOutboundQueuePolicy());
+    queue.enableMonitoring(null, 1, "TCP");
+    for (int i = 0; i < 3; i++) {
+      queue.put(PacketImpl.newInstance());
+    }
+    var session = mock(Session.class);
+    when(session.isActivated()).thenReturn(true);
+    when(session.fetchOutboundQueue()).thenReturn(queue);
+    var udp = PacketImpl.newInstance();
+    udp.setTransportType(com.tenio.core.network.define.TransportType.UDP);
+    if (explicitOptions) {
+      udp.setDeliveryOptions(DeliveryOptions.important().withPriority(DeliveryOptions.Priority.LOW));
+    }
+    var method = ZeroWriterImpl.class.getDeclaredMethod("enqueuePacket", Session.class, Packet.class);
+    method.setAccessible(true);
+    method.invoke(writer, session, udp);
+    assertEquals(3, queue.getSize());
+    assertEquals(1, queue.statistics().policyDrops());
+    assertEquals(0, queue.statistics().fullDrops());
+    verify(session).addDroppedPackets(1);
+    verify(stats).updateWrittenDroppedPacketsByPolicy(1);
+    verify(stats, never()).updateWrittenDroppedPacketsByFull(anyInt());
+  }
 }

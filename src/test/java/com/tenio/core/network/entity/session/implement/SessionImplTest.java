@@ -931,7 +931,7 @@ class SessionImplTest {
     session.configureSlowConsumingInboundQueueWarningThreshold(1);
     session.configureMaxInboundQueueSize(0);
     DataCollection msg = mock(DataCollection.class);
-    // Add 3 items so that on the 3rd call remaining=2 > threshold=1, triggering the warn
+    // The second call reaches the threshold; the third warning is suppressed.
     session.enqueueInbound(msg);
     session.enqueueInbound(msg);
     assertDoesNotThrow(() -> session.enqueueInbound(msg));

@@ -86,8 +86,9 @@ public class SessionImpl extends AbstractLogger implements Session {
 
   private int maxInboundQueueSize;
   private AtomicLong inboundFullRejections;
-  private int slowConsumingInboundQueueWarningThreshold;
-  private int slowConsumingOutboundQueueWarningThreshold;
+  private SlowQueueWarning inboundQueueWarning;
+  private SlowQueueWarning outboundQueueWarning;
+  private volatile FullQueueWarnings fullQueueWarnings;
   private OutboundQueue outboundQueue;
   private ProcessedPacket processedPacket;
   private volatile PendingPacket pendingPacket;
@@ -244,8 +245,9 @@ public class SessionImpl extends AbstractLogger implements Session {
   public void enqueueInbound(DataCollection message) {
     synchronized (inboundQueue) {
       int remaining = inboundQueueCount.intValue();
-      if (slowConsumingInboundQueueWarningThreshold > 0 && isWarnEnabled()) {
-        if (remaining > slowConsumingInboundQueueWarningThreshold) {
+      var warning = inboundQueueWarning;
+      if (warning != null && isWarnEnabled()) {
+        if (warning.shouldWarn(remaining)) {
           warn("[Slow Consuming Inbound Queue] Remaining: ", remaining, " > ", this);
         }
       }
@@ -253,11 +255,11 @@ public class SessionImpl extends AbstractLogger implements Session {
         if (inboundFullRejections != null) {
           inboundFullRejections.incrementAndGet();
         }
-        var exception = new InboundQueueFullException(remaining);
-        if (isErrorEnabled()) {
-          error(exception, exception.getMessage(), " > ", this);
+        if (isWarnEnabled() && fullQueueWarnings().inbound.shouldWarn(1)) {
+          warn("[Inbound Queue Full] Rejected message; depth: ", remaining,
+              ", capacity: ", maxInboundQueueSize, ", sessionId: ", id);
         }
-        throw exception;
+        throw new InboundQueueFullException(remaining);
       }
       inboundQueue.add(message);
       inboundQueueCount.incrementAndGet();
@@ -283,12 +285,12 @@ public class SessionImpl extends AbstractLogger implements Session {
 
   @Override
   public void configureSlowConsumingInboundQueueWarningThreshold(int threshold) {
-    slowConsumingInboundQueueWarningThreshold = threshold;
+    inboundQueueWarning = threshold > 0 ? new SlowQueueWarning(threshold) : null;
   }
 
   @Override
   public void configureSlowConsumingOutboundQueueWarningThreshold(int threshold) {
-    slowConsumingOutboundQueueWarningThreshold = threshold;
+    outboundQueueWarning = threshold > 0 ? new SlowQueueWarning(threshold) : null;
   }
 
   @Override
@@ -303,11 +305,56 @@ public class SessionImpl extends AbstractLogger implements Session {
 
   @Override
   public int getRemainingSlowConsumingOutboundQueue() {
-    if (slowConsumingOutboundQueueWarningThreshold <= 0) {
+    var warning = outboundQueueWarning;
+    if (warning == null) {
       return 0;
     }
     int remaining = outboundQueue.getSnapshotSize();
-    return remaining >= slowConsumingOutboundQueueWarningThreshold ? remaining : 0;
+    return remaining >= warning.threshold() ? remaining : 0;
+  }
+
+  @Override
+  public int pollSlowConsumingOutboundQueueWarning() {
+    var warning = outboundQueueWarning;
+    if (warning == null) {
+      return 0;
+    }
+    int remaining = outboundQueue.getSnapshotSize();
+    return warning.shouldWarn(remaining) ? remaining : 0;
+  }
+
+  @Override
+  public boolean pollOutboundQueueFullWarning() {
+    return fullQueueWarnings().outbound.shouldWarn(1);
+  }
+
+  private FullQueueWarnings fullQueueWarnings() {
+    var warnings = fullQueueWarnings;
+    if (warnings == null) {
+      synchronized (inboundQueue) {
+        warnings = fullQueueWarnings;
+        if (warnings == null) {
+          warnings = new FullQueueWarnings();
+          fullQueueWarnings = warnings;
+        }
+      }
+    }
+    return warnings;
+  }
+
+  /** Full-queue warning gates are allocated only after the first WARN-enabled rejection. */
+  static final class FullQueueWarnings {
+    private final SlowQueueWarning inbound;
+    private final SlowQueueWarning outbound;
+
+    FullQueueWarnings() {
+      this(System::nanoTime);
+    }
+
+    FullQueueWarnings(java.util.function.LongSupplier clock) {
+      inbound = new SlowQueueWarning(1, clock);
+      outbound = new SlowQueueWarning(1, clock);
+    }
   }
 
   @Override

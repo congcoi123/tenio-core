@@ -95,7 +95,7 @@ selected explicitly on `InitialRoomSetting.Builder` and are created per room ins
 | Interface | Built-in behavior when no override is supplied | How to change it |
 | --- | --- | --- |
 | `ConnectionFilter` | `DefaultConnectionFilter` rejects banned IPs and connections above `max-connections-per-ip`. The configured limit is applied at startup. | Register a filter bean implementing the complete admission/counting/ban contract. |
-| `OutboundQueuePolicy` | `DefaultOutboundQueuePolicy` reads `DeliveryOptions.priority()`: reject a full queue, reject `LOW` at 75% occupancy and `NORMAL` at 90%; `HIGH` remains eligible until full. Missing options mean `NORMAL`. Priority does not reorder packets or promise delivery. | Register a policy bean using delivery settings; hard packet/byte bounds still apply. |
+| `OutboundQueuePolicy` | `DefaultOutboundQueuePolicy` uses `LOW` for UDP without delivery options and `NORMAL` for other transports. Explicit `DeliveryOptions.priority()` overrides the transport default: reject `LOW` at 75% and `NORMAL` at 90%; `HIGH` remains eligible until full. Priority does not reorder packets or promise delivery. | Register a policy bean using delivery settings; hard packet/byte bounds still apply. |
 | `DatagramPacketPolicy` | `DefaultDatagramPacketPolicy`: `ZeroMap`/`MsgPackMap` use integer `u` (convey ID) and nested `d` (payload). `ZeroArray` takes its last integer as convey ID and removes that element from the payload. Missing/unsupported content is not routed as a player command. | Register a policy bean matching your client's UDP envelope. It does not extract application command codes. |
 | `RequestPolicy` | No extra preprocessing of queued connection/UDP-access requests. This is not the gameplay command router. | Register a policy bean to preprocess those requests. |
 | `BinaryPacketCompressor` | No application compressor is installed. | Register a compressor bean and implement the matching client codec. |
@@ -127,7 +127,7 @@ TenIO implementations can override them; an unavailable diagnostic is not the sa
 | `Room` | Short `addPlayer` overloads delegate without a password, with the default slot and participant role; short spectator promotion uses the default slot. `clear()` throws unless implemented. | Override only to customize those defaults; implement cleanup for a custom room. |
 | `RoomManager` | Ownerless creation delegates with `null` owner. `clear()` and discovery enablement throw unless supported; `getDirectory()` returns `null`. `refreshDiscovery(room)` refreshes an existing directory, otherwise does nothing. | Custom managers must implement discovery/cleanup. Publish rooms explicitly; direct room mutations require refresh. |
 | `ChannelManager` | `createChannel(id)` delegates with `null` properties. | Supply properties through the full overload. |
-| `Session` | `close()` uses `EXCEPTION` for connection and player reasons. Inbound monitoring enablement is a no-op; statistics return `null`. | Use explicit close reasons; custom sessions implement diagnostics if offered. `SessionImpl` supports monitor-gated diagnostics. |
+| `Session` | `close()` uses `EXCEPTION` for connection and player reasons. Inbound monitoring enablement is a no-op; statistics return `null`. `pollSlowConsumingOutboundQueueWarning()` delegates to the backlog getter; `pollOutboundQueueFullWarning()` permits reporting a capacity rejection. | Use explicit close reasons; custom sessions implement diagnostics and warning suppression if offered. `SessionImpl` supports monitor-gated diagnostics and per-session warning suppression. |
 | `SessionManager` | `getOperationalHistory()` returns `null`. | Custom managers return their configured recorder; callers handle absence. |
 | `Response` | Delivery options default to `null`; setting them throws unless supported. | `ResponseImpl` supports `DeliveryOptions`; custom responses must implement them to offer this feature. |
 | `Packet` | Delivery options default to `null`, deadline to `0` (none); setting non-null options throws unless supported. | `PacketImpl` implements optional delivery metadata. |
@@ -228,6 +228,29 @@ mutation context as gameplay. Without a registered policy, the existing login/re
 See **Authenticated recovery** in the [framework services guide](./docs/framework-services.md) for strategies,
 token lifetime, ordering and failure handling.
 
+### Slow queue warnings
+
+`slow-consuming-warning-session-request-threshold` controls inbound backlog warnings;
+`slow-consuming-warning-session-response-threshold` controls outbound backlog warnings.
+A non-positive value disables that direction's warnings. These settings are independent of
+`monitor` and take effect only when the relevant logger permits WARN messages.
+
+The standard session warns when an enqueue attempt first observes a backlog at or above the
+threshold. During sustained congestion, reminders are limited to one per 30 seconds for each
+session and direction. A later enqueue observation below the threshold rearms the next warning.
+The inbound observation occurs before admitting the new message, as does the outbound check.
+Warnings describe backlog rather than measuring client speed directly, and do not change queue
+capacity, drop policies or message processing. No warning timer or scheduled task is created.
+
+Full-queue rejections have separate WARN messages: `[Inbound Queue Full]` and
+`[Outbound Queue Full]`. The standard session logs the first capacity rejection immediately and
+limits further full-queue warnings to one per 30 seconds for each session and direction, even
+when slow-queue thresholds are disabled. These messages omit exception stack traces. Their warning
+state is allocated lazily on the first WARN-enabled capacity rejection. WebSocket writes rejected
+by Netty's non-writable channel check use the same outbound warning gate. UDP congestion-policy
+rejections are silent at the writer and remain counted as policy drops; capacity rejections remain
+counted as full drops. Unexpected failures retain their existing error reporting.
+
 ## Rooms and shared state
 
 ### Public room discovery
@@ -290,11 +313,33 @@ var options = DeliveryOptions.replaceable("position:" + entityId, Duration.ofMil
 response().setContent(position).setRecipientPlayer(player).delivery(options).write();
 ```
 
-Priority affects congestion admission, never send order. The default policy rejects `LOW` at 75%
-and `NORMAL` at 90% occupancy; `HIGH` never bypasses full queues or byte limits. Custom policies can
-reject any priority. Policy rejections remain explicit even for best-effort messages; capacity
+Priority affects congestion admission, never send order. Without delivery options, the default
+policy treats UDP as `LOW` and rejects it at 75% or greater current packet occupancy, retaining
+queue headroom for TCP. Explicit `DeliveryOptions.priority()` overrides that transport default.
+Queued packets retain FIFO order and are not evicted by congestion admission.
+
+For example, `.delivery(DeliveryOptions.important())` explicitly selects HIGH, including for UDP.
+Use `.withPriority(DeliveryOptions.Priority.NORMAL)` to select NORMAL instead.
+
+| Delivery configuration | Effective priority | Rejected at current queue occupancy |
+| --- | --- | --- |
+| UDP without delivery options | LOW | 75% |
+| Other transports without delivery options | NORMAL | 90% |
+| Any transport with explicit LOW | LOW | 75% |
+| Any transport with explicit NORMAL | NORMAL | 90% |
+| Any transport with explicit HIGH | HIGH | Full queue |
+
+Full packet queues and configured byte limits still reject admission for every transport and
+priority. These checks use current occupancy before adding the packet; a non-growing replacement
+is evaluated after temporarily removing its previous unclaimed packet. Policy rejections count
+as policy drops; full-capacity rejections count separately. Current direct Netty WebSocket writes
+bypass these queue rules. Custom policies can reject any priority or define different UDP rules.
+Direct queue calls still signal policy/full rejection through their documented exceptions; the
+network writer handles expected rejections without logging exception stack traces. Policy drops
+are silent; full drops receive the rate-limited WARN described above. Capacity
 failures return a dropped admission result for best-effort. Responses without options retain
-implicit `NORMAL` priority and do not allocate delivery options or enhanced queue state.
+implicit `NORMAL` priority for non-UDP packets and `LOW` for UDP. They do not allocate
+delivery options or enhanced queue state.
 
 These modes govern queue admission, not end-to-end acknowledgement or durable storage. Writer-claimed
 packets cannot be replaced. The current direct Netty WebSocket output bypasses these queue semantics.

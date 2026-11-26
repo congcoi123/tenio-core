@@ -341,6 +341,10 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
         if (!channel.isWritable()) {
           session.addDroppedPackets(1);
           networkWriterStatistic.updateWrittenDroppedPacketsByFull(1);
+          if (isWarnEnabled() && session.pollOutboundQueueFullWarning()) {
+            warn("[Outbound Queue Full] Rejected WebSocket packet; channel is not writable; "
+                + "sessionId: ", session.getId());
+          }
           continue;
         }
         if (encodedData == null) {

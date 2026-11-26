@@ -31,8 +31,10 @@ import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 
 /**
- * The default congestion admission policy. Missing delivery settings use NORMAL priority.
- * Priority never reorders packets or bypasses a full queue.
+ * The default congestion admission policy. Without delivery options, UDP uses LOW priority
+ * and other transports use NORMAL. Explicit delivery priority overrides these defaults.
+ * Priority never reorders queued packets,
+ * evicts existing UDP packets or bypasses a full queue.
  *
  * @see OutboundQueuePolicy
  */
@@ -52,7 +54,9 @@ public class DefaultOutboundQueuePolicy implements OutboundQueuePolicy {
       return;
     }
     var options = packet.getDeliveryOptions();
-    var priority = options == null ? DeliveryOptions.Priority.NORMAL : options.priority();
+    var priority = options == null
+        ? (packet.isUdp() ? DeliveryOptions.Priority.LOW : DeliveryOptions.Priority.NORMAL)
+        : options.priority();
     if ((priority == DeliveryOptions.Priority.LOW && percentageUsed >= THREE_QUARTERS_FULL)
         || (priority == DeliveryOptions.Priority.NORMAL && percentageUsed >= NINETY_PERCENT_FULL)) {
       throw new OutboundQueuePolicyViolationException(packet, percentageUsed);

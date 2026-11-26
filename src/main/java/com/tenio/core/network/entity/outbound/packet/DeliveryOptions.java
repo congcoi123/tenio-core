@@ -34,6 +34,8 @@ import java.util.Objects;
  * messages preserve FIFO order and cannot expire or replace another message. All modes remain
  * subject to packet/byte capacity and the configured outbound queue policy. Responses with no
  * options use NORMAL priority without allocating this record or enhanced queue bookkeeping.
+ * Without delivery options the default queue policy treats UDP as LOW; explicit priority
+ * overrides that transport default.
  *
  * @param mode admission and replacement behavior
  * @param priority congestion admission priority; never changes FIFO order
@@ -53,7 +55,8 @@ public record DeliveryOptions(Mode mode, Priority priority, String key, Duration
   }
 
   /**
-   * Congestion admission levels used by DefaultOutboundQueuePolicy. Custom policies may define
+   * Congestion admission levels used by DefaultOutboundQueuePolicy. Missing delivery options
+   * mean LOW for UDP and NORMAL for other transports. Custom policies may define
    * their own admission rules; these levels never bypass hard queue bounds or reorder packets.
    */
   public enum Priority {
@@ -126,7 +129,9 @@ public record DeliveryOptions(Mode mode, Priority priority, String key, Duration
 
   /**
    * Selects a congestion priority without changing mode, replacement key or lifetime. A custom
-   * policy still has the final admission decision. Lowering an important message's priority can
+   * policy still has the final admission decision. Explicit priority overrides the default LOW
+   * admission priority for UDP.
+   * Lowering an important message's priority can
    * make it subject to default congestion rejection before the queue is full.
    *
    * @param value non-null congestion admission priority
