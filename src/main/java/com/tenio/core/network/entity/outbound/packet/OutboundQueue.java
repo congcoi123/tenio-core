@@ -57,203 +57,213 @@ import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
  */
 public interface OutboundQueue {
 
-  /**
-   * Retrieves the last-in packet in the queue.
-   *
-   * @return the last-in {@link Packet} in the queue
-   */
-  Packet peek();
+    /**
+     * Retrieves the last-in packet in the queue.
+     *
+     * @return the last-in {@link Packet} in the queue
+     */
+    Packet peek();
 
-  /**
-   * Retrieves the last-in packet in the queue and removes it as well.
-   *
-   * @return the last-in {@link Packet} in the queue
-   */
-  Packet take();
+    /**
+     * Retrieves the last-in packet in the queue and removes it as well.
+     *
+     * @return the last-in {@link Packet} in the queue
+     */
+    Packet take();
 
-  /**
-   * Determines whether the queue is empty (approximately correct).
-   *
-   * @return {@code true} if the queue is approximated to be empty, otherwise returns {@code false}
-   * @since 0.7.3
-   */
-  boolean isSnapshotEmpty();
+    /**
+     * Determines whether the queue is empty (approximately correct).
+     *
+     * @return {@code true} if the queue is approximated to be empty, otherwise returns {@code false}
+     * @since 0.7.3
+     */
+    boolean isSnapshotEmpty();
 
-  /**
-   * Determines whether the queue is empty.
-   * This method is costly, use with caution.
-   *
-   * @return {@code true} if the queue is empty, otherwise returns {@code false}
-   * @since 0.7.3
-   */
-  boolean isEmpty();
+    /**
+     * Determines whether the queue is empty.
+     * This method is costly, use with caution.
+     *
+     * @return {@code true} if the queue is empty, otherwise returns {@code false}
+     * @since 0.7.3
+     */
+    boolean isEmpty();
 
-  /**
-   * Determines whether the queue is full (approximately correct).
-   *
-   * @return {@code true} if the queue is approximated to be full, otherwise returns {@code false}
-   * @since 0.7.3
-   */
-  boolean isSnapshotFull();
+    /**
+     * Determines whether the queue is full (approximately correct).
+     *
+     * @return {@code true} if the queue is approximated to be full, otherwise returns {@code false}
+     * @since 0.7.3
+     */
+    boolean isSnapshotFull();
 
-  /**
-   * Determines whether the queue is full.
-   * This method is costly, use with caution.
-   *
-   * @return {@code true} if the queue is full, otherwise returns {@code false}
-   * @since 0.7.3
-   */
-  boolean isFull();
+    /**
+     * Determines whether the queue is full.
+     * This method is costly, use with caution.
+     *
+     * @return {@code true} if the queue is full, otherwise returns {@code false}
+     * @since 0.7.3
+     */
+    boolean isFull();
 
-  /**
-   * Retrieves the most recent update of the current size of queue.
-   *
-   * @return the most recent update of the current {@code integer} size of queue
-   * @since 0.7.3
-   */
-  int getSnapshotSize();
+    /**
+     * Retrieves the most recent update of the current size of queue.
+     *
+     * @return the most recent update of the current {@code integer} size of queue
+     * @since 0.7.3
+     */
+    int getSnapshotSize();
 
-  /**
-   * Retrieves the current size of queue.
-   * This method is costly, use with caution.
-   *
-   * @return the current {@code integer} size of queue
-   * @since 0.7.3
-   */
-  int getSize();
+    /**
+     * Retrieves the current size of queue.
+     * This method is costly, use with caution.
+     *
+     * @return the current {@code integer} size of queue
+     * @since 0.7.3
+     */
+    int getSize();
 
-  /**
-   * Sets the maximum allowed size of queue.
-   *
-   * @param maxSize the maximum {@code integer} allowed size of queue
-   */
-  void configureMaxSize(int maxSize);
+    /**
+     * Sets the maximum allowed size of queue.
+     *
+     * @param maxSize the maximum {@code integer} allowed size of queue
+     */
+    void configureMaxSize(int maxSize);
 
-  /**
-   * Enables queue diagnostics and optionally records queue pressure events.
-   * Call this method before making the session available to other threads.
-   *
-   * @param history the operational history recorder, or {@code null} to skip history recording
-   * @param id the session ID associated with recorded events
-   * @param transport the transport name associated with recorded events
-   * @see #enableMonitoring(boolean, OperationalHistory, long, String)
-   */
-  default void enableMonitoring(OperationalHistory history, long id, String transport) {
-    enableMonitoring(true, history, id, transport);
-  }
+    /**
+     * Enables queue diagnostics and optionally records queue pressure events.
+     * Call this method before making the session available to other threads.
+     *
+     * @param history   the operational history recorder, or {@code null} to skip history recording
+     * @param id        the session ID associated with recorded events
+     * @param transport the transport name associated with recorded events
+     * @see #enableMonitoring(boolean, OperationalHistory, long, String)
+     */
+    default void enableMonitoring(OperationalHistory history, long id, String transport) {
+        enableMonitoring(true, history, id, transport);
+    }
 
-  /**
-   * Configures queue diagnostics and pressure event recording independently.
-   * Call this method before making the queue available to other threads.
-   *
-   * @param diagnostics whether to track the high-water mark, packet drops, and pressure duration
-   * @param history the operational history recorder, or {@code null} to skip history recording
-   * @param id the session ID associated with recorded events
-   * @param transport the transport name associated with recorded events
-   */
-  void enableMonitoring(boolean diagnostics, OperationalHistory history, long id, String transport);
+    /**
+     * Configures queue diagnostics and pressure event recording independently.
+     * Call this method before making the queue available to other threads.
+     *
+     * @param diagnostics whether to track the high-water mark, packet drops, and pressure duration
+     * @param history     the operational history recorder, or {@code null} to skip history recording
+     * @param id          the session ID associated with recorded events
+     * @param transport   the transport name associated with recorded events
+     */
+    void enableMonitoring(boolean diagnostics, OperationalHistory history, long id, String transport);
 
-  /**
-   * Sets a set of rules for managing packets in queue.
-   *
-   * @param outboundQueuePolicy the implementation of {@link OutboundQueuePolicy} used to manage
-   *                          packets in the queue
-   * @see DefaultOutboundQueuePolicy
-   */
-  void configureOutboundQueuePolicy(OutboundQueuePolicy outboundQueuePolicy);
+    /**
+     * Sets a set of rules for managing packets in queue.
+     *
+     * @param outboundQueuePolicy the implementation of {@link OutboundQueuePolicy} used to manage
+     *                            packets in the queue
+     * @see DefaultOutboundQueuePolicy
+     */
+    void configureOutboundQueuePolicy(OutboundQueuePolicy outboundQueuePolicy);
 
-  /**
-   * Retrieves the current usage of queue.
-   *
-   * @return the current {@code float} usage of queue. Its range is between 0 and 100 percent
-   */
-  float getPercentageUsed();
+    /**
+     * Retrieves the current usage of queue.
+     *
+     * @return the current {@code float} usage of queue. Its range is between 0 and 100 percent
+     */
+    float getPercentageUsed();
 
-  /**
-   * Puts a new packet into queue.
-   *
-   * @param packet an appended {@link Packet}
-   * @throws OutboundQueueFullException            when the queue is full and not be able to hold
-   *                                             more packets
-   * @throws OutboundQueuePolicyViolationException when a new appended packet violates the queue
-   *                                             policies
-   * @see DefaultOutboundQueuePolicy
-   */
-  void put(Packet packet) throws OutboundQueueFullException, OutboundQueuePolicyViolationException;
+    /**
+     * Puts a new packet into queue.
+     *
+     * @param packet an appended {@link Packet}
+     * @throws OutboundQueueFullException            when the queue is full and not be able to hold
+     *                                               more packets
+     * @throws OutboundQueuePolicyViolationException when a new appended packet violates the queue
+     *                                               policies
+     * @see DefaultOutboundQueuePolicy
+     */
+    void put(Packet packet) throws OutboundQueueFullException, OutboundQueuePolicyViolationException;
 
-  /**
-   * Clears all packets from the queue.
-   */
-  void clear();
+    /**
+     * Clears all packets from the queue.
+     */
+    void clear();
 
-  /**
-   * A snapshot of outbound queue occupancy, packet drops, and pressure.
-   *
-   * @param depth the last recorded number of packets in the queue
-   * @param capacity the maximum number of packets the queue can hold, or {@code -1} if unavailable
-   * @param highWater the highest recorded queue depth since diagnostics began, or {@code -1}
-   *     if unavailable
-   * @param fullDrops the number of packets rejected because the queue was full, or {@code -1}
-   *     if unavailable
-   * @param policyDrops the number of packets rejected for violating the outbound queue policy,
-   *     or {@code -1} if unavailable
-   * @param pressureAgeMillis the elapsed time in milliseconds since the current period of queue
-   *     pressure began, or {@code 0} if the queue is below the pressure threshold or pressure
-   *     tracking is unavailable
-   */
-  record Statistics(int depth, int capacity, int highWater, long fullDrops, long policyDrops, long pressureAgeMillis) {}
+    /**
+     * A snapshot of outbound queue occupancy, packet drops, and pressure.
+     *
+     * @param depth             the last recorded number of packets in the queue
+     * @param capacity          the maximum number of packets the queue can hold, or {@code -1} if unavailable
+     * @param highWater         the highest recorded queue depth since diagnostics began, or {@code -1}
+     *                          if unavailable
+     * @param fullDrops         the number of packets rejected because the queue was full, or {@code -1}
+     *                          if unavailable
+     * @param policyDrops       the number of packets rejected for violating the outbound queue policy,
+     *                          or {@code -1} if unavailable
+     * @param pressureAgeMillis the elapsed time in milliseconds since the current period of queue
+     *                          pressure began, or {@code 0} if the queue is below the pressure threshold or pressure
+     *                          tracking is unavailable
+     */
+    record Statistics(int depth, int capacity, int highWater, long fullDrops, long policyDrops, long pressureAgeMillis) {
+    }
 
-  /**
-   * Returns a snapshot of outbound queue statistics.
-   *
-   * <p>The default implementation uses {@link #getSnapshotSize()} for depth, returns {@code -1}
-   * for capacity, high-water mark, and drop counters, and returns {@code 0} for pressure age.
-   *
-   * @return the outbound queue statistics snapshot
-   */
-  default Statistics statistics() {
-    return new Statistics(getSnapshotSize(), -1, -1, -1, -1, 0);
-  }
+    /**
+     * Returns a snapshot of outbound queue statistics.
+     *
+     * <p>The default implementation uses {@link #getSnapshotSize()} for depth, returns {@code -1}
+     * for capacity, high-water mark, and drop counters, and returns {@code 0} for pressure age.
+     *
+     * @return the outbound queue statistics snapshot
+     */
+    default Statistics statistics() {
+        return new Statistics(getSnapshotSize(), -1, -1, -1, -1, 0);
+    }
 
-  /**
-   * Enables a serialized-payload byte bound in addition to the existing packet bound. Configure
-   * before publishing the queue; zero disables the byte bound.
-   *
-   * @param maximumBytes positive bound or zero
-   */
-  default void configureDeliveryByteLimit(long maximumBytes) {
-    throw new UnsupportedOperationException("Delivery byte limits are not supported");
-  }
+    /**
+     * Enables a serialized-payload byte bound in addition to the existing packet bound. Configure
+     * before publishing the queue; zero disables the byte bound.
+     *
+     * @param maximumBytes positive bound or zero
+     */
+    void configureDeliveryByteLimit(long maximumBytes);
 
-  /** Queued bytes and additional policy outcomes; counters are -1 without monitor diagnostics. */
-  record DeliveryStatistics(long queuedBytes, long expired, long replaced, long bestEffortDrops) {}
+    /**
+     * Queued bytes and additional policy outcomes; counters are -1 without monitor diagnostics.
+     */
+    record DeliveryStatistics(long queuedBytes, long expired, long replaced, long bestEffortDrops) {
+    }
 
-  /**
-   * @return enhanced delivery diagnostics, or unavailable values when disabled
-   */
-  default DeliveryStatistics deliveryStatistics() {
-    return new DeliveryStatistics(-1, -1, -1, -1);
-  }
+    /**
+     * @return enhanced delivery diagnostics, or unavailable values when disabled
+     */
+    default DeliveryStatistics deliveryStatistics() {
+        return new DeliveryStatistics(-1, -1, -1, -1);
+    }
 
-  /** Outcome of optional enhanced queue admission. */
-  enum Admission {
-    /** Queued successfully. */
-    ENQUEUED,
-    /** Deadline elapsed before admission. */
-    EXPIRED,
-    /** Best-effort message discarded at the queue capacity bound. */
-    DROPPED
-  }
+    /**
+     * Outcome of optional enhanced queue admission.
+     */
+    enum Admission {
+        /**
+         * Queued successfully.
+         */
+        ENQUEUED,
+        /**
+         * Deadline elapsed before admission.
+         */
+        EXPIRED,
+        /**
+         * Best-effort message discarded at the queue capacity bound.
+         */
+        DROPPED
+    }
 
-  /**
-   * Admits a packet and reports an intentional drop to network/session counters. Alternate queue
-   * implementations retain their existing put() behavior.
-   *
-   * @param packet packet selected for optional enhanced delivery
-   * @return admission outcome
-   */
-  default Admission putWithDelivery(Packet packet) {
-    put(packet);
-    return Admission.ENQUEUED;
-  }
+    /**
+     * Admits a packet and reports an intentional drop to network/session counters. Alternate queue
+     * implementations retain their existing put() behavior.
+     *
+     * @param packet packet selected for optional enhanced delivery
+     * @return admission outcome
+     */
+    default Admission putWithDelivery(Packet packet) {
+        put(packet);
+        return Admission.ENQUEUED;
+    }
 }
