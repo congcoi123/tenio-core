@@ -109,16 +109,20 @@ response().setContent(position).setRecipientPlayer(player)
     .write();
 ```
 
-`DeliveryOptions` holds mode, congestion priority, replacement key and queued lifetime. Factories
-select HIGH for `important()`, NORMAL for `replaceable(key, lifetime)` and LOW for
-`bestEffort(lifetime)`. Use `withPriority(DeliveryOptions.Priority.HIGH)` to override only priority.
-Without delivery options, the default queue policy treats UDP as LOW and other transports as
-NORMAL. Explicit delivery priority overrides either default, including for UDP. LOW is rejected
-at 75% current occupancy, NORMAL at 90%, and HIGH remains eligible until full. Queued UDP is not evicted and FIFO order
-is preserved. This reserves headroom for TCP in the shared session queue. Current direct Netty
-WebSocket writes bypass these queue rules. Priority does not reorder FIFO output, bypass hard packet/byte bounds or override a
-custom OutboundQueuePolicy. Explicitly lowering important-message priority also lowers its admission
-eligibility. None of these settings acknowledges delivery or provides durable storage.
+`DeliveryOptions` holds queued-message mode, replacement key and lifetime. `important()` retains
+FIFO order without expiry or replacement; `replaceable(key, lifetime)` can supersede a matching
+unclaimed update; `bestEffort(lifetime)` allows capacity dropping and optional expiry.
+
+Congestion admission is a separate `OutboundQueuePolicy` responsibility. The default policy
+rejects a full queue and rejects incoming UDP at 75% or greater packet occupancy. TCP remains
+eligible until full. Delivery mode cannot bypass these rules, provide UDP reliability, reorder
+retained FIFO packets or bypass hard packet/byte bounds. Register an application policy bean to
+change admission rules. Current direct Netty WebSocket writes use writability checks rather than
+the shared outbound queue policy.
+
+The priority component, `Priority` enum and `withPriority(...)` API have been removed without
+compatibility adapters. The record constructor is now `DeliveryOptions(mode, key, timeToLive)`.
+Existing mode factory methods keep their signatures; custom admission rules belong in a policy.
 
 BEST_EFFORT drops on capacity admission failure. Queue-policy rejections remain explicit and are
 counted separately from full-queue drops. The network writer handles policy drops silently; full
@@ -128,9 +132,8 @@ unexpected failures retain normal error reporting. Direct queue calls retain the
 contracts. Never use replaceable/best-effort for purchases or final
 match results.
 
-Responses with no delivery metadata use implicit NORMAL priority for non-UDP packets; UDP still
-uses the 75% cutoff. Both retain their allocation-free
-basic queue path. The first explicitly
+Responses with no delivery metadata retain basic FIFO behavior without replacement or expiry,
+subject to the same transport admission policy, and keep the allocation-free basic queue path. The first explicitly
 annotated packet activates enhanced queue bookkeeping and a default 1 MiB serialized-payload byte
 bound. Packet count limits and existing queue policies remain effective. Customize per session:
 

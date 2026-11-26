@@ -28,33 +28,30 @@ import java.time.Duration;
 import java.util.Objects;
 
 /**
- * Immutable pre-write admission, replacement and expiry settings.
+ * Immutable queued-message replacement, expiry and overflow behavior.
  *
- * <p>Priority controls congestion admission, not send order or transport reliability. Important
- * messages preserve FIFO order and cannot expire or replace another message. All modes remain
- * subject to packet/byte capacity and the configured outbound queue policy. Responses with no
- * options use NORMAL priority without allocating this record or enhanced queue bookkeeping.
- * Without delivery options the default queue policy treats UDP as LOW; explicit priority
- * overrides that transport default.
+ * <p>Important messages preserve FIFO order and cannot expire or replace another message.
+ * Congestion admission is controlled separately by the outbound queue policy. Every mode is
+ * subject to packet/byte capacity and that policy, including the default UDP cutoff at 75 percent
+ * occupancy. No mode provides end-to-end acknowledgement or durable storage. Responses with no
+ * options retain basic FIFO behavior without allocating this record or enhanced bookkeeping.
  *
- * @param mode       admission and replacement behavior
- * @param priority   congestion admission priority; never changes FIFO order
+ * @param mode       queued-message replacement, expiry and overflow behavior
  * @param key        application replacement key, required only for REPLACEABLE
  * @param timeToLive maximum queued age, or zero for no deadline; at most one day
  */
-public record DeliveryOptions(Mode mode, Priority priority, String key, Duration timeToLive) {
+public record DeliveryOptions(Mode mode, String key, Duration timeToLive) {
 
-    private static final DeliveryOptions IMPORTANT = new DeliveryOptions(Mode.IMPORTANT, Priority.HIGH, null, Duration.ZERO);
+    private static final DeliveryOptions IMPORTANT = new DeliveryOptions(Mode.IMPORTANT, null, Duration.ZERO);
 
     /**
      * Validates the complete delivery configuration.
      *
-     * @throws NullPointerException     if mode, priority or timeToLive is null
+     * @throws NullPointerException     if mode or timeToLive is null
      * @throws IllegalArgumentException if lifetime, replacement key or mode constraints are invalid
      */
     public DeliveryOptions {
         Objects.requireNonNull(mode);
-        Objects.requireNonNull(priority);
         Objects.requireNonNull(timeToLive);
         if (timeToLive.isNegative()
                 || timeToLive.compareTo(Duration.ofDays(1)) > 0
@@ -66,7 +63,7 @@ public record DeliveryOptions(Mode mode, Priority priority, String key, Duration
     }
 
     /**
-     * Returns shared immutable settings for an important HIGH-priority FIFO message without expiry.
+     * Returns shared immutable settings for an important FIFO message without expiry.
      * Queue capacity and custom admission policies still apply.
      *
      * @return important delivery settings
@@ -76,7 +73,7 @@ public record DeliveryOptions(Mode mode, Priority priority, String key, Duration
     }
 
     /**
-     * Creates a NORMAL-priority update that may supersede an unclaimed update for the same key and
+     * Creates an update that may supersede an unclaimed update for the same key and
      * transport. Superseded content is not delivered; writer-claimed packets cannot be replaced.
      *
      * @param key      non-blank replacement key of at most 128 characters
@@ -86,11 +83,11 @@ public record DeliveryOptions(Mode mode, Priority priority, String key, Duration
      * @throws IllegalArgumentException if key or lifetime is invalid
      */
     public static DeliveryOptions replaceable(String key, Duration lifetime) {
-        return new DeliveryOptions(Mode.REPLACEABLE, Priority.NORMAL, key, lifetime);
+        return new DeliveryOptions(Mode.REPLACEABLE, key, lifetime);
     }
 
     /**
-     * Creates a LOW-priority expendable update with an optional queue lifetime. Capacity failure
+     * Creates an expendable update with an optional queue lifetime. Capacity failure
      * returns a dropped admission result; outbound queue policy rejections remain explicit.
      *
      * @param lifetime maximum queued age; zero disables expiry, maximum one day
@@ -99,27 +96,11 @@ public record DeliveryOptions(Mode mode, Priority priority, String key, Duration
      * @throws IllegalArgumentException if lifetime is negative or exceeds one day
      */
     public static DeliveryOptions bestEffort(Duration lifetime) {
-        return new DeliveryOptions(Mode.BEST_EFFORT, Priority.LOW, null, lifetime);
+        return new DeliveryOptions(Mode.BEST_EFFORT, null, lifetime);
     }
 
     /**
-     * Selects a congestion priority without changing mode, replacement key or lifetime. A custom
-     * policy still has the final admission decision. Explicit priority overrides the default LOW
-     * admission priority for UDP.
-     * Lowering an important message's priority can
-     * make it subject to default congestion rejection before the queue is full.
-     *
-     * @param value non-null congestion admission priority
-     * @return this instance if unchanged, otherwise new immutable settings
-     * @throws NullPointerException if value is null
-     */
-    public DeliveryOptions withPriority(Priority value) {
-        Objects.requireNonNull(value);
-        return priority == value ? this : new DeliveryOptions(mode, value, key, timeToLive);
-    }
-
-    /**
-     * Queue admission categories; none provides end-to-end delivery acknowledgement.
+     * Queued-message behavior categories; all remain subject to the outbound queue policy.
      */
     public enum Mode {
         /**
@@ -134,25 +115,5 @@ public record DeliveryOptions(Mode mode, Priority priority, String key, Duration
          * Drop this packet when bounded queue capacity admission fails.
          */
         BEST_EFFORT
-    }
-
-    /**
-     * Congestion admission levels used by DefaultOutboundQueuePolicy. Missing delivery options
-     * mean LOW for UDP and NORMAL for other transports. Custom policies may define
-     * their own admission rules; these levels never bypass hard queue bounds or reorder packets.
-     */
-    public enum Priority {
-        /**
-         * The default policy rejects admission at 75 percent packet occupancy.
-         */
-        LOW,
-        /**
-         * The default policy rejects admission at 90 percent packet occupancy.
-         */
-        NORMAL,
-        /**
-         * The default policy admits until the queue is full.
-         */
-        HIGH
     }
 }

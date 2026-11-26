@@ -95,7 +95,7 @@ selected explicitly on `InitialRoomSetting.Builder` and are created per room ins
 | Interface | Built-in behavior when no override is supplied | How to change it |
 | --- | --- | --- |
 | `ConnectionFilter` | `DefaultConnectionFilter` rejects banned IPs and connections above `max-connections-per-ip`. The configured limit is applied at startup. | Register a filter bean implementing the complete admission/counting/ban contract. |
-| `OutboundQueuePolicy` | `DefaultOutboundQueuePolicy` uses `LOW` for UDP without delivery options and `NORMAL` for other transports. Explicit `DeliveryOptions.priority()` overrides the transport default: reject `LOW` at 75% and `NORMAL` at 90%; `HIGH` remains eligible until full. Priority does not reorder packets or promise delivery. | Register a policy bean using delivery settings; hard packet/byte bounds still apply. |
+| `OutboundQueuePolicy` | `DefaultOutboundQueuePolicy` rejects a full queue and rejects incoming UDP at 75% packet occupancy. TCP remains eligible until full. Delivery modes do not override admission, reorder queued packets or promise delivery. Current direct Netty WebSocket writes bypass the shared queue. | Register a policy bean to change admission rules; hard packet/byte bounds still apply. |
 | `DatagramPacketPolicy` | `DefaultDatagramPacketPolicy`: `ZeroMap`/`MsgPackMap` use integer `u` (convey ID) and nested `d` (payload). `ZeroArray` takes its last integer as convey ID and removes that element from the payload. Missing/unsupported content is not routed as a player command. | Register a policy bean matching your client's UDP envelope. It does not extract application command codes. |
 | `RequestPolicy` | No extra preprocessing of queued connection/UDP-access requests. This is not the gameplay command router. | Register a policy bean to preprocess those requests. |
 | `BinaryPacketCompressor` | No application compressor is installed. | Register a compressor bean and implement the matching client codec. |
@@ -129,8 +129,8 @@ TenIO implementations can override them; an unavailable diagnostic is not the sa
 | `ChannelManager` | `createChannel(id)` delegates with `null` properties. | Supply properties through the full overload. |
 | `Session` | `close()` uses `EXCEPTION` for connection and player reasons. Inbound monitoring enablement is a no-op; statistics return `null`. `pollSlowConsumingOutboundQueueWarning()` delegates to the backlog getter; `pollOutboundQueueFullWarning()` permits reporting a capacity rejection. | Use explicit close reasons; custom sessions implement diagnostics and warning suppression if offered. `SessionImpl` supports monitor-gated diagnostics and per-session warning suppression. |
 | `SessionManager` | `getOperationalHistory()` returns `null`. | Custom managers return their configured recorder; callers handle absence. |
-| `Response` | Delivery options default to `null`; setting them throws unless supported. | `ResponseImpl` supports `DeliveryOptions`; custom responses must implement them to offer this feature. |
-| `Packet` | Delivery options default to `null`, deadline to `0` (none); setting non-null options throws unless supported. | `PacketImpl` implements optional delivery metadata. |
+| `Response` | Delivery methods have no fallback implementation. `ResponseImpl` starts with no delivery options and basic FIFO behavior. | Custom responses implement `delivery(...)` and `getDeliveryOptions()`; queue policy controls admission independently of mode. |
+| `Packet` | Delivery methods have no fallback implementation. `PacketImpl` starts with no options and deadline `0` (none). | Custom packets implement the delivery metadata contract. |
 | `OutboundQueue` | The short monitoring overload enables diagnostics plus optional history. `statistics()` reports current depth, `-1` for unavailable capacity/high-water/drop counters, and `0` pressure age. Delivery counters default to `-1`; configuring byte limits throws. `putWithDelivery` delegates to legacy `put` and returns `ENQUEUED`. | `OutboundQueueImpl` supplies diagnostics and delivery semantics. Custom queues must override delivery methods to provide replacement/expiry; the fallback does not provide those guarantees. |
 
 ## Client commands
@@ -294,9 +294,9 @@ Responses without delivery options retain their configured queue policy and FIFO
 
 | Delivery mode | Behavior |
 | --- | --- |
-| `DeliveryOptions.important()` | `HIGH` priority; preserve queued order without expiry or replacement. Queue bounds and custom policies still apply. |
-| `DeliveryOptions.replaceable(key, lifetime)` | `NORMAL` priority; replace an unclaimed queued update with the same key and transport, and expire stale updates. |
-| `DeliveryOptions.bestEffort(lifetime)` | `LOW` priority; allow expiry and dropping when queue capacity admission fails. Policy rejection is recorded separately from a full queue. |
+| `DeliveryOptions.important()` | Preserve FIFO order without expiry or replacement; signal capacity rejection. Queue admission policy still applies. |
+| `DeliveryOptions.replaceable(key, lifetime)` | Replace an eligible unclaimed queued update with the same key and transport; optionally expire stale updates. |
+| `DeliveryOptions.bestEffort(lifetime)` | Optionally expire stale updates; discard when capacity admission fails. Policy rejection remains separate from a full-capacity drop. |
 
 ```java
 response().setContent(position).setRecipientPlayer(player)
@@ -304,44 +304,38 @@ response().setContent(position).setRecipientPlayer(player)
     .write();
 ```
 
-`DeliveryOptions` is the single configuration for admission priority, replacement and lifetime.
-Override a factory's priority without changing its mode, key or lifetime:
+`DeliveryOptions` contains only mode, replacement key and queued lifetime. Modes describe what
+happens to queued messages; `OutboundQueuePolicy` independently decides whether to admit a packet.
 
-```java
-var options = DeliveryOptions.replaceable("position:" + entityId, Duration.ofMillis(150))
-    .withPriority(DeliveryOptions.Priority.HIGH);
-response().setContent(position).setRecipientPlayer(player).delivery(options).write();
-```
+| Transport | Default admission rule |
+| --- | --- |
+| UDP | Reject incoming packets when current packet occupancy is at least 75%. |
+| TCP | Remain eligible until the queue is full. |
+| WebSocket | Direct Netty writes use their own writability/backpressure checks. If a WebSocket packet is explicitly passed through the queue policy, it remains eligible until full. |
 
-Priority affects congestion admission, never send order. Without delivery options, the default
-policy treats UDP as `LOW` and rejects it at 75% or greater current packet occupancy, retaining
-queue headroom for TCP. Explicit `DeliveryOptions.priority()` overrides that transport default.
-Queued packets retain FIFO order and are not evicted by congestion admission.
+No mode bypasses the UDP cutoff or hard packet/byte bounds. Even `important()` UDP packets can be
+rejected by the admission policy. Send critical events over the appropriate reliable transport;
+`important()` does not make UDP reliable. To change congestion admission, register an application
+`OutboundQueuePolicy` implementation with `@Component` or `@Bean` in the bootstrap scan path and
+an active profile. A custom policy can inspect the transport and delivery mode when needed.
 
-For example, `.delivery(DeliveryOptions.important())` explicitly selects HIGH, including for UDP.
-Use `.withPriority(DeliveryOptions.Priority.NORMAL)` to select NORMAL instead.
+The cutoff is evaluated against current occupancy before the policy admits a packet. For an
+eligible replacement, the previous unclaimed packet is temporarily removed before policy
+validation; a non-growing update can therefore reuse its slot without consuming reserved headroom.
+If policy validation rejects it, the previous packet and its accounting are restored.
 
-| Delivery configuration | Effective priority | Rejected at current queue occupancy |
-| --- | --- | --- |
-| UDP without delivery options | LOW | 75% |
-| Other transports without delivery options | NORMAL | 90% |
-| Any transport with explicit LOW | LOW | 75% |
-| Any transport with explicit NORMAL | NORMAL | 90% |
-| Any transport with explicit HIGH | HIGH | Full queue |
+Direct queue calls retain their documented rejection exceptions. The network writer handles
+expected policy rejections silently, records policy/full drops separately and rate-limits
+full-capacity warnings as described above. Best-effort capacity failure returns a dropped
+admission result. Responses without options retain basic FIFO behavior with no expiry or
+replacement and allocate neither delivery options nor enhanced queue bookkeeping.
 
-Full packet queues and configured byte limits still reject admission for every transport and
-priority. These checks use current occupancy before adding the packet; a non-growing replacement
-is evaluated after temporarily removing its previous unclaimed packet. Policy rejections count
-as policy drops; full-capacity rejections count separately. Current direct Netty WebSocket writes
-bypass these queue rules. Custom policies can reject any priority or define different UDP rules.
-Direct queue calls still signal policy/full rejection through their documented exceptions; the
-network writer handles expected rejections without logging exception stack traces. Policy drops
-are silent; full drops receive the rate-limited WARN described above. Capacity
-failures return a dropped admission result for best-effort. Responses without options retain
-implicit `NORMAL` priority for non-UDP packets and `LOW` for UDP. They do not allocate
-delivery options or enhanced queue state.
+The `Priority` enum, priority record component and `withPriority(...)` have been removed.
+Existing factory calls remain valid. Direct construction now uses
+`new DeliveryOptions(mode, key, lifetime)`; move any former priority-based admission rules into
+an `OutboundQueuePolicy` implementation.
 
-These modes govern queue admission, not end-to-end acknowledgement or durable storage. Writer-claimed
+These modes govern queued-message behavior, not end-to-end acknowledgement or durable storage. Writer-claimed
 packets cannot be replaced. The current direct Netty WebSocket output bypasses these queue semantics.
 See **Queued delivery** in the [framework services guide](./docs/framework-services.md) for limits and transport support.
 

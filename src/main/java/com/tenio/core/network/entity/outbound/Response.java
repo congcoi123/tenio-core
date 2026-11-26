@@ -137,8 +137,9 @@ public interface Response {
     Response setRecipientSession(Session session);
 
     /**
-     * Sets the higher priority for sending packets via the Datagram channel. In case the session in
-     * use is WebSocket, then this setting should be ignored.
+     * Prefers the Datagram channel when available, otherwise uses the recipient's main transport.
+     * This selects a transport; it does not change congestion admission or queue ordering.
+     * WebSocket recipients continue to use WebSocket.
      *
      * @return the pointer of response
      */
@@ -182,16 +183,17 @@ public interface Response {
     void writeThenClose();
 
     /**
-     * Selects queued-delivery mode, priority and lifetime before write(). Default implementations reject it.
-     * Never use replaceable/best-effort for results or transactions that must be retained.
+     * Selects queued-message mode, replacement key and lifetime before write(). Queue admission is
+     * determined separately by the outbound queue policy. Never use replaceable/best-effort for
+     * results or transactions that must be retained.
      *
-     * @param options explicit application policy
+     * @param options explicit queued-message behavior
      * @return this response
      */
     Response delivery(DeliveryOptions options);
 
     /**
-     * @return delivery settings, or null for implicit NORMAL priority without expiry or replacement
+     * @return queued-message behavior, or null for basic FIFO without expiry or replacement
      */
     DeliveryOptions getDeliveryOptions();
 }

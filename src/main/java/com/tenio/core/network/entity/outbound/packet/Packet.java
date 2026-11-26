@@ -35,12 +35,12 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Represents the smallest unit of data transfer from the server to clients.
  * This class encapsulates network communication data with support for different
- * transport types and priority levels.
+ * transport types and queued-message behavior.
  *
  * <p>Key features:
  * <ul>
  *   <li>Multiple transport type support (TCP, UDP)</li>
- *   <li>Priority-based packet handling</li>
+ *   <li>Transport-based queue admission</li>
  *   <li>Session association</li>
  *   <li>Deep copy capabilities</li>
  *   <li>Last packet marking for connection closure</li>
@@ -239,8 +239,8 @@ public interface Packet {
     Packet deepCopy();
 
     /**
-     * @return delivery settings, or null for no expiry/replacement and implicit LOW priority for
-     * UDP or NORMAL for other transports under the default queue policy
+     * @return queued-message behavior, or null for basic FIFO without expiry or replacement;
+     * congestion admission is determined separately by the outbound queue policy
      */
     DeliveryOptions getDeliveryOptions();
 

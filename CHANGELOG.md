@@ -238,3 +238,9 @@ and replicated state. No existing Zero/MessagePack type codes or application ope
 - Allocate full-queue warning state only on the first WARN-enabled rejection; keep it independent of slow-queue thresholds and retain normal reporting for unexpected failures.
 - Preserve direct queue exception contracts and separate policy/full-drop accounting, including best-effort capacity drops.
 - Apply the same full-capacity warning gate to direct WebSocket drops when Netty marks the channel non-writable.
+
+### Delivery modes and admission policy separation
+- Remove `DeliveryOptions.Priority`, its record component and `withPriority(...)` without compatibility adapters. `DeliveryOptions` now holds only mode, replacement key and lifetime; existing mode factories retain their signatures.
+- Make the default admission policy transport-based: reject incoming UDP at 75% occupancy; keep TCP eligible until full. No mode bypasses admission. Applications change these rules through a custom `OutboundQueuePolicy`.
+- Preserve mode-specific overflow behavior, replacement/expiry, packet/byte bounds, FIFO ordering, counters and rate-limited expected-pressure warnings. Wire formats are unchanged.
+- Update factory, transport-boundary, admission/capacity, replacement rollback and packet-copy tests, plus API documentation and migration guidance.

@@ -167,7 +167,7 @@ public final class OutboundQueueImpl implements OutboundQueue {
 
     @Override
     public Admission putWithDelivery(Packet packet) {
-       Objects.requireNonNull(packet, "packet");
+        Objects.requireNonNull(packet, "packet");
         synchronized (queue) {
             if (delivery != null || packet.getDeliveryOptions() != null) {
                 return enhancedPut(packet);
@@ -415,17 +415,26 @@ public final class OutboundQueueImpl implements OutboundQueue {
         }
     }
 
+    @Override
+    public String toString() {
+        return "OutboundQueue{" +
+                "outboundQueuePolicyType=" + (outboundQueuePolicy == null ? null : outboundQueuePolicy.getClass().getName()) +
+                ", maxSize=" + maxSize +
+                ", snapshotSize=" + snapshotSize +
+                '}';
+    }
+
     private static final class Monitor {
 
+        final boolean diagnostics;
+        final OperationalHistory history;
+        final long id;
+        final String transport;
         int highWater;
         long fullDrops;
         long policyDrops;
         boolean pressured;
         long pressureSince;
-        final boolean diagnostics;
-        final OperationalHistory history;
-        final long id;
-        final String transport;
 
         Monitor(boolean diagnostics, OperationalHistory history, long id, String transport) {
             this.diagnostics = diagnostics;
@@ -444,14 +453,5 @@ public final class OutboundQueueImpl implements OutboundQueue {
         long expired;
         long replaced;
         long bestEffortDrops;
-    }
-
-    @Override
-    public String toString() {
-        return "OutboundQueue{" +
-                "outboundQueuePolicyType=" + (outboundQueuePolicy == null ? null : outboundQueuePolicy.getClass().getName()) +
-                ", maxSize=" + maxSize +
-                ", snapshotSize=" + snapshotSize +
-                '}';
     }
 }

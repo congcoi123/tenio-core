@@ -66,7 +66,7 @@ class DeliveryAdmissionTest {
   }
 
   @Test
-  void lowPriorityCongestionRejectionsRemainPolicyDrops() throws Exception {
+  void udpCongestionRejectionsRemainPolicyDrops() throws Exception {
     var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
     var stats = mock(NetworkWriterStatistic.class);
     writer.setNetworkWriterStatistic(stats);
@@ -80,6 +80,7 @@ class DeliveryAdmissionTest {
     when(session.isActivated()).thenReturn(true);
     when(session.fetchOutboundQueue()).thenReturn(queue);
     var dropped = PacketImpl.newInstance();
+    dropped.setTransportType(com.tenio.core.network.define.TransportType.UDP);
     dropped.setDeliveryOptions(DeliveryOptions.bestEffort(Duration.ZERO));
     var method = ZeroWriterImpl.class.getDeclaredMethod("enqueuePacket", Session.class, Packet.class);
     method.setAccessible(true);
@@ -92,7 +93,7 @@ class DeliveryAdmissionTest {
 
   @org.junit.jupiter.params.ParameterizedTest
   @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
-  void udpDefaultAndExplicitLowCongestionRejectionsReachPolicyDropTotals(boolean explicitOptions)
+  void udpWithOrWithoutImportantModeRemainsASilentPolicyDrop(boolean explicitOptions)
       throws Exception {
     var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
     var stats = mock(NetworkWriterStatistic.class);
@@ -110,7 +111,7 @@ class DeliveryAdmissionTest {
     var udp = PacketImpl.newInstance();
     udp.setTransportType(com.tenio.core.network.define.TransportType.UDP);
     if (explicitOptions) {
-      udp.setDeliveryOptions(DeliveryOptions.important().withPriority(DeliveryOptions.Priority.LOW));
+      udp.setDeliveryOptions(DeliveryOptions.important());
     }
     var method = ZeroWriterImpl.class.getDeclaredMethod("enqueuePacket", Session.class, Packet.class);
     method.setAccessible(true);

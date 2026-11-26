@@ -178,7 +178,7 @@ class DeliveryPolicyTest {
   }
 
   @Test
-  void defaultImportantAdmissionAtNinetyPercentKeepsFifoAndHardLimits() {
+  void importantTcpRetainsFifoAndHardLimitsAtNinetyPercent() {
     var q = queue(10);
     var original = new java.util.ArrayList<Packet>();
     for (int i = 0; i < 9; i++) {
@@ -197,7 +197,7 @@ class DeliveryPolicyTest {
   }
 
   @Test
-  void rejectedLowPriorityReplacementRestoresTheOriginalOrderAndByteAccounting() {
+  void customPolicyRejectionRestoresTheOriginalOrderAndByteAccounting() {
     var q = queue(10);
     var original = new java.util.ArrayList<Packet>();
     for (int i = 0; i < 9; i++) {
@@ -205,8 +205,11 @@ class DeliveryPolicyTest {
       original.add(entry);
       q.put(entry);
     }
-    var replacement = packet(2, DeliveryOptions.replaceable("state", Duration.ZERO)
-        .withPriority(DeliveryOptions.Priority.LOW));
+    q.configureOutboundQueuePolicy((queue, packet) -> {
+      throw new com.tenio.core.exception.OutboundQueuePolicyViolationException(
+          packet, queue.getPercentageUsed());
+    });
+    var replacement = packet(2, DeliveryOptions.replaceable("state", Duration.ZERO));
     assertThrows(com.tenio.core.exception.OutboundQueuePolicyViolationException.class,
         () -> q.putWithDelivery(replacement));
     assertEquals(9, q.deliveryStatistics().queuedBytes());
@@ -218,12 +221,23 @@ class DeliveryPolicyTest {
   }
 
   @Test
-  void copiesRetainSelectedPriorityAndTheOriginalExpiryDeadline() {
-    var original = packet(1, DeliveryOptions.bestEffort(Duration.ofSeconds(5))
-        .withPriority(DeliveryOptions.Priority.HIGH));
-    var copy = original.deepCopy();
-    assertEquals(DeliveryOptions.Priority.HIGH, copy.getDeliveryOptions().priority());
-    assertEquals(original.getDeliveryDeadlineNanos(), copy.getDeliveryDeadlineNanos());
+  void noDeliveryModeBypassesTheUdpCongestionCutoff() {
+    var q = queue(100);
+    for (int i = 0; i < 75; i++) {
+      var tcp = packet(1, null);
+      tcp.setTransportType(com.tenio.core.network.define.TransportType.TCP);
+      q.put(tcp);
+    }
+    for (var options : new DeliveryOptions[] {null, DeliveryOptions.important(),
+        DeliveryOptions.replaceable("udp-state", Duration.ZERO),
+        DeliveryOptions.bestEffort(Duration.ZERO)}) {
+      var udp = packet(1, options);
+      udp.setTransportType(com.tenio.core.network.define.TransportType.UDP);
+      assertThrows(com.tenio.core.exception.OutboundQueuePolicyViolationException.class,
+          () -> q.putWithDelivery(udp));
+    }
+    assertEquals(75, q.getSize());
+    assertEquals(4, q.statistics().policyDrops());
   }
 
   @Test
@@ -242,7 +256,7 @@ class DeliveryPolicyTest {
     assertEquals(75, q.getSize());
     assertEquals(1, q.statistics().policyDrops());
     for (int i = 75; i < 100; i++) {
-      var entry = packet(1, i < 90 ? null : DeliveryOptions.important());
+      var entry = packet(1, null);
       entry.setTransportType(com.tenio.core.network.define.TransportType.TCP);
       original.add(entry);
       q.put(entry);
@@ -258,7 +272,7 @@ class DeliveryPolicyTest {
   }
 
   @Test
-  void rejectedLowPriorityUdpReplacementRestoresItsOriginalPositionAndByteAccounting() {
+  void rejectedUdpReplacementRestoresItsOriginalPositionAndByteAccounting() {
     var q = queue(100);
     var original = new java.util.ArrayList<Packet>();
     for (int i = 0; i < 76; i++) {
@@ -268,8 +282,7 @@ class DeliveryPolicyTest {
       original.add(entry);
       q.put(entry);
     }
-    var replacement = packet(2, DeliveryOptions.replaceable("position", Duration.ZERO)
-        .withPriority(DeliveryOptions.Priority.LOW));
+    var replacement = packet(2, DeliveryOptions.replaceable("position", Duration.ZERO));
     replacement.setTransportType(com.tenio.core.network.define.TransportType.UDP);
     assertThrows(com.tenio.core.exception.OutboundQueuePolicyViolationException.class,
         () -> q.putWithDelivery(replacement));
@@ -316,31 +329,28 @@ class DeliveryPolicyTest {
     assertThrows(OutboundQueueFullException.class, () -> q.put(extra));
   }
 
-  @Test
-  void explicitNormalAndHighUdpPrioritiesOverrideTheLowTransportDefault() {
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.EnumSource(DeliveryOptions.Mode.class)
+  void tcpWithEveryModeRemainsEligibleAtNinetyPercent(DeliveryOptions.Mode mode) {
     var q = queue(20);
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 18; i++) {
       var tcp = packet(1, null);
       tcp.setTransportType(com.tenio.core.network.define.TransportType.TCP);
       q.put(tcp);
     }
-    var normal = packet(1, DeliveryOptions.replaceable("udp-state", Duration.ZERO));
-    normal.setTransportType(com.tenio.core.network.define.TransportType.UDP);
-    q.put(normal);
-    var high = packet(1, DeliveryOptions.important());
-    high.setTransportType(com.tenio.core.network.define.TransportType.UDP);
-    q.put(high);
-    assertEquals(18, q.getSize());
-    var moreNormal = packet(1, DeliveryOptions.replaceable("another-state", Duration.ZERO));
-    moreNormal.setTransportType(com.tenio.core.network.define.TransportType.UDP);
-    assertThrows(com.tenio.core.exception.OutboundQueuePolicyViolationException.class,
-        () -> q.put(moreNormal));
-    for (int i = 0; i < 2; i++) {
-      var moreHigh = packet(1, DeliveryOptions.important());
-      moreHigh.setTransportType(com.tenio.core.network.define.TransportType.UDP);
-      q.put(moreHigh);
-    }
+    var options = switch (mode) {
+      case IMPORTANT -> DeliveryOptions.important();
+      case REPLACEABLE -> DeliveryOptions.replaceable("tcp-state", Duration.ZERO);
+      case BEST_EFFORT -> DeliveryOptions.bestEffort(Duration.ZERO);
+    };
+    var tcp = packet(1, options);
+    tcp.setTransportType(com.tenio.core.network.define.TransportType.TCP);
+    q.put(tcp);
+    assertEquals(19, q.getSize());
+    var finalTcp = packet(1, null);
+    finalTcp.setTransportType(com.tenio.core.network.define.TransportType.TCP);
+    q.put(finalTcp);
     assertEquals(20, q.getSize());
-    assertThrows(OutboundQueueFullException.class, () -> q.put(high));
+    assertThrows(OutboundQueueFullException.class, () -> q.put(packet(1, null)));
   }
 }
