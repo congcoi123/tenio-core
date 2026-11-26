@@ -34,46 +34,46 @@ import java.util.function.LongSupplier;
  */
 final class SlowQueueWarning {
 
-  static final long REMINDER_INTERVAL_NANOS = TimeUnit.SECONDS.toNanos(30);
+    static final long REMINDER_INTERVAL_NANOS = TimeUnit.SECONDS.toNanos(30);
 
-  private final int threshold;
-  private final LongSupplier clock;
-  private volatile boolean congested;
-  private volatile long lastWarningNanos;
+    private final int threshold;
+    private final LongSupplier clock;
+    private volatile boolean congested;
+    private volatile long lastWarningNanos;
 
-  SlowQueueWarning(int threshold) {
-    this(threshold, System::nanoTime);
-  }
+    SlowQueueWarning(int threshold) {
+        this(threshold, System::nanoTime);
+    }
 
-  SlowQueueWarning(int threshold, LongSupplier clock) {
-    this.threshold = threshold;
-    this.clock = clock;
-  }
+    SlowQueueWarning(int threshold, LongSupplier clock) {
+        this.threshold = threshold;
+        this.clock = clock;
+    }
 
-  int threshold() {
-    return threshold;
-  }
+    int threshold() {
+        return threshold;
+    }
 
-  boolean shouldWarn(int depth) {
-    if (depth < threshold) {
-      if (congested) {
-        synchronized (this) {
-          congested = false;
+    boolean shouldWarn(int depth) {
+        if (depth < threshold) {
+            if (congested) {
+                synchronized (this) {
+                    congested = false;
+                }
+            }
+            return false;
         }
-      }
-      return false;
+        long now = clock.getAsLong();
+        if (congested && now - lastWarningNanos < REMINDER_INTERVAL_NANOS) {
+            return false;
+        }
+        synchronized (this) {
+            if (congested && now - lastWarningNanos < REMINDER_INTERVAL_NANOS) {
+                return false;
+            }
+            lastWarningNanos = now;
+            congested = true;
+            return true;
+        }
     }
-    long now = clock.getAsLong();
-    if (congested && now - lastWarningNanos < REMINDER_INTERVAL_NANOS) {
-      return false;
-    }
-    synchronized (this) {
-      if (congested && now - lastWarningNanos < REMINDER_INTERVAL_NANOS) {
-        return false;
-      }
-      lastWarningNanos = now;
-      congested = true;
-      return true;
-    }
-  }
 }
