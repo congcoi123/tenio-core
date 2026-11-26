@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.server.core;
 
-import com.tenio.core.processor.Processor;
 import com.tenio.core.command.client.ClientCommandManager;
 import com.tenio.core.command.client.ClientCommandPolicy;
 import com.tenio.core.entity.manager.PlayerManager;
@@ -33,6 +32,7 @@ import com.tenio.core.network.entity.inbound.policy.RequestPolicy;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
+import com.tenio.core.processor.Processor;
 import com.tenio.core.recovery.RecoveryManager;
 import com.tenio.core.recovery.RecoveryPolicy;
 
@@ -41,86 +41,83 @@ import com.tenio.core.recovery.RecoveryPolicy;
  */
 public interface ZeroProcessor extends Processor {
 
-  /**
-   * Subscribes all events on the server.
-   *
-   * @param supportSocketConnection sets to {@code true} if the {@link TransportType#TCP}
-   *                                or {@link TransportType#WEB_SOCKET} is supported, otherwise returns {@code false}
-   * @param supportDatagramChannel  sets to {@code true} if the {@link TransportType#UDP}
-   *                                is supported, otherwise returns {@code false}
-   */
-  void subscribe(boolean supportSocketConnection, boolean supportDatagramChannel);
+    /**
+     * Subscribes all events on the server.
+     *
+     * @param supportSocketConnection sets to {@code true} if the {@link TransportType#TCP}
+     *                                or {@link TransportType#WEB_SOCKET} is supported, otherwise returns {@code false}
+     * @param supportDatagramChannel  sets to {@code true} if the {@link TransportType#UDP}
+     *                                is supported, otherwise returns {@code false}
+     */
+    void subscribe(boolean supportSocketConnection, boolean supportDatagramChannel);
 
-  /**
-   * Set the request policy.
-   *
-   * @param requestPolicy the {@link RequestPolicy}
-   * @since 0.6.6
-   */
-  void setRequestPolicy(RequestPolicy requestPolicy);
+    /**
+     * Set the request policy.
+     *
+     * @param requestPolicy the {@link RequestPolicy}
+     * @since 0.6.6
+     */
+    void setRequestPolicy(RequestPolicy requestPolicy);
 
-  /**
-   * Sets the maximum number of players allowed participating on the server.
-   *
-   * @param maxPlayers {@code integer} value, the maximum number of players allowed
-   *                   participating on the server
-   */
-  void setMaxNumberPlayers(int maxPlayers);
+    /**
+     * Sets the maximum number of players allowed participating on the server.
+     *
+     * @param maxPlayers {@code integer} value, the maximum number of players allowed
+     *                   participating on the server
+     */
+    void setMaxNumberPlayers(int maxPlayers);
 
-  /**
-   * Determines if a player could be kept its connection when it is disconnected from the server
-   * for a while.
-   *
-   * @param keepPlayerOnDisconnection sets to {@code true} if a player could be kept its
-   *                                  connection when it is disconnected from the server for a
-   *                                  while, otherwise returns {@code false}
-   */
-  void setKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection);
+    /**
+     * Determines if a player could be kept its connection when it is disconnected from the server
+     * for a while.
+     *
+     * @param keepPlayerOnDisconnection sets to {@code true} if a player could be kept its
+     *                                  connection when it is disconnected from the server for a
+     *                                  while, otherwise returns {@code false}
+     */
+    void setKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection);
 
-  /**
-   * Sets a session manager instance.
-   *
-   * @param sessionManager a {@link SessionManager} instance
-   */
-  void setSessionManager(SessionManager sessionManager);
+    /**
+     * Sets a session manager instance.
+     *
+     * @param sessionManager a {@link SessionManager} instance
+     */
+    void setSessionManager(SessionManager sessionManager);
 
-  /**
-   * Sets a player manager for the server which is used to manage all players.
-   *
-   * @param playerManager an instance of {@link PlayerManager}
-   */
-  void setPlayerManager(PlayerManager playerManager);
+    /**
+     * Sets a player manager for the server which is used to manage all players.
+     *
+     * @param playerManager an instance of {@link PlayerManager}
+     */
+    void setPlayerManager(PlayerManager playerManager);
 
-  /**
-   * Sets a network reader statistic instance which takes responsibility recording the
-   * receiving data from clients.
-   *
-   * @param networkReaderStatistic a {@link NetworkReaderStatistic} instance
-   */
-  void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic);
+    /**
+     * Sets a network reader statistic instance which takes responsibility recording the
+     * receiving data from clients.
+     *
+     * @param networkReaderStatistic a {@link NetworkReaderStatistic} instance
+     */
+    void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic);
 
-  /**
-   * Sets a network writer statistic instance which takes responsibility recording the
-   * sending data from the network.
-   *
-   * @param networkWriterStatistic a {@link NetworkWriterStatistic} instance
-   */
-  void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic);
+    /**
+     * Sets a network writer statistic instance which takes responsibility recording the
+     * sending data from the network.
+     *
+     * @param networkWriterStatistic a {@link NetworkWriterStatistic} instance
+     */
+    void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic);
 
-  /**
-   * Configures automatic command routing before processing begins. Implementations must cache
-   * whether routing is enabled from the startup command registrations and optional policy.
-   *
-   * @param commands the startup command registry
-   * @param policy the application envelope policy
-   */
-  default void configureClientCommands(ClientCommandManager commands, ClientCommandPolicy policy) {
-    throw new UnsupportedOperationException(
-        "Automatic command routing is not supported by this processor");
-  }
+    /**
+     * Configures automatic command routing before processing begins. Implementations must cache
+     * whether routing is enabled from the startup command registrations and optional policy.
+     *
+     * @param clientCommandManager the startup command registry
+     * @param clientCommandPolicy  the application envelope policy
+     */
+    void configureClientCommands(ClientCommandManager clientCommandManager, ClientCommandPolicy clientCommandPolicy);
 
-  /** Installs optional recovery before processing begins. */
-  default void configureRecovery(RecoveryManager manager, RecoveryPolicy policy) {
-    throw new UnsupportedOperationException("Recovery is not supported by this processor");
-  }
+    /**
+     * Installs optional recovery before processing begins.
+     */
+    void configureRecovery(RecoveryManager recoveryManager, RecoveryPolicy recoveryPolicy);
 }
