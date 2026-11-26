@@ -362,8 +362,7 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
                     if (player.getSession().orElse(null) == session) {
                         if (recoveryManager != null
                                 ? recoveryManager.disconnected(player, connectionDisconnectMode)
-                                : shouldKeepPlayerOnDisconnection(keepPlayerOnDisconnection, connectionDisconnectMode,
-                                playerDisconnectMode)) {
+                                : shouldKeepPlayerOnDisconnection(keepPlayerOnDisconnection, connectionDisconnectMode, playerDisconnectMode)) {
                             // Retain room and channel state for reconnection, but detach the closed session.
                             player.setSession(null);
                         } else {
