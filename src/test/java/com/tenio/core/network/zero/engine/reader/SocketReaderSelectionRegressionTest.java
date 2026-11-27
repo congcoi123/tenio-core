@@ -24,53 +24,57 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.reader;
 
-import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.zero.handler.SocketIoHandler;
+import org.junit.jupiter.api.Test;
+
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.time.Duration;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class SocketReaderSelectionRegressionTest {
-  @Test
-  void drainsAlreadyReadableBytesWithoutNeedingAnotherClientWrite() throws Exception {
-    var sessions = mock(SessionManager.class);
-    var io = mock(SocketIoHandler.class);
-    // Force one TCP write to require several reader iterations without relying on OS timing.
-    var reader =
-        new SocketReaderHandler(
-            ByteBuffer.allocate(1), sessions, mock(NetworkReaderStatistic.class), io);
-    try (var listener = ServerSocketChannel.open()) {
-      listener.bind(new InetSocketAddress("127.0.0.1", 0));
-      try (var client = SocketChannel.open(listener.getLocalAddress());
-          var server = listener.accept()) {
-        server.configureBlocking(false);
-        var session = mock(Session.class);
-        when(sessions.getSessionBySocket(server)).thenReturn(session);
-        when(session.isActivated()).thenReturn(true);
-        reader.registerClientSocketChannel(server, key -> {}, () -> {});
-        reader.running();
-        client.write(ByteBuffer.wrap(new byte[] {1, 2, 3, 4}));
-        assertTimeoutPreemptively(
-            Duration.ofSeconds(2),
-            () -> {
-              for (int i = 0; i < 4; i++) {
+
+    @Test
+    void drainsAlreadyReadableBytesWithoutNeedingAnotherClientWrite() throws Exception {
+        var sessions = mock(SessionManager.class);
+        var io = mock(SocketIoHandler.class);
+        // Force one TCP write to require several reader iterations without relying on OS timing.
+        var reader = new SocketReaderHandler(ByteBuffer.allocate(1), sessions, mock(NetworkReaderStatistic.class), io);
+        try (var listener = ServerSocketChannel.open()) {
+            listener.bind(new InetSocketAddress("127.0.0.1", 0));
+            try (var client = SocketChannel.open(listener.getLocalAddress());
+                 var server = listener.accept()) {
+                server.configureBlocking(false);
+                var session = mock(Session.class);
+                when(sessions.getSessionBySocket(server)).thenReturn(session);
+                when(session.isActivated()).thenReturn(true);
+                reader.registerClientSocketChannel(server, key -> {}, () -> {});
                 reader.running();
-              }
-            });
-        verify(io, timeout(1000).times(4)).sessionRead(eq(session), any(byte[].class));
-      }
-    } finally {
-      reader.shutdown();
+                client.write(ByteBuffer.wrap(new byte[]{1, 2, 3, 4}));
+                assertTimeoutPreemptively(
+                        Duration.ofSeconds(2),
+                        () -> {
+                            for (int i = 0; i < 4; i++) {
+                                reader.running();
+                            }
+                        }
+                );
+                verify(io, timeout(1000).times(4)).sessionRead(eq(session), any(byte[].class));
+            }
+        } finally {
+            reader.shutdown();
+        }
     }
-  }
 }

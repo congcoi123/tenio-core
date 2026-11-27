@@ -24,16 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.netty.websocket;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.entity.session.manager.SessionManager;
@@ -42,6 +32,7 @@ import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.DefaultHttpRequest;
@@ -53,79 +44,87 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
 @DisplayName("Unit Test Cases For NettyWsHandShake")
 class NettyWsHandShakeTest {
 
-  private NettyWsHandShake handShake;
-  private EventManager eventManager;
-  private SessionManager sessionManager;
+    private NettyWsHandShake handShake;
+    private EventManager eventManager;
+    private SessionManager sessionManager;
 
-  @BeforeEach
-  void setUp() {
-    eventManager = mock(EventManager.class);
-    sessionManager = mock(SessionManager.class);
-    handShake = NettyWsHandShake.newInstance(
-        eventManager,
-        sessionManager,
-        mock(ConnectionFilter.class),
-        mock(BinaryPacketDecoder.class),
-        mock(NetworkReaderStatistic.class));
-  }
+    @BeforeEach
+    void setUp() {
+        eventManager = mock(EventManager.class);
+        sessionManager = mock(SessionManager.class);
+        handShake = NettyWsHandShake.newInstance(
+                eventManager,
+                sessionManager,
+                mock(ConnectionFilter.class),
+                mock(BinaryPacketDecoder.class),
+                mock(NetworkReaderStatistic.class)
+        );
+    }
 
-  @Test
-  @DisplayName("newInstance creates a non-null handshaker")
-  void testNewInstanceCreatesNonNull() {
-    assertNotNull(handShake);
-  }
+    @Test
+    @DisplayName("newInstance creates a non-null handshaker")
+    void testNewInstanceCreatesNonNull() {
+        assertNotNull(handShake);
+    }
 
-  @Test
-  @DisplayName("channelRead with a non-HttpRequest object does nothing")
-  void testChannelReadWithNonHttpRequestDoesNothing() {
-    ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+    @Test
+    @DisplayName("channelRead with a non-HttpRequest object does nothing")
+    void testChannelReadWithNonHttpRequestDoesNothing() {
+        ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
 
-    assertDoesNotThrow(() -> handShake.channelRead(ctx, "not an http request"));
+        assertDoesNotThrow(() -> handShake.channelRead(ctx, "not an http request"));
 
-    verifyNoInteractions(ctx);
-    verifyNoInteractions(eventManager);
-    verifyNoInteractions(sessionManager);
-  }
+        verifyNoInteractions(ctx);
+        verifyNoInteractions(eventManager);
+        verifyNoInteractions(sessionManager);
+    }
 
-  @Test
-  @DisplayName("channelRead with a non-HttpRequest numeric object does nothing")
-  void testChannelReadWithIntegerObjectDoesNothing() {
-    ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+    @Test
+    @DisplayName("channelRead with a non-HttpRequest numeric object does nothing")
+    void testChannelReadWithIntegerObjectDoesNothing() {
+        ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
 
-    assertDoesNotThrow(() -> handShake.channelRead(ctx, 42));
+        assertDoesNotThrow(() -> handShake.channelRead(ctx, 42));
 
-    verifyNoInteractions(ctx);
-  }
+        verifyNoInteractions(ctx);
+    }
 
-  @Test
-  @DisplayName("Unsupported WebSocket versions do not install the application handler")
-  void testUnsupportedVersionDoesNotInstallApplicationHandler() {
-    ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
-    Channel channel = mock(Channel.class);
-    ChannelPipeline pipeline = mock(ChannelPipeline.class);
-    ChannelFuture future = mock(ChannelFuture.class);
+    @Test
+    @DisplayName("Unsupported WebSocket versions do not install the application handler")
+    void testUnsupportedVersionDoesNotInstallApplicationHandler() {
+        ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+        Channel channel = mock(Channel.class);
+        ChannelPipeline pipeline = mock(ChannelPipeline.class);
+        ChannelFuture future = mock(ChannelFuture.class);
 
-    DefaultHttpRequest request = new DefaultHttpRequest(
-        HttpVersion.HTTP_1_1, HttpMethod.GET, "/ws");
-    request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE);
-    request.headers().set(HttpHeaderNames.UPGRADE, "WebSocket");
-    request.headers().set(HttpHeaderNames.HOST, "localhost:8080");
-    request.headers().set(HttpHeaderNames.SEC_WEBSOCKET_KEY, "dGhlIHNhbXBsZSBub25jZQ==");
-    // Use unrecognized WS version so newHandshaker returns null -> sendUnsupportedVersionResponse
-    request.headers().set(io.netty.handler.codec.http.HttpHeaderNames.SEC_WEBSOCKET_VERSION, "99");
+        DefaultHttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/ws");
+        request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE);
+        request.headers().set(HttpHeaderNames.UPGRADE, "WebSocket");
+        request.headers().set(HttpHeaderNames.HOST, "localhost:8080");
+        request.headers().set(HttpHeaderNames.SEC_WEBSOCKET_KEY, "dGhlIHNhbXBsZSBub25jZQ==");
+        // Use unrecognized WS version so newHandshaker returns null -> sendUnsupportedVersionResponse
+        request.headers().set(HttpHeaderNames.SEC_WEBSOCKET_VERSION, "99");
 
-    when(ctx.channel()).thenReturn(channel);
-    when(ctx.pipeline()).thenReturn(pipeline);
-    when(channel.alloc()).thenReturn(UnpooledByteBufAllocator.DEFAULT);
-    when(channel.writeAndFlush(any(), any())).thenReturn(future);
+        when(ctx.channel()).thenReturn(channel);
+        when(ctx.pipeline()).thenReturn(pipeline);
+        when(channel.alloc()).thenReturn(UnpooledByteBufAllocator.DEFAULT);
+        when(channel.writeAndFlush(any(), any())).thenReturn(future);
 
-    assertDoesNotThrow(() -> handShake.channelRead(ctx, request));
+        assertDoesNotThrow(() -> handShake.channelRead(ctx, request));
 
-    verify(pipeline, never()).replace(any(io.netty.channel.ChannelHandler.class), eq("handler"),
-        any(io.netty.channel.ChannelHandler.class));
-  }
-
+        verify(pipeline, never()).replace(any(ChannelHandler.class), eq("handler"), any(ChannelHandler.class));
+    }
 }

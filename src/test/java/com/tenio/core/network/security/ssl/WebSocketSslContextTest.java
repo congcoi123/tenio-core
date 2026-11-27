@@ -24,29 +24,31 @@ THE SOFTWARE.
 
 package com.tenio.core.network.security.ssl;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.security.Security;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayName("Unit Test Cases For WebSocketSslContext")
 class WebSocketSslContextTest {
 
-  @Test
-  @DisplayName("constructor fails fast when TLS configuration is unavailable")
-  void testConstructorFailsFastWhenKeystoreUnavailable() {
-    assertThrows(IllegalStateException.class, WebSocketSslContext::new);
-  }
-
-  @Test
-  @DisplayName("constructor uses custom algorithm from Security property when set")
-  void testConstructorUsesCustomAlgorithmFromSecurityProperty() {
-    var originalAlgorithm = java.security.Security.getProperty("ssl.KeyManagerFactory.algorithm");
-    java.security.Security.setProperty("ssl.KeyManagerFactory.algorithm", "SunX509");
-    try {
-      assertThrows(IllegalStateException.class, WebSocketSslContext::new);
-    } finally {
-      java.security.Security.setProperty("ssl.KeyManagerFactory.algorithm", originalAlgorithm);
+    @Test
+    @DisplayName("constructor fails fast when TLS configuration is unavailable")
+    void testConstructorFailsFastWhenKeystoreUnavailable() {
+        assertThrows(IllegalStateException.class, WebSocketSslContext::new);
     }
-  }
+
+    @Test
+    @DisplayName("constructor uses custom algorithm from Security property when set")
+    void testConstructorUsesCustomAlgorithmFromSecurityProperty() {
+        var originalAlgorithm = Security.getProperty("ssl.KeyManagerFactory.algorithm");
+        Security.setProperty("ssl.KeyManagerFactory.algorithm", "SunX509");
+        try {
+            assertThrows(IllegalStateException.class, WebSocketSslContext::new);
+        } finally {
+            Security.setProperty("ssl.KeyManagerFactory.algorithm", originalAlgorithm);
+        }
+    }
 }

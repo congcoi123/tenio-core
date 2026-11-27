@@ -24,9 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.api;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import com.tenio.core.api.implement.ServerApiImpl;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.Room;
@@ -38,45 +35,51 @@ import com.tenio.core.entity.manager.RoomManager;
 import com.tenio.core.entity.replication.ReplicatedState;
 import com.tenio.core.entity.replication.StateReplication;
 import com.tenio.core.server.Server;
+import org.junit.jupiter.api.Test;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class OptionalLifecycleTest {
-  @Test
-  void logoutOfAnOldPlayerObjectDoesNotDestroyNewPlayersStateOrSubscriptions() {
-    var server = mock(Server.class);
-    var players = mock(PlayerManager.class);
-    var rooms = mock(RoomManager.class);
-    when(server.getPlayerManager()).thenReturn(players);
-    when(server.getRoomManager()).thenReturn(rooms);
-    var old = mock(Player.class);
-    var current = mock(Player.class);
-    when(old.getIdentity()).thenReturn("alice");
-    when(old.getSession()).thenReturn(Optional.empty());
-    when(players.getPlayerByIdentity("alice")).thenReturn(current);
-    try (var replication = new StateReplication(10, 1024, 10);
-        var directory = new RoomDirectory(Set.of(), 10, 10)) {
-      when(server.getStateReplication()).thenReturn(replication);
-      when(rooms.getDirectory()).thenReturn(directory);
-      var state =
-          replication.createPlayer(
-              "alice",
-              Map.of(
-                  "ready",
-                  new ReplicatedState.Definition(
-                      ReplicatedState.Type.BOOLEAN, ReplicatedState.Visibility.ROOM, false, 1)));
-      var subscription = directory.subscribe("alice", "group");
-      ServerApiImpl.newInstance(server)
-          .logout(
-              old, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
-      assertSame(state, replication.player("alice"));
-      var room = mock(Room.class);
-      when(room.getName()).thenReturn("room");
-      when(room.getId()).thenReturn(1L);
-      directory.publish(room, "group", "game", "waiting", Map.of());
-      assertNotNull(subscription.poll());
+
+    @Test
+    void logoutOfAnOldPlayerObjectDoesNotDestroyNewPlayersStateOrSubscriptions() {
+        var server = mock(Server.class);
+        var players = mock(PlayerManager.class);
+        var rooms = mock(RoomManager.class);
+        when(server.getPlayerManager()).thenReturn(players);
+        when(server.getRoomManager()).thenReturn(rooms);
+        var old = mock(Player.class);
+        var current = mock(Player.class);
+        when(old.getIdentity()).thenReturn("alice");
+        when(old.getSession()).thenReturn(Optional.empty());
+        when(players.getPlayerByIdentity("alice")).thenReturn(current);
+        try (var replication = new StateReplication(10, 1024, 10);
+             var directory = new RoomDirectory(Set.of(), 10, 10)) {
+            when(server.getStateReplication()).thenReturn(replication);
+            when(rooms.getDirectory()).thenReturn(directory);
+            var state = replication.createPlayer(
+                    "alice",
+                    Map.of(
+                            "ready",
+                            new ReplicatedState.Definition(ReplicatedState.Type.BOOLEAN, ReplicatedState.Visibility.ROOM, false, 1)
+                    )
+            );
+            var subscription = directory.subscribe("alice", "group");
+            ServerApiImpl.newInstance(server).logout(old, ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+            assertSame(state, replication.player("alice"));
+            var room = mock(Room.class);
+            when(room.getName()).thenReturn("room");
+            when(room.getId()).thenReturn(1L);
+            directory.publish(room, "group", "game", "waiting", Map.of());
+            assertNotNull(subscription.poll());
+        }
     }
-  }
 }
+

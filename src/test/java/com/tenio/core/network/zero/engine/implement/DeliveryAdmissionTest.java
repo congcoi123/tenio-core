@@ -24,10 +24,8 @@ THE SOFTWARE.
 
 package com.tenio.core.network.zero.engine.implement;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.implement.OutboundQueueImpl;
@@ -35,92 +33,101 @@ import com.tenio.core.network.entity.outbound.packet.implement.PacketImpl;
 import com.tenio.core.network.entity.outbound.packet.policy.DefaultOutboundQueuePolicy;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import java.time.Duration;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.time.Duration;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class DeliveryAdmissionTest {
-  @Test
-  void bestEffortCapacityDropsReachSessionAndNetworkTotals() throws Exception {
-    var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
-    var stats = mock(NetworkWriterStatistic.class);
-    writer.setNetworkWriterStatistic(stats);
-    var queue = OutboundQueueImpl.newInstance();
-    queue.configureMaxSize(1);
-    queue.configureOutboundQueuePolicy(new DefaultOutboundQueuePolicy());
-    var first = PacketImpl.newInstance();
-    first.setData(new byte[] {1});
-    queue.put(first);
-    var session = mock(Session.class);
-    when(session.isActivated()).thenReturn(true);
-    when(session.fetchOutboundQueue()).thenReturn(queue);
-    var dropped = PacketImpl.newInstance();
-    dropped.setData(new byte[] {2});
-    dropped.setDeliveryOptions(DeliveryOptions.bestEffort(Duration.ZERO));
-    var method =
-        ZeroWriterImpl.class.getDeclaredMethod("enqueuePacket", Session.class, Packet.class);
-    method.setAccessible(true);
-    method.invoke(writer, session, dropped);
-    assertEquals(1, queue.getSize());
-    verify(session).addDroppedPackets(1);
-    verify(stats).updateWrittenDroppedPacketsByFull(1);
-  }
 
-  @Test
-  void udpCongestionRejectionsRemainPolicyDrops() throws Exception {
-    var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
-    var stats = mock(NetworkWriterStatistic.class);
-    writer.setNetworkWriterStatistic(stats);
-    var queue = OutboundQueueImpl.newInstance();
-    queue.configureMaxSize(4);
-    queue.configureOutboundQueuePolicy(new DefaultOutboundQueuePolicy());
-    for (int i = 0; i < 3; i++) {
-      queue.put(PacketImpl.newInstance());
+    @Test
+    void bestEffortCapacityDropsReachSessionAndNetworkTotals() throws Exception {
+        var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
+        var stats = mock(NetworkWriterStatistic.class);
+        writer.setNetworkWriterStatistic(stats);
+        var queue = OutboundQueueImpl.newInstance();
+        queue.configureMaxSize(1);
+        queue.configureOutboundQueuePolicy(new DefaultOutboundQueuePolicy());
+        var first = PacketImpl.newInstance();
+        first.setData(new byte[]{1});
+        queue.put(first);
+        var session = mock(Session.class);
+        when(session.isActivated()).thenReturn(true);
+        when(session.fetchOutboundQueue()).thenReturn(queue);
+        var dropped = PacketImpl.newInstance();
+        dropped.setData(new byte[]{2});
+        dropped.setDeliveryOptions(DeliveryOptions.bestEffort(Duration.ZERO));
+        var method = ZeroWriterImpl.class.getDeclaredMethod("enqueuePacket", Session.class, Packet.class);
+        method.setAccessible(true);
+        method.invoke(writer, session, dropped);
+        assertEquals(1, queue.getSize());
+        verify(session).addDroppedPackets(1);
+        verify(stats).updateWrittenDroppedPacketsByFull(1);
     }
-    var session = mock(Session.class);
-    when(session.isActivated()).thenReturn(true);
-    when(session.fetchOutboundQueue()).thenReturn(queue);
-    var dropped = PacketImpl.newInstance();
-    dropped.setTransportType(com.tenio.core.network.define.TransportType.UDP);
-    dropped.setDeliveryOptions(DeliveryOptions.bestEffort(Duration.ZERO));
-    var method = ZeroWriterImpl.class.getDeclaredMethod("enqueuePacket", Session.class, Packet.class);
-    method.setAccessible(true);
-    method.invoke(writer, session, dropped);
-    assertEquals(3, queue.getSize());
-    verify(session).addDroppedPackets(1);
-    verify(stats).updateWrittenDroppedPacketsByPolicy(1);
-    verify(stats, never()).updateWrittenDroppedPacketsByFull(anyInt());
-  }
 
-  @org.junit.jupiter.params.ParameterizedTest
-  @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
-  void udpWithOrWithoutImportantModeRemainsASilentPolicyDrop(boolean explicitOptions)
-      throws Exception {
-    var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
-    var stats = mock(NetworkWriterStatistic.class);
-    writer.setNetworkWriterStatistic(stats);
-    var queue = OutboundQueueImpl.newInstance();
-    queue.configureMaxSize(4);
-    queue.configureOutboundQueuePolicy(new DefaultOutboundQueuePolicy());
-    queue.enableMonitoring(null, 1, "TCP");
-    for (int i = 0; i < 3; i++) {
-      queue.put(PacketImpl.newInstance());
+    @Test
+    void udpCongestionRejectionsRemainPolicyDrops() throws Exception {
+        var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
+        var stats = mock(NetworkWriterStatistic.class);
+        writer.setNetworkWriterStatistic(stats);
+        var queue = OutboundQueueImpl.newInstance();
+        queue.configureMaxSize(4);
+        queue.configureOutboundQueuePolicy(new DefaultOutboundQueuePolicy());
+        for (int i = 0; i < 3; i++) {
+            queue.put(PacketImpl.newInstance());
+        }
+        var session = mock(Session.class);
+        when(session.isActivated()).thenReturn(true);
+        when(session.fetchOutboundQueue()).thenReturn(queue);
+        var dropped = PacketImpl.newInstance();
+        dropped.setTransportType(TransportType.UDP);
+        dropped.setDeliveryOptions(DeliveryOptions.bestEffort(Duration.ZERO));
+        var method = ZeroWriterImpl.class.getDeclaredMethod("enqueuePacket", Session.class, Packet.class);
+        method.setAccessible(true);
+        method.invoke(writer, session, dropped);
+        assertEquals(3, queue.getSize());
+        verify(session).addDroppedPackets(1);
+        verify(stats).updateWrittenDroppedPacketsByPolicy(1);
+        verify(stats, never()).updateWrittenDroppedPacketsByFull(anyInt());
     }
-    var session = mock(Session.class);
-    when(session.isActivated()).thenReturn(true);
-    when(session.fetchOutboundQueue()).thenReturn(queue);
-    var udp = PacketImpl.newInstance();
-    udp.setTransportType(com.tenio.core.network.define.TransportType.UDP);
-    if (explicitOptions) {
-      udp.setDeliveryOptions(DeliveryOptions.important());
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void udpWithOrWithoutImportantModeRemainsASilentPolicyDrop(boolean explicitOptions) throws Exception {
+        var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
+        var stats = mock(NetworkWriterStatistic.class);
+        writer.setNetworkWriterStatistic(stats);
+        var queue = OutboundQueueImpl.newInstance();
+        queue.configureMaxSize(4);
+        queue.configureOutboundQueuePolicy(new DefaultOutboundQueuePolicy());
+        queue.enableMonitoring(null, 1, "TCP");
+        for (int i = 0; i < 3; i++) {
+            queue.put(PacketImpl.newInstance());
+        }
+        var session = mock(Session.class);
+        when(session.isActivated()).thenReturn(true);
+        when(session.fetchOutboundQueue()).thenReturn(queue);
+        var udp = PacketImpl.newInstance();
+        udp.setTransportType(TransportType.UDP);
+        if (explicitOptions) {
+            udp.setDeliveryOptions(DeliveryOptions.important());
+        }
+        var method = ZeroWriterImpl.class.getDeclaredMethod("enqueuePacket", Session.class, Packet.class);
+        method.setAccessible(true);
+        method.invoke(writer, session, udp);
+        assertEquals(3, queue.getSize());
+        assertEquals(1, queue.statistics().policyDrops());
+        assertEquals(0, queue.statistics().fullDrops());
+        verify(session).addDroppedPackets(1);
+        verify(stats).updateWrittenDroppedPacketsByPolicy(1);
+        verify(stats, never()).updateWrittenDroppedPacketsByFull(anyInt());
     }
-    var method = ZeroWriterImpl.class.getDeclaredMethod("enqueuePacket", Session.class, Packet.class);
-    method.setAccessible(true);
-    method.invoke(writer, session, udp);
-    assertEquals(3, queue.getSize());
-    assertEquals(1, queue.statistics().policyDrops());
-    assertEquals(0, queue.statistics().fullDrops());
-    verify(session).addDroppedPackets(1);
-    verify(stats).updateWrittenDroppedPacketsByPolicy(1);
-    verify(stats, never()).updateWrittenDroppedPacketsByFull(anyInt());
-  }
 }

@@ -36,6 +36,7 @@ import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.server.Server;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -93,8 +94,7 @@ class ServerInspectionTest {
         assertEquals(InspectionResult.message("Session no longer exists"), inspection.query("session 7"));
         assertTrue(inspection.query("server stop").values().getFirst().startsWith("Commands"));
         assertTrue(inspection.query("history 7").values().getFirst().contains("restart TenIO"));
-        assertEquals(InspectionResult.message("Network pressure requires the monitor profile."),
-                inspection.query("network pressure"));
+        assertEquals(InspectionResult.message("Network pressure requires the monitor profile."), inspection.query("network pressure"));
         verify(sessions, never()).getSnapshotSessionsList();
         verifyNoInteractions(server);
     }
@@ -126,12 +126,13 @@ class ServerInspectionTest {
 
             var inspection = new ServerInspection(server, network, true);
             assertEquals(
-          "help | stats | room <id> | session <id> | network pressure | limits | history [id] |"
-              + " performance [minutes] | clear",
-                    AdminCommands.shortcuts());
-            assertEquals(List.of("stats", "room <id>", "session <id>", "network pressure", "limits",
-                    "history [id]",
-              "performance [minutes]", "clear"), inspection.query("help").labels());
+                    "help | stats | room <id> | session <id> | network pressure | limits | history [id] | performance [minutes] | clear",
+                    AdminCommands.shortcuts()
+            );
+            assertEquals(
+                    List.of("stats", "room <id>", "session <id>", "network pressure", "limits", "history [id]", "performance [minutes]", "clear"),
+                    inspection.query("help").labels()
+            );
             assertTrue(inspection.query("ROOM  42").labels().contains("Room ID"));
             assertEquals(inspection.query("room 42"), inspection.query("room 42 all"));
             assertEquals(inspection.query("history"), inspection.query("history all"));
@@ -141,14 +142,16 @@ class ServerInspectionTest {
             assertEquals("0", details.values().get(details.labels().indexOf("Outbound packets dropped (queue full)")));
             assertEquals("0", details.values().get(details.labels().indexOf("Outbound packets dropped (queue policy)")));
             var pressure = inspection.query("network pressure");
-            assertEquals(List.of("Session 7 inbound", "Session 7 outbound", "Matching queues", "Sessions under inbound pressure",
-                    "Sessions under outbound pressure"), pressure.labels());
+            assertEquals(
+                    List.of("Session 7 inbound", "Session 7 outbound", "Matching queues", "Sessions under inbound pressure", "Sessions under outbound pressure"),
+                    pressure.labels()
+            );
             assertEquals(List.of("8/10", "8/10 for 12 ms", "Showing 2 of 2 matching queue rows", "1", "1"), pressure.values());
             assertEquals(2, inspection.query("history").labels().size());
             var result = inspection.query("history 7");
             assertTrue(result.labels().getFirst().matches(
-                  "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3} (Z|[+-]\\d{2}:\\d{2}) \\|"
-                      + " Session #7"));
+                    "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3} (Z|[+-]\\d{2}:\\d{2}) \\|"
+                            + " Session #7"));
             assertEquals(List.of("Disconnected (TCP) — Connection error"), result.values());
             assertEquals(List.of("No events recorded for session #99."), inspection.query("history 99").values());
         }
@@ -161,7 +164,7 @@ class ServerInspectionTest {
         var sessions = mock(SessionManager.class);
         var session = mock(Session.class);
         when(network.getSessionManager()).thenReturn(sessions);
-        when(sessions.getSnapshotSessionsList()).thenReturn(java.util.Collections.nCopies(51, session));
+        when(sessions.getSnapshotSessionsList()).thenReturn(Collections.nCopies(51, session));
         when(session.inboundQueueStatistics()).thenReturn(new Session.InboundQueueStatistics(8, 10, 0));
 
         var inspection = new ServerInspection(server, network, true);

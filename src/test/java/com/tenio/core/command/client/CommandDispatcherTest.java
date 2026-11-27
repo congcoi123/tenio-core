@@ -24,129 +24,136 @@ THE SOFTWARE.
 
 package com.tenio.core.command.client;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class CommandDispatcherTest {
-  static void await(CountDownLatch latch) {
-    try {
-      assertTrue(latch.await(5, TimeUnit.SECONDS));
-    } catch (InterruptedException failure) {
-      Thread.currentThread().interrupt();
-      throw new AssertionError(failure);
-    }
-  }
 
-  @Test
-  void sharesOrderedLaneAndBoundsQueuedPlusRunning() {
-    try (var dispatcher = new CommandDispatcher(4, 2)) {
-      var started = new CountDownLatch(1);
-      var release = new CountDownLatch(1);
-      var done = new CountDownLatch(2);
-      var order = new CopyOnWriteArrayList<Integer>();
-      assertTrue(
-          dispatcher.submit(
-              "room-1",
-              2,
-              () -> {
+    static void await(CountDownLatch latch) {
+        try {
+            assertTrue(latch.await(5, TimeUnit.SECONDS));
+        } catch (InterruptedException failure) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError(failure);
+        }
+    }
+
+    @Test
+    void sharesOrderedLaneAndBoundsQueuedPlusRunning() {
+        try (var dispatcher = new CommandDispatcher(4, 2)) {
+            var started = new CountDownLatch(1);
+            var release = new CountDownLatch(1);
+            var done = new CountDownLatch(2);
+            var order = new CopyOnWriteArrayList<Integer>();
+            assertTrue(dispatcher.submit(
+                    "room-1",
+                    2,
+                    () -> {
+                        started.countDown();
+                        await(release);
+                        order.add(1);
+                        done.countDown();
+                    })
+            );
+            await(started);
+            assertTrue(dispatcher.submit(
+                    "room-1",
+                    2,
+                    () -> {
+                        order.add(2);
+                        done.countDown();
+                    })
+            );
+            assertFalse(dispatcher.submit("room-1", 2, () -> fail("not admitted")));
+            assertEquals(2, dispatcher.outstanding());
+            release.countDown();
+            await(done);
+            assertEquals(List.of(1, 2), order);
+        }
+    }
+
+    @Test
+    void unrelatedLanesRunConcurrentlyButAdmissionIsBounded() {
+        try (var dispatcher = new CommandDispatcher(3, 2)) {
+            var started = new CountDownLatch(2);
+            var release = new CountDownLatch(1);
+            var completed = new CountDownLatch(3);
+            var failures = new CopyOnWriteArrayList<Throwable>();
+            Runnable work = () -> {
                 started.countDown();
-                await(release);
-                order.add(1);
-                done.countDown();
-              }));
-      await(started);
-      assertTrue(
-          dispatcher.submit(
-              "room-1",
-              2,
-              () -> {
-                order.add(2);
-                done.countDown();
-              }));
-      assertFalse(dispatcher.submit("room-1", 2, () -> fail("not admitted")));
-      assertEquals(2, dispatcher.outstanding());
-      release.countDown();
-      await(done);
-      assertEquals(List.of(1, 2), order);
-    }
-  }
-
-  @Test
-  void unrelatedLanesRunConcurrentlyButAdmissionIsBounded() {
-    try (var dispatcher = new CommandDispatcher(3, 2)) {
-      var started = new CountDownLatch(2);
-      var release = new CountDownLatch(1);
-      var completed = new CountDownLatch(3);
-      var failures = new CopyOnWriteArrayList<Throwable>();
-      Runnable work =
-          () -> {
-            started.countDown();
+                try {
+                    await(release);
+                } catch (Throwable failure) {
+                    // Assertions in a worker must fail this JUnit test, not just print on stderr.
+                    failures.add(failure);
+                } finally {
+                    completed.countDown();
+                }
+            };
             try {
-              await(release);
-            } catch (Throwable failure) {
-              // Assertions in a worker must fail this JUnit test, not just print on stderr.
-              failures.add(failure);
+                assertTrue(dispatcher.submit("a", 2, work));
+                assertTrue(dispatcher.submit("b", 2, work));
+                await(started);
+                assertFalse(dispatcher.submit(null, 2, work));
+                assertTrue(dispatcher.submit("a", 2, completed::countDown));
+                assertFalse(dispatcher.submit("b", 2, () -> {
+                }));
             } finally {
-              completed.countDown();
+                release.countDown();
             }
-          };
-      try {
-        assertTrue(dispatcher.submit("a", 2, work));
-        assertTrue(dispatcher.submit("b", 2, work));
+            // close() deliberately interrupts running work. Finish this admission test first;
+            // the separate shutdown test below checks interruption and queued-work cancellation.
+            await(completed);
+            assertTrue(failures.isEmpty(), () -> "Dispatcher worker failed: " + failures);
+        }
+    }
+
+    @Test
+    void closeDiscardsQueuedWorkAndInterruptsRunningWork() {
+        var dispatcher = new CommandDispatcher(3, 1);
+        var started = new CountDownLatch(1);
+        var interrupted = new CountDownLatch(1);
+        var calls = new AtomicInteger();
+        assertTrue(dispatcher.submit(
+                "key",
+                3,
+                () -> {
+                    started.countDown();
+                    try {
+                        new CountDownLatch(1).await();
+                    } catch (InterruptedException expected) {
+                        interrupted.countDown();
+                    }
+                })
+        );
         await(started);
-        assertFalse(dispatcher.submit(null, 2, work));
-        assertTrue(dispatcher.submit("a", 2, completed::countDown));
-        assertFalse(dispatcher.submit("b", 2, () -> {}));
-      } finally {
-        release.countDown();
-      }
-      // close() deliberately interrupts running work. Finish this admission test first;
-      // the separate shutdown test below checks interruption and queued-work cancellation.
-      await(completed);
-      assertTrue(failures.isEmpty(), () -> "Dispatcher worker failed: " + failures);
+        assertTrue(dispatcher.submit("key", 3, calls::incrementAndGet));
+        dispatcher.close();
+        await(interrupted);
+        assertEquals(0, calls.get());
+        assertEquals(0, dispatcher.outstanding());
+        assertFalse(dispatcher.submit("new", 3, calls::incrementAndGet));
+        dispatcher.close();
     }
-  }
 
-  @Test
-  void closeDiscardsQueuedWorkAndInterruptsRunningWork() {
-    var dispatcher = new CommandDispatcher(3, 1);
-    var started = new CountDownLatch(1);
-    var interrupted = new CountDownLatch(1);
-    var calls = new AtomicInteger();
-    assertTrue(
-        dispatcher.submit(
-            "key",
-            3,
-            () -> {
-              started.countDown();
-              try {
-                new CountDownLatch(1).await();
-              } catch (InterruptedException expected) {
-                interrupted.countDown();
-              }
+    @Test
+    void rejectsInvalidLimits() {
+        assertThrows(IllegalArgumentException.class, () -> new CommandDispatcher(0, 1));
+        assertThrows(IllegalArgumentException.class, () -> new CommandDispatcher(1, 2));
+        try (var dispatcher = new CommandDispatcher(2, 1)) {
+            assertThrows(IllegalArgumentException.class, () -> dispatcher.submit("x", 0, () -> {
             }));
-    await(started);
-    assertTrue(dispatcher.submit("key", 3, calls::incrementAndGet));
-    dispatcher.close();
-    await(interrupted);
-    assertEquals(0, calls.get());
-    assertEquals(0, dispatcher.outstanding());
-    assertFalse(dispatcher.submit("new", 3, calls::incrementAndGet));
-    dispatcher.close();
-  }
-
-  @Test
-  void rejectsInvalidLimits() {
-    assertThrows(IllegalArgumentException.class, () -> new CommandDispatcher(0, 1));
-    assertThrows(IllegalArgumentException.class, () -> new CommandDispatcher(1, 2));
-    try (var dispatcher = new CommandDispatcher(2, 1)) {
-      assertThrows(IllegalArgumentException.class, () -> dispatcher.submit("x", 0, () -> {}));
+        }
     }
-  }
 }

@@ -24,10 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.server.core;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataUtility;
 import com.tenio.core.api.ServerApi;
@@ -40,139 +36,144 @@ import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.RejectedExecutionException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 class ClientCommandRoutingTest {
-  private final EventManager events = mock(EventManager.class);
-  private final ClientCommandManager commands = mock(ClientCommandManager.class);
-  private final ClientCommandPolicy policy = mock(ClientCommandPolicy.class);
-  private final Session session = mock(Session.class);
-  private final Player player = mock(Player.class);
-  private final PlayerManager players = mock(PlayerManager.class);
-  private final DataCollection message = DataUtility.newZeroMap().putShort("op", (short) 42);
-  private ZeroProcessorImpl processor;
 
-  @BeforeEach
-  void setUp() {
-    processor =
-        ZeroProcessorImpl.newInstance(
-            events, mock(ServerApi.class), mock(DatagramChannelManager.class));
-    processor.setPlayerManager(players);
-    when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
-    when(session.getName()).thenReturn("alice");
-    when(players.getPlayerByIdentity("alice")).thenReturn(player);
-    when(player.getSession()).thenReturn(Optional.of(session));
-  }
+    private final EventManager events = mock(EventManager.class);
+    private final ClientCommandManager commands = mock(ClientCommandManager.class);
+    private final ClientCommandPolicy policy = mock(ClientCommandPolicy.class);
+    private final Session session = mock(Session.class);
+    private final Player player = mock(Player.class);
+    private final PlayerManager players = mock(PlayerManager.class);
+    private final DataCollection message = DataUtility.newZeroMap().putShort("op", (short) 42);
+    private ZeroProcessorImpl processor;
 
-  private void receive() throws Exception {
-    var method =
-        ZeroProcessorImpl.class.getDeclaredMethod(
-            "processSessionReadMessage", Session.class, DataCollection.class);
-    method.setAccessible(true);
-    method.invoke(processor, session, message);
-  }
+    @BeforeEach
+    void setUp() {
+        processor = ZeroProcessorImpl.newInstance(events, mock(ServerApi.class), mock(DatagramChannelManager.class));
+        processor.setPlayerManager(players);
+        when(session.isAssociatedToPlayer(Session.AssociatedState.DONE)).thenReturn(true);
+        when(session.getName()).thenReturn("alice");
+        when(players.getPlayerByIdentity("alice")).thenReturn(player);
+        when(player.getSession()).thenReturn(Optional.of(session));
+    }
 
-  @SuppressWarnings("unchecked")
-  private void configureCommands() {
-    var handler = mock(AbstractClientCommandHandler.class);
-    when(commands.getHandlers()).thenReturn(Map.of((short) 42, handler));
-    when(commands.getHandler((short) 42)).thenReturn(handler);
-    processor.configureClientCommands(commands, policy);
-  }
+    private void receive() throws Exception {
+        var method = ZeroProcessorImpl.class.getDeclaredMethod("processSessionReadMessage", Session.class, DataCollection.class);
+        method.setAccessible(true);
+        method.invoke(processor, session, message);
+    }
 
-  @Test
-  void noPolicyPreservesEventModeEvenWithCommands() throws Exception {
-    processor.configureClientCommands(commands, null);
-    receive();
-    verify(events).emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
-    verifyNoInteractions(policy, commands);
-  }
+    @SuppressWarnings("unchecked")
+    private void configureCommands() {
+        var handler = mock(AbstractClientCommandHandler.class);
+        when(commands.getHandlers()).thenReturn(Map.of((short) 42, handler));
+        when(commands.getHandler((short) 42)).thenReturn(handler);
+        processor.configureClientCommands(commands, policy);
+    }
 
-  @Test
-  void noCommandsCachesDisabledModeAndNeverInvokesPolicy() throws Exception {
-    var registry = new HashMap<Short, AbstractClientCommandHandler<Player, DataCollection>>();
-    when(commands.getHandlers()).thenReturn(registry);
-    processor.configureClientCommands(commands, policy);
-    receive();
-    receive();
-    verify(commands, times(1)).getHandlers();
-    verifyNoInteractions(policy);
-    verify(events, times(2)).emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
-  }
+    @Test
+    void noPolicyPreservesEventModeEvenWithCommands() throws Exception {
+        processor.configureClientCommands(commands, null);
+        receive();
+        verify(events).emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
+        verifyNoInteractions(policy, commands);
+    }
 
-  @Test
-  void routesResolvedPayloadExactlyOnceAndSkipsLegacyEvent() throws Exception {
-    configureCommands();
-    var payload = DataUtility.newZeroMap().putString("text", "hello");
-    when(policy.applyPolicy(message))
-        .thenReturn(new ClientCommandPolicy.CommandRequest((short) 42, payload));
-    receive();
-    verify(commands).invoke((short) 42, player, payload);
-    verify(events, never()).emit(eq(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER), any(), any());
-    verify(commands, times(1)).getHandlers();
-  }
+    @Test
+    void noCommandsCachesDisabledModeAndNeverInvokesPolicy() throws Exception {
+        var registry = new HashMap<Short, AbstractClientCommandHandler<Player, DataCollection>>();
+        when(commands.getHandlers()).thenReturn(registry);
+        processor.configureClientCommands(commands, policy);
+        receive();
+        receive();
+        verify(commands, times(1)).getHandlers();
+        verifyNoInteractions(policy);
+        verify(events, times(2)).emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
+    }
 
-  @Test
-  void missingCodeCannotFallBackToEventMode() throws Exception {
-    configureCommands();
-    receive();
-    verify(commands, never()).invoke(any(), any(), any());
-    verifyNoInteractions(events);
-  }
+    @Test
+    void routesResolvedPayloadExactlyOnceAndSkipsLegacyEvent() throws Exception {
+        configureCommands();
+        var payload = DataUtility.newZeroMap().putString("text", "hello");
+        when(policy.applyPolicy(message)).thenReturn(new ClientCommandPolicy.CommandRequest((short) 42, payload));
+        receive();
+        verify(commands).invoke((short) 42, player, payload);
+        verify(events, never()).emit(eq(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER), any(), any());
+        verify(commands, times(1)).getHandlers();
+    }
 
-  @Test
-  void malformedEnvelopeCannotFallBackToEventMode() throws Exception {
-    configureCommands();
-    when(policy.applyPolicy(message)).thenThrow(new IllegalArgumentException("bad payload"));
-    receive();
-    verify(commands, never()).invoke(any(), any(), any());
-    verifyNoInteractions(events);
-  }
+    @Test
+    void missingCodeCannotFallBackToEventMode() throws Exception {
+        configureCommands();
+        receive();
+        verify(commands, never()).invoke(any(), any(), any());
+        verifyNoInteractions(events);
+    }
 
-  @Test
-  void unknownCommandCannotFallBackToEventMode() throws Exception {
-    configureCommands();
-    when(policy.applyPolicy(message))
-        .thenReturn(new ClientCommandPolicy.CommandRequest((short) 99, message));
-    receive();
-    verify(commands, never()).invoke(any(), any(), any());
-    verifyNoInteractions(events);
-  }
+    @Test
+    void malformedEnvelopeCannotFallBackToEventMode() throws Exception {
+        configureCommands();
+        when(policy.applyPolicy(message)).thenThrow(new IllegalArgumentException("bad payload"));
+        receive();
+        verify(commands, never()).invoke(any(), any(), any());
+        verifyNoInteractions(events);
+    }
 
-  @Test
-  void fullMailboxDoesNotFallBackOrTerminateReceiveProcessing() throws Exception {
-    configureCommands();
-    when(policy.applyPolicy(message))
-        .thenReturn(new ClientCommandPolicy.CommandRequest((short) 42, message));
-    doThrow(new RejectedExecutionException())
-        .doNothing()
-        .when(commands)
-        .invoke((short) 42, player, message);
-    receive();
-    receive();
-    verify(commands, times(2)).invoke((short) 42, player, message);
-    verifyNoInteractions(events);
-  }
+    @Test
+    void unknownCommandCannotFallBackToEventMode() throws Exception {
+        configureCommands();
+        when(policy.applyPolicy(message)).thenReturn(new ClientCommandPolicy.CommandRequest((short) 99, message));
+        receive();
+        verify(commands, never()).invoke(any(), any(), any());
+        verifyNoInteractions(events);
+    }
 
-  @Test
-  void staleSessionNeverReachesPolicy() throws Exception {
-    configureCommands();
-    when(player.getSession()).thenReturn(Optional.of(mock(Session.class)));
-    receive();
-    verifyNoInteractions(policy, events);
-  }
+    @Test
+    void fullMailboxDoesNotFallBackOrTerminateReceiveProcessing() throws Exception {
+        configureCommands();
+        when(policy.applyPolicy(message)).thenReturn(new ClientCommandPolicy.CommandRequest((short) 42, message));
+        doThrow(new RejectedExecutionException())
+                .doNothing()
+                .when(commands)
+                .invoke((short) 42, player, message);
+        receive();
+        receive();
+        verify(commands, times(2)).invoke((short) 42, player, message);
+        verifyNoInteractions(events);
+    }
 
-  @Test
-  void destroyedProcessorDoesNotRetainThePreviousRoutingMode() throws Exception {
-    configureCommands();
-    processor.onDestroyed();
-    receive();
-    verifyNoInteractions(policy);
-    verify(events).emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
-  }
+    @Test
+    void staleSessionNeverReachesPolicy() throws Exception {
+        configureCommands();
+        when(player.getSession()).thenReturn(Optional.of(mock(Session.class)));
+        receive();
+        verifyNoInteractions(policy, events);
+    }
+
+    @Test
+    void destroyedProcessorDoesNotRetainThePreviousRoutingMode() throws Exception {
+        configureCommands();
+        processor.onDestroyed();
+        receive();
+        verifyNoInteractions(policy);
+        verify(events).emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
+    }
 }

@@ -24,22 +24,25 @@ THE SOFTWARE.
 
 package com.tenio.core.scheduler.job;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.tenio.core.bootstrap.injector.Injector;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 class PerformanceProfileTest {
-  @Test
-  void performanceSamplerIsSelectedOnlyByItsProfile() throws Exception {
-    var plain = new Injector();
-    plain.setProfiles(Set.of("default"));
-    plain.scanPackages(PerformanceJob.class);
-    assertNull(plain.getBean(PerformanceJob.class));
-    var enabled = new Injector();
-    enabled.setProfiles(Set.of("performance"));
-    enabled.scanPackages(PerformanceJob.class);
-    assertNotNull(enabled.getBean(PerformanceJob.class));
-  }
+
+    @Test
+    void performanceSamplerIsSelectedOnlyByItsProfile() throws Exception {
+        var plain = new Injector();
+        plain.setProfiles(Set.of("default"));
+        plain.scanPackages(PerformanceJob.class);
+        assertNull(plain.getBean(PerformanceJob.class));
+        var enabled = new Injector();
+        enabled.setProfiles(Set.of("performance"));
+        enabled.scanPackages(PerformanceJob.class);
+        assertNotNull(enabled.getBean(PerformanceJob.class));
+    }
 }

@@ -439,8 +439,7 @@ public final class ServerImpl extends SystemLogger implements Server {
         if (commandPolicy != null) {
             zeroProcessor.configureClientCommands(clientCommandManager, commandPolicy);
         }
-        boolean registeredCommands =
-                clientCommandManager != null && !clientCommandManager.getHandlers().isEmpty();
+        boolean registeredCommands = clientCommandManager != null && !clientCommandManager.getHandlers().isEmpty();
         boolean commandMode = commandPolicy != null && registeredCommands;
         if (isInfoEnabled()) {
             info("CLIENT MESSAGE ROUTING",
