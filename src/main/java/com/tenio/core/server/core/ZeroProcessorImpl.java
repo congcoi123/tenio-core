@@ -24,14 +24,13 @@ THE SOFTWARE.
 
 package com.tenio.core.server.core;
 
-import com.tenio.core.admin.OperationalHistory;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.utility.TimeUtility;
+import com.tenio.core.admin.OperationalHistory;
 import com.tenio.core.api.ServerApi;
+import com.tenio.core.command.client.ClientCommandManager;
+import com.tenio.core.command.client.ClientCommandPolicy;
 import com.tenio.core.configuration.define.ServerEvent;
-import com.tenio.core.network.entity.inbound.implement.DatagramRequest;
-import com.tenio.core.network.entity.inbound.implement.SessionRequest;
-import com.tenio.core.processor.AbstractProcessor;
 import com.tenio.core.entity.Player;
 import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
@@ -41,16 +40,23 @@ import com.tenio.core.entity.define.result.ConnectionEstablishedResult;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.inbound.Request;
+import com.tenio.core.network.entity.inbound.implement.DatagramRequest;
+import com.tenio.core.network.entity.inbound.implement.SessionRequest;
 import com.tenio.core.network.entity.inbound.policy.RequestPolicy;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
+import com.tenio.core.processor.AbstractProcessor;
+import com.tenio.core.recovery.RecoveryManager;
+import com.tenio.core.recovery.RecoveryPolicy;
+
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.DatagramChannel;
 import java.util.Optional;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * The implementation for the processor service.
@@ -59,438 +65,553 @@ import java.util.Optional;
  */
 public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroProcessor {
 
-  private final ServerApi serverApi;
-  private final DatagramChannelManager datagramChannelManager;
-  private SessionManager sessionManager;
-  private PlayerManager playerManager;
-  private RequestPolicy requestPolicy;
-  private int maxNumberPlayers;
-  private boolean keepPlayerOnDisconnection;
+    private final ServerApi serverApi;
+    private final DatagramChannelManager datagramChannelManager;
+    private SessionManager sessionManager;
+    private PlayerManager playerManager;
+    private RequestPolicy requestPolicy;
+    private int maxNumberPlayers;
+    private boolean keepPlayerOnDisconnection;
+    private RecoveryManager recoveryManager;
+    private RecoveryPolicy recoveryPolicy;
+    private ClientCommandManager clientCommandManager;
+    private ClientCommandPolicy clientCommandPolicy;
+    // Established once before worker publication. No registry queries on the disabled receive path.
+    private boolean automaticClientCommands;
 
-  private ZeroProcessorImpl(EventManager eventManager, ServerApi serverApi,
-                            DatagramChannelManager datagramChannelManager) {
-    super(eventManager);
-    this.serverApi = serverApi;
-    this.datagramChannelManager = datagramChannelManager;
-  }
-
-  /**
-   * Retrieves a new instance of internal processor.
-   *
-   * @param eventManager           an instance of {@link EventManager}
-   * @param serverApi              an instance of {@link ServerApi}
-   * @param datagramChannelManager an instance of {@link DatagramChannelManager}
-   * @return a new instance of {@link ZeroProcessor}
-   */
-  public static ZeroProcessorImpl newInstance(EventManager eventManager,
-                                              ServerApi serverApi,
-                                              DatagramChannelManager datagramChannelManager) {
-    return new ZeroProcessorImpl(eventManager, serverApi, datagramChannelManager);
-  }
-
-  @Override
-  public void initialize() {
-    super.initialize();
-  }
-
-  @Override
-  public void subscribe(boolean supportSocketConnection, boolean supportDatagramChannel) {
-    if (supportSocketConnection) {
-      eventManager.on(ServerEvent.SESSION_REQUEST_CONNECTION, params -> {
-        var session = (Session) params[0];
-        var message = (DataCollection) params[1];
-        var request = SessionRequest.newInstance().setEvent(ServerEvent.SESSION_REQUEST_CONNECTION);
-        request.setSender(session);
-        request.setMessage(message);
-        if (requestPolicy != null) {
-          requestPolicy.applyPolicy(request);
-        }
-        enqueueRequest(request);
-
-        return null;
-      });
-
-      eventManager.on(ServerEvent.SESSION_WILL_BE_CLOSED, params -> {
-        var session = (Session) params[0];
-        var connectionDisconnectMode = (ConnectionDisconnectMode) params[1];
-        var playerDisconnectMode = (PlayerDisconnectMode) params[2];
-        // The closing process should happen immediately on the caller thread
-        // That's why we DID NOT mark the event SESSION_WILL_BE_CLOSED as @Asynchronous
-        processSessionWillBeClosed(session, connectionDisconnectMode, playerDisconnectMode);
-
-        return null;
-      });
-
-      eventManager.on(ServerEvent.SESSION_READ_MESSAGE, params -> {
-        var session = (Session) params[0];
-        var message = (DataCollection) params[1];
-        processSessionReadMessage(session, message);
-
-        return null;
-      });
+    private ZeroProcessorImpl(EventManager eventManager, ServerApi serverApi,
+                              DatagramChannelManager datagramChannelManager) {
+        super(eventManager);
+        this.serverApi = serverApi;
+        this.datagramChannelManager = datagramChannelManager;
     }
 
-    if (supportDatagramChannel) {
-      eventManager.on(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS, params -> {
-        var datagramChannel = (DatagramChannel) params[0];
-        var remoteAddress = (SocketAddress) params[1];
-        var message = (DataCollection) params[2];
-        var request = DatagramRequest.newInstance().setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS);
-        request.setSender(datagramChannel);
-        request.setRemoteAddress(remoteAddress);
-        request.setMessage(message);
-        if (requestPolicy != null) {
-          requestPolicy.applyPolicy(request);
-        }
-        enqueueRequest(request);
-
-        return null;
-      });
-    }
-  }
-
-  @Override
-  public void subscribe() {
-    // Do nothing
-  }
-
-  @Override
-  public void setRequestPolicy(RequestPolicy requestPolicy) {
-    this.requestPolicy = requestPolicy;
-  }
-
-  @Override
-  public void processRequest(Request request) {
-    switch (request.getEvent()) {
-      case SESSION_REQUEST_CONNECTION -> processSessionRequestsConnection(request);
-      case DATAGRAM_CHANNEL_REQUEST_ACCESS -> processDatagramChannelRequestsAccess(request);
-      default -> {
-        // do nothing
-      }
-    }
-  }
-
-  private void processSessionRequestsConnection(Request request) {
-    // Check if it's a reconnection request first
-    var session = (Session) request.getSender();
-
-    // We only consider the fresh session
-    if (!session.isActivated() || !session.transitionAssociatedState(Session.AssociatedState.NONE,
-        Session.AssociatedState.DOING)) {
-      return;
+    /**
+     * Retrieves a new instance of internal processor.
+     *
+     * @param eventManager           an instance of {@link EventManager}
+     * @param serverApi              an instance of {@link ServerApi}
+     * @param datagramChannelManager an instance of {@link DatagramChannelManager}
+     * @return a new instance of {@link ZeroProcessor}
+     */
+    public static ZeroProcessorImpl newInstance(EventManager eventManager,
+                                                ServerApi serverApi,
+                                                DatagramChannelManager datagramChannelManager) {
+        return new ZeroProcessorImpl(eventManager, serverApi, datagramChannelManager);
     }
 
-    var message = request.getMessage();
-
-    // When it gets disconnected from client side, the server may not recognize it. In this
-    // case, the player is remained on the server side, so we should always check this event
-    Object reconnectedObject = null;
-    try {
-      reconnectedObject = eventManager.emit(ServerEvent.PLAYER_CONNECTION_RETRY, session, message);
-    } catch (Exception exception) {
-      if (isErrorEnabled()) {
-        error(exception, request);
-      }
+    @Override
+    public void initialize() {
+        super.initialize();
     }
 
-    // check reconnected case
-    if (reconnectedObject != null) {
-      Optional<?> playerOptional = (Optional<?>) reconnectedObject;
-      if (playerOptional.isPresent()) {
-        Player player = (Player) playerOptional.get();
-        Optional<Session> optionalSession = player.getSession();
-        if (optionalSession.isPresent()) {
-          Session currentSession = optionalSession.get();
-          // This is to ensure that by any chance, the current session is not the one who is
-          // trying to reconnect
-          if (currentSession.isActivated() && !currentSession.equals(session)) {
-            try {
-              // Make the previous connection unable to submit or receive normal player traffic
-              // before the application sends its final handover notification.
-              currentSession.prepareForReplacement();
-              try {
-                eventManager.emit(ServerEvent.PLAYER_CONNECTION_REPLACING, player, currentSession,
-                    session);
-              } catch (Exception exception) {
-                if (isErrorEnabled()) {
-                  error(exception, "Error while notifying about connection replacement: ",
-                      currentSession);
+    @Override
+    public void subscribe(boolean supportSocketConnection, boolean supportDatagramChannel) {
+        if (supportSocketConnection) {
+            eventManager.on(ServerEvent.SESSION_REQUEST_CONNECTION, params -> {
+                var session = (Session) params[0];
+                var message = (DataCollection) params[1];
+                var request = SessionRequest.newInstance().setEvent(ServerEvent.SESSION_REQUEST_CONNECTION);
+                request.setSender(session);
+                request.setMessage(message);
+                if (requestPolicy != null) {
+                    requestPolicy.applyPolicy(request);
                 }
-              }
-              // A duplicate-login handler may have queued a final notification with
-              // Response#writeThenClose(). Let the writer deliver that response before it closes
-              // the stale session; otherwise the client misses the duplicate-login code and
-              // starts reconnecting again.
-              if (!currentSession.isCloseAfterPendingWriteMarked()) {
-                currentSession.close(ConnectionDisconnectMode.RECONNECTION,
-                    PlayerDisconnectMode.RECONNECTION);
-              }
-            } catch (IOException exception) {
-              if (isErrorEnabled()) {
-                error(exception, "Error while closing old session: ", currentSession);
-              }
+                enqueueRequest(request);
+
+                return null;
+            });
+
+            eventManager.on(ServerEvent.SESSION_WILL_BE_CLOSED, params -> {
+                var session = (Session) params[0];
+                var connectionDisconnectMode = (ConnectionDisconnectMode) params[1];
+                var playerDisconnectMode = (PlayerDisconnectMode) params[2];
+                // The closing process should happen immediately on the caller thread
+                // That's why we DID NOT mark the event SESSION_WILL_BE_CLOSED as @Asynchronous
+                processSessionWillBeClosed(session, connectionDisconnectMode, playerDisconnectMode);
+
+                return null;
+            });
+
+            eventManager.on(ServerEvent.SESSION_READ_MESSAGE, params -> {
+                var session = (Session) params[0];
+                var message = (DataCollection) params[1];
+                processSessionReadMessage(session, message);
+
+                return null;
+            });
+        }
+
+        if (supportDatagramChannel) {
+            eventManager.on(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS, params -> {
+                var datagramChannel = (DatagramChannel) params[0];
+                var remoteAddress = (SocketAddress) params[1];
+                var message = (DataCollection) params[2];
+                var request = DatagramRequest.newInstance().setEvent(ServerEvent.DATAGRAM_CHANNEL_REQUEST_ACCESS);
+                request.setSender(datagramChannel);
+                request.setRemoteAddress(remoteAddress);
+                request.setMessage(message);
+                if (requestPolicy != null) {
+                    requestPolicy.applyPolicy(request);
+                }
+                enqueueRequest(request);
+
+                return null;
+            });
+        }
+    }
+
+    @Override
+    public void subscribe() {
+        // Do nothing
+    }
+
+    @Override
+    public void setRequestPolicy(RequestPolicy requestPolicy) {
+        this.requestPolicy = requestPolicy;
+    }
+
+    @Override
+    public void processRequest(Request request) {
+        switch (request.getEvent()) {
+            case SESSION_REQUEST_CONNECTION -> processSessionRequestsConnection(request);
+            case DATAGRAM_CHANNEL_REQUEST_ACCESS -> processDatagramChannelRequestsAccess(request);
+            default -> {
+                // do nothing
             }
-          }
         }
-
-        // In case the server does not want to hold the player when he gets disconnected, the
-        // player should be removed from his current room
-        // In case the server wants to keep this player, all the current information (room
-        // related data) has to be sent to client to get up-to-date
-        if (!keepPlayerOnDisconnection) {
-          // player should leave room (if applicable) first
-          if (player.isInRoom()) {
-            serverApi.leaveRoom(player, PlayerLeaveRoomMode.RECONNECTION);
-          }
-        }
-
-        // Connect the player to the new session only while this session still owns the
-        // DOING state. A concurrent close changes it to NONE and makes this fail.
-        boolean attached = attachPlayerToSession(player, session);
-        var history = sessionManager == null ? null : sessionManager.getOperationalHistory();
-        if (history != null) {
-          history.record(session.getId(), String.valueOf(session.getTransportType()),
-              OperationalHistory.Kind.RECONNECT, attached ? "resumed" : "attachment failed");
-        }
-        if (!attached) {
-          return;
-        }
-        player.setLastReadTime(now());
-        player.setLastWriteTime(now());
-        eventManager.emit(ServerEvent.PLAYER_CONNECTION_RESUMED, player, session);
-      } else {
-        establishNewPlayerConnection(session, message);
-      }
-    } else {
-      establishNewPlayerConnection(session, message);
     }
-  }
 
-  private void establishNewPlayerConnection(Session session, DataCollection message) {
-    // check the number of current players
-    if (playerManager.getSnapshotPlayerCount() >= maxNumberPlayers) {
-      eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
-          ConnectionEstablishedResult.REACHED_MAX_CONNECTION);
-      try {
-        if (session.isActivated()) {
-          session.close(ConnectionDisconnectMode.REACHED_MAX_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
-        }
-      } catch (IOException exception) {
-        if (isErrorEnabled()) {
-          error(exception, "Session closed with error: ", session.toString());
-        }
-      }
-    } else {
-      eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message,
-          ConnectionEstablishedResult.SUCCESS);
+    @Override
+    public void configureClientCommands(ClientCommandManager clientCommandManager, ClientCommandPolicy clientCommandPolicy) {
+        this.clientCommandManager = clientCommandManager;
+        this.clientCommandPolicy = clientCommandPolicy;
+        automaticClientCommands = clientCommandManager != null && clientCommandPolicy != null && !clientCommandManager.getHandlers().isEmpty();
     }
-  }
 
-  // This should be finished quickly because it's processed on the caller thread
-  private void processSessionWillBeClosed(Session session, ConnectionDisconnectMode connectionDisconnectMode,
-                                          PlayerDisconnectMode playerDisconnectMode) {
-    if (releaseSessionAssociation(session)) {
-      // The session is still available to handlers here. Emit before detaching it from the player
-      // or removing it, so applications can observe every associated connection close.
-      eventManager.emit(ServerEvent.CONNECTION_WILL_BE_CLOSED, session, playerDisconnectMode);
-      var player = playerManager.getPlayerByIdentity(session.getName());
-      // the player maybe existed
-      if (player != null) {
-        synchronized (player) {
-          // A reconnect may have bound a newer session already. A stale close must not
-          // unsubscribe, remove, or clear that player.
-          if (player.getSession().orElse(null) == session) {
-            if (shouldKeepPlayerOnDisconnection(keepPlayerOnDisconnection, connectionDisconnectMode,
-                    playerDisconnectMode)) {
-              // Retain room and channel state for reconnection, but detach the closed session.
-              player.setSession(null);
+    @Override
+    public void configureRecovery(RecoveryManager recoveryManager, RecoveryPolicy recoveryPolicy) {
+        this.recoveryManager = recoveryManager;
+        this.recoveryPolicy = recoveryPolicy;
+    }
+
+    private void processSessionRequestsConnection(Request request) {
+        // Check if it's a reconnection request first
+        var session = (Session) request.getSender();
+
+        // We only consider the fresh session
+        if (!session.isActivated() || !session.transitionAssociatedState(Session.AssociatedState.NONE, Session.AssociatedState.DOING)) {
+            return;
+        }
+
+        var message = request.getMessage();
+
+        // When it gets disconnected from client side, the server may not recognize it. In this
+        // case, the player is remained on the server side, so we should always check this event
+        RecoveryManager.Claim recoveryClaim = null;
+        Object reconnectedObject = null;
+        try {
+            var credentials = recoveryPolicy == null ? null : recoveryPolicy.credentials(session, message);
+            if (credentials != null) {
+                recoveryClaim = recoveryManager.claim(credentials);
+                if (recoveryClaim == null) {
+                    session.close(ConnectionDisconnectMode.REFUSED_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
+                    return;
+                }
+                reconnectedObject = Optional.of(recoveryClaim.player());
             } else {
-              // Keep the current session bound until all destructive cleanup has completed.
-              serverApi.unsubscribeFromAllChannels(player);
-              if (player.isInRoom()) {
-                serverApi.leaveRoom(player, PlayerLeaveRoomMode.SESSION_CLOSED);
-              }
-              eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
-
-              player.setSession(null);
-              playerManager.removePlayerByIdentity(player.getIdentity());
-              player.clean();
+                reconnectedObject = eventManager.emit(ServerEvent.PLAYER_CONNECTION_RETRY, session, message);
             }
-          }
+        } catch (Exception exception) {
+            if (isErrorEnabled()) {
+                if (recoveryPolicy == null) {
+                    error(exception, request);
+                } else {
+                    error(exception, "Recovery handshake rejected");
+                }
+            }
+            if (recoveryPolicy != null) {
+                try {
+                    session.close(ConnectionDisconnectMode.REFUSED_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
+                } catch (IOException closeFailure) {
+                    if (isErrorEnabled()) {
+                        error(closeFailure);
+                    }
+                }
+                return;
+            }
         }
-      } else {
-        if (isDebugEnabled()) {
-          debug("SESSION WILL BE REMOVED", "The player ", session.getName(),
-              " should be presented, but it was not");
-        }
-      }
-    }
-    session.setName(null);
-    session.remove();
-  }
 
-  private boolean shouldKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection,
-                                                  ConnectionDisconnectMode connectionDisconnectMode,
-                                                  PlayerDisconnectMode playerDisconnectMode) {
-    return keepPlayerOnDisconnection &&
-            !((connectionDisconnectMode == ConnectionDisconnectMode.CLIENT_REQUEST &&
-                    playerDisconnectMode == PlayerDisconnectMode.CLIENT_REQUEST)
-              || (connectionDisconnectMode == ConnectionDisconnectMode.IDLE &&
-                    playerDisconnectMode == PlayerDisconnectMode.IDLE));
-  }
+        // check reconnected case
+        if (reconnectedObject != null) {
+            Optional<?> playerOptional = (Optional<?>) reconnectedObject;
+            if (playerOptional.isPresent()) {
+                Player player = (Player) playerOptional.get();
+                Optional<Session> optionalSession = player.getSession();
+                if (optionalSession.isPresent()) {
+                    Session currentSession = optionalSession.get();
+                    // This is to ensure that by any chance, the current session is not the one who is
+                    // trying to reconnect
+                    if (currentSession.isActivated() && !currentSession.equals(session)) {
+                        try {
+                            // Make the previous connection unable to submit or receive normal player traffic
+                            // before the application sends its final handover notification.
+                            currentSession.prepareForReplacement();
+                            try {
+                                eventManager.emit(ServerEvent.PLAYER_CONNECTION_REPLACING, player, currentSession, session);
+                            } catch (Exception exception) {
+                                if (isErrorEnabled()) {
+                                    error(exception, "Error while notifying about connection replacement: ", currentSession);
+                                }
+                            }
+                            // A duplicate-login handler may have queued a final notification with
+                            // Response#writeThenClose(). Let the writer deliver that response before it closes
+                            // the stale session; otherwise the client misses the duplicate-login code and
+                            // starts reconnecting again.
+                            if (!currentSession.isCloseAfterPendingWriteMarked()) {
+                                currentSession.close(ConnectionDisconnectMode.RECONNECTION, PlayerDisconnectMode.RECONNECTION);
+                            }
+                        } catch (IOException exception) {
+                            if (isErrorEnabled()) {
+                                error(exception, "Error while closing old session: ", currentSession);
+                            }
+                        }
+                    }
+                }
 
-  /**
-   * Atomically claims a fresh session for this player. The session owns the association lock, so
-   * DONE is never handled before the player-side session reference is available.
-   */
-  private boolean attachPlayerToSession(Player player, Session session) {
-    return session.associatePlayer(player);
-  }
+                // In case the server does not want to hold the player when he gets disconnected, the
+                // player should be removed from his current room
+                // In case the server wants to keep this player, all the current information (room
+                // related data) has to be sent to client to get up-to-date
+                if (!keepPlayerOnDisconnection && recoveryClaim == null) {
+                    // player should leave room (if applicable) first
+                    if (player.isInRoom()) {
+                        serverApi.leaveRoom(player, PlayerLeaveRoomMode.RECONNECTION);
+                    }
+                }
 
-  /**
-   * Invalidates a session that is either being associated or already associated. CLOSING is a
-   * terminal association state, so an attach cannot resurrect a session once close has started.
-   */
-  private boolean releaseSessionAssociation(Session session) {
-    return session.beginPlayerAssociationClose();
-  }
-
-  // In this phase, the session must be bound with a player, a free session can only be accepted
-  // when it is being handled in the connection established phase
-  // NOTE: Since version 0.7.0, this kind of request doesn't need to get in the processor queue as it's using
-  // its independent session queue (thanks to virtual thread)
-  private void processSessionReadMessage(Session session, DataCollection message) {
-    session.setLastReadTime(TimeUtility.currentTimeMillis());
-    session.increaseReadMessages();
-
-    if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
-      var player = playerManager.getPlayerByIdentity(session.getName());
-      if (player == null) {
-        if (isErrorEnabled()) {
-          error(new IllegalArgumentException(String.format("Unable to find player for the session: %s", session)));
-        }
-        return;
-      }
-      // A player can have moved to a replacement connection after this session queued the
-      // message. Never let an older connection mutate the shared game state after that cutover.
-      if (player.getSession().orElse(null) != session) {
-        return;
-      }
-      eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
-    }
-  }
-
-  private void processDatagramChannelRequestsAccess(Request request) {
-    var message = request.getMessage();
-
-    // verify the datagram channel accessing request
-    Object checkingPlayer = null;
-    try {
-      checkingPlayer = eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION, message);
-    } catch (Exception exception) {
-      if (isErrorEnabled()) {
-        error(exception, request);
-      }
-    }
-
-    if (!(checkingPlayer instanceof Optional<?> optionalPlayer)) {
-      return;
-    }
-
-    if (optionalPlayer.isEmpty()) {
-      eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-          null, Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.PLAYER_NOT_FOUND);
-    } else {
-      Player player = (Player) optionalPlayer.get();
-      if (!player.containsSession() || player.getSession().isEmpty()) {
-        eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-            player, Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.SESSION_NOT_FOUND);
-      } else {
-        Session session = player.getSession().get();
-        if (!session.isTcp()) {
-          eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-              player, Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
+                // Connect the player to the new session only while this session still owns the
+                // DOING state. A concurrent close changes it to NONE and makes this fail.
+                boolean attached = attachPlayerToSession(player, session);
+                var history = sessionManager == null ? null : sessionManager.getOperationalHistory();
+                if (history != null) {
+                    history.record(session.getId(), String.valueOf(session.getTransportType()), OperationalHistory.Kind.RECONNECT, attached ? "resumed" : "attachment failed");
+                }
+                if (!attached) {
+                    if (recoveryClaim != null) {
+                        recoveryManager.revoke(player);
+                    }
+                    return;
+                }
+                player.setLastReadTime(now());
+                player.setLastWriteTime(now());
+                if (recoveryClaim != null) {
+                    try {
+                        var claim = recoveryClaim;
+                        recoveryPolicy.recover(player, session, () -> recoveryManager.complete(claim));
+                        recoveryManager.finish(claim);
+                    } catch (RuntimeException failure) {
+                        recoveryManager.revoke(player);
+                        serverApi.logout(player, ConnectionDisconnectMode.EXCEPTION, PlayerDisconnectMode.CONNECTION_LOST);
+                        if (isErrorEnabled()) {
+                            error(failure, "Recovery delivery failed");
+                        }
+                        return;
+                    }
+                }
+                eventManager.emit(ServerEvent.PLAYER_CONNECTION_RESUMED, player, session);
+            } else {
+                establishNewPlayerConnection(session, message);
+            }
         } else {
-          var udpConvey = datagramChannelManager.getCurrentUdpConveyId();
-          var datagramChannel = (DatagramChannel) request.getSender();
-          var remoteAddress = request.getRemoteAddress();
-
-          session.setDatagramRemoteAddress(remoteAddress);
-          sessionManager.addDatagramForSession(datagramChannel, udpConvey, session);
-
-          eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
-              player, udpConvey, AccessDatagramChannelResult.SUCCESS);
+            establishNewPlayerConnection(session, message);
         }
-      }
     }
-  }
 
-  private long now() {
-    return TimeUtility.currentTimeMillis();
-  }
+    private void establishNewPlayerConnection(Session session, DataCollection message) {
+        // check the number of current players
+        if (playerManager.getSnapshotPlayerCount() >= maxNumberPlayers) {
+            eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message, ConnectionEstablishedResult.REACHED_MAX_CONNECTION);
+            try {
+                if (session.isActivated()) {
+                    session.close(ConnectionDisconnectMode.REACHED_MAX_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
+                }
+            } catch (IOException exception) {
+                if (isErrorEnabled()) {
+                    error(exception, "Session closed with error: ", session.toString());
+                }
+            }
+        } else {
+            eventManager.emit(ServerEvent.CONNECTION_ESTABLISHED_RESULT, session, message, ConnectionEstablishedResult.SUCCESS);
+        }
+    }
 
-  @Override
-  public String getName() {
-    return "zero-processor";
-  }
+    // This should be finished quickly because it's processed on the caller thread
+    private void processSessionWillBeClosed(Session session, ConnectionDisconnectMode connectionDisconnectMode,
+                                            PlayerDisconnectMode playerDisconnectMode) {
+        if (releaseSessionAssociation(session)) {
+            // The session is still available to handlers here. Emit before detaching it from the player
+            // or removing it, so applications can observe every associated connection close.
+            eventManager.emit(ServerEvent.CONNECTION_WILL_BE_CLOSED, session, playerDisconnectMode);
+            var player = playerManager.getPlayerByIdentity(session.getName());
+            // the player maybe existed
+            if (player != null) {
+                synchronized (player) {
+                    // A reconnect may have bound a newer session already. A stale close must not
+                    // unsubscribe, remove, or clear that player.
+                    if (player.getSession().orElse(null) == session) {
+                        if (recoveryManager != null
+                                ? recoveryManager.disconnected(player, connectionDisconnectMode)
+                                : shouldKeepPlayerOnDisconnection(keepPlayerOnDisconnection, connectionDisconnectMode, playerDisconnectMode)) {
+                            // Retain room and channel state for reconnection, but detach the closed session.
+                            player.setSession(null);
+                        } else {
+                            // Keep the current session bound until all destructive cleanup has completed.
+                            serverApi.unsubscribeFromAllChannels(player);
+                            if (player.isInRoom()) {
+                                serverApi.leaveRoom(player, PlayerLeaveRoomMode.SESSION_CLOSED);
+                            }
+                            eventManager.emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
 
-  @Override
-  protected boolean isEnabledPriority() {
-    return requestPolicy != null;
-  }
+                            player.setSession(null);
+                            var replication = serverApi.getStateReplication();
+                            if (replication != null) {
+                                replication.removePlayer(player.getIdentity());
+                            }
+                            var directory = serverApi.getRoomDirectory();
+                            if (directory != null) {
+                                directory.release(player.getIdentity());
+                            }
+                            playerManager.removePlayerByIdentity(player.getIdentity());
+                            player.clean();
+                        }
+                    }
+                }
+            } else {
+                if (isDebugEnabled()) {
+                    debug("SESSION WILL BE REMOVED", "The player ", session.getName(), " should be presented, but it was not");
+                }
+            }
+        }
+        session.setName(null);
+        session.remove();
+    }
 
-  @Override
-  public void setMaxNumberPlayers(int maxNumberPlayers) {
-    this.maxNumberPlayers = maxNumberPlayers;
-  }
+    private boolean shouldKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection,
+                                                    ConnectionDisconnectMode connectionDisconnectMode,
+                                                    PlayerDisconnectMode playerDisconnectMode) {
+        return keepPlayerOnDisconnection &&
+                !((connectionDisconnectMode == ConnectionDisconnectMode.CLIENT_REQUEST &&
+                        playerDisconnectMode == PlayerDisconnectMode.CLIENT_REQUEST)
+                        || (connectionDisconnectMode == ConnectionDisconnectMode.IDLE &&
+                        playerDisconnectMode == PlayerDisconnectMode.IDLE));
+    }
 
-  @Override
-  public void setKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection) {
-    this.keepPlayerOnDisconnection = keepPlayerOnDisconnection;
-  }
+    /**
+     * Atomically claims a fresh session for this player. The session owns the association lock, so
+     * DONE is never handled before the player-side session reference is available.
+     */
+    private boolean attachPlayerToSession(Player player, Session session) {
+        return session.associatePlayer(player);
+    }
 
-  @Override
-  public void setSessionManager(SessionManager sessionManager) {
-    this.sessionManager = sessionManager;
-  }
+    /**
+     * Invalidates a session that is either being associated or already associated. CLOSING is a
+     * terminal association state, so an attachment cannot resurrect a session once close has started.
+     */
+    private boolean releaseSessionAssociation(Session session) {
+        return session.beginPlayerAssociationClose();
+    }
 
-  @Override
-  public void setPlayerManager(PlayerManager playerManager) {
-    this.playerManager = playerManager;
-  }
+    // In this phase, the session must be bound with a player, a free session can only be accepted
+    // when it is being handled in the connection established phase
+    // NOTE: Since version 0.7.0, this kind of request doesn't need to get in the processor queue as it's using
+    // its independent session queue (thanks to virtual thread)
+    private void processSessionReadMessage(Session session, DataCollection message) {
+        session.setLastReadTime(TimeUtility.currentTimeMillis());
+        session.increaseReadMessages();
 
-  @Override
-  public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
-    // Do nothing
-  }
+        if (session.isAssociatedToPlayer(Session.AssociatedState.DONE)) {
+            var player = playerManager.getPlayerByIdentity(session.getName());
+            if (player == null) {
+                if (isErrorEnabled()) {
+                    error(new IllegalArgumentException(String.format("Unable to find player for the session: %s", session)));
+                }
+                return;
+            }
+            // A player can have moved to a replacement connection after this session queued the
+            // message. Never let an older connection mutate the shared game state after that cutover.
+            if (player.getSession().orElse(null) != session) {
+                return;
+            }
+            if (recoveryManager != null && recoveryManager.isRecovering(player)) {
+                if (!recoveryManager.awaitReady(player)) {
+                    recoveryManager.revoke(player);
+                    try {
+                        session.close(ConnectionDisconnectMode.REFUSED_CONNECTION, PlayerDisconnectMode.CONNECTION_LOST);
+                    } catch (IOException failure) {
+                        if (isErrorEnabled()) {
+                            error(failure);
+                        }
+                    }
+                    return;
+                }
+                if (!session.isActivated() || player.getSession().orElse(null) != session) {
+                    return;
+                }
+            }
+            if (automaticClientCommands) {
+                routeClientCommand(player, message);
+                return;
+            }
+            eventManager.emit(ServerEvent.RECEIVED_MESSAGE_FROM_PLAYER, player, message);
+        }
+    }
 
-  @Override
-  public void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic) {
-    // Do nothing
-  }
+    private void routeClientCommand(Player player, DataCollection message) {
+        final ClientCommandPolicy.CommandRequest command;
+        try {
+            command = clientCommandPolicy.applyPolicy(message);
+        } catch (RuntimeException malformed) {
+            // Do not log an untrusted payload or exception text that could contain credentials.
+            if (isDebugEnabled()) {
+                debug("CLIENT_COMMAND", "Rejected malformed command envelope");
+            }
+            return;
+        }
+        if (command == null) {
+            return;
+        }
+        if (clientCommandManager.getHandler(command.code()) == null) {
+            if (isDebugEnabled()) {
+                debug("CLIENT_COMMAND", "Rejected unknown command code: " + command.code());
+            }
+            return;
+        }
+        try {
+            clientCommandManager.invoke(command.code(), player, command.content());
+        } catch (RejectedExecutionException full) {
+            if (isDebugEnabled()) {
+                debug("CLIENT_COMMAND", "Rejected command: execution mailbox is full");
+            }
+        }
+    }
 
-  @Override
-  public void onInitialized() {
-    // Do nothing
-  }
+    private void processDatagramChannelRequestsAccess(Request request) {
+        var message = request.getMessage();
 
-  @Override
-  public void onStarted() {
-    // Do nothing
-  }
+        // verify the datagram channel accessing request
+        Object checkingPlayer = null;
+        try {
+            checkingPlayer = eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION, message);
+        } catch (Exception exception) {
+            if (isErrorEnabled()) {
+                error(exception, request);
+            }
+        }
 
-  @Override
-  public void onRunning() {
-    // Do nothing
-  }
+        if (!(checkingPlayer instanceof Optional<?> optionalPlayer)) {
+            return;
+        }
 
-  @Override
-  public void onShutdown() {
-    // Do nothing
-  }
+        if (optionalPlayer.isEmpty()) {
+            eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
+                    null, Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.PLAYER_NOT_FOUND);
+        } else {
+            Player player = (Player) optionalPlayer.get();
+            if (!player.containsSession() || player.getSession().isEmpty()) {
+                eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
+                        player, Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.SESSION_NOT_FOUND);
+            } else {
+                Session session = player.getSession().get();
+                if (!session.isTcp()) {
+                    eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
+                            player, Session.EMPTY_DATAGRAM_CONVEY_ID, AccessDatagramChannelResult.INVALID_SESSION_PROTOCOL);
+                } else {
+                    var udpConvey = datagramChannelManager.getCurrentUdpConveyId();
+                    var datagramChannel = (DatagramChannel) request.getSender();
+                    var remoteAddress = request.getRemoteAddress();
 
-  @Override
-  public void onDestroyed() {
-    // Do nothing
-  }
+                    session.setDatagramRemoteAddress(remoteAddress);
+                    sessionManager.addDatagramForSession(datagramChannel, udpConvey, session);
+
+                    eventManager.emit(ServerEvent.ACCESS_DATAGRAM_CHANNEL_REQUEST_VALIDATION_RESULT,
+                            player, udpConvey, AccessDatagramChannelResult.SUCCESS);
+                }
+            }
+        }
+    }
+
+    private long now() {
+        return TimeUtility.currentTimeMillis();
+    }
+
+    @Override
+    public String getName() {
+        return "zero-processor";
+    }
+
+    @Override
+    protected boolean isEnabledPriority() {
+        return requestPolicy != null;
+    }
+
+    @Override
+    public void setMaxNumberPlayers(int maxNumberPlayers) {
+        this.maxNumberPlayers = maxNumberPlayers;
+    }
+
+    @Override
+    public void setKeepPlayerOnDisconnection(boolean keepPlayerOnDisconnection) {
+        this.keepPlayerOnDisconnection = keepPlayerOnDisconnection;
+    }
+
+    @Override
+    public void setSessionManager(SessionManager sessionManager) {
+        this.sessionManager = sessionManager;
+    }
+
+    @Override
+    public void setPlayerManager(PlayerManager playerManager) {
+        this.playerManager = playerManager;
+    }
+
+    @Override
+    public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
+        // Do nothing
+    }
+
+    @Override
+    public void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic) {
+        // Do nothing
+    }
+
+    @Override
+    public void onInitialized() {
+        // Do nothing
+    }
+
+    @Override
+    public void onStarted() {
+        // Do nothing
+    }
+
+    @Override
+    public void onRunning() {
+        // Do nothing
+    }
+
+    @Override
+    public void onShutdown() {
+        // Do nothing
+    }
+
+    @Override
+    public void onDestroyed() {
+        automaticClientCommands = false;
+        clientCommandManager = null;
+        clientCommandPolicy = null;
+        recoveryManager = null;
+        recoveryPolicy = null;
+    }
 }

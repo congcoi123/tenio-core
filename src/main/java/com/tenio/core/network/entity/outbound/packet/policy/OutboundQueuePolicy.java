@@ -25,8 +25,8 @@ THE SOFTWARE.
 package com.tenio.core.network.entity.outbound.packet.policy;
 
 import com.tenio.core.exception.OutboundQueuePolicyViolationException;
-import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
+import com.tenio.core.network.entity.outbound.packet.Packet;
 
 /**
  * The outbound queue policy.
@@ -35,14 +35,12 @@ import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
  */
 public interface OutboundQueuePolicy {
 
-  /**
-   * Applies policies on a queue whenever a new packet is added into it.
-   *
-   * @param outboundQueue the checking {@link OutboundQueue}
-   * @param packet      a new appended {@link Packet}
-   * @throws OutboundQueuePolicyViolationException whenever a new added packet violates the queue's
-   * policies
-   */
-  void applyPolicy(OutboundQueue outboundQueue, Packet packet)
-      throws OutboundQueuePolicyViolationException;
+    /**
+     * Applies policies on a queue whenever a new packet is added into it.
+     *
+     * @param outboundQueue the checking {@link OutboundQueue}
+     * @param packet        a new appended {@link Packet}
+     * @throws OutboundQueuePolicyViolationException whenever a new added packet violates the queue's policies
+     */
+    void applyPolicy(OutboundQueue outboundQueue, Packet packet) throws OutboundQueuePolicyViolationException;
 }

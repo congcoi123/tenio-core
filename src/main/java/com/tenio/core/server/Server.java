@@ -24,8 +24,9 @@ THE SOFTWARE.
 
 package com.tenio.core.server;
 
-import com.tenio.core.admin.ServerInspection;
 import com.tenio.common.configuration.Configuration;
+import com.tenio.core.admin.PerformanceHistory;
+import com.tenio.core.admin.ServerInspection;
 import com.tenio.core.api.ServerApi;
 import com.tenio.core.bootstrap.BootstrapHandler;
 import com.tenio.core.bootstrap.Bootstrapper;
@@ -34,10 +35,12 @@ import com.tenio.core.configuration.ConfigurationSource;
 import com.tenio.core.entity.manager.ChannelManager;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
+import com.tenio.core.entity.replication.StateReplication;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.zero.engine.manager.DatagramChannelManager;
+import com.tenio.core.recovery.RecoveryManager;
 import io.netty.bootstrap.Bootstrap;
 
 /**
@@ -46,122 +49,144 @@ import io.netty.bootstrap.Bootstrap;
  */
 public interface Server {
 
-  /**
-   * Starts the server bases on the configurations.
-   *
-   * @param bootstrapHandler a {@link BootstrapHandler} handles all processes concerning the DI
-   *                         mechanism
-   * @param params           a list of {@link String} arguments used by the boostrap
-   * @throws Exception whenever any issue emerged
-   * @see Bootstrap
-   * @see Bootstrapper
-   */
-  void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception;
+    /**
+     * Starts the server bases on the configurations.
+     *
+     * @param bootstrapHandler a {@link BootstrapHandler} handles all processes concerning the DI
+     *                         mechanism
+     * @param params           a list of {@link String} arguments used by the boostrap
+     * @throws Exception whenever any issue emerged
+     * @see Bootstrap
+     * @see Bootstrapper
+     */
+    void start(BootstrapHandler bootstrapHandler, String[] params) throws Exception;
 
-  /**
-   * Starts with XML already read by the application launcher.
-   */
-  default void start(BootstrapHandler bootstrapHandler, String[] params, ConfigurationSource source) throws Exception {
-    start(bootstrapHandler, params);
-  }
+    /**
+     * Starts with XML already read by the application launcher.
+     */
+    default void start(BootstrapHandler bootstrapHandler, String[] params, ConfigurationSource source) throws Exception {
+        start(bootstrapHandler, params);
+    }
 
-  /**
-   * Shuts down the server and closes all services.
-   */
-  void shutdown();
+    /**
+     * Shuts down the server and closes all services.
+     */
+    void shutdown();
 
-  /**
-   * Returns the active TCP and WebSocket connection filter.
-   */
-  default ConnectionFilter getConnectionFilter() {
-    return null;
-  }
+    /**
+     * Returns the active TCP and WebSocket connection filter.
+     */
+    default ConnectionFilter getConnectionFilter() {
+        return null;
+    }
 
-  /**
-   * Retrieves a server APIs object which provides all supporting APIs on the server.
-   *
-   * @return an instance of {@link ServerApi}
-   */
-  ServerApi getApi();
+    /**
+     * Retrieves a server APIs object which provides all supporting APIs on the server.
+     *
+     * @return an instance of {@link ServerApi}
+     */
+    ServerApi getApi();
 
-  /**
-   * Retrieves a management object of self-defined user commands.
-   *
-   * @return an instance of {@link ClientCommandManager}
-   * @since 0.5.0
-   */
-  ClientCommandManager getClientCommandManager();
+    /**
+     * Retrieves a management object of self-defined user commands.
+     *
+     * @return an instance of {@link ClientCommandManager}
+     * @since 0.5.0
+     */
+    ClientCommandManager getClientCommandManager();
 
-  /**
-   * Retrieves an event manager object which manages all events supporting on the server.
-   *
-   * @return an instance of {@link EventManager}
-   */
-  EventManager getEventManager();
+    /**
+     * Retrieves an event manager object which manages all events supporting on the server.
+     *
+     * @return an instance of {@link EventManager}
+     */
+    EventManager getEventManager();
 
-  /**
-   * Retrieves a player manager object which manages all players on the server.
-   *
-   * @return an instance of {@link PlayerManager}
-   */
-  PlayerManager getPlayerManager();
+    /**
+     * Retrieves a player manager object which manages all players on the server.
+     *
+     * @return an instance of {@link PlayerManager}
+     */
+    PlayerManager getPlayerManager();
 
-  /**
-   * Retrieves a room manager object which manages all rooms on the server.
-   *
-   * @return an instance of {@link RoomManager}
-   */
-  RoomManager getRoomManager();
+    /**
+     * Retrieves a room manager object which manages all rooms on the server.
+     *
+     * @return an instance of {@link RoomManager}
+     */
+    RoomManager getRoomManager();
 
-  /**
-   * Retrieves a channel manager object which manages channels.
-   *
-   * @since 0.6.3
-   * @return an instance of {@link ChannelManager}
-   */
-  ChannelManager getChannelManager();
+    /**
+     * Retrieves a channel manager object which manages channels.
+     *
+     * @return an instance of {@link ChannelManager}
+     * @since 0.6.3
+     */
+    ChannelManager getChannelManager();
 
-  /**
-   * Retrieves a data channel manager object which allows managing UDP related information.
-   *
-   * @return an instance of {@link DatagramChannelManager}
-   */
-  DatagramChannelManager getDatagramChannelManager();
+    /**
+     * Retrieves a data channel manager object which allows managing UDP related information.
+     *
+     * @return an instance of {@link DatagramChannelManager}
+     */
+    DatagramChannelManager getDatagramChannelManager();
 
-  /**
-   * Retrieves the current server's configuration.
-   *
-   * @return the current {@link Configuration} of server
-   * @since 0.4.0
-   */
-  Configuration getConfiguration();
+    /**
+     * Retrieves the current server's configuration.
+     *
+     * @return the current {@link Configuration} of server
+     * @since 0.4.0
+     */
+    Configuration getConfiguration();
 
-  /**
-   * Retrieves the time when server starts in milliseconds.
-   *
-   * @return started time in milliseconds
-   */
-  long getStartedTime();
+    /**
+     * Retrieves the time when server starts in milliseconds.
+     *
+     * @return started time in milliseconds
+     */
+    long getStartedTime();
 
-  /**
-   * Retrieves the current uptime of server in milliseconds.
-   *
-   * @return the current server's uptime in milliseconds
-   */
-  long getUptime();
+    /**
+     * Retrieves the current uptime of server in milliseconds.
+     *
+     * @return the current server's uptime in milliseconds
+     */
+    long getUptime();
 
-  /**
-   * Available when the local admin window or operational history is enabled.
-   */
-  default ServerInspection getInspection() {
-    return null;
-  }
+    /**
+     * Available when the local admin window or operational history is enabled.
+     */
+    default ServerInspection getInspection() {
+        return null;
+    }
 
-  /**
-   * Writes down data to socket/channel to send them to client sides.
-   *
-   * @param response an instance of {@link Response} using to carry conveying information
-   * @param markedAsLast marks as this writing is the last one
-   */
-  void write(Response response, boolean markedAsLast);
+    /**
+     * Writes down data to socket/channel to send them to client sides.
+     *
+     * @param response     an instance of {@link Response} using to carry conveying information
+     * @param markedAsLast marks as this writing is the last one
+     */
+    void write(Response response, boolean markedAsLast);
+
+    /**
+     * Returns the optional recovery authority configured through a RecoveryPolicy bean.
+     *
+     * @return authority, or null when recovery is not enabled
+     */
+    RecoveryManager getRecoveryManager();
+
+    /**
+     * @return optional persistent performance recorder, or null when disabled
+     */
+    PerformanceHistory getPerformanceHistory();
+
+    /**
+     * Enables explicitly replicated state during startup; never copies existing property maps.
+     */
+    StateReplication enableStateReplication(int maximumEntities, int maximumBytes, int maximumSubscribers);
+
+    /**
+     * @return enabled replication service, or null
+     */
+    StateReplication getStateReplication();
 }

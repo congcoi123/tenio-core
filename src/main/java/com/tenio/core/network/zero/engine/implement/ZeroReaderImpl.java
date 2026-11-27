@@ -35,6 +35,7 @@ import com.tenio.core.network.zero.engine.reader.DatagramReaderHandler;
 import com.tenio.core.network.zero.engine.reader.SocketReaderHandler;
 import com.tenio.core.network.zero.engine.reader.policy.DatagramPacketPolicy;
 import java.io.IOException;
+import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -180,7 +181,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine implements ZeroRead
         try {
           socketReaderHandler.running();
         } catch (Throwable cause) {
-          if (isErrorEnabled()) {
+          if (isErrorEnabled() && !(isStopping() && cause instanceof ClosedSelectorException)) {
             error(cause);
           }
         }
@@ -205,7 +206,7 @@ public final class ZeroReaderImpl extends AbstractZeroEngine implements ZeroRead
         try {
           datagramReaderHandler.running();
         } catch (Throwable cause) {
-          if (isErrorEnabled()) {
+          if (isErrorEnabled() && !(isStopping() && cause instanceof ClosedSelectorException)) {
             error(cause);
           }
         }

@@ -25,6 +25,7 @@ THE SOFTWARE.
 package com.tenio.core.bootstrap.annotation;
 
 import com.tenio.core.command.client.AbstractClientCommandHandler;
+import com.tenio.core.command.client.ExecutionMode;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -82,6 +83,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface ClientCommand {
 
+    int DEFAULT_MAILBOX_CAPACITY = 128;
+
     /**
      * Startup profiles allowing this annotated element to participate. An empty array or blank
      * restriction is unrestricted. Values are trimmed, case-sensitive OR alternatives; each entry may
@@ -100,6 +103,16 @@ public @interface ClientCommand {
      * @return the command value
      */
     short value();
+
+    /**
+     * @return optional dispatch policy; inline preserves existing execution
+     */
+    ExecutionMode execution() default ExecutionMode.INLINE;
+
+    /**
+     * @return maximum outstanding requests for this session/room lane; must be positive
+     */
+    int mailboxCapacity() default DEFAULT_MAILBOX_CAPACITY;
 
     /**
      * Optional display name. The handler class name is used when this is blank.

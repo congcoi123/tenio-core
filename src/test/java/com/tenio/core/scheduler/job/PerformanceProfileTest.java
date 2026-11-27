@@ -22,17 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package com.tenio.core.network.define;
+package com.tenio.core.scheduler.job;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
+import com.tenio.core.bootstrap.injector.Injector;
 import org.junit.jupiter.api.Test;
 
-class ResponseGuaranteeTest {
-  @Test
-  void testValueOf() {
-    ResponseGuarantee actualValueOfResult = ResponseGuarantee.valueOf("NON_GUARANTEED");
-    assertEquals(1, actualValueOfResult.getValue());
-    assertEquals("NON_GUARANTEED", actualValueOfResult.toString());
-  }
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+class PerformanceProfileTest {
+
+    @Test
+    void performanceSamplerIsSelectedOnlyByItsProfile() throws Exception {
+        var plain = new Injector();
+        plain.setProfiles(Set.of("default"));
+        plain.scanPackages(PerformanceJob.class);
+        assertNull(plain.getBean(PerformanceJob.class));
+        var enabled = new Injector();
+        enabled.setProfiles(Set.of("performance"));
+        enabled.scanPackages(PerformanceJob.class);
+        assertNotNull(enabled.getBean(PerformanceJob.class));
+    }
 }

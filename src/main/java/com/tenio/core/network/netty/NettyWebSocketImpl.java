@@ -49,6 +49,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.util.concurrent.DefaultThreadFactory;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,320 +60,320 @@ import java.util.concurrent.TimeUnit;
  */
 public final class NettyWebSocketImpl extends AbstractManager implements NettyWebSocket {
 
-  private static final String PREFIX_WEBSOCKET = "websocket";
+    private static final String PREFIX_WEBSOCKET = "websocket";
 
-  private static final int DEFAULT_SENDER_BUFFER_SIZE = 1024;
-  private static final int DEFAULT_RECEIVER_BUFFER_SIZE = 1024;
-  private static final int DEFAULT_PRODUCER_WORKER_SIZE = 2;
-  private static final int DEFAULT_CONSUMER_WORKER_SIZE = Runtime.getRuntime().availableProcessors() * 2;
+    private static final int DEFAULT_SENDER_BUFFER_SIZE = 1024;
+    private static final int DEFAULT_RECEIVER_BUFFER_SIZE = 1024;
+    private static final int DEFAULT_PRODUCER_WORKER_SIZE = 2;
+    private static final int DEFAULT_CONSUMER_WORKER_SIZE = Runtime.getRuntime().availableProcessors() * 2;
 
-  private final Object lifecycleLock;
-  private ServerBootstrap bootstrap;
-  private EventLoopGroup webSocketAcceptors;
-  private EventLoopGroup webSocketWorkers;
-  private List<Channel> serverWebSockets;
+    private final Object lifecycleLock;
+    private String serverAddress = "0.0.0.0";
+    private ServerBootstrap bootstrap;
+    private EventLoopGroup webSocketAcceptors;
+    private EventLoopGroup webSocketWorkers;
+    private List<Channel> serverWebSockets;
 
-  private int senderBufferSize;
-  private int receiverBufferSize;
-  private int producerWorkerSize;
-  private int consumerWorkerSize;
+    private int senderBufferSize;
+    private int receiverBufferSize;
+    private int producerWorkerSize;
+    private int consumerWorkerSize;
 
-  private ConnectionFilter connectionFilter;
-  private SessionManager sessionManager;
-  private BinaryPacketEncoder binaryPacketEncoder;
-  private BinaryPacketDecoder binaryPacketDecoder;
-  private NetworkReaderStatistic networkReaderStatistic;
-  private NetworkWriterStatistic networkWriterStatistic;
-  private SocketConfiguration socketConfiguration;
-  private boolean usingSsl;
+    private ConnectionFilter connectionFilter;
+    private SessionManager sessionManager;
+    private BinaryPacketEncoder binaryPacketEncoder;
+    private BinaryPacketDecoder binaryPacketDecoder;
+    private NetworkReaderStatistic networkReaderStatistic;
+    private NetworkWriterStatistic networkWriterStatistic;
+    private SocketConfiguration socketConfiguration;
+    private boolean usingSsl;
 
-  private boolean initialized;
-  private boolean started;
+    private boolean initialized;
+    private boolean started;
 
-  private NettyWebSocketImpl(EventManager eventManager) {
-    super(eventManager);
+    private NettyWebSocketImpl(EventManager eventManager) {
+        super(eventManager);
 
-    senderBufferSize = DEFAULT_SENDER_BUFFER_SIZE;
-    receiverBufferSize = DEFAULT_RECEIVER_BUFFER_SIZE;
-    producerWorkerSize = DEFAULT_PRODUCER_WORKER_SIZE;
-    consumerWorkerSize = DEFAULT_CONSUMER_WORKER_SIZE;
+        senderBufferSize = DEFAULT_SENDER_BUFFER_SIZE;
+        receiverBufferSize = DEFAULT_RECEIVER_BUFFER_SIZE;
+        producerWorkerSize = DEFAULT_PRODUCER_WORKER_SIZE;
+        consumerWorkerSize = DEFAULT_CONSUMER_WORKER_SIZE;
 
-    lifecycleLock = new Object();
-    initialized = false;
-    started = false;
-  }
-
-  /**
-   * Creates a new instance of web socket engine.
-   *
-   * @param eventManager the instance of {@link EventManager}
-   * @return a new instance of {@link NettyWebSocket}
-   */
-  public static NettyWebSocket newInstance(EventManager eventManager) {
-    return new NettyWebSocketImpl(eventManager);
-  }
-
-  private void attemptToStart() throws InterruptedException {
-    if (isInfoEnabled()) {
-      info("START ENGINE", buildgen(getName(), " (", producerWorkerSize + consumerWorkerSize, ")"));
+        lifecycleLock = new Object();
+        initialized = false;
+        started = false;
     }
 
-    var defaultWebsocketThreadFactory =
-        new DefaultThreadFactory(PREFIX_WEBSOCKET, true, Thread.NORM_PRIORITY);
-
-    webSocketAcceptors = new NioEventLoopGroup(producerWorkerSize, defaultWebsocketThreadFactory);
-    webSocketWorkers = new NioEventLoopGroup(consumerWorkerSize, defaultWebsocketThreadFactory);
-    serverWebSockets = new ArrayList<>();
-
-    WebSocketSslContext sslContext = null;
-    if (usingSsl) {
-      sslContext = new WebSocketSslContext();
+    /**
+     * Creates a new instance of WebSocket engine.
+     *
+     * @param eventManager the instance of {@link EventManager}
+     * @return a new instance of {@link NettyWebSocket}
+     */
+    public static NettyWebSocket newInstance(EventManager eventManager) {
+        return new NettyWebSocketImpl(eventManager);
     }
 
-    bootstrap = new ServerBootstrap();
-    bootstrap.group(webSocketAcceptors, webSocketWorkers).channel(NioServerSocketChannel.class)
-        .option(ChannelOption.SO_BACKLOG, 5)
-        .childOption(ChannelOption.SO_SNDBUF, senderBufferSize)
-        .childOption(ChannelOption.SO_RCVBUF, receiverBufferSize)
-        .childOption(ChannelOption.SO_KEEPALIVE, true)
-        .childHandler(NettyWsInitializer.newInstance(eventManager, sessionManager,
-            connectionFilter, binaryPacketDecoder, networkReaderStatistic, sslContext, usingSsl));
-
-    if (isInfoEnabled()) {
-      info("WEB SOCKET", buildgen("Started at port: ", socketConfiguration.port()));
-    }
-  }
-
-  private void attemptToShutdown() {
-    if (serverWebSockets != null) {
-      for (var socket : serverWebSockets) {
-        close(socket);
-      }
-      serverWebSockets.clear();
-    }
-
-    if (webSocketAcceptors != null) {
-      webSocketAcceptors.shutdownGracefully(0, 10, TimeUnit.SECONDS)
-          .awaitUninterruptibly(10, TimeUnit.SECONDS);
-    }
-    if (webSocketWorkers != null) {
-      webSocketWorkers.shutdownGracefully(0, 10, TimeUnit.SECONDS)
-          .awaitUninterruptibly(10, TimeUnit.SECONDS);
-    }
-
-    if (isInfoEnabled()) {
-      info("STOPPED ENGINE", buildgen(getName(), " (", producerWorkerSize + consumerWorkerSize, ")"));
-    }
-  }
-
-  /**
-   * Close a channel, see {@link Channel}.
-   *
-   * @param channel the closed channel
-   */
-  private void close(Channel channel) {
-    if (channel == null) {
-      return;
-    }
-
-    try {
-      channel.close().sync().addListener(future -> {
-        if (!future.isSuccess()) {
-          if (isErrorEnabled()) {
-            error(future.cause());
-          }
+    private void attemptToStart() throws InterruptedException {
+        if (isInfoEnabled()) {
+            info("START ENGINE", buildgen(getName(), " (", producerWorkerSize + consumerWorkerSize, ")"));
         }
-      });
-    } catch (InterruptedException exception) {
-      if (isErrorEnabled()) {
-        error(exception);
-      }
-    }
-  }
 
-  @Override
-  public void initialize() {
-    synchronized (lifecycleLock) {
-      initialized = true;
-    }
-  }
+        var defaultWebsocketThreadFactory = new DefaultThreadFactory(PREFIX_WEBSOCKET, true, Thread.NORM_PRIORITY);
 
-  @Override
-  public void start() {
-    synchronized (lifecycleLock) {
-      if (!initialized || started) {
-        return;
-      }
-      try {
-        attemptToStart();
-        started = true;
-      } catch (InterruptedException exception) {
-        Thread.currentThread().interrupt();
-        throw new ServiceRuntimeException(exception.getMessage());
-      }
-    }
-  }
+        webSocketAcceptors = new NioEventLoopGroup(producerWorkerSize, defaultWebsocketThreadFactory);
+        webSocketWorkers = new NioEventLoopGroup(consumerWorkerSize, defaultWebsocketThreadFactory);
+        serverWebSockets = new ArrayList<>();
 
-  @Override
-  public void shutdown() {
-    synchronized (lifecycleLock) {
-      if (!initialized) {
-        return;
-      }
-      attemptToShutdown();
-      started = false;
-      initialized = false;
-    }
-  }
-
-  @Override
-  public void activate() {
-    synchronized (lifecycleLock) {
-      if (!initialized || !started) {
-        return;
-      }
-
-      ChannelFuture channelFuture;
-      try {
-        channelFuture = bootstrap.bind(socketConfiguration.port()).sync()
-            .addListener(future -> {
-              if (!future.isSuccess()) {
-                if (isErrorEnabled()) {
-                  error(future.cause());
-                }
-                throw new IOException(String.valueOf(socketConfiguration.port()));
-              }
-            });
-      } catch (InterruptedException exception) {
-        Thread.currentThread().interrupt();
-        throw new RuntimeException(exception);
-      }
-      serverWebSockets.add(channelFuture.channel());
-    }
-  }
-
-  @Override
-  public String getName() {
-    return "netty-websocket";
-  }
-
-  @Override
-  public void setName(String name) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public int getMaximumStartingTimeInMilliseconds() {
-    return 0;
-  }
-
-  @Override
-  public boolean isActivated() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setSenderBufferSize(int bufferSize) {
-    senderBufferSize = bufferSize;
-  }
-
-  @Override
-  public void setReceiverBufferSize(int bufferSize) {
-    receiverBufferSize = bufferSize;
-  }
-
-  @Override
-  public void setProducerWorkerSize(int workerSize) {
-    producerWorkerSize = workerSize;
-  }
-
-  @Override
-  public void setConsumerWorkerSize(int workerSize) {
-    consumerWorkerSize = workerSize;
-  }
-
-  @Override
-  public void setConnectionFilter(ConnectionFilter connectionFilter) {
-    this.connectionFilter = connectionFilter;
-  }
-
-  @Override
-  public void setPacketEncoder(BinaryPacketEncoder packetEncoder) {
-    this.binaryPacketEncoder = packetEncoder;
-  }
-
-  @Override
-  public void setPacketDecoder(BinaryPacketDecoder packetDecoder) {
-    this.binaryPacketDecoder = packetDecoder;
-  }
-
-  @Override
-  public void setSessionManager(SessionManager sessionManager) {
-    this.sessionManager = sessionManager;
-  }
-
-  @Override
-  public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
-    this.networkReaderStatistic = networkReaderStatistic;
-  }
-
-  @Override
-  public void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic) {
-    this.networkWriterStatistic = networkWriterStatistic;
-  }
-
-  @Override
-  public void setWebSocketConfiguration(SocketConfiguration socketConfiguration) {
-    this.socketConfiguration = socketConfiguration;
-  }
-
-  @Override
-  public void setUsingSsl(boolean usingSsl) {
-    this.usingSsl = usingSsl;
-  }
-
-  @Override
-  public void write(Packet packet) {
-    int originalSize = packet.getOriginalSize();
-    byte[] encodedData = null;
-    var iterator = packet.getRecipients().iterator();
-    while (iterator.hasNext()) {
-      var session = iterator.next();
-      if (session.isActivated()) {
-        Channel channel = session.fetchWebSocketChannel();
-        if (!channel.isWritable()) {
-          session.addDroppedPackets(1);
-          networkWriterStatistic.updateWrittenDroppedPacketsByFull(1);
-          continue;
+        WebSocketSslContext sslContext = null;
+        if (usingSsl) {
+            sslContext = new WebSocketSslContext();
         }
-        if (encodedData == null) {
-          Packet encodedPacket = binaryPacketEncoder.encode(packet.deepCopy());
-          encodedData = encodedPacket.getData();
-        }
-        ChannelFuture writeFuture = channel
-            .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(encodedData)));
-        session.addWrittenBytes(originalSize);
-        networkWriterStatistic.updateWrittenBytes(originalSize);
-        networkWriterStatistic.updateWrittenPackets(1);
-        if (packet.isMarkedAsLast()) {
-          writeFuture.addListener(future -> {
-            try {
-              if (session.isActivated()) {
-                session.close(ConnectionDisconnectMode.CLIENT_REQUEST,
-                    PlayerDisconnectMode.CLIENT_REQUEST);
-              }
-            } catch (IOException exception) {
-              if (isErrorEnabled()) {
-                error(exception, session.toString());
-              }
+
+        bootstrap = new ServerBootstrap();
+        bootstrap.group(webSocketAcceptors, webSocketWorkers).channel(NioServerSocketChannel.class)
+                .option(ChannelOption.SO_BACKLOG, 5)
+                .childOption(ChannelOption.SO_SNDBUF, senderBufferSize)
+                .childOption(ChannelOption.SO_RCVBUF, receiverBufferSize)
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .childHandler(NettyWsInitializer.newInstance(eventManager, sessionManager, connectionFilter, binaryPacketDecoder, networkReaderStatistic, sslContext, usingSsl));
+    }
+
+    private void attemptToShutdown() {
+        if (serverWebSockets != null) {
+            for (var socket : serverWebSockets) {
+                close(socket);
             }
-          });
+            serverWebSockets.clear();
         }
-      } else {
-        if (isDebugEnabled()) {
-          debug("WRITE WEBSOCKET CHANNEL", "Session is inactivated: ", session.toString());
+
+        if (webSocketAcceptors != null) {
+            webSocketAcceptors.shutdownGracefully(0, 10, TimeUnit.SECONDS)
+                    .awaitUninterruptibly(10, TimeUnit.SECONDS);
         }
-      }
+        if (webSocketWorkers != null) {
+            webSocketWorkers.shutdownGracefully(0, 10, TimeUnit.SECONDS)
+                    .awaitUninterruptibly(10, TimeUnit.SECONDS);
+        }
+
+        if (isInfoEnabled()) {
+            info("STOPPED ENGINE", buildgen(getName(), " (", producerWorkerSize + consumerWorkerSize, ")"));
+        }
     }
-  }
+
+    /**
+     * Close a channel, see {@link Channel}.
+     *
+     * @param channel the closed channel
+     */
+    private void close(Channel channel) {
+        if (channel == null) {
+            return;
+        }
+
+        channel.close().awaitUninterruptibly();
+    }
+
+    @Override
+    public void initialize() {
+        synchronized (lifecycleLock) {
+            initialized = true;
+        }
+    }
+
+    @Override
+    public void start() {
+        synchronized (lifecycleLock) {
+            if (!initialized || started) {
+                return;
+            }
+            try {
+                attemptToStart();
+                started = true;
+            } catch (InterruptedException exception) {
+                attemptToShutdown();
+                Thread.currentThread().interrupt();
+                throw new ServiceRuntimeException(exception.getMessage());
+            } catch (RuntimeException exception) {
+                attemptToShutdown();
+                throw exception;
+            }
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        synchronized (lifecycleLock) {
+            if (!initialized) {
+                return;
+            }
+            attemptToShutdown();
+            started = false;
+            initialized = false;
+        }
+    }
+
+    @Override
+    public void activate() {
+        synchronized (lifecycleLock) {
+            if (!initialized || !started) {
+                return;
+            }
+
+            if (!serverWebSockets.isEmpty()) {
+                return;
+            }
+            try {
+                var channelFuture = bootstrap.bind(serverAddress, socketConfiguration.port()).sync();
+                serverWebSockets.add(channelFuture.channel());
+                if (isInfoEnabled()) {
+                    info("WEB SOCKET", buildgen("Started at address: ", serverAddress,
+                            ", port: ", socketConfiguration.port()));
+                }
+            } catch (InterruptedException exception) {
+                attemptToShutdown();
+                started = false;
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(exception);
+            } catch (Exception exception) {
+                attemptToShutdown();
+                started = false;
+                throw new IllegalStateException("Unable to bind WebSocket listener", exception);
+            }
+        }
+    }
+
+    @Override
+    public String getName() {
+        return "netty-websocket";
+    }
+
+    @Override
+    public void setName(String name) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getMaximumStartingTimeInMilliseconds() {
+        return 0;
+    }
+
+    @Override
+    public boolean isActivated() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setServerAddress(String serverAddress) {
+        this.serverAddress = serverAddress;
+    }
+
+    @Override
+    public void setSenderBufferSize(int bufferSize) {
+        senderBufferSize = bufferSize;
+    }
+
+    @Override
+    public void setReceiverBufferSize(int bufferSize) {
+        receiverBufferSize = bufferSize;
+    }
+
+    @Override
+    public void setProducerWorkerSize(int workerSize) {
+        producerWorkerSize = workerSize;
+    }
+
+    @Override
+    public void setConsumerWorkerSize(int workerSize) {
+        consumerWorkerSize = workerSize;
+    }
+
+    @Override
+    public void setConnectionFilter(ConnectionFilter connectionFilter) {
+        this.connectionFilter = connectionFilter;
+    }
+
+    @Override
+    public void setPacketEncoder(BinaryPacketEncoder packetEncoder) {
+        this.binaryPacketEncoder = packetEncoder;
+    }
+
+    @Override
+    public void setPacketDecoder(BinaryPacketDecoder packetDecoder) {
+        this.binaryPacketDecoder = packetDecoder;
+    }
+
+    @Override
+    public void setSessionManager(SessionManager sessionManager) {
+        this.sessionManager = sessionManager;
+    }
+
+    @Override
+    public void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic) {
+        this.networkReaderStatistic = networkReaderStatistic;
+    }
+
+    @Override
+    public void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic) {
+        this.networkWriterStatistic = networkWriterStatistic;
+    }
+
+    @Override
+    public void setWebSocketConfiguration(SocketConfiguration socketConfiguration) {
+        this.socketConfiguration = socketConfiguration;
+    }
+
+    @Override
+    public void setUsingSsl(boolean usingSsl) {
+        this.usingSsl = usingSsl;
+    }
+
+    @Override
+    public void write(Packet packet) {
+        int originalSize = packet.getOriginalSize();
+        byte[] encodedData = null;
+        var iterator = packet.getRecipients().iterator();
+        while (iterator.hasNext()) {
+            var session = iterator.next();
+            if (session.isActivated()) {
+                Channel channel = session.fetchWebSocketChannel();
+                if (!channel.isWritable()) {
+                    session.addDroppedPackets(1);
+                    networkWriterStatistic.updateWrittenDroppedPacketsByFull(1);
+                    if (isWarnEnabled() && session.pollOutboundQueueFullWarning()) {
+                        warn("[Outbound Queue Full] Rejected WebSocket packet; channel is not writable; "
+                                + "sessionId: ", session.getId());
+                    }
+                    continue;
+                }
+                if (encodedData == null) {
+                    Packet encodedPacket = binaryPacketEncoder.encode(packet.deepCopy());
+                    encodedData = encodedPacket.getData();
+                }
+                ChannelFuture writeFuture = channel
+                        .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(encodedData)));
+                session.addWrittenBytes(originalSize);
+                networkWriterStatistic.updateWrittenBytes(originalSize);
+                networkWriterStatistic.updateWrittenPackets(1);
+                if (packet.isMarkedAsLast()) {
+                    writeFuture.addListener(future -> {
+                        try {
+                            if (session.isActivated()) {
+                                session.close(ConnectionDisconnectMode.CLIENT_REQUEST,
+                                        PlayerDisconnectMode.CLIENT_REQUEST);
+                            }
+                        } catch (IOException exception) {
+                            if (isErrorEnabled()) {
+                                error(exception, session.toString());
+                            }
+                        }
+                    });
+                }
+            } else {
+                if (isDebugEnabled()) {
+                    debug("WRITE WEBSOCKET CHANNEL", "Session is inactivated: ", session.toString());
+                }
+            }
+        }
+    }
 }
