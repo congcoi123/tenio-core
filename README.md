@@ -223,6 +223,11 @@ After authenticated login, enroll the player and send the token privately over a
 String token = api().getRecoveryManager().issue(player);
 ```
 
+Only players enrolled through `issue(player)` follow recovery grace periods and replay rules,
+independently of `keep-player-on-disconnection`. Unenrolled players retain that configuration's
+existing login/retry behavior even when a recovery policy is installed. Explicit logout, kick, ban
+and idle expiry end enrolled recovery rather than falling back to legacy retention.
+
 The policy controls grace periods and replay bounds. Capture and delivery must use the same
 mutation context as gameplay. Without a registered policy, the existing login/retry flow applies.
 See **Authenticated recovery** in the [framework services guide](./docs/framework-services.md) for strategies,
@@ -308,6 +313,12 @@ response().setContent(position).setRecipientPlayer(player)
 
 `DeliveryOptions` contains only mode, replacement key and queued lifetime. Modes describe what
 happens to queued messages; `OutboundQueuePolicy` independently decides whether to admit a packet.
+The first packet with delivery options activates a default 1 MiB queued-payload byte bound.
+Configure `session.fetchOutboundQueue().configureDeliveryByteLimit(bytes)` before publishing the
+session to change it; zero disables the byte bound. TTL begins when packet delivery options are
+assigned during writing, including serialization/encoding time. Configuring `Response.delivery(...)`
+earlier does not start that deadline. `writeThenClose()` closes TCP/WebSocket recipients even if
+its final packet is rejected or writing fails.
 
 | Transport | Default admission rule |
 | --- | --- |

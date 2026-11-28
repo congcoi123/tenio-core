@@ -360,9 +360,10 @@ public final class ZeroProcessorImpl extends AbstractProcessor implements ZeroPr
                     // A reconnect may have bound a newer session already. A stale close must not
                     // unsubscribe, remove, or clear that player.
                     if (player.getSession().orElse(null) == session) {
+                        boolean retainUnenrolled = shouldKeepPlayerOnDisconnection(keepPlayerOnDisconnection, connectionDisconnectMode, playerDisconnectMode);
                         if (recoveryManager != null
-                                ? recoveryManager.disconnected(player, connectionDisconnectMode)
-                                : shouldKeepPlayerOnDisconnection(keepPlayerOnDisconnection, connectionDisconnectMode, playerDisconnectMode)) {
+                                ? recoveryManager.disconnected(player, connectionDisconnectMode, retainUnenrolled)
+                                : retainUnenrolled) {
                             // Retain room and channel state for reconnection, but detach the closed session.
                             player.setSession(null);
                         } else {

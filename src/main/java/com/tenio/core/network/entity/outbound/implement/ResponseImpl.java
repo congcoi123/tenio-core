@@ -27,11 +27,14 @@ package com.tenio.core.network.entity.outbound.implement;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataType;
 import com.tenio.core.entity.Player;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.network.entity.outbound.Response;
 import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.server.ServerImpl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
@@ -199,7 +202,29 @@ public final class ResponseImpl implements Response {
         constructRecipientPlayers();
         markRecipientsForCloseAfterPendingWrite(socketSessions);
         markRecipientsForCloseAfterPendingWrite(webSocketSessions);
-        ServerImpl.getInstance().write(this, true);
+        try {
+            ServerImpl.getInstance().write(this, true);
+        } catch (RuntimeException | Error failure) {
+            closeAfterFailedFinalWrite(socketSessions, failure);
+            closeAfterFailedFinalWrite(webSocketSessions, failure);
+            throw failure;
+        }
+    }
+
+    private void closeAfterFailedFinalWrite(Collection<Session> sessions, Throwable failure) {
+        if (sessions != null) {
+            for (var session : sessions) {
+                try {
+                    if (session.isActivated()) {
+                        session.close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+                    }
+                } catch (IOException | RuntimeException closeFailure) {
+                    if (closeFailure != failure) {
+                        failure.addSuppressed(closeFailure);
+                    }
+                }
+            }
+        }
     }
 
     private void markRecipientsForCloseAfterPendingWrite(Collection<Session> sessions) {

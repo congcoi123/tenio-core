@@ -169,5 +169,6 @@
 - Added performance history with rotating archives and desktop charts.
 - Improved WebSocket handshakes, fragmentation, control frames and listener lifecycle.
 - Improved startup diagnostics and network shutdown; fixed TCP reader stalls and room discovery issues.
+- Preserved legacy retention for unenrolled players, rejected commands without required context, and closed connections when final writes fail.
 - Rate-limited slow/full queue warnings while preserving drop counters and unexpected error logs.
 - Removed writeInDelay, ResponseGuarantee and delivery priorities; updated documentation and regression tests.

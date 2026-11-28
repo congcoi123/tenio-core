@@ -174,12 +174,34 @@ public final class RecoveryManager implements AutoCloseable {
     }
 
     /**
-     * Marks eligible transport failures as recoverable; explicit logout/kick/ban are excluded.
+     * Marks eligible transport failures as recoverable. Unenrolled players are not retained;
+     * explicit logout, kick and ban remove an existing enrollment.
+     *
+     * @param player the player whose connection closed
+     * @param reason the connection close reason
+     * @return whether recovery retains the player
      */
-    public synchronized boolean disconnected(Player player, ConnectionDisconnectMode reason) {
-        Entry entry = entry(player);
-        if (closed || entry == null) {
+    public boolean disconnected(Player player, ConnectionDisconnectMode reason) {
+        return disconnected(player, reason, false);
+    }
+
+    /**
+     * Resolves recovery retention atomically with enrollment lookup. Enrolled players follow the
+     * recovery policy independently of legacy retention. Unenrolled players use the caller's
+     * retention decision. Explicit closes of enrolled players never fall back to legacy retention.
+     *
+     * @param player the player whose connection closed
+     * @param reason the connection close reason
+     * @param retainUnenrolled the caller's retention decision when this player is not enrolled
+     * @return whether the player should be retained; a closed recovery manager always returns false
+     */
+    public synchronized boolean disconnected(Player player, ConnectionDisconnectMode reason, boolean retainUnenrolled) {
+        if (closed) {
             return false;
+        }
+        Entry entry = entry(player);
+        if (entry == null) {
+            return retainUnenrolled;
         }
         if (reason == ConnectionDisconnectMode.RECONNECTION && entry.claim != null) {
             return true;

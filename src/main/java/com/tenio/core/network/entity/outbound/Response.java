@@ -175,8 +175,9 @@ public interface Response {
     void write();
 
     /**
-     * Writes down the content data to sessions for sending to client sides then disconnect them
-     * (close sessions).
+     * Writes the final response and closes its TCP/WebSocket recipients after the write completes.
+     * If the final response cannot be admitted or written, those recipients are closed without
+     * waiting for the unsent packet. Unexpected synchronous failures still propagate to the caller.
      *
      * @since 0.5.0
      */
@@ -185,7 +186,8 @@ public interface Response {
     /**
      * Selects queued-message mode, replacement key and lifetime before write(). Queue admission is
      * determined separately by the outbound queue policy. Never use replaceable/best-effort for
-     * results or transactions that must be retained.
+     * results or transactions that must be retained. This method stores options without starting
+     * a TTL; packet deadlines are created during {@link #write()} or {@link #writeThenClose()}.
      *
      * @param options explicit queued-message behavior
      * @return this response

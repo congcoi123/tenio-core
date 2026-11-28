@@ -25,6 +25,8 @@ THE SOFTWARE.
 package com.tenio.core.network.zero.engine.implement;
 
 import com.tenio.core.event.implement.EventManager;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.Packet;
@@ -36,6 +38,7 @@ import com.tenio.core.network.zero.engine.writer.WriterHandler;
 import com.tenio.core.network.zero.engine.writer.implement.DatagramWriterHandler;
 import com.tenio.core.network.zero.engine.writer.implement.SocketWriterHandler;
 
+import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -132,10 +135,17 @@ public final class ZeroWriterImpl extends AbstractZeroEngine implements ZeroWrit
             return;
         }
 
-        if (packet.isTcp()) {
-            socketWriterHandler.send(outboundQueue, session, packet);
-        } else if (packet.isUdp()) {
-            datagramWriterHandler.send(outboundQueue, session, packet);
+        try {
+            if (packet.isTcp()) {
+                socketWriterHandler.send(outboundQueue, session, packet);
+            } else if (packet.isUdp()) {
+                datagramWriterHandler.send(outboundQueue, session, packet);
+            }
+        } catch (RuntimeException | Error failure) {
+            if (packet.isMarkedAsLast()) {
+                closeAfterFailedFinalWrite(session);
+            }
+            throw failure;
         }
     }
 
@@ -168,33 +178,53 @@ public final class ZeroWriterImpl extends AbstractZeroEngine implements ZeroWrit
             return;
         }
 
-        // loops through the outbound queue and handles its packets
-        var outboundQueue = session.fetchOutboundQueue();
-        if (outboundQueue != null) {
-            var result = outboundQueue.put(packet);
-            if (result.isCapacityRejection()) {
-                session.addDroppedPackets(1);
-                networkWriterStatistic.updateWrittenDroppedPacketsByFull(1);
-                if (!result.isSilent()) {
-                    warnQueueRejection(session, outboundQueue, "Full");
+        boolean scheduled = false;
+        try {
+            // loops through the outbound queue and handles its packets
+            var outboundQueue = session.fetchOutboundQueue();
+            if (outboundQueue != null) {
+                var result = outboundQueue.put(packet);
+                if (result.isCapacityRejection()) {
+                    session.addDroppedPackets(1);
+                    networkWriterStatistic.updateWrittenDroppedPacketsByFull(1);
+                    if (!result.isSilent()) {
+                        warnQueueRejection(session, outboundQueue, "Full");
+                    }
+                } else if (result.isPolicyRejection()) {
+                    session.addDroppedPackets(1);
+                    networkWriterStatistic.updateWrittenDroppedPacketsByPolicy(1);
+                    if (!result.isSilent()) {
+                        warnQueueRejection(session, outboundQueue, "Policy");
+                    }
                 }
-            } else if (result.isPolicyRejection()) {
-                session.addDroppedPackets(1);
-                networkWriterStatistic.updateWrittenDroppedPacketsByPolicy(1);
-                if (!result.isSilent()) {
-                    warnQueueRejection(session, outboundQueue, "Policy");
+                if (result != OutboundQueue.Admission.ENQUEUED) {
+                    packet.setRecipients(null);
+                    return;
                 }
-            }
-            if (result != OutboundQueue.Admission.ENQUEUED) {
+                warnSlowQueue(session);
+
+                // duplicated entries are expected
+                sessionTicketsQueueManager.getQueueByElementId(session.getId()).add(session);
+                scheduled = true;
+
                 packet.setRecipients(null);
-                return;
             }
-            warnSlowQueue(session);
+        } finally {
+            if (!scheduled && packet.isMarkedAsLast()) {
+                closeAfterFailedFinalWrite(session);
+            }
+        }
+    }
 
-            // duplicated entries are expected
-            sessionTicketsQueueManager.getQueueByElementId(session.getId()).add(session);
-
-            packet.setRecipients(null);
+    private void closeAfterFailedFinalWrite(Session session) {
+        try {
+            if (session.isActivated()) {
+                session.close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+            }
+        } catch (IOException | RuntimeException closeFailure) {
+            if (isErrorEnabled()) {
+                error(closeFailure, "Unable to close session after a failed final write: ", session.getId());
+            }
         }
     }
 

@@ -290,7 +290,11 @@ public final class ClientCommandManager extends SystemLogger {
         var mode = binding.execution();
         if ((mode == ExecutionMode.SESSION && session == null)
                 || (mode == ExecutionMode.ROOM && (room == null || session == null))) {
-            throw new IllegalStateException("Ordered command requires an associated session/room");
+            if (isDebugEnabled()) {
+                debug("CLIENT_COMMAND", "Rejected command ", binding.value(),
+                        ": required session/room context is unavailable for ", mode);
+            }
+            return;
         }
         Object key = switch (mode) {
             case SESSION -> new Lane(mode, session.getId());

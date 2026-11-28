@@ -36,6 +36,15 @@ import java.util.Objects;
  * occupancy. No mode provides end-to-end acknowledgement or durable storage. Responses with no
  * options retain basic FIFO behavior without allocating this record or enhanced bookkeeping.
  *
+ * <p>The first packet with delivery options enables enhanced queue bookkeeping and a default
+ * 1 MiB bound on queued serialized payload bytes, including previously queued packets. Configure
+ * {@link OutboundQueue#configureDeliveryByteLimit(long)} before publishing the queue to change
+ * that bound; zero disables it. Packet count and policy bounds still apply.
+ *
+ * <p>A packet's TTL starts when {@link Packet#setDeliveryOptions(DeliveryOptions)} is called.
+ * Configuring a Response only stores options; its packets and deadlines are created during write.
+ * Time spent serializing, encoding or waiting for admission therefore counts toward packet TTL.
+ *
  * @param mode       queued-message replacement, expiry and overflow behavior
  * @param key        application replacement key, required only for REPLACEABLE
  * @param timeToLive maximum queued age, or zero for no deadline; at most one day

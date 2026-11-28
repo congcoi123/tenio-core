@@ -245,7 +245,11 @@ public interface Packet {
     DeliveryOptions getDeliveryOptions();
 
     /**
-     * Sets delivery policy before publishing this packet to writers.
+     * Sets delivery options before publishing this packet to writers. A nonzero TTL starts
+     * immediately at this call, before serialization, encoding and queue admission. Packet copies
+     * preserve the deadline; they do not extend it. Passing null clears the options and deadline.
+     *
+     * @param options the delivery options, or null to retain basic FIFO behavior
      */
     void setDeliveryOptions(DeliveryOptions options);
 

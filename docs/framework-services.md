@@ -39,7 +39,9 @@ runs before dispatch; its accepted counter means rate-limit acceptance, not succ
 Queued work is skipped if its original session has closed/been replaced or its room changed.
 Commands already running must cooperate with interruption and observe their own application state
 versions. Inline commands, event handlers, and direct Room mutations do not automatically join a
-ROOM lane. External completions must re-enter the application's mutation context before commit.
+ROOM lane. Commands lacking their required room/session context are rejected before input copying
+or dispatch; they do not produce ERROR stack traces. Application handler failures still propagate
+or are logged by their execution context. External completions must re-enter the application's mutation context before commit.
 
 Workers stop before SERVER_TEARDOWN, discard queued requests and wait at most five seconds in
 total. Blocking handlers must use I/O timeouts and release resources on interruption. Virtual threads
@@ -62,6 +64,9 @@ String token = api().getRecoveryManager().issue(player);
 Policy defaults are a 30-second disconnected grace period, 4,096 enrolled players, 256 replay events
 and 256 KiB replay bytes per player. Replay events expire after two minutes by default. Override the policy methods to choose bounded application
 values. Resource limits and strategy are captured at startup, not changed at runtime. Explicit logout, kick, ban, idle cleanup and server shutdown do not create recovery windows.
+Only enrolled players use these recovery rules, independently of the legacy
+`keep-player-on-disconnection` setting. Unenrolled players continue to use that setting even when
+a policy is configured; an explicit close of an enrolled player does not fall back to it.
 Unexpected read/write loss and connection exceptions can retain enrolled players. Enrolling a
 player does not make messages durable across a process restart. Existing idle-player maintenance
 can end a recovery window earlier; choose an idle timeout longer than the desired grace period.
@@ -160,8 +165,13 @@ Zero explicitly disables the byte bound. Byte counts measure payload size at adm
 TLS/framing/compression overhead. Packets must not be mutated after enqueue. Replacement removes
 one unclaimed update with the same key and transport and appends the newer one, preserving FIFO
 among retained important events. A replacement rejected by policy restores the prior packet at
-its original position. Expiry uses monotonic time. Claimed, fragmented and final-close packets
-are protected. Data already handed to a socket cannot be replaced or expired.
+its original position. Expiry uses monotonic time. Packet TTL starts at `setDeliveryOptions`,
+which the framework calls while creating a packet during `Response.write()`/`writeThenClose()`.
+Assigning `Response.delivery(...)` beforehand does not start a TTL. Serialization, encoding and
+admission wait after packet creation consume that lifetime. Claimed, fragmented and final-close packets
+are protected. Data already handed to a socket cannot be replaced or expired. A failed or rejected
+final TCP/WebSocket response closes its recipients without waiting for an unsent final packet;
+unexpected synchronous failures still propagate.
 
 Only `monitor` enables the extra reason counters: expired updates, superseded updates and
 best-effort capacity drops. Required queued-byte admission bookkeeping is independent of diagnostics.

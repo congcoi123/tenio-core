@@ -282,7 +282,8 @@ public final class ReplicatedState implements AutoCloseable {
          */
         SERVER,
         /**
-         * Only the entity/variable owner.
+         * Only the entity/variable owner. A server-owned entity with no owner exposes this field
+         * to no client. Use ROOM or LOBBY for client-visible fields; SERVER is also client-invisible.
          */
         OWNER,
         /**

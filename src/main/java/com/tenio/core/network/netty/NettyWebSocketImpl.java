@@ -33,6 +33,7 @@ import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
 import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.outbound.packet.Packet;
+import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.netty.websocket.NettyWsInitializer;
 import com.tenio.core.network.security.filter.ConnectionFilter;
@@ -336,38 +337,35 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
         while (iterator.hasNext()) {
             var session = iterator.next();
             if (session.isActivated()) {
-                Channel channel = session.fetchWebSocketChannel();
-                if (!channel.isWritable()) {
-                    session.addDroppedPackets(1);
-                    networkWriterStatistic.updateWrittenDroppedPacketsByFull(1);
-                    if (isWarnEnabled() && session.pollOutboundQueueFullWarning()) {
-                        warn("[Outbound Queue Full] Rejected WebSocket packet; channel is not writable; "
-                                + "sessionId: ", session.getId());
-                    }
-                    continue;
-                }
-                if (encodedData == null) {
-                    Packet encodedPacket = binaryPacketEncoder.encode(packet.deepCopy());
-                    encodedData = encodedPacket.getData();
-                }
-                ChannelFuture writeFuture = channel
-                        .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(encodedData)));
-                session.addWrittenBytes(originalSize);
-                networkWriterStatistic.updateWrittenBytes(originalSize);
-                networkWriterStatistic.updateWrittenPackets(1);
-                if (packet.isMarkedAsLast()) {
-                    writeFuture.addListener(future -> {
-                        try {
-                            if (session.isActivated()) {
-                                session.close(ConnectionDisconnectMode.CLIENT_REQUEST,
-                                        PlayerDisconnectMode.CLIENT_REQUEST);
-                            }
-                        } catch (IOException exception) {
-                            if (isErrorEnabled()) {
-                                error(exception, session.toString());
-                            }
+                boolean scheduled = false;
+                try {
+                    Channel channel = session.fetchWebSocketChannel();
+                    if (!channel.isWritable()) {
+                        session.addDroppedPackets(1);
+                        networkWriterStatistic.updateWrittenDroppedPacketsByFull(1);
+                        if (isWarnEnabled() && session.pollOutboundQueueFullWarning()) {
+                            warn("[Outbound Queue Full] Rejected WebSocket packet; channel is not writable; "
+                                    + "sessionId: ", session.getId());
                         }
-                    });
+                        continue;
+                    }
+                    if (encodedData == null) {
+                        Packet encodedPacket = binaryPacketEncoder.encode(packet.deepCopy());
+                        encodedData = encodedPacket.getData();
+                    }
+                    ChannelFuture writeFuture = channel
+                            .writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(encodedData)));
+                    session.addWrittenBytes(originalSize);
+                    networkWriterStatistic.updateWrittenBytes(originalSize);
+                    networkWriterStatistic.updateWrittenPackets(1);
+                    if (packet.isMarkedAsLast()) {
+                        writeFuture.addListener(future -> closeAfterFinalWrite(session));
+                    }
+                    scheduled = true;
+                } finally {
+                    if (!scheduled && packet.isMarkedAsLast()) {
+                        closeAfterFinalWrite(session);
+                    }
                 }
             } else {
                 if (isDebugEnabled()) {
@@ -376,4 +374,17 @@ public final class NettyWebSocketImpl extends AbstractManager implements NettyWe
             }
         }
     }
+
+    private void closeAfterFinalWrite(Session session) {
+        try {
+            if (session.isActivated()) {
+                session.close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+            }
+        } catch (IOException | RuntimeException closeFailure) {
+            if (isErrorEnabled()) {
+                error(closeFailure, "Unable to close WebSocket session after final write: ", session.getId());
+            }
+        }
+    }
+
 }
