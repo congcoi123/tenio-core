@@ -25,8 +25,6 @@ THE SOFTWARE.
 package com.tenio.core.handler.event;
 
 import com.tenio.core.processor.AbstractProcessor;
-import com.tenio.core.exception.OutboundQueueFullException;
-import com.tenio.core.exception.OutboundQueuePolicyViolationException;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
 
@@ -61,8 +59,7 @@ public interface EventFetchedBandwidthInfo {
    * @see AbstractProcessor
    * @see OutboundQueue
    * @see OutboundQueuePolicy
-   * @see OutboundQueuePolicyViolationException
-   * @see OutboundQueueFullException
+   * @see OutboundQueue.Admission
    */
   void onFetchedBandwidthInfo(long readBytes, long readPackets, long readDroppedPackets, long writtenBytes,
                               long writtenPackets, long writtenDroppedPacketsByPolicy,

@@ -88,6 +88,9 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
       }
       // now the packet can be safely removed
       outboundQueue.take();
+      if (packet.isMarkedAsLast()) {
+        closeAfterFinalPacket(outboundQueue, session);
+      }
       return;
     }
 
@@ -175,14 +178,7 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
 
       // in case this packet is the last one, it closes the session
       if (packet.isMarkedAsLast()) {
-        outboundQueue.clear();
-        try {
-          if (session.isActivated()) {
-            session.close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
-          }
-        } catch (IOException exception) {
-          error(exception, "Error occurred in writing on session: ", session.toString());
-        }
+        closeAfterFinalPacket(outboundQueue, session);
         return;
       }
 
@@ -193,4 +189,18 @@ public final class SocketWriterHandler extends AbstractWriterHandler {
       }
     }
   }
+
+  private void closeAfterFinalPacket(OutboundQueue outboundQueue, Session session) {
+    outboundQueue.clear();
+    try {
+      if (session.isActivated()) {
+        session.close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+      }
+    } catch (IOException exception) {
+      if (isErrorEnabled()) {
+        error(exception, "Error occurred in writing on session: ", session.toString());
+      }
+    }
+  }
+
 }

@@ -43,6 +43,7 @@ final class AdminCommands {
             new Command("network pressure", "Show up to 50 queues at least 80% full. Use network pressure all for the full table."),
             new Command("limits", "Show up to 50 rate-limit counters. Use limits all for the full table."),
             new Command("history [id]", "Show up to 50 recent events. Use history all or history <id> all for the full table. Requires history."),
+            new Command("performance [minutes]", "Show retained performance samples (1–10080 minutes). Requires performance."),
             new Command("clear", "Clear the local console output."));
 
     private AdminCommands() {
@@ -53,8 +54,10 @@ final class AdminCommands {
     }
 
     static InspectionResult help() {
-        return new InspectionResult(COMMANDS.stream().map(Command::usage).toList(),
-                COMMANDS.stream().map(Command::description).toList());
+        return new InspectionResult(
+                COMMANDS.stream().map(Command::usage).toList(),
+                COMMANDS.stream().map(Command::description).toList()
+        );
     }
 
     static boolean handles(String input) {

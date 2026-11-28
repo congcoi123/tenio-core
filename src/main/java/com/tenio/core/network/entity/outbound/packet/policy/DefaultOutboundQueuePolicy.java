@@ -24,38 +24,27 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.outbound.packet.policy;
 
-import com.tenio.core.exception.OutboundQueueFullException;
-import com.tenio.core.exception.OutboundQueuePolicyViolationException;
-import com.tenio.core.network.define.ResponseGuarantee;
-import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
+import com.tenio.core.network.entity.outbound.packet.Packet;
 
 /**
- * The default implementation of the outbound queue policy.
+ * The default transport-based congestion admission policy. Incoming UDP packets are rejected
+ * silently at 90 percent queue occupancy or on a hard capacity rejection. Other transports
+ * remain eligible until the queue is full; their capacity rejections remain visible in logs.
+ * Delivery mode does not override admission. This policy neither reorders queued packets nor
+ * evicts existing packets. Applications can register a custom policy to change admission rules.
  *
  * @see OutboundQueuePolicy
  */
 public class DefaultOutboundQueuePolicy implements OutboundQueuePolicy {
 
-  private static final float THREE_QUARTERS_FULL = 75.0f;
-  private static final float NINETY_PERCENT_FULL = 90.0f;
+    private static final float NINETY_PERCENT_FULL = 90.0f;
 
-  @Override
-  public void applyPolicy(OutboundQueue outboundQueue, Packet packet) {
-    if (outboundQueue.isSnapshotFull()) {
-      throw new OutboundQueueFullException(outboundQueue.getSnapshotSize());
+    @Override
+    public Decision applyPolicy(OutboundQueue outboundQueue, Packet packet, boolean capacityExceeded) {
+        if ((capacityExceeded || outboundQueue.getPercentageUsed() >= NINETY_PERCENT_FULL) && packet.isUdp()) {
+            return Decision.REJECT_SILENTLY;
+        }
+        return Decision.ACCEPT;
     }
-
-    float percentageUsed = outboundQueue.getPercentageUsed();
-
-    if (percentageUsed >= THREE_QUARTERS_FULL && percentageUsed < NINETY_PERCENT_FULL) {
-      if (packet.getGuarantee().getValue() < ResponseGuarantee.NORMAL.getValue()) {
-        throw new OutboundQueuePolicyViolationException(packet, percentageUsed);
-      }
-    } else if (percentageUsed >= NINETY_PERCENT_FULL) {
-      if (packet.getGuarantee().getValue() < ResponseGuarantee.GUARANTEED.getValue()) {
-        throw new OutboundQueuePolicyViolationException(packet, percentageUsed);
-      }
-    }
-  }
 }

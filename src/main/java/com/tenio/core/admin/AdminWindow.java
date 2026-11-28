@@ -67,10 +67,16 @@ public final class AdminWindow implements AutoCloseable {
     private CommandHistory commandHistory;
     private DefaultTableModel table;
     private Chart chart;
+    private final PerformanceHistory performanceHistory;
     private boolean busy;
     private String pending;
 
     public AdminWindow(String title, Query query, LocalCommands commands) {
+        this(title, query, commands, null);
+    }
+
+    public AdminWindow(String title, Query query, LocalCommands commands, PerformanceHistory history) {
+        this.performanceHistory = history;
         this.query = query;
         this.commands = commands;
         SwingUtilities.invokeLater(() -> open(title));
@@ -110,6 +116,9 @@ public final class AdminWindow implements AutoCloseable {
         var tabs = new JTabbedPane();
         tabs.addTab("Statistics", new JScrollPane(new JTable(table)));
         tabs.addTab("Players", chart);
+        if (performanceHistory != null) {
+            tabs.addTab("Performance history", new PerformancePanel(performanceHistory, worker));
+        }
         var lower = new JPanel(new BorderLayout(4, 4));
         lower.add(new JScrollPane(output));
         var commandPanel = new JPanel(new BorderLayout(4, 4));

@@ -146,10 +146,11 @@ public final class SocketReaderHandler extends SystemLogger {
    * Processing. This should be run in a loop.
    */
   public void running() {
-    int countReadyKeys = 0;
     try {
       // blocks until at least one channel is ready for the events you registered for
-      countReadyKeys = readableSelector.select();
+      if (readableSelector.selectedKeys().isEmpty()) {
+        readableSelector.select();
+      }
     } catch (IOException exception) {
       error(exception, "I/O reading/selection error: ", exception.getMessage());
     }
@@ -168,7 +169,7 @@ public final class SocketReaderHandler extends SystemLogger {
       }
     }
 
-    if (countReadyKeys == 0) {
+    if (readableSelector.selectedKeys().isEmpty()) {
       return;
     }
 
@@ -186,13 +187,6 @@ public final class SocketReaderHandler extends SystemLogger {
         var socketChannel = (SocketChannel) selectableChannel;
         readTcpData(socketChannel, selectionKey, readerBuffer);
       }
-    }
-
-    // clear canceled keys
-    try {
-      readableSelector.selectNow(); // helps to quickly remove stale keys
-    } catch (IOException exception) {
-      error(exception, "I/O reading/selection error: ", exception.getMessage());
     }
   }
 

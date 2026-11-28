@@ -24,100 +24,85 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.outbound.packet.policy;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import com.tenio.core.exception.OutboundQueueFullException;
-import com.tenio.core.exception.OutboundQueuePolicyViolationException;
-import com.tenio.core.network.define.ResponseGuarantee;
+import com.tenio.core.network.define.TransportType;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.Packet;
-import com.tenio.core.network.entity.outbound.packet.implement.OutboundQueueImpl;
-import org.junit.jupiter.api.BeforeEach;
+import com.tenio.core.network.entity.outbound.packet.implement.PacketImpl;
+import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy.Decision;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
+
+import java.time.Duration;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 class DefaultOutboundQueuePolicyTest {
 
-  private DefaultOutboundQueuePolicy policy;
+    private final DefaultOutboundQueuePolicy policy = new DefaultOutboundQueuePolicy();
 
-  @BeforeEach
-  void setUp() {
-    policy = new DefaultOutboundQueuePolicy();
-  }
+    @ParameterizedTest
+    @CsvSource({
+            "UDP,0,false", "UDP,74.9,false", "UDP,75,false", "UDP,89.9,false", "UDP,90,true",
+            "UDP,99.9,true", "TCP,0,false", "TCP,74.9,false", "TCP,75,false", "TCP,89.9,false",
+            "TCP,90,false", "TCP,99.9,false", "WEB_SOCKET,0,false", "WEB_SOCKET,74.9,false",
+            "WEB_SOCKET,75,false", "WEB_SOCKET,89.9,false", "WEB_SOCKET,90,false", "WEB_SOCKET,99.9,false"
+    })
+    void transportDeterminesAdmissionForEveryMode(TransportType transport, float occupancy,
+                                                  boolean rejected) {
+        var queue = mock(OutboundQueue.class);
+        when(queue.getPercentageUsed()).thenReturn(occupancy);
+        for (var options : new DeliveryOptions[]{null, DeliveryOptions.important(),
+                DeliveryOptions.replaceable("position", Duration.ZERO),
+                DeliveryOptions.bestEffort(Duration.ZERO)}) {
+            var packet = PacketImpl.newInstance();
+            packet.setTransportType(transport);
+            packet.setDeliveryOptions(options);
+            assertEquals(rejected ? Decision.REJECT_SILENTLY : Decision.ACCEPT, policy.applyPolicy(queue, packet, false));
+        }
+    }
 
-  @Test
-  void testApplyPolicy() {
-    DefaultOutboundQueuePolicy defaultOutboundQueuePolicy = new DefaultOutboundQueuePolicy();
-    OutboundQueueImpl newInstanceResult = OutboundQueueImpl.newInstance();
-    assertThrows(OutboundQueueFullException.class, () -> defaultOutboundQueuePolicy.applyPolicy(newInstanceResult, mock(Packet.class)));
-  }
+    @ParameterizedTest
+    @EnumSource(value = TransportType.class, names = {"TCP", "UDP", "WEB_SOCKET"})
+    void hardCapacityRejectionsAreSilentOnlyForUdp(TransportType transport) {
+        var queue = mock(OutboundQueue.class);
+        for (var options : new DeliveryOptions[]{null, DeliveryOptions.important(),
+                DeliveryOptions.replaceable("position", Duration.ZERO),
+                DeliveryOptions.bestEffort(Duration.ZERO)}) {
+            var packet = PacketImpl.newInstance();
+            packet.setTransportType(transport);
+            packet.setDeliveryOptions(options);
+            assertEquals(
+                    transport == TransportType.UDP ? Decision.REJECT_SILENTLY : Decision.ACCEPT,
+                    policy.applyPolicy(queue, packet, true)
+            );
+        }
+        verifyNoInteractions(queue);
+    }
 
-  @Test
-  void testAlmostFullQueueThrowsOutboundQueueFullException() {
-    OutboundQueue queue = mock(OutboundQueue.class);
-    when(queue.isSnapshotFull()).thenReturn(true);
-    when(queue.getSnapshotSize()).thenReturn(5);
+    @Test
+    void uncongestedQueuesDoNotInspectPacketMetadata() {
+        var queue = mock(OutboundQueue.class);
+        var packet = mock(Packet.class);
+        when(queue.getPercentageUsed()).thenReturn(50.0f);
+        assertEquals(Decision.ACCEPT, policy.applyPolicy(queue, packet, false));
+        verifyNoInteractions(packet);
+    }
 
-    assertThrows(OutboundQueueFullException.class,
-        () -> policy.applyPolicy(queue, mock(Packet.class)));
-  }
-
-  @Test
-  void testBetween75And90PercentWithNonGuaranteedThrowsPolicyViolation() {
-    OutboundQueue queue = mock(OutboundQueue.class);
-    Packet packet = mock(Packet.class);
-    when(queue.isSnapshotFull()).thenReturn(false);
-    when(queue.getPercentageUsed()).thenReturn(80.0f);
-    when(packet.getGuarantee()).thenReturn(ResponseGuarantee.NON_GUARANTEED);
-
-    assertThrows(OutboundQueuePolicyViolationException.class,
-        () -> policy.applyPolicy(queue, packet));
-  }
-
-  @Test
-  void testBetween75And90PercentWithNormalGuaranteeDoesNotThrow() {
-    OutboundQueue queue = mock(OutboundQueue.class);
-    Packet packet = mock(Packet.class);
-    when(queue.isSnapshotFull()).thenReturn(false);
-    when(queue.getPercentageUsed()).thenReturn(80.0f);
-    when(packet.getGuarantee()).thenReturn(ResponseGuarantee.NORMAL);
-
-    assertDoesNotThrow(() -> policy.applyPolicy(queue, packet));
-  }
-
-  @Test
-  void testAt90PercentOrAboveWithNormalGuaranteeThrowsPolicyViolation() {
-    OutboundQueue queue = mock(OutboundQueue.class);
-    Packet packet = mock(Packet.class);
-    when(queue.isSnapshotFull()).thenReturn(false);
-    when(queue.getPercentageUsed()).thenReturn(92.0f);
-    when(packet.getGuarantee()).thenReturn(ResponseGuarantee.NORMAL);
-
-    assertThrows(OutboundQueuePolicyViolationException.class,
-        () -> policy.applyPolicy(queue, packet));
-  }
-
-  @Test
-  void testAt90PercentOrAboveWithGuaranteedDoesNotThrow() {
-    OutboundQueue queue = mock(OutboundQueue.class);
-    Packet packet = mock(Packet.class);
-    when(queue.isSnapshotFull()).thenReturn(false);
-    when(queue.getPercentageUsed()).thenReturn(92.0f);
-    when(packet.getGuarantee()).thenReturn(ResponseGuarantee.GUARANTEED);
-
-    assertDoesNotThrow(() -> policy.applyPolicy(queue, packet));
-  }
-
-  @Test
-  void testBelow75PercentWithNonGuaranteedDoesNotThrow() {
-    OutboundQueue queue = mock(OutboundQueue.class);
-    Packet packet = mock(Packet.class);
-    when(queue.isSnapshotFull()).thenReturn(false);
-    when(queue.getPercentageUsed()).thenReturn(50.0f);
-    when(packet.getGuarantee()).thenReturn(ResponseGuarantee.NON_GUARANTEED);
-
-    assertDoesNotThrow(() -> policy.applyPolicy(queue, packet));
-  }
+    @Test
+    void congestedQueuesDoNotInspectDeliveryOptions() {
+        var queue = mock(OutboundQueue.class);
+        var packet = mock(Packet.class);
+        when(queue.getPercentageUsed()).thenReturn(90.0f);
+        when(packet.isUdp()).thenReturn(true);
+        assertEquals(Decision.REJECT_SILENTLY, policy.applyPolicy(queue, packet, false));
+        verify(packet, never()).getDeliveryOptions();
+    }
 }

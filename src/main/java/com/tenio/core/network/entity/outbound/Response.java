@@ -27,9 +27,9 @@ package com.tenio.core.network.entity.outbound;
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataType;
 import com.tenio.core.entity.Player;
-import com.tenio.core.network.define.ResponseGuarantee;
-import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.session.Session;
+
 import java.util.Collection;
 
 /**
@@ -37,171 +37,165 @@ import java.util.Collection;
  */
 public interface Response {
 
-  /**
-   * Retrieves the content which is carried by the response.
-   *
-   * @return an instance of {@link DataCollection}
-   */
-  DataCollection getContent();
+    /**
+     * Retrieves the content which is carried by the response.
+     *
+     * @return an instance of {@link DataCollection}
+     */
+    DataCollection getContent();
 
-  /**
-   * Sets content for the response. This will automatically detect its data type.
-   *
-   * @param content an instance of {@link DataCollection}
-   * @return the pointer of response
-   * @see DataType
-   * @since 0.6.7
-   */
-  Response setContent(DataCollection content);
+    /**
+     * Sets content for the response. This will automatically detect its data type.
+     *
+     * @param content an instance of {@link DataCollection}
+     * @return the pointer of response
+     * @see DataType
+     * @since 0.6.7
+     */
+    Response setContent(DataCollection content);
 
-  /**
-   * Retrieves the data type.
-   *
-   * @return the {@link DataType}
-   * @since 0.6.7
-   */
-  DataType getDataType();
+    /**
+     * Retrieves the data type.
+     *
+     * @return the {@link DataType}
+     * @since 0.6.7
+     */
+    DataType getDataType();
 
-  /**
-   * Retrieves a collection of recipient players.
-   *
-   * @return a collection of recipient {@link Player}s
-   * @see Collection
-   */
-  Collection<Player> getRecipientPlayers();
+    /**
+     * Retrieves a collection of recipient players.
+     *
+     * @return a collection of recipient {@link Player}s
+     * @see Collection
+     */
+    Collection<Player> getRecipientPlayers();
 
-  /**
-   * Sets a collection of recipient players.
-   *
-   * @param players a collection of recipient {@link Player}s
-   * @return the pointer of this instance
-   * @see Collection
-   */
-  Response setRecipientPlayers(Collection<Player> players);
+    /**
+     * Sets a collection of recipient players.
+     *
+     * @param players a collection of recipient {@link Player}s
+     * @return the pointer of this instance
+     * @see Collection
+     */
+    Response setRecipientPlayers(Collection<Player> players);
 
-  /**
-   * Retrieves a collection of non session recipient players.
-   *
-   * @return a collection of recipient {@link Player}s
-   * @see Collection
-   */
-  Collection<Player> getNonSessionRecipientPlayers();
+    /**
+     * Retrieves a collection of non session recipient players.
+     *
+     * @return a collection of recipient {@link Player}s
+     * @see Collection
+     */
+    Collection<Player> getNonSessionRecipientPlayers();
 
-  /**
-   * Retrieves a collection of recipient socket sessions.
-   *
-   * @return a collection of recipient {@link Session}s
-   * @see Collection
-   */
-  Collection<Session> getRecipientSocketSessions();
+    /**
+     * Retrieves a collection of recipient socket sessions.
+     *
+     * @return a collection of recipient {@link Session}s
+     * @see Collection
+     */
+    Collection<Session> getRecipientSocketSessions();
 
-  /**
-   * Retrieves a collection of recipient socket sessions which receives packets by datagram channel.
-   *
-   * @return a collection of recipient {@link Session}s which receives packets by datagram channel
-   * @see Collection
-   */
-  Collection<Session> getRecipientDatagramSessions();
+    /**
+     * Retrieves a collection of recipient socket sessions which receives packets by datagram channel.
+     *
+     * @return a collection of recipient {@link Session}s which receives packets by datagram channel
+     * @see Collection
+     */
+    Collection<Session> getRecipientDatagramSessions();
 
-  /**
-   * Retrieves a collection of recipient WebSocket sessions.
-   *
-   * @return a collection of recipient WebSocket {@link Session}s
-   * @see Collection
-   */
-  Collection<Session> getRecipientWebSocketSessions();
+    /**
+     * Retrieves a collection of recipient WebSocket sessions.
+     *
+     * @return a collection of recipient WebSocket {@link Session}s
+     * @see Collection
+     */
+    Collection<Session> getRecipientWebSocketSessions();
 
-  /**
-   * Sets a recipient player.
-   *
-   * @param player a recipient {@link Player}
-   * @return the pointer of this instance
-   */
-  Response setRecipientPlayer(Player player);
+    /**
+     * Sets a recipient player.
+     *
+     * @param player a recipient {@link Player}
+     * @return the pointer of this instance
+     */
+    Response setRecipientPlayer(Player player);
 
-  /**
-   * Sets a collection of recipient sessions.
-   *
-   * @param sessions a collection of recipient {@link Session}s
-   * @return the pointer of this instance
-   * @see Collection
-   */
-  Response setRecipientSessions(Collection<Session> sessions);
+    /**
+     * Sets a collection of recipient sessions.
+     *
+     * @param sessions a collection of recipient {@link Session}s
+     * @return the pointer of this instance
+     * @see Collection
+     */
+    Response setRecipientSessions(Collection<Session> sessions);
 
-  /**
-   * Sets a recipient session.
-   *
-   * @param session a recipient {@link Session}
-   * @return the pointer of this instance
-   */
-  Response setRecipientSession(Session session);
+    /**
+     * Sets a recipient session.
+     *
+     * @param session a recipient {@link Session}
+     * @return the pointer of this instance
+     */
+    Response setRecipientSession(Session session);
 
-  /**
-   * Sets the higher priority for sending packets via the Datagram channel. In case the session in
-   * use is WebSocket, then this setting should be ignored.
-   *
-   * @return the pointer of response
-   */
-  Response prioritizedUdp();
+    /**
+     * Prefers the Datagram channel when available, otherwise uses the recipient's main transport.
+     * This selects a transport; it does not change congestion admission or queue ordering.
+     * WebSocket recipients continue to use WebSocket.
+     *
+     * @return the pointer of response
+     */
+    Response prioritizedUdp();
 
-  /**
-   * Sends packets only through the Datagram channel.
-   *
-   * Recipients without an available Datagram channel are ignored. This method does not fall
-   * back to TCP or WebSocket.
-   *
-   * @return the pointer of response
-   */
-  Response onlyUdp();
+    /**
+     * Sends packets only through the Datagram channel.
+     * <p>
+     * Recipients without an available Datagram channel are ignored. This method does not fall
+     * back to TCP or WebSocket.
+     *
+     * @return the pointer of response
+     */
+    Response onlyUdp();
 
-  /**
-   * Allows the sending content to be encrypted.
-   *
-   * @return the pointer of response
-   */
-  Response encrypted();
+    /**
+     * Allows the sending content to be encrypted.
+     *
+     * @return the pointer of response
+     */
+    Response encrypted();
 
-  /**
-   * Sets guarantee level for the response.
-   *
-   * @param guarantee the {@link ResponseGuarantee}
-   * @return the pointer of response
-   * @see OutboundQueuePolicy
-   */
-  Response guarantee(ResponseGuarantee guarantee);
+    /**
+     * Determines whether the response's content needs to be encrypted.
+     *
+     * @return {@code true} if the response's content is encrypted, otherwise returns {@code false}
+     */
+    boolean needsEncrypted();
 
-  /**
-   * Retrieves the guarantee level of response.
-   *
-   * @return the current {@link ResponseGuarantee} of response
-   * @see OutboundQueuePolicy
-   */
-  ResponseGuarantee getGuarantee();
+    /**
+     * Writes down the content data to sessions for sending to client sides.
+     */
+    void write();
 
-  /**
-   * Determines whether the response's content needs to be encrypted.
-   *
-   * @return {@code true} if the response's content is encrypted, otherwise returns {@code false}
-   */
-  boolean needsEncrypted();
+    /**
+     * Writes the final response and closes its TCP/WebSocket recipients after the write completes.
+     * If the final response cannot be admitted or written, those recipients are closed without
+     * waiting for the unsent packet. Unexpected synchronous failures still propagate to the caller.
+     *
+     * @since 0.5.0
+     */
+    void writeThenClose();
 
-  /**
-   * Writes down the content data to sessions for sending to client sides.
-   */
-  void write();
+    /**
+     * Selects queued-message mode, replacement key and lifetime before write(). Queue admission is
+     * determined separately by the outbound queue policy. Never use replaceable/best-effort for
+     * results or transactions that must be retained. This method stores options without starting
+     * a TTL; packet deadlines are created during {@link #write()} or {@link #writeThenClose()}.
+     *
+     * @param options explicit queued-message behavior
+     * @return this response
+     */
+    Response delivery(DeliveryOptions options);
 
-  /**
-   * Writes down the content data to sessions for sending to client sides.
-   *
-   * @param delayInMilliseconds allows delaying in the number of milliseconds
-   */
-  void writeInDelay(long delayInMilliseconds);
-
-  /**
-   * Writes down the content data to sessions for sending to client sides then disconnect them
-   * (close sessions).
-   *
-   * @since 0.5.0
-   */
-  void writeThenClose();
+    /**
+     * @return queued-message behavior, or null for basic FIFO without expiry or replacement
+     */
+    DeliveryOptions getDeliveryOptions();
 }

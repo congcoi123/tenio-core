@@ -159,3 +159,16 @@
 - Added readable operational history, disk archives for deployments without the monitor window, and arrow-key command recall.
 - Accepted an explicitly empty XML profile for deployments using unrestricted components.
 - Removed the unused JLine dependencies and the unfilled security policy template.
+
+## 1.1.0 2026-11-25 Feature release
+- Added automatic client command routing and ordered, bounded command execution.
+- Added authenticated session recovery with rotating tokens and snapshot/replay support.
+- Added public room discovery and typed player/room state replication.
+- Added delivery modes for queued-message replacement, expiry and best-effort overflow.
+- Centralize 90% UDP admission and silent drops in the default policy; use enum results for outbound rejections, retaining counters and TCP/WebSocket warnings.
+- Added performance history with rotating archives and desktop charts.
+- Improved WebSocket handshakes, fragmentation, control frames and listener lifecycle.
+- Improved startup diagnostics and network shutdown; fixed TCP reader stalls and room discovery issues.
+- Preserved legacy retention for unenrolled players, rejected commands without required context, and closed connections when final writes fail.
+- Rate-limited slow/full queue warnings while preserving drop counters and unexpected error logs.
+- Removed writeInDelay, ResponseGuarantee and delivery priorities; updated documentation and regression tests.

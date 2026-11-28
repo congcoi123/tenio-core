@@ -26,279 +26,293 @@ package com.tenio.core.network.entity.outbound.implement;
 
 import com.tenio.common.data.DataCollection;
 import com.tenio.common.data.DataType;
-import com.tenio.common.logger.SystemLogger;
 import com.tenio.core.entity.Player;
-import com.tenio.core.network.define.ResponseGuarantee;
+import com.tenio.core.entity.define.mode.ConnectionDisconnectMode;
+import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.network.entity.outbound.Response;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.server.ServerImpl;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.Objects;
 
 /**
  * The implementation for response.
  *
  * @see Response
  */
-public final class ResponseImpl extends SystemLogger implements Response {
+public final class ResponseImpl implements Response {
 
-  private DataCollection content;
-  private Collection<Player> players;
-  private Collection<Player> nonSessionPlayers;
-  private Collection<Session> socketSessions;
-  private Collection<Session> datagramSessions;
-  private Collection<Session> webSocketSessions;
-  /**
-   * The session that owned each player when the response was addressed. Keeping this association
-   * prevents an already-created response from following a player to a replacement connection.
-   */
-  private Map<Player, Session> addressedPlayerSessions;
-  private ResponseGuarantee guarantee;
-  private boolean prioritizedUdp;
-  private boolean onlyUdp;
-  private boolean encrypted;
+    private DataCollection content;
+    private Collection<Player> players;
+    private Collection<Player> nonSessionPlayers;
+    private Collection<Session> socketSessions;
+    private Collection<Session> datagramSessions;
+    private Collection<Session> webSocketSessions;
+    /**
+     * The session that owned each player when the response was addressed. Keeping this association
+     * prevents an already-created response from following a player to a replacement connection.
+     */
+    private final Map<Player, Session> addressedPlayerSessions;
+    private DeliveryOptions deliveryOptions;
+    private boolean prioritizedUdp;
+    private boolean onlyUdp;
+    private boolean encrypted;
 
-  private ResponseImpl() {
-    players = null;
-    socketSessions = null;
-    datagramSessions = null;
-    webSocketSessions = null;
-    nonSessionPlayers = null;
-    addressedPlayerSessions = new IdentityHashMap<>();
-    guarantee = ResponseGuarantee.NORMAL;
-    prioritizedUdp = false;
-    onlyUdp = false;
-    encrypted = false;
-  }
-
-  /**
-   * Creates a new response instance.
-   *
-   * @return a new instance of {@link Response}
-   */
-  public static Response newInstance() {
-    return new ResponseImpl();
-  }
-
-  @Override
-  public DataCollection getContent() {
-    return content;
-  }
-
-  @Override
-  public Response setContent(DataCollection content) {
-    this.content = content;
-    return this;
-  }
-
-  @Override
-  public DataType getDataType() {
-    return content.getType();
-  }
-
-  @Override
-  public Collection<Player> getRecipientPlayers() {
-    return players;
-  }
-
-  @Override
-  public Collection<Player> getNonSessionRecipientPlayers() {
-    return nonSessionPlayers;
-  }
-
-  @Override
-  public Collection<Session> getRecipientSocketSessions() {
-    return socketSessions;
-  }
-
-  @Override
-  public Collection<Session> getRecipientDatagramSessions() {
-    return datagramSessions;
-  }
-
-  @Override
-  public Collection<Session> getRecipientWebSocketSessions() {
-    return webSocketSessions;
-  }
-
-  @Override
-  public Response setRecipientPlayers(Collection<Player> players) {
-    players.forEach(this::setRecipientPlayer);
-    return this;
-  }
-
-  @Override
-  public Response setRecipientPlayer(Player player) {
-    if (players == null) {
-      players = new ArrayList<>();
-    }
-    players.add(player);
-    // Address the response to the connection that exists now. Resolving this only in write()
-    // lets a delayed response for an old connection be delivered to a newly logged-in device.
-    player.getSession().ifPresent(session -> addressedPlayerSessions.put(player, session));
-    return this;
-  }
-
-  @Override
-  public Response setRecipientSessions(Collection<Session> sessions) {
-    sessions.forEach(this::checksAndAddsSession);
-    return this;
-  }
-
-  @Override
-  public Response setRecipientSession(Session session) {
-    checksAndAddsSession(session);
-    return this;
-  }
-
-  @Override
-  public Response prioritizedUdp() {
-    prioritizedUdp = true;
-    return this;
-  }
-
-  @Override
-  public Response onlyUdp() {
-    onlyUdp = true;
-    return this;
-  }
-
-  @Override
-  public Response encrypted() {
-    encrypted = true;
-    return this;
-  }
-
-  @Override
-  public Response guarantee(ResponseGuarantee guarantee) {
-    this.guarantee = guarantee;
-    return this;
-  }
-
-  @Override
-  public boolean needsEncrypted() {
-    return encrypted;
-  }
-
-  @Override
-  public ResponseGuarantee getGuarantee() {
-    return guarantee;
-  }
-
-  @Override
-  public void write() {
-    constructRecipientPlayers();
-    ServerImpl.getInstance().write(this, false);
-  }
-
-  @Override
-  public void writeInDelay(long delayInMilliseconds) {
-    try {
-      TimeUnit.MILLISECONDS.sleep(delayInMilliseconds);
-      write();
-    } catch (InterruptedException exception) {
-      error(exception);
-    }
-  }
-
-  @Override
-  public void writeThenClose() {
-    constructRecipientPlayers();
-    markRecipientsForCloseAfterPendingWrite(socketSessions);
-    markRecipientsForCloseAfterPendingWrite(webSocketSessions);
-    ServerImpl.getInstance().write(this, true);
-  }
-
-  private void markRecipientsForCloseAfterPendingWrite(Collection<Session> sessions) {
-    if (sessions != null) {
-      sessions.forEach(Session::markCloseAfterPendingWrite);
-    }
-  }
-
-  private void constructRecipientPlayers() {
-    if (players == null || players.isEmpty()) {
-      return;
+    @Override
+    public Response delivery(DeliveryOptions options) {
+        deliveryOptions = Objects.requireNonNull(options);
+        return this;
     }
 
-    // If the player had a session when it was addressed, retain that exact session. A player may
-    // have moved to a replacement connection before this response is finally written.
-    //
-    // If it had no session then, retain the existing non-session behavior and resolve it here.
-    // This supports responses that are intentionally addressed while a player is offline.
-    //
-    // If UDP is set to the highest priority in use but the session type is WebSocket, then use the
-    // WebSocket channel instead. When UDP is required exclusively, skip recipients without it.
-    Iterator<Player> iterator = players.iterator();
-    while (iterator.hasNext()) {
-      Player player = iterator.next();
-      Session addressedSession = addressedPlayerSessions.get(player);
-      if (addressedSession != null) {
-        if (!checksAndAddsSession(addressedSession)) {
-          iterator.remove();
+    @Override
+    public DeliveryOptions getDeliveryOptions() {
+        return deliveryOptions;
+    }
+
+    private ResponseImpl() {
+        players = null;
+        socketSessions = null;
+        datagramSessions = null;
+        webSocketSessions = null;
+        nonSessionPlayers = null;
+        addressedPlayerSessions = new IdentityHashMap<>();
+        prioritizedUdp = false;
+        onlyUdp = false;
+        encrypted = false;
+    }
+
+    /**
+     * Creates a new response instance.
+     *
+     * @return a new instance of {@link Response}
+     */
+    public static Response newInstance() {
+        return new ResponseImpl();
+    }
+
+    @Override
+    public DataCollection getContent() {
+        return content;
+    }
+
+    @Override
+    public Response setContent(DataCollection content) {
+        this.content = content;
+        return this;
+    }
+
+    @Override
+    public DataType getDataType() {
+        return content.getType();
+    }
+
+    @Override
+    public Collection<Player> getRecipientPlayers() {
+        return players;
+    }
+
+    @Override
+    public Collection<Player> getNonSessionRecipientPlayers() {
+        return nonSessionPlayers;
+    }
+
+    @Override
+    public Collection<Session> getRecipientSocketSessions() {
+        return socketSessions;
+    }
+
+    @Override
+    public Collection<Session> getRecipientDatagramSessions() {
+        return datagramSessions;
+    }
+
+    @Override
+    public Collection<Session> getRecipientWebSocketSessions() {
+        return webSocketSessions;
+    }
+
+    @Override
+    public Response setRecipientPlayers(Collection<Player> players) {
+        players.forEach(this::setRecipientPlayer);
+        return this;
+    }
+
+    @Override
+    public Response setRecipientPlayer(Player player) {
+        if (players == null) {
+            players = new ArrayList<>();
         }
-      } else if (player.containsSession()) {
-        if (!player.getSession().filter(this::checksAndAddsSession).isPresent()) {
-          iterator.remove();
-        }
-      } else if (onlyUdp) {
-        iterator.remove();
-      } else {
-        if (nonSessionPlayers == null) {
-          nonSessionPlayers = new ArrayList<>();
-        }
-        nonSessionPlayers.add(player);
-      }
+        players.add(player);
+        // Address the response to the connection that exists now. Resolving this only in write()
+        // lets a delayed response for an old connection be delivered to a newly logged-in device.
+        player.getSession().ifPresent(session -> addressedPlayerSessions.put(player, session));
+        return this;
     }
-  }
 
-  private boolean checksAndAddsSession(Session session) {
-    if (session.isTcp()) {
-      // When the session contains UDP and the response requires it, add it to the UDP list.
-      if ((prioritizedUdp || onlyUdp) && session.containsUdp()) {
-        if (datagramSessions == null) {
-          datagramSessions = new ArrayList<>();
+    @Override
+    public Response setRecipientSessions(Collection<Session> sessions) {
+        sessions.forEach(this::checksAndAddsSession);
+        return this;
+    }
+
+    @Override
+    public Response setRecipientSession(Session session) {
+        checksAndAddsSession(session);
+        return this;
+    }
+
+    @Override
+    public Response prioritizedUdp() {
+        prioritizedUdp = true;
+        return this;
+    }
+
+    @Override
+    public Response onlyUdp() {
+        onlyUdp = true;
+        return this;
+    }
+
+    @Override
+    public Response encrypted() {
+        encrypted = true;
+        return this;
+    }
+
+    @Override
+    public boolean needsEncrypted() {
+        return encrypted;
+    }
+
+    @Override
+    public void write() {
+        constructRecipientPlayers();
+        ServerImpl.getInstance().write(this, false);
+    }
+
+    @Override
+    public void writeThenClose() {
+        constructRecipientPlayers();
+        markRecipientsForCloseAfterPendingWrite(socketSessions);
+        markRecipientsForCloseAfterPendingWrite(webSocketSessions);
+        try {
+            ServerImpl.getInstance().write(this, true);
+        } catch (RuntimeException | Error failure) {
+            closeAfterFailedFinalWrite(socketSessions, failure);
+            closeAfterFailedFinalWrite(webSocketSessions, failure);
+            throw failure;
         }
-        datagramSessions.add(session);
-        return true;
-      }
-      if (onlyUdp) {
+    }
+
+    private void closeAfterFailedFinalWrite(Collection<Session> sessions, Throwable failure) {
+        if (sessions != null) {
+            for (var session : sessions) {
+                try {
+                    if (session.isActivated()) {
+                        session.close(ConnectionDisconnectMode.CLIENT_REQUEST, PlayerDisconnectMode.CLIENT_REQUEST);
+                    }
+                } catch (IOException | RuntimeException closeFailure) {
+                    if (closeFailure != failure) {
+                        failure.addSuppressed(closeFailure);
+                    }
+                }
+            }
+        }
+    }
+
+    private void markRecipientsForCloseAfterPendingWrite(Collection<Session> sessions) {
+        if (sessions != null) {
+            sessions.forEach(Session::markCloseAfterPendingWrite);
+        }
+    }
+
+    private void constructRecipientPlayers() {
+        if (players == null || players.isEmpty()) {
+            return;
+        }
+
+        // If the player had a session when it was addressed, retain that exact session. A player may
+        // have moved to a replacement connection before this response is finally written.
+        //
+        // If it had no session then, retain the existing non-session behavior and resolve it here.
+        // This supports responses that are intentionally addressed while a player is offline.
+        //
+        // If UDP is set to the highest priority in use but the session type is WebSocket, then use the
+        // WebSocket channel instead. When UDP is required exclusively, skip recipients without it.
+        Iterator<Player> iterator = players.iterator();
+        while (iterator.hasNext()) {
+            Player player = iterator.next();
+            Session addressedSession = addressedPlayerSessions.get(player);
+            if (addressedSession != null) {
+                if (!checksAndAddsSession(addressedSession)) {
+                    iterator.remove();
+                }
+            } else if (player.containsSession()) {
+                if (player.getSession().filter(this::checksAndAddsSession).isEmpty()) {
+                    iterator.remove();
+                }
+            } else if (onlyUdp) {
+                iterator.remove();
+            } else {
+                if (nonSessionPlayers == null) {
+                    nonSessionPlayers = new ArrayList<>();
+                }
+                nonSessionPlayers.add(player);
+            }
+        }
+    }
+
+    private boolean checksAndAddsSession(Session session) {
+        if (session.isTcp()) {
+            // When the session contains UDP and the response requires it, add it to the UDP list.
+            if ((prioritizedUdp || onlyUdp) && session.containsUdp()) {
+                if (datagramSessions == null) {
+                    datagramSessions = new ArrayList<>();
+                }
+                datagramSessions.add(session);
+                return true;
+            }
+            if (onlyUdp) {
+                return false;
+            }
+            if (socketSessions == null) {
+                socketSessions = new ArrayList<>();
+            }
+            socketSessions.add(session);
+            return true;
+        } else if (session.isWebSocket()) {
+            if (onlyUdp) {
+                return false;
+            }
+            if (webSocketSessions == null) {
+                webSocketSessions = new ArrayList<>();
+            }
+            webSocketSessions.add(session);
+            return true;
+        }
         return false;
-      }
-      if (socketSessions == null) {
-        socketSessions = new ArrayList<>();
-      }
-      socketSessions.add(session);
-      return true;
-    } else if (session.isWebSocket()) {
-      if (onlyUdp) {
-        return false;
-      }
-      if (webSocketSessions == null) {
-        webSocketSessions = new ArrayList<>();
-      }
-      webSocketSessions.add(session);
-      return true;
     }
-    return false;
-  }
 
-  @Override
-  public String toString() {
-    return "Response{" +
-        "contentType=" + (content == null ? null : content.getClass().getName()) +
-        ", playersCount=" + (players == null ? 0 : players.size()) +
-        ", nonSessionPlayersCount=" + (nonSessionPlayers == null ? 0 : nonSessionPlayers.size()) +
-        ", socketSessionsCount=" + (socketSessions == null ? 0 : socketSessions.size()) +
-        ", datagramSessionsCount=" + (datagramSessions == null ? 0 : datagramSessions.size()) +
-        ", webSocketSessionsCount=" + (webSocketSessions == null ? 0 : webSocketSessions.size()) +
-        ", guarantee=" + guarantee +
-        ", prioritizedUdp=" + prioritizedUdp +
-        ", onlyUdp=" + onlyUdp +
-        ", encrypted=" + encrypted +
-        '}';
-  }
+    @Override
+    public String toString() {
+        return "Response{" +
+                "contentType=" + (content == null ? null : content.getClass().getName()) +
+                ", playersCount=" + (players == null ? 0 : players.size()) +
+                ", nonSessionPlayersCount=" + (nonSessionPlayers == null ? 0 : nonSessionPlayers.size()) +
+                ", socketSessionsCount=" + (socketSessions == null ? 0 : socketSessions.size()) +
+                ", datagramSessionsCount=" + (datagramSessions == null ? 0 : datagramSessions.size()) +
+                ", webSocketSessionsCount=" + (webSocketSessions == null ? 0 : webSocketSessions.size()) +
+                ", deliveryOptions=" + deliveryOptions +
+                ", prioritizedUdp=" + prioritizedUdp +
+                ", onlyUdp=" + onlyUdp +
+                ", encrypted=" + encrypted +
+                '}';
+    }
 }

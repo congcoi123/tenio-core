@@ -38,9 +38,11 @@ import com.tenio.core.entity.define.mode.RoomRemoveMode;
 import com.tenio.core.entity.define.result.PlayerJoinedRoomResult;
 import com.tenio.core.entity.define.result.PlayerLeftRoomResult;
 import com.tenio.core.entity.define.result.RoomCreatedResult;
+import com.tenio.core.entity.discovery.RoomDirectory;
 import com.tenio.core.entity.manager.ChannelManager;
 import com.tenio.core.entity.manager.PlayerManager;
 import com.tenio.core.entity.manager.RoomManager;
+import com.tenio.core.entity.replication.StateReplication;
 import com.tenio.core.entity.setting.InitialRoomSetting;
 import com.tenio.core.event.implement.EventManager;
 import com.tenio.core.exception.AddedDuplicatedPlayerException;
@@ -48,12 +50,15 @@ import com.tenio.core.exception.CreatedRoomException;
 import com.tenio.core.exception.PlayerJoinedRoomException;
 import com.tenio.core.exception.RemovedNonExistentPlayerException;
 import com.tenio.core.network.entity.session.Session;
+import com.tenio.core.recovery.RecoveryManager;
 import com.tenio.core.server.Server;
+
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -61,308 +66,359 @@ import java.util.function.Consumer;
  */
 public final class ServerApiImpl extends SystemLogger implements ServerApi {
 
-  private final Server server;
+    private final Server server;
 
-  private ServerApiImpl(Server server) {
-    this.server = server;
-  }
-
-  /**
-   * Initialization.
-   *
-   * @param server an instance of {@link Server}
-   * @return an instance of {@link ServerApi}
-   */
-  public static ServerApi newInstance(Server server) {
-    return new ServerApiImpl(server);
-  }
-
-  @Override
-  public void login(String playerName) {
-    Player player = getPlayerManager().createPlayer(playerName);
-    getEventManager().emit(ServerEvent.PLAYER_LOGIN, player);
-  }
-
-  @Override
-  public void login(String playerName, Session session) {
-    Player player = getPlayerManager().createPlayerWithSession(playerName, session);
-    getEventManager().emit(ServerEvent.PLAYER_LOGIN, player);
-  }
-
-  @Override
-  public void login(Player player) {
-    getPlayerManager().addPlayer(player);
-    getEventManager().emit(ServerEvent.PLAYER_LOGIN, player);
-  }
-
-  @Override
-  public void logout(Player player, ConnectionDisconnectMode connectionDisconnectMode,
-                     PlayerDisconnectMode playerDisconnectMode) {
-    if (player == null) {
-      return;
+    private ServerApiImpl(Server server) {
+        this.server = server;
     }
 
-    try {
-      var session = player.getSession().orElse(null);
+    /**
+     * Initialization.
+     *
+     * @param server an instance of {@link Server}
+     * @return an instance of {@link ServerApi}
+     */
+    public static ServerApi newInstance(Server server) {
+        return new ServerApiImpl(server);
+    }
 
-      // This closes the physical connection. ZeroProcessor may retain the player,
-      // depending on keepPlayerOnDisconnection.
-      if (session != null && session.isActivated()) {
-        session.close(connectionDisconnectMode, playerDisconnectMode);
-      }
+    @Override
+    public void login(String playerName) {
+        Player player = getPlayerManager().createPlayer(playerName);
+        getEventManager().emit(ServerEvent.PLAYER_LOGIN, player);
+    }
 
-      // An explicit API logout must always remove the logical player.
-      // If ZeroProcessor already removed it, this prevents duplicate cleanup.
-      if (getPlayerManager().getPlayerByIdentity(player.getIdentity()) == player) {
-        unsubscribeFromAllChannels(player);
+    @Override
+    public void login(String playerName, Session session) {
+        Player player = getPlayerManager().createPlayerWithSession(playerName, session);
+        getEventManager().emit(ServerEvent.PLAYER_LOGIN, player);
+    }
 
-        if (player.isInRoom()) {
-          leaveRoom(player, PlayerLeaveRoomMode.LOG_OUT);
+    @Override
+    public void login(Player player) {
+        getPlayerManager().addPlayer(player);
+        getEventManager().emit(ServerEvent.PLAYER_LOGIN, player);
+    }
+
+    @Override
+    public void logout(Player player, ConnectionDisconnectMode connectionDisconnectMode, PlayerDisconnectMode playerDisconnectMode) {
+        if (player == null) {
+            return;
         }
 
-        getEventManager().emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
-        getPlayerManager().removePlayerByIdentity(player.getIdentity());
-        player.clean();
-      }
-    } catch (RemovedNonExistentPlayerException | IOException exception) {
-      if (isErrorEnabled()) {
-        error(exception, "Remove player: ", player.getIdentity(), " with issue");
-      }
-    }
-  }
+        var recovery = server.getRecoveryManager();
+        if (recovery != null) {
+            recovery.revoke(player);
+        }
 
-  @Override
-  public Room createRoom(InitialRoomSetting roomSetting, Player roomOwner) {
-    Room room = null;
-    try {
-      if (roomOwner == null) {
-        room = getRoomManager().createRoom(roomSetting);
-      } else {
-        room = getRoomManager().createRoomWithOwner(roomSetting, roomOwner);
-      }
-      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, room,
-          roomSetting, RoomCreatedResult.SUCCESS);
-    } catch (IllegalArgumentException exception) {
-      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, roomSetting,
-          RoomCreatedResult.INVALID_NAME_OR_PASSWORD);
-    } catch (CreatedRoomException exception) {
-      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, roomSetting,
-          exception.getResult());
-    }
+        try {
+            var session = player.getSession().orElse(null);
 
-    return room;
-  }
+            // This closes the physical connection. ZeroProcessor may retain the player,
+            // depending on keepPlayerOnDisconnection.
+            if (session != null && session.isActivated()) {
+                session.close(connectionDisconnectMode, playerDisconnectMode);
+            }
 
-  @Override
-  public Room addRoom(Room room, InitialRoomSetting roomSetting, Player roomOwner) {
-    try {
-      getRoomManager().addRoomWithOwner(room, roomSetting, roomOwner);
-      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, room,
-          roomSetting, RoomCreatedResult.SUCCESS);
-      return room;
-    } catch (IllegalArgumentException exception) {
-      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, roomSetting,
-          RoomCreatedResult.INVALID_NAME_OR_PASSWORD);
-    } catch (CreatedRoomException exception) {
-      getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, roomSetting,
-          exception.getResult());
-    }
-    return null;
-  }
+            // An explicit API logout must always remove the logical player.
+            // If ZeroProcessor already removed it, this prevents duplicate cleanup.
+            if (getPlayerManager().getPlayerByIdentity(player.getIdentity()) == player) {
+                var replication = getStateReplication();
+                if (replication != null) {
+                    replication.removePlayer(player.getIdentity());
+                }
+                var directory = getRoomDirectory();
+                if (directory != null) {
+                    directory.release(player.getIdentity());
+                }
+                unsubscribeFromAllChannels(player);
 
-  @Override
-  public Optional<Player> getPlayerByIdentity(String identity) {
-    return Optional.ofNullable(getPlayerManager().getPlayerByIdentity(identity));
-  }
+                if (player.isInRoom()) {
+                    leaveRoom(player, PlayerLeaveRoomMode.LOG_OUT);
+                }
 
-  @Override
-  public int getSnapshotPlayerCount() {
-    return getPlayerManager().getSnapshotPlayerCount();
-  }
-
-  @Override
-  public void computePlayers(Consumer<Iterator<Player>> onComputed) {
-    getPlayerManager().computePlayers(onComputed);
-  }
-
-  @Override
-  public List<Player> getSnapshotPlayersList() {
-    return getPlayerManager().getSnapshotPlayersList();
-  }
-
-  @Override
-  public Optional<Room> getRoomById(long roomId) {
-    return Optional.ofNullable(getRoomManager().getRoomById(roomId));
-  }
-
-  @Override
-  public void computeRooms(Consumer<Iterator<Room>> onComputed) {
-    getRoomManager().computeRooms(onComputed);
-  }
-
-  @Override
-  public List<Room> getSnapshotRoomsList() {
-    return getRoomManager().getSnapshotRoomsList();
-  }
-
-  @Override
-  public int getSnapshotRoomCount() {
-    return getRoomManager().getSnapshotRoomCount();
-  }
-
-  @Override
-  public void joinRoom(Player player, Room room, String roomPassword, int slotInRoom,
-                       boolean asSpectator) {
-    if (player == null || room == null) {
-      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
-          PlayerJoinedRoomResult.PLAYER_OR_ROOM_UNAVAILABLE);
-      return;
+                getEventManager().emit(ServerEvent.DISCONNECT_PLAYER, player, playerDisconnectMode);
+                getPlayerManager().removePlayerByIdentity(player.getIdentity());
+                player.clean();
+            }
+        } catch (RemovedNonExistentPlayerException | IOException exception) {
+            if (isErrorEnabled()) {
+                error(exception, "Remove player: ", player.getIdentity(), " with issue");
+            }
+        }
     }
 
-    if (player.isInRoom()) {
-      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
-          PlayerJoinedRoomResult.PLAYER_IS_IN_ANOTHER_ROOM);
-      return;
+    @Override
+    public Room createRoom(InitialRoomSetting roomSetting, Player roomOwner) {
+        Room room = null;
+        try {
+            if (roomOwner == null) {
+                room = getRoomManager().createRoom(roomSetting);
+            } else {
+                room = getRoomManager().createRoomWithOwner(roomSetting, roomOwner);
+            }
+            getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, room,
+                    roomSetting, RoomCreatedResult.SUCCESS);
+        } catch (IllegalArgumentException exception) {
+            getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, roomSetting,
+                    RoomCreatedResult.INVALID_NAME_OR_PASSWORD);
+        } catch (CreatedRoomException exception) {
+            getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, roomSetting,
+                    exception.getResult());
+        }
+
+        return room;
     }
 
-    try {
-      room.addPlayer(player, roomPassword, asSpectator, slotInRoom);
-      player.setCurrentRoom(room);
-      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
-          PlayerJoinedRoomResult.SUCCESS);
-    } catch (PlayerJoinedRoomException exception) {
-      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
-          exception.getResult());
-    } catch (AddedDuplicatedPlayerException exception) {
-      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
-          PlayerJoinedRoomResult.DUPLICATED_PLAYER);
-    }
-  }
-
-  @Override
-  public void changeRoom(Player player, Room room, String roomPassword, int slotInRoom,
-                         boolean asSpectator) {
-    if (player == null || room == null) {
-      getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
-          PlayerJoinedRoomResult.PLAYER_OR_ROOM_UNAVAILABLE);
-      return;
+    @Override
+    public Room addRoom(Room room, InitialRoomSetting roomSetting, Player roomOwner) {
+        try {
+            getRoomManager().addRoomWithOwner(room, roomSetting, roomOwner);
+            getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, room,
+                    roomSetting, RoomCreatedResult.SUCCESS);
+            return room;
+        } catch (IllegalArgumentException exception) {
+            getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, roomSetting,
+                    RoomCreatedResult.INVALID_NAME_OR_PASSWORD);
+        } catch (CreatedRoomException exception) {
+            getEventManager().emit(ServerEvent.ROOM_CREATED_RESULT, null, roomSetting,
+                    exception.getResult());
+        }
+        return null;
     }
 
-    if (player.isInRoom()) {
-      leaveRoom(player, PlayerLeaveRoomMode.CHANGE_ROOM);
+    @Override
+    public Optional<Player> getPlayerByIdentity(String identity) {
+        return Optional.ofNullable(getPlayerManager().getPlayerByIdentity(identity));
     }
 
-    joinRoom(player, room, roomPassword, slotInRoom, asSpectator);
-  }
-
-  @Override
-  public void leaveRoom(Player player, PlayerLeaveRoomMode leaveRoomMode) {
-    if (!player.isInRoom()) {
-      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, null,
-          leaveRoomMode, PlayerLeftRoomResult.PLAYER_ALREADY_LEFT_ROOM);
-      return;
+    @Override
+    public int getSnapshotPlayerCount() {
+        return getPlayerManager().getSnapshotPlayerCount();
     }
 
-    var room = player.getCurrentRoom().orElse(null);
-    getEventManager().emit(ServerEvent.PLAYER_BEFORE_LEAVE_ROOM, player, room, leaveRoomMode);
-    try {
-      if (room != null) {
-        room.removePlayer(player);
-      }
-      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,
-          leaveRoomMode, PlayerLeftRoomResult.SUCCESS);
-    } catch (RemovedNonExistentPlayerException exception) {
-      getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,
-          leaveRoomMode, PlayerLeftRoomResult.PLAYER_ALREADY_LEFT_ROOM);
-    }
-  }
-
-  @Override
-  public void removeRoom(Room room, RoomRemoveMode removeRoomMode) {
-    if (room == null) {
-      // nothing needs to do
-      return;
+    @Override
+    public void computePlayers(Consumer<Iterator<Player>> onComputed) {
+        getPlayerManager().computePlayers(onComputed);
     }
 
-    getEventManager().emit(ServerEvent.ROOM_WILL_BE_REMOVED, room, removeRoomMode);
-
-    room.computePlayers(iterator -> {
-      while (iterator.hasNext()) {
-        var player = iterator.next();
-        leaveRoom(player, PlayerLeaveRoomMode.ROOM_REMOVED);
-      }
-    });
-
-    long roomId = room.getId();
-    getRoomManager().removeRoomById(roomId);
-    if (isDebugEnabled()) {
-      debug("REMOVED ROOM", "Room ", roomId, " was removed");
+    @Override
+    public List<Player> getSnapshotPlayersList() {
+        return getPlayerManager().getSnapshotPlayersList();
     }
-  }
 
-  @Override
-  public void createChannel(String id, String description) {
-    getChannelManager().createChannel(id, description);
-  }
+    @Override
+    public Optional<Room> getRoomById(long roomId) {
+        return Optional.ofNullable(getRoomManager().getRoomById(roomId));
+    }
 
-  @Override
-  public void removeChannel(String id) {
-    getChannelManager().removeChannel(id);
-  }
+    @Override
+    public void computeRooms(Consumer<Iterator<Room>> onComputed) {
+        getRoomManager().computeRooms(onComputed);
+    }
 
-  @Override
-  public void subscribeToChannel(Channel channel, Player player) {
-    getChannelManager().subscribe(channel, player);
-  }
+    @Override
+    public List<Room> getSnapshotRoomsList() {
+        return getRoomManager().getSnapshotRoomsList();
+    }
 
-  @Override
-  public void unsubscribeFromChannel(Channel channel, Player player) {
-    getChannelManager().unsubscribe(channel, player);
-  }
+    @Override
+    public int getSnapshotRoomCount() {
+        return getRoomManager().getSnapshotRoomCount();
+    }
 
-  @Override
-  public void unsubscribeFromAllChannels(Player player) {
-    getChannelManager().unsubscribe(player);
-  }
+    @Override
+    public void joinRoom(Player player, Room room, String roomPassword, int slotInRoom, boolean asSpectator) {
+        if (player == null || room == null) {
+            getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
+                    PlayerJoinedRoomResult.PLAYER_OR_ROOM_UNAVAILABLE);
+            return;
+        }
 
-  @Override
-  public void broadcastToChannel(Channel channel, DataCollection message) {
-    getChannelManager().broadcast(channel, message);
-  }
+        if (player.isInRoom()) {
+            getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
+                    PlayerJoinedRoomResult.PLAYER_IS_IN_ANOTHER_ROOM);
+            return;
+        }
 
-  @Override
-  public Map<String, Channel> getSubscribedChannelsForPlayer(Player player) {
-    return getChannelManager().getSubscribedChannelsForPlayer(player);
-  }
+        try {
+            room.addPlayer(player, roomPassword, asSpectator, slotInRoom);
+            player.setCurrentRoom(room);
+            refreshDiscovery(room);
+            getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
+                    PlayerJoinedRoomResult.SUCCESS);
+        } catch (PlayerJoinedRoomException exception) {
+            getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
+                    exception.getResult());
+        } catch (AddedDuplicatedPlayerException exception) {
+            getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
+                    PlayerJoinedRoomResult.DUPLICATED_PLAYER);
+        }
+    }
 
-  @Override
-  public int getUdpPort() {
-    return server.getDatagramChannelManager().getUdpPort();
-  }
+    @Override
+    public void changeRoom(Player player, Room room, String roomPassword, int slotInRoom, boolean asSpectator) {
+        if (player == null || room == null) {
+            getEventManager().emit(ServerEvent.PLAYER_JOINED_ROOM_RESULT, player, room,
+                    PlayerJoinedRoomResult.PLAYER_OR_ROOM_UNAVAILABLE);
+            return;
+        }
 
-  @Override
-  public long getStartedTime() {
-    return server.getStartedTime();
-  }
+        if (player.isInRoom()) {
+            leaveRoom(player, PlayerLeaveRoomMode.CHANGE_ROOM);
+        }
 
-  @Override
-  public long getUptime() {
-    return server.getUptime();
-  }
+        joinRoom(player, room, roomPassword, slotInRoom, asSpectator);
+    }
 
-  private EventManager getEventManager() {
-    return server.getEventManager();
-  }
+    @Override
+    public void leaveRoom(Player player, PlayerLeaveRoomMode leaveRoomMode) {
+        if (!player.isInRoom()) {
+            getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, null,
+                    leaveRoomMode, PlayerLeftRoomResult.PLAYER_ALREADY_LEFT_ROOM);
+            return;
+        }
 
-  private PlayerManager getPlayerManager() {
-    return server.getPlayerManager();
-  }
+        var room = player.getCurrentRoom().orElse(null);
+        getEventManager().emit(ServerEvent.PLAYER_BEFORE_LEAVE_ROOM, player, room, leaveRoomMode);
+        try {
+            if (room != null) {
+                room.removePlayer(player);
+            }
+            if (room != null) {
+                refreshDiscovery(room);
+            }
+            getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,
+                    leaveRoomMode, PlayerLeftRoomResult.SUCCESS);
+        } catch (RemovedNonExistentPlayerException exception) {
+            getEventManager().emit(ServerEvent.PLAYER_AFTER_LEFT_ROOM, player, room,
+                    leaveRoomMode, PlayerLeftRoomResult.PLAYER_ALREADY_LEFT_ROOM);
+        }
+    }
 
-  private RoomManager getRoomManager() {
-    return server.getRoomManager();
-  }
+    @Override
+    public void removeRoom(Room room, RoomRemoveMode removeRoomMode) {
+        if (room == null) {
+            // nothing needs to do
+            return;
+        }
 
-  private ChannelManager getChannelManager() {
-    return server.getChannelManager();
-  }
+        getEventManager().emit(ServerEvent.ROOM_WILL_BE_REMOVED, room, removeRoomMode);
+
+        room.computePlayers(iterator -> {
+            while (iterator.hasNext()) {
+                var player = iterator.next();
+                leaveRoom(player, PlayerLeaveRoomMode.ROOM_REMOVED);
+            }
+        });
+
+        long roomId = room.getId();
+        var replication = getStateReplication();
+        if (replication != null) {
+            replication.removeRoom(roomId);
+        }
+        getRoomManager().removeRoomById(roomId);
+        if (isDebugEnabled()) {
+            debug("REMOVED ROOM", "Room ", roomId, " was removed");
+        }
+    }
+
+    @Override
+    public void createChannel(String id, String description) {
+        getChannelManager().createChannel(id, description);
+    }
+
+    @Override
+    public void removeChannel(String id) {
+        getChannelManager().removeChannel(id);
+    }
+
+    @Override
+    public void subscribeToChannel(Channel channel, Player player) {
+        getChannelManager().subscribe(channel, player);
+    }
+
+    @Override
+    public void unsubscribeFromChannel(Channel channel, Player player) {
+        getChannelManager().unsubscribe(channel, player);
+    }
+
+    @Override
+    public void unsubscribeFromAllChannels(Player player) {
+        getChannelManager().unsubscribe(player);
+    }
+
+    @Override
+    public void broadcastToChannel(Channel channel, DataCollection message) {
+        getChannelManager().broadcast(channel, message);
+    }
+
+    @Override
+    public Map<String, Channel> getSubscribedChannelsForPlayer(Player player) {
+        return getChannelManager().getSubscribedChannelsForPlayer(player);
+    }
+
+    @Override
+    public int getUdpPort() {
+        return server.getDatagramChannelManager().getUdpPort();
+    }
+
+    @Override
+    public long getStartedTime() {
+        return server.getStartedTime();
+    }
+
+    @Override
+    public long getUptime() {
+        return server.getUptime();
+    }
+
+    @Override
+    public StateReplication enableStateReplication(int maximumEntities, int maximumBytes, int maximumSubscribers) {
+        return server.enableStateReplication(maximumEntities, maximumBytes, maximumSubscribers);
+    }
+
+    @Override
+    public StateReplication getStateReplication() {
+        return server.getStateReplication();
+    }
+
+    @Override
+    public RoomDirectory enableRoomDiscovery(Set<String> fields, int maximumRooms, int maximumSubscriptions) {
+        return getRoomManager().enableDiscovery(fields, maximumRooms, maximumSubscriptions);
+    }
+
+    @Override
+    public RoomDirectory getRoomDirectory() {
+        var manager = getRoomManager();
+        return manager == null ? null : manager.getDirectory();
+    }
+
+    @Override
+    public RecoveryManager getRecoveryManager() {
+        return server.getRecoveryManager();
+    }
+
+    private void refreshDiscovery(Room room) {
+        var directory = getRoomDirectory();
+        if (directory != null && room != null) {
+            directory.refresh(room);
+        }
+    }
+
+    private EventManager getEventManager() {
+        return server.getEventManager();
+    }
+
+    private PlayerManager getPlayerManager() {
+        return server.getPlayerManager();
+    }
+
+    private RoomManager getRoomManager() {
+        return server.getRoomManager();
+    }
+
+    private ChannelManager getChannelManager() {
+        return server.getChannelManager();
+    }
 }

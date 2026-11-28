@@ -27,14 +27,17 @@ package com.tenio.core.network.entity.outbound.packet.implement;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.tenio.core.admin.OperationalHistory;
-import com.tenio.core.exception.OutboundQueueFullException;
 import com.tenio.core.network.entity.outbound.packet.Packet;
+import com.tenio.core.network.entity.outbound.packet.OutboundQueue.Admission;
+import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy.Decision;
 import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +51,7 @@ class OutboundQueueImplTest {
   void setUp() {
     queue = OutboundQueueImpl.newInstance();
     policy = mock(OutboundQueuePolicy.class);
+    when(policy.applyPolicy(any(), any(), anyBoolean())).thenReturn(Decision.ACCEPT);
     queue.configureMaxSize(10);
     queue.configureOutboundQueuePolicy(policy);
   }
@@ -56,7 +60,7 @@ class OutboundQueueImplTest {
   void testNewInstance() {
     OutboundQueueImpl actualNewInstanceResult = OutboundQueueImpl.newInstance();
     actualNewInstanceResult.configureMaxSize(3);
-    actualNewInstanceResult.configureOutboundQueuePolicy(mock(OutboundQueuePolicy.class));
+    actualNewInstanceResult.configureOutboundQueuePolicy((queue, packet, capacityExceeded) -> Decision.ACCEPT);
     assertEquals(0, actualNewInstanceResult.getSnapshotSize());
   }
 
@@ -123,10 +127,10 @@ class OutboundQueueImplTest {
   void testIsSnapshotFullWhenSizeEqualsMaxSize() {
     OutboundQueueImpl q = OutboundQueueImpl.newInstance();
     q.configureMaxSize(1);
-    q.configureOutboundQueuePolicy(mock(OutboundQueuePolicy.class));
+    q.configureOutboundQueuePolicy((queue, packet, capacityExceeded) -> Decision.ACCEPT);
     q.put(mock(Packet.class));
     assertTrue(q.isSnapshotFull());
-    assertThrows(OutboundQueueFullException.class, () -> q.put(mock(Packet.class)));
+    assertEquals(Admission.DROPPED, q.putWithDelivery(mock(Packet.class)));
     assertEquals(1, q.getSize());
   }
 
@@ -150,7 +154,7 @@ class OutboundQueueImplTest {
   void testPutInvokesPolicyApplyPolicy() {
     Packet packet = mock(Packet.class);
     queue.put(packet);
-    verify(policy).applyPolicy(queue, packet);
+    verify(policy).applyPolicy(queue, packet, false);
   }
 
   @Test
@@ -172,7 +176,7 @@ class OutboundQueueImplTest {
     var packet = mock(Packet.class);
     queue.put(packet);
     queue.put(packet);
-    assertThrows(OutboundQueueFullException.class, () -> queue.put(packet));
+    assertEquals(Admission.DROPPED, queue.putWithDelivery(packet));
     queue.take();
     assertEquals(2, queue.statistics().highWater());
     assertEquals(1, queue.statistics().fullDrops());
@@ -189,7 +193,7 @@ class OutboundQueueImplTest {
       queue.configureMaxSize(1);
       var packet = mock(Packet.class);
       queue.put(packet);
-      assertThrows(OutboundQueueFullException.class, () -> queue.put(packet));
+      assertEquals(Admission.DROPPED, queue.putWithDelivery(packet));
       queue.take();
       var stats = queue.statistics();
       assertEquals(-1, stats.highWater());

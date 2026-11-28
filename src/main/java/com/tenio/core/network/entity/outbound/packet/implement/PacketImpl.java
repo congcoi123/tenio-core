@@ -26,10 +26,11 @@ package com.tenio.core.network.entity.outbound.packet.implement;
 
 import com.tenio.common.data.DataType;
 import com.tenio.common.utility.TimeUtility;
-import com.tenio.core.network.define.ResponseGuarantee;
 import com.tenio.core.network.define.TransportType;
+import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.session.Session;
+
 import java.util.Collection;
 
 /**
@@ -39,208 +40,220 @@ import java.util.Collection;
  */
 public final class PacketImpl implements Packet, Comparable<Packet> {
 
-  private final long id;
-  private final long createdTime;
-  private byte[] data;
-  private DataType dataType;
-  private ResponseGuarantee guarantee;
-  private boolean encrypted;
-  private boolean lengthPrefixed;
-  private TransportType transportType;
-  private int originalSize;
-  private Collection<Session> recipients;
-  private byte[] fragmentBuffer;
-  private boolean last;
+    private record Delivery(DeliveryOptions options, long deadline) {
+    }
 
-  private PacketImpl() {
-    id = ID_COUNTER.getAndIncrement();
-    createdTime = TimeUtility.currentTimeMillis();
-    transportType = TransportType.UNKNOWN;
-    guarantee = ResponseGuarantee.NORMAL;
-  }
+    private final long id;
+    private final long createdTime;
+    private byte[] data;
+    private DataType dataType;
+    private boolean encrypted;
+    private boolean lengthPrefixed;
+    private TransportType transportType;
+    private Delivery delivery;
+    private int originalSize;
+    private Collection<Session> recipients;
+    private byte[] fragmentBuffer;
+    private boolean last;
 
-  /**
-   * Creates a new instance of packet.
-   *
-   * @return a new instance of {@link Packet}
-   */
-  public static Packet newInstance() {
-    return new PacketImpl();
-  }
+    private PacketImpl() {
+        id = ID_COUNTER.getAndIncrement();
+        createdTime = TimeUtility.currentTimeMillis();
+        transportType = TransportType.UNKNOWN;
+    }
 
-  @Override
-  public long getId() {
-    return id;
-  }
+    /**
+     * Creates a new instance of packet.
+     *
+     * @return a new instance of {@link Packet}
+     */
+    public static Packet newInstance() {
+        return new PacketImpl();
+    }
 
-  @Override
-  public byte[] getData() {
-    return data;
-  }
+    @Override
+    public long getId() {
+        return id;
+    }
 
-  @Override
-  public void setData(byte[] binaries) {
-    data = binaries;
-    originalSize = binaries.length;
-  }
+    @Override
+    public byte[] getData() {
+        return data;
+    }
 
-  @Override
-  public DataType getDataType() {
-    return dataType;
-  }
+    @Override
+    public void setData(byte[] binaries) {
+        data = binaries;
+        originalSize = binaries.length;
+    }
 
-  @Override
-  public void setDataType(DataType dataType) {
-    this.dataType = dataType;
-  }
+    @Override
+    public DataType getDataType() {
+        return dataType;
+    }
 
-  @Override
-  public TransportType getTransportType() {
-    return transportType;
-  }
+    @Override
+    public void setDataType(DataType dataType) {
+        this.dataType = dataType;
+    }
 
-  @Override
-  public void setTransportType(TransportType type) {
-    transportType = type;
-  }
+    @Override
+    public TransportType getTransportType() {
+        return transportType;
+    }
 
-  @Override
-  public ResponseGuarantee getGuarantee() {
-    return guarantee;
-  }
+    @Override
+    public void setTransportType(TransportType type) {
+        transportType = type;
+    }
 
-  @Override
-  public void setGuarantee(ResponseGuarantee guarantee) {
-    this.guarantee = guarantee;
-  }
+    @Override
+    public boolean needsEncrypted() {
+        return encrypted;
+    }
 
-  @Override
-  public boolean needsEncrypted() {
-    return encrypted;
-  }
+    @Override
+    public void needsEncrypted(boolean encrypted) {
+        this.encrypted = encrypted;
+    }
 
-  @Override
-  public void needsEncrypted(boolean encrypted) {
-    this.encrypted = encrypted;
-  }
+    @Override
+    public boolean hasLengthPrefixed() {
+        return lengthPrefixed;
+    }
 
-  @Override
-  public boolean hasLengthPrefixed() {
-    return lengthPrefixed;
-  }
+    @Override
+    public void hasLengthPrefixed(boolean lengthPrefixed) {
+        this.lengthPrefixed = lengthPrefixed;
+    }
 
-  @Override
-  public void hasLengthPrefixed(boolean lengthPrefixed) {
-    this.lengthPrefixed = lengthPrefixed;
-  }
+    @Override
+    public Collection<Session> getRecipients() {
+        return recipients;
+    }
 
-  @Override
-  public Collection<Session> getRecipients() {
-    return recipients;
-  }
+    @Override
+    public void setRecipients(Collection<Session> recipients) {
+        this.recipients = recipients;
+    }
 
-  @Override
-  public void setRecipients(Collection<Session> recipients) {
-    this.recipients = recipients;
-  }
+    @Override
+    public long getCreatedTime() {
+        return createdTime;
+    }
 
-  @Override
-  public long getCreatedTime() {
-    return createdTime;
-  }
+    @Override
+    public int getOriginalSize() {
+        return originalSize;
+    }
 
-  @Override
-  public int getOriginalSize() {
-    return originalSize;
-  }
+    @Override
+    public boolean isTcp() {
+        return transportType == TransportType.TCP;
+    }
 
-  @Override
-  public boolean isTcp() {
-    return transportType == TransportType.TCP;
-  }
+    @Override
+    public boolean isUdp() {
+        return transportType == TransportType.UDP;
+    }
 
-  @Override
-  public boolean isUdp() {
-    return transportType == TransportType.UDP;
-  }
+    @Override
+    public byte[] getFragmentBuffer() {
+        return fragmentBuffer;
+    }
 
-  @Override
-  public byte[] getFragmentBuffer() {
-    return fragmentBuffer;
-  }
+    @Override
+    public void setFragmentBuffer(byte[] binaries) {
+        fragmentBuffer = binaries;
+    }
 
-  @Override
-  public void setFragmentBuffer(byte[] binaries) {
-    fragmentBuffer = binaries;
-  }
+    @Override
+    public boolean isFragmented() {
+        return fragmentBuffer != null;
+    }
 
-  @Override
-  public boolean isFragmented() {
-    return fragmentBuffer != null;
-  }
+    @Override
+    public boolean isMarkedAsLast() {
+        return last;
+    }
 
-  @Override
-  public boolean isMarkedAsLast() {
-    return last;
-  }
+    @Override
+    public void setMarkedAsLast(boolean markedAsLast) {
+        this.last = markedAsLast;
+    }
 
-  @Override
-  public void setMarkedAsLast(boolean markedAsLast) {
-    this.last = markedAsLast;
-  }
+    @Override
+    public DeliveryOptions getDeliveryOptions() {
+        return delivery == null ? null : delivery.options();
+    }
 
-  @Override
-  public boolean equals(Object object) {
-    return (object instanceof Packet packet) && (getId() == packet.getId());
-  }
+    @Override
+    public void setDeliveryOptions(DeliveryOptions options) {
+        delivery = options == null
+                ? null
+                : new Delivery(options, options.timeToLive().isZero()
+                ? 0
+                : System.nanoTime() + options.timeToLive().toNanos()
+        );
+    }
 
-  /**
-   * It is generally necessary to override the <b>hashCode</b> method whenever
-   * equals method is overridden, so as to maintain the general contract for the
-   * hashCode method, which states that equal objects must have equal hash codes.
-   *
-   * @see <a href="https://imgur.com/x6rEAZE">Formula</a>
-   */
-  @Override
-  public int hashCode() {
-    return Long.hashCode(id);
-  }
+    @Override
+    public long getDeliveryDeadlineNanos() {
+        return delivery == null ? 0 : delivery.deadline();
+    }
 
-  @Override
-  public int compareTo(Packet packet2) {
-    Packet packet1 = this;
-    return Long.compare(packet2.getId(), packet1.getId());
-  }
+    @Override
+    public boolean equals(Object object) {
+        return (object instanceof Packet packet) && (getId() == packet.getId());
+    }
 
-  @Override
-  public String toString() {
-    return "Packet{" +
-        "id=" + id +
-        ", createdTime=" + createdTime +
-        ", data(bytes)=" + (data != null ? data.length : "null") +
-        ", dataType=" + dataType +
-        ", guarantee=" + guarantee +
-        ", encrypted=" + encrypted +
-        ", lengthPrefixed=" + lengthPrefixed +
-        ", transportType=" + transportType +
-        ", originalSize=" + originalSize +
-        ", recipientCount=" + (recipients == null ? 0 : recipients.size()) +
-        ", last=" + last +
-        ", fragmentBuffer(bytes)=" + (fragmentBuffer != null ? fragmentBuffer.length : "null") +
-        '}';
-  }
+    /**
+     * It is generally necessary to override the <b>hashCode</b> method whenever
+     * equals method is overridden, to maintain the general contract for the
+     * hashCode method, which states that equal objects must have equal hash codes.
+     *
+     * @see <a href="https://imgur.com/x6rEAZE">Formula</a>
+     */
+    @Override
+    public int hashCode() {
+        return Long.hashCode(id);
+    }
 
-  public Packet deepCopy() {
-    Packet packet = PacketImpl.newInstance();
-    packet.setDataType(dataType);
-    packet.setData(data);
-    packet.setFragmentBuffer(fragmentBuffer);
-    packet.setGuarantee(guarantee);
-    packet.needsEncrypted(encrypted);
-    packet.hasLengthPrefixed(lengthPrefixed);
-    packet.setRecipients(recipients);
-    packet.setTransportType(transportType);
-    packet.setMarkedAsLast(last);
-    return packet;
-  }
+    @Override
+    public int compareTo(Packet packet2) {
+        Packet packet1 = this;
+        return Long.compare(packet2.getId(), packet1.getId());
+    }
+
+    @Override
+    public String toString() {
+        return "Packet{" +
+                "id=" + id +
+                ", createdTime=" + createdTime +
+                ", data(bytes)=" + (data != null ? data.length : "null") +
+                ", dataType=" + dataType +
+                ", encrypted=" + encrypted +
+                ", lengthPrefixed=" + lengthPrefixed +
+                ", transportType=" + transportType +
+                ", delivery=" + delivery +
+                ", originalSize=" + originalSize +
+                ", recipientCount=" + (recipients == null ? 0 : recipients.size()) +
+                ", last=" + last +
+                ", fragmentBuffer(bytes)=" + (fragmentBuffer != null ? fragmentBuffer.length : "null") +
+                '}';
+    }
+
+    public Packet deepCopy() {
+        Packet packet = PacketImpl.newInstance();
+        packet.setDataType(dataType);
+        packet.setData(data);
+        packet.setFragmentBuffer(fragmentBuffer);
+        packet.needsEncrypted(encrypted);
+        packet.hasLengthPrefixed(lengthPrefixed);
+        packet.setRecipients(recipients);
+        packet.setTransportType(transportType);
+        packet.setMarkedAsLast(last);
+        ((PacketImpl) packet).delivery = delivery;
+        return packet;
+    }
 }

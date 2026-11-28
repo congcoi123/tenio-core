@@ -24,15 +24,16 @@ THE SOFTWARE.
 
 package com.tenio.core.network.netty;
 
+import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.configuration.SocketConfiguration;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.statistic.NetworkWriterStatistic;
-import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
-import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.service.Service;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -40,100 +41,107 @@ import java.nio.ByteBuffer;
  */
 public interface NettyWebSocket extends Service {
 
-  /**
-   * Sets size of {@link ByteBuffer} using for the WebSocket to write binaries data down.
-   *
-   * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for writing
-   *                   binaries data
-   */
-  void setSenderBufferSize(int bufferSize);
+    /**
+     * Sets the local address to bind before the service starts.
+     *
+     * @param serverAddress a local IP address or hostname; use {@code 0.0.0.0} for all IPv4 interfaces
+     */
+    void setServerAddress(String serverAddress);
 
-  /**
-   * Sets size of {@link ByteBuffer} using for the WebSocket to read binaries data from.
-   *
-   * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for reading
-   *                   binaries data
-   */
-  void setReceiverBufferSize(int bufferSize);
+    /**
+     * Sets size of {@link ByteBuffer} using for the WebSocket to write binaries data down.
+     *
+     * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for writing
+     *                   binaries data
+     */
+    void setSenderBufferSize(int bufferSize);
 
-  /**
-   * Sets the number of producer workers for the WebSocket.
-   *
-   * @param workerSize the number ({@code integer} value) of producer workers for the WebSocket
-   */
-  void setProducerWorkerSize(int workerSize);
+    /**
+     * Sets size of {@link ByteBuffer} using for the WebSocket to read binaries data from.
+     *
+     * @param bufferSize the size of {@link ByteBuffer} ({@code integer} value) for reading
+     *                   binaries data
+     */
+    void setReceiverBufferSize(int bufferSize);
 
-  /**
-   * Sets the number of consumer workers for the WebSocket.
-   *
-   * @param workerSize the number ({@code integer} value) of consumer workers for the WebSocket
-   */
-  void setConsumerWorkerSize(int workerSize);
+    /**
+     * Sets the number of producer workers for the WebSocket.
+     *
+     * @param workerSize the number ({@code integer} value) of producer workers for the WebSocket
+     */
+    void setProducerWorkerSize(int workerSize);
 
-  /**
-   * Sets an instance for the connection filter.
-   *
-   * @param connectionFilter an instance of {@link ConnectionFilter}
-   */
-  void setConnectionFilter(ConnectionFilter connectionFilter);
+    /**
+     * Sets the number of consumer workers for the WebSocket.
+     *
+     * @param workerSize the number ({@code integer} value) of consumer workers for the WebSocket
+     */
+    void setConsumerWorkerSize(int workerSize);
 
-  /**
-   * Sets an instance of packet encoder to encode packets for sending to clients.
-   *
-   * @param packetEncoder an instance of {@link BinaryPacketEncoder}
-   * @since 0.6.7
-   */
-  void setPacketEncoder(BinaryPacketEncoder packetEncoder);
+    /**
+     * Sets an instance for the connection filter.
+     *
+     * @param connectionFilter an instance of {@link ConnectionFilter}
+     */
+    void setConnectionFilter(ConnectionFilter connectionFilter);
 
-  /**
-   * Sets an instance of packet decoder to decode packets sent from clients.
-   *
-   * @param packetDecoder an instance of {@link BinaryPacketDecoder}
-   * @since 0.6.7
-   */
-  void setPacketDecoder(BinaryPacketDecoder packetDecoder);
+    /**
+     * Sets an instance of packet encoder to encode packets for sending to clients.
+     *
+     * @param packetEncoder an instance of {@link BinaryPacketEncoder}
+     * @since 0.6.7
+     */
+    void setPacketEncoder(BinaryPacketEncoder packetEncoder);
 
-  /**
-   * Sets a session manager instance.
-   *
-   * @param sessionManager a {@link SessionManager} instance
-   */
-  void setSessionManager(SessionManager sessionManager);
+    /**
+     * Sets an instance of packet decoder to decode packets sent from clients.
+     *
+     * @param packetDecoder an instance of {@link BinaryPacketDecoder}
+     * @since 0.6.7
+     */
+    void setPacketDecoder(BinaryPacketDecoder packetDecoder);
 
-  /**
-   * Sets a network reader statistic instance which takes responsibility recording the
-   * receiving data from clients.
-   *
-   * @param networkReaderStatistic a {@link NetworkReaderStatistic} instance
-   */
-  void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic);
+    /**
+     * Sets a session manager instance.
+     *
+     * @param sessionManager a {@link SessionManager} instance
+     */
+    void setSessionManager(SessionManager sessionManager);
 
-  /**
-   * Sets a network writer statistic instance which takes responsibility recording the
-   * sending data from the network.
-   *
-   * @param networkWriterStatistic a {@link NetworkWriterStatistic} instance
-   */
-  void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic);
+    /**
+     * Sets a network reader statistic instance which takes responsibility recording the
+     * receiving data from clients.
+     *
+     * @param networkReaderStatistic a {@link NetworkReaderStatistic} instance
+     */
+    void setNetworkReaderStatistic(NetworkReaderStatistic networkReaderStatistic);
 
-  /**
-   * Declares a socket configurations for the WebSocket.
-   *
-   * @param socketConfiguration a instance of {@link SocketConfiguration}
-   */
-  void setWebSocketConfiguration(SocketConfiguration socketConfiguration);
+    /**
+     * Sets a network writer statistic instance which takes responsibility recording the
+     * sending data from the network.
+     *
+     * @param networkWriterStatistic a {@link NetworkWriterStatistic} instance
+     */
+    void setNetworkWriterStatistic(NetworkWriterStatistic networkWriterStatistic);
 
-  /**
-   * Determines whether the WebSocket is able to use the SSL.
-   *
-   * @param usingSsl sets to {@code true} in case of using SSL, otherwise returns {@code false}
-   */
-  void setUsingSsl(boolean usingSsl);
+    /**
+     * Declares a socket configurations for the WebSocket.
+     *
+     * @param socketConfiguration a instance of {@link SocketConfiguration}
+     */
+    void setWebSocketConfiguration(SocketConfiguration socketConfiguration);
 
-  /**
-   * Writes down (binaries) data to socket/channel in order to send them to client side.
-   *
-   * @param packet an instance of {@link Packet} using to carry conveying information
-   */
-  void write(Packet packet);
+    /**
+     * Determines whether the WebSocket is able to use the SSL.
+     *
+     * @param usingSsl sets to {@code true} in case of using SSL, otherwise returns {@code false}
+     */
+    void setUsingSsl(boolean usingSsl);
+
+    /**
+     * Writes down (binaries) data to socket/channel in order to send them to client side.
+     *
+     * @param packet an instance of {@link Packet} using to carry conveying information
+     */
+    void write(Packet packet);
 }

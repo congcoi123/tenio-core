@@ -38,9 +38,14 @@ import com.tenio.core.network.security.filter.ConnectionFilter;
 import com.tenio.core.network.statistic.NetworkReaderStatistic;
 import com.tenio.core.network.utility.SocketUtility;
 import com.tenio.core.network.codec.decoder.BinaryPacketDecoder;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.ReferenceCountUtil;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -109,6 +114,33 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object raw) {
     try {
+      if (raw instanceof PingWebSocketFrame ping) {
+        ctx.writeAndFlush(new PongWebSocketFrame(ping.content().retain()));
+        return;
+      }
+      if (raw instanceof CloseWebSocketFrame close) {
+        ctx.writeAndFlush(close.retain()).addListener(future -> {
+          try {
+            var session = sessionManager.getSessionByWebSocket(ctx.channel());
+            if (session != null && session.isActivated()) {
+              session.close(ConnectionDisconnectMode.CLIENT_REQUEST,
+                  PlayerDisconnectMode.CLIENT_REQUEST);
+            }
+          } catch (IOException exception) {
+            if (logger.isErrorEnabled()) {
+              logger.error(exception, "Unable to close WebSocket session");
+            }
+          } finally {
+            ctx.close();
+          }
+        });
+        return;
+      }
+      if (raw instanceof TextWebSocketFrame) {
+        ctx.writeAndFlush(new CloseWebSocketFrame(1003, "Binary TenIO messages required"))
+            .addListener(ChannelFutureListener.CLOSE);
+        return;
+      }
       // only allow this type of frame
       if (!(raw instanceof BinaryWebSocketFrame frame)) {
         return;
@@ -117,6 +149,11 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
       var buffer = frame.content();
       var binaries = new byte[buffer.readableBytes()];
       buffer.getBytes(buffer.readerIndex(), binaries);
+      if (binaries.length == 0) {
+        ctx.writeAndFlush(new CloseWebSocketFrame(1002, "Empty TenIO packet"))
+            .addListener(ChannelFutureListener.CLOSE);
+        return;
+      }
 
       var session = sessionManager.getSessionByWebSocket(ctx.channel());
 
@@ -195,6 +232,7 @@ public final class NettyWsHandler extends ChannelInboundHandlerAdapter {
         logger.error(cause, "Exception was occurred on channel: ", ctx.channel().toString());
       }
     }
+    ctx.close();
   }
 }
 
