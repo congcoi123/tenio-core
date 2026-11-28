@@ -24,13 +24,12 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.outbound.packet.implement;
 
-import com.tenio.core.exception.OutboundQueueFullException;
-import com.tenio.core.exception.OutboundQueuePolicyViolationException;
 import com.tenio.core.network.define.TransportType;
 import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.policy.DefaultOutboundQueuePolicy;
+import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy.Decision;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -84,17 +83,17 @@ class DeliveryPolicyTest {
         var first = packet(3, DeliveryOptions.replaceable("position:1", Duration.ZERO));
         q.put(first);
         assertSame(first, q.peek());
-        assertThrows(
-                OutboundQueueFullException.class,
-                () -> q.put(packet(4, DeliveryOptions.replaceable("position:1", Duration.ZERO)))
+        assertEquals(
+                OutboundQueue.Admission.DROPPED,
+                q.putWithDelivery(packet(4, DeliveryOptions.replaceable("position:1", Duration.ZERO)))
         );
         assertSame(first, q.take());
         first = packet(3, DeliveryOptions.replaceable("position:1", Duration.ZERO));
         first.setMarkedAsLast(true);
         q.put(first);
-        assertThrows(
-                OutboundQueueFullException.class,
-                () -> q.put(packet(4, DeliveryOptions.replaceable("position:1", Duration.ZERO)))
+        assertEquals(
+                OutboundQueue.Admission.DROPPED,
+                q.putWithDelivery(packet(4, DeliveryOptions.replaceable("position:1", Duration.ZERO)))
         );
     }
 
@@ -133,7 +132,7 @@ class DeliveryPolicyTest {
         q.put(packet(2, DeliveryOptions.bestEffort(Duration.ZERO)));
         assertEquals(1, q.getSize());
         assertEquals(1, q.deliveryStatistics().bestEffortDrops());
-        assertThrows(OutboundQueueFullException.class, () -> q.put(packet(2, DeliveryOptions.important())));
+        assertEquals(OutboundQueue.Admission.DROPPED, q.putWithDelivery(packet(2, DeliveryOptions.important())));
         q.take();
         assertEquals(0, q.deliveryStatistics().queuedBytes());
     }
@@ -146,7 +145,7 @@ class DeliveryPolicyTest {
         q.put(first);
         q.put(old);
         q.configureOutboundQueuePolicy(
-                (queue, packet) -> {
+                (queue, packet, capacityExceeded) -> {
                     throw new IllegalArgumentException("rejected");
                 }
         );
@@ -203,7 +202,7 @@ class DeliveryPolicyTest {
         }
         var important = packet(1, DeliveryOptions.important());
         assertEquals(OutboundQueue.Admission.ENQUEUED, q.putWithDelivery(important));
-        assertThrows(OutboundQueueFullException.class, () -> q.put(packet(1, DeliveryOptions.important())));
+        assertEquals(OutboundQueue.Admission.DROPPED, q.putWithDelivery(packet(1, DeliveryOptions.important())));
         for (var entry : original) {
             assertSame(entry, q.take());
         }
@@ -219,11 +218,9 @@ class DeliveryPolicyTest {
             original.add(entry);
             q.put(entry);
         }
-        q.configureOutboundQueuePolicy((queue, packet) -> {
-            throw new OutboundQueuePolicyViolationException(packet, queue.getPercentageUsed());
-        });
+        q.configureOutboundQueuePolicy((queue, packet, capacityExceeded) -> Decision.REJECT);
         var replacement = packet(2, DeliveryOptions.replaceable("state", Duration.ZERO));
-        assertThrows(OutboundQueuePolicyViolationException.class, () -> q.putWithDelivery(replacement));
+        assertEquals(OutboundQueue.Admission.POLICY_REJECTED, q.putWithDelivery(replacement));
         assertEquals(9, q.deliveryStatistics().queuedBytes());
         assertEquals(0, q.deliveryStatistics().replaced());
         assertEquals(1, q.statistics().policyDrops());
@@ -235,7 +232,7 @@ class DeliveryPolicyTest {
     @Test
     void noDeliveryModeBypassesTheUdpCongestionCutoff() {
         var q = queue(100);
-        for (int i = 0; i < 75; i++) {
+        for (int i = 0; i < 90; i++) {
             var tcp = packet(1, null);
             tcp.setTransportType(TransportType.TCP);
             q.put(tcp);
@@ -245,9 +242,9 @@ class DeliveryPolicyTest {
                 DeliveryOptions.bestEffort(Duration.ZERO)}) {
             var udp = packet(1, options);
             udp.setTransportType(TransportType.UDP);
-            assertThrows(OutboundQueuePolicyViolationException.class, () -> q.putWithDelivery(udp));
+            assertEquals(OutboundQueue.Admission.SILENTLY_POLICY_REJECTED, q.putWithDelivery(udp));
         }
-        assertEquals(75, q.getSize());
+        assertEquals(90, q.getSize());
         assertEquals(4, q.statistics().policyDrops());
     }
 
@@ -255,7 +252,7 @@ class DeliveryPolicyTest {
     void udpLeavesReservedHeadroomForTcpWithoutEvictingOrReorderingQueuedPackets() {
         var q = queue(100);
         var original = new java.util.ArrayList<Packet>();
-        for (int i = 0; i < 75; i++) {
+        for (int i = 0; i < 90; i++) {
             var entry = packet(1, null);
             entry.setTransportType(TransportType.UDP);
             original.add(entry);
@@ -263,17 +260,17 @@ class DeliveryPolicyTest {
         }
         var udp = packet(1, null);
         udp.setTransportType(TransportType.UDP);
-        assertThrows(com.tenio.core.exception.OutboundQueuePolicyViolationException.class, () -> q.put(udp));
-        assertEquals(75, q.getSize());
+        assertEquals(OutboundQueue.Admission.SILENTLY_POLICY_REJECTED, q.putWithDelivery(udp));
+        assertEquals(90, q.getSize());
         assertEquals(1, q.statistics().policyDrops());
-        for (int i = 75; i < 100; i++) {
+        for (int i = 90; i < 100; i++) {
             var entry = packet(1, null);
             entry.setTransportType(TransportType.TCP);
             original.add(entry);
             q.put(entry);
         }
         assertEquals(100, q.getSize());
-        assertThrows(OutboundQueueFullException.class, () -> q.put(udp));
+        assertEquals(OutboundQueue.Admission.SILENTLY_DROPPED, q.putWithDelivery(udp));
         assertEquals(1, q.statistics().policyDrops());
         assertEquals(1, q.statistics().fullDrops());
         for (var entry : original) {
@@ -286,7 +283,7 @@ class DeliveryPolicyTest {
     void rejectedUdpReplacementRestoresItsOriginalPositionAndByteAccounting() {
         var q = queue(100);
         var original = new java.util.ArrayList<Packet>();
-        for (int i = 0; i < 76; i++) {
+        for (int i = 0; i < 91; i++) {
             var entry = packet(1, i == 1 ? DeliveryOptions.replaceable("position", Duration.ZERO) : null);
             entry.setTransportType(i == 1 ? TransportType.UDP : TransportType.TCP);
             original.add(entry);
@@ -294,9 +291,9 @@ class DeliveryPolicyTest {
         }
         var replacement = packet(2, DeliveryOptions.replaceable("position", Duration.ZERO));
         replacement.setTransportType(TransportType.UDP);
-        assertThrows(OutboundQueuePolicyViolationException.class, () -> q.putWithDelivery(replacement));
-        assertEquals(76, q.getSize());
-        assertEquals(76, q.deliveryStatistics().queuedBytes());
+        assertEquals(OutboundQueue.Admission.SILENTLY_POLICY_REJECTED, q.putWithDelivery(replacement));
+        assertEquals(91, q.getSize());
+        assertEquals(91, q.deliveryStatistics().queuedBytes());
         assertEquals(0, q.deliveryStatistics().replaced());
         assertEquals(1, q.statistics().policyDrops());
         for (var entry : original) {
@@ -307,7 +304,7 @@ class DeliveryPolicyTest {
     @Test
     void nonGrowingUdpReplacementAtTheCutoffDoesNotConsumeReservedSlots() {
         var q = queue(100);
-        for (int i = 0; i < 75; i++) {
+        for (int i = 0; i < 90; i++) {
             var entry = packet(1, i == 0 ? DeliveryOptions.replaceable("position", Duration.ZERO) : null);
             entry.setTransportType(i == 0 ? TransportType.UDP : TransportType.TCP);
             q.put(entry);
@@ -315,9 +312,9 @@ class DeliveryPolicyTest {
         var replacement = packet(2, DeliveryOptions.replaceable("position", Duration.ZERO));
         replacement.setTransportType(TransportType.UDP);
         q.put(replacement);
-        assertEquals(75, q.getSize());
+        assertEquals(90, q.getSize());
         assertEquals(1, q.deliveryStatistics().replaced());
-        for (int i = 1; i < 75; i++) {
+        for (int i = 1; i < 90; i++) {
             assertTrue(q.take().isTcp());
         }
         assertSame(replacement, q.take());
@@ -326,8 +323,7 @@ class DeliveryPolicyTest {
     @Test
     void aCustomPolicyCanChooseDifferentUdpAdmissionButCannotExceedQueueCapacity() {
         var q = queue(4);
-        q.configureOutboundQueuePolicy((queue, packet) -> {
-        });
+        q.configureOutboundQueuePolicy((queue, packet, capacityExceeded) -> Decision.ACCEPT);
         for (int i = 0; i < 4; i++) {
             var udp = packet(1, null);
             udp.setTransportType(TransportType.UDP);
@@ -335,7 +331,7 @@ class DeliveryPolicyTest {
         }
         var extra = packet(1, null);
         extra.setTransportType(TransportType.UDP);
-        assertThrows(OutboundQueueFullException.class, () -> q.put(extra));
+        assertEquals(OutboundQueue.Admission.DROPPED, q.putWithDelivery(extra));
     }
 
     @ParameterizedTest
@@ -360,6 +356,6 @@ class DeliveryPolicyTest {
         finalTcp.setTransportType(TransportType.TCP);
         q.put(finalTcp);
         assertEquals(20, q.getSize());
-        assertThrows(OutboundQueueFullException.class, () -> q.put(packet(1, null)));
+        assertEquals(OutboundQueue.Admission.DROPPED, q.putWithDelivery(packet(1, null)));
     }
 }

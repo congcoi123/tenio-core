@@ -25,8 +25,6 @@ THE SOFTWARE.
 package com.tenio.core.network.entity.outbound.packet;
 
 import com.tenio.core.admin.OperationalHistory;
-import com.tenio.core.exception.OutboundQueueFullException;
-import com.tenio.core.exception.OutboundQueuePolicyViolationException;
 import com.tenio.core.network.entity.outbound.packet.policy.DefaultOutboundQueuePolicy;
 import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
 
@@ -51,8 +49,6 @@ import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
  * @see Packet
  * @see OutboundQueuePolicy
  * @see DefaultOutboundQueuePolicy
- * @see OutboundQueueFullException
- * @see OutboundQueuePolicyViolationException
  * @since 0.3.0
  */
 public interface OutboundQueue {
@@ -170,16 +166,16 @@ public interface OutboundQueue {
     float getPercentageUsed();
 
     /**
-     * Puts a new packet into queue.
+     * Admits a packet subject to the configured policy and hard packet/byte bounds. Expected
+     * capacity and policy rejections return enum results instead of throwing. The writer uses
+     * the result to count drops, log visible rejections and schedule admitted packets.
      *
-     * @param packet an appended {@link Packet}
-     * @throws OutboundQueueFullException            when the queue is full and not be able to hold
-     *                                               more packets
-     * @throws OutboundQueuePolicyViolationException when a new appended packet violates the queue
-     *                                               policies
+     * @param packet the packet proposed for admission
+     * @return the admission outcome, never {@code null}
+     * @throws RuntimeException if an unexpected admission failure occurs
      * @see DefaultOutboundQueuePolicy
      */
-    void put(Packet packet) throws OutboundQueueFullException, OutboundQueuePolicyViolationException;
+    Admission put(Packet packet);
 
     /**
      * Clears all packets from the queue.
@@ -214,19 +210,19 @@ public interface OutboundQueue {
     }
 
     /**
-     * Admits a packet and reports an intentional drop to network/session counters. Alternate queue
-     * implementations retain their existing put() behavior.
+     * Delegates to {@link #put(Packet)}, preserving its admission result. Delivery metadata is
+     * handled by the queue's normal admission path; callers can use {@code put} for all packets.
      *
-     * @param packet packet selected for optional enhanced delivery
-     * @return admission outcome
+     * @param packet the packet proposed for admission
+     * @return the admission outcome from {@code put}, never {@code null}
      */
     default Admission putWithDelivery(Packet packet) {
-        put(packet);
-        return Admission.ENQUEUED;
+        return put(packet);
     }
 
     /**
-     * Outcome of optional enhanced queue admission.
+     * Outcome of basic or enhanced queue admission. Silent outcomes suppress rejection warnings
+     * while retaining the same capacity or policy drop counters.
      */
     enum Admission {
         /**
@@ -238,9 +234,48 @@ public interface OutboundQueue {
          */
         EXPIRED,
         /**
-         * Best-effort message discarded at the queue capacity bound.
+         * Packet rejected at a hard packet or byte bound; allow a rejection warning.
          */
-        DROPPED
+        DROPPED,
+        /**
+         * Packet rejected by policy within hard bounds; allow a rejection warning.
+         */
+        POLICY_REJECTED,
+        /**
+         * Packet rejected at a hard packet or byte bound without a rejection warning.
+         */
+        SILENTLY_DROPPED,
+        /**
+         * Packet rejected by policy within hard bounds without a rejection warning.
+         */
+        SILENTLY_POLICY_REJECTED;
+
+        /**
+         * Determines whether this result counts as a capacity drop.
+         *
+         * @return {@code true} for either visible or silent capacity rejection
+         */
+        public boolean isCapacityRejection() {
+            return this == DROPPED || this == SILENTLY_DROPPED;
+        }
+
+        /**
+         * Determines whether this result counts as a policy drop.
+         *
+         * @return {@code true} for either visible or silent policy rejection
+         */
+        public boolean isPolicyRejection() {
+            return this == POLICY_REJECTED || this == SILENTLY_POLICY_REJECTED;
+        }
+
+        /**
+         * Determines whether the policy suppressed rejection warnings for this result.
+         *
+         * @return {@code true} when a rejection must be counted without a warning
+         */
+        public boolean isSilent() {
+            return this == SILENTLY_DROPPED || this == SILENTLY_POLICY_REJECTED;
+        }
     }
 
     /**

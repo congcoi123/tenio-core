@@ -32,7 +32,7 @@ import java.util.Objects;
  *
  * <p>Important messages preserve FIFO order and cannot expire or replace another message.
  * Congestion admission is controlled separately by the outbound queue policy. Every mode is
- * subject to packet/byte capacity and that policy, including the default UDP cutoff at 75 percent
+ * subject to packet/byte capacity and that policy, including the default UDP cutoff at 90 percent
  * occupancy. No mode provides end-to-end acknowledgement or durable storage. Responses with no
  * options retain basic FIFO behavior without allocating this record or enhanced bookkeeping.
  *

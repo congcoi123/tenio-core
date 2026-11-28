@@ -79,9 +79,9 @@ class DeliveryAdmissionTest {
         var stats = mock(NetworkWriterStatistic.class);
         writer.setNetworkWriterStatistic(stats);
         var queue = OutboundQueueImpl.newInstance();
-        queue.configureMaxSize(4);
+        queue.configureMaxSize(10);
         queue.configureOutboundQueuePolicy(new DefaultOutboundQueuePolicy());
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 9; i++) {
             queue.put(PacketImpl.newInstance());
         }
         var session = mock(Session.class);
@@ -93,7 +93,7 @@ class DeliveryAdmissionTest {
         var method = ZeroWriterImpl.class.getDeclaredMethod("enqueuePacket", Session.class, Packet.class);
         method.setAccessible(true);
         method.invoke(writer, session, dropped);
-        assertEquals(3, queue.getSize());
+        assertEquals(9, queue.getSize());
         verify(session).addDroppedPackets(1);
         verify(stats).updateWrittenDroppedPacketsByPolicy(1);
         verify(stats, never()).updateWrittenDroppedPacketsByFull(anyInt());
@@ -106,10 +106,10 @@ class DeliveryAdmissionTest {
         var stats = mock(NetworkWriterStatistic.class);
         writer.setNetworkWriterStatistic(stats);
         var queue = OutboundQueueImpl.newInstance();
-        queue.configureMaxSize(4);
+        queue.configureMaxSize(10);
         queue.configureOutboundQueuePolicy(new DefaultOutboundQueuePolicy());
         queue.enableMonitoring(null, 1, "TCP");
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 9; i++) {
             queue.put(PacketImpl.newInstance());
         }
         var session = mock(Session.class);
@@ -123,7 +123,7 @@ class DeliveryAdmissionTest {
         var method = ZeroWriterImpl.class.getDeclaredMethod("enqueuePacket", Session.class, Packet.class);
         method.setAccessible(true);
         method.invoke(writer, session, udp);
-        assertEquals(3, queue.getSize());
+        assertEquals(9, queue.getSize());
         assertEquals(1, queue.statistics().policyDrops());
         assertEquals(0, queue.statistics().fullDrops());
         verify(session).addDroppedPackets(1);

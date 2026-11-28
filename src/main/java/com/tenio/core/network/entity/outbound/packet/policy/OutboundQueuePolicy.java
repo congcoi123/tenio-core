@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.outbound.packet.policy;
 
-import com.tenio.core.exception.OutboundQueuePolicyViolationException;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 
@@ -36,11 +35,36 @@ import com.tenio.core.network.entity.outbound.packet.Packet;
 public interface OutboundQueuePolicy {
 
     /**
-     * Applies policies on a queue whenever a new packet is added into it.
+     * Evaluates admission before the queue inserts the packet. Hard packet and byte bounds
+     * cannot be bypassed by accepting a packet that exceeds capacity. Implementations must not
+     * mutate the queue or packet during this call.
      *
-     * @param outboundQueue the checking {@link OutboundQueue}
-     * @param packet        a new appended {@link Packet}
-     * @throws OutboundQueuePolicyViolationException whenever a new added packet violates the queue's policies
+     * @param outboundQueue    the queue being checked; its depth excludes an eligible replacement
+     *                         during policy evaluation
+     * @param packet           the packet proposed for admission
+     * @param capacityExceeded whether admitting the packet would exceed a hard packet or byte bound,
+     *                         after accounting for an eligible replacement
+     * @return the admission decision, never {@code null}; expected rejections must return a code
+     * @throws RuntimeException if an unexpected policy failure occurs
      */
-    void applyPolicy(OutboundQueue outboundQueue, Packet packet) throws OutboundQueuePolicyViolationException;
+    Decision applyPolicy(OutboundQueue outboundQueue, Packet packet, boolean capacityExceeded);
+
+    /**
+     * Policy admission decisions. The queue determines the capacity or policy rejection reason;
+     * the policy determines whether the writer should log the rejection.
+     */
+    enum Decision {
+        /**
+         * Accept subject to the queue's hard capacity bounds.
+         */
+        ACCEPT,
+        /**
+         * Reject and allow the writer to log a rate-limited warning.
+         */
+        REJECT,
+        /**
+         * Reject without rejection warnings; drop counters are still updated.
+         */
+        REJECT_SILENTLY
+    }
 }

@@ -24,14 +24,13 @@ THE SOFTWARE.
 
 package com.tenio.core.network.entity.outbound.packet.policy;
 
-import com.tenio.core.exception.OutboundQueueFullException;
-import com.tenio.core.exception.OutboundQueuePolicyViolationException;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 
 /**
  * The default transport-based congestion admission policy. Incoming UDP packets are rejected
- * at 75 percent queue occupancy; other transports remain eligible until the queue is full.
+ * silently at 90 percent queue occupancy or on a hard capacity rejection. Other transports
+ * remain eligible until the queue is full; their capacity rejections remain visible in logs.
  * Delivery mode does not override admission. This policy neither reorders queued packets nor
  * evicts existing packets. Applications can register a custom policy to change admission rules.
  *
@@ -39,17 +38,13 @@ import com.tenio.core.network.entity.outbound.packet.Packet;
  */
 public class DefaultOutboundQueuePolicy implements OutboundQueuePolicy {
 
-    private static final float THREE_QUARTERS_FULL = 75.0f;
+    private static final float NINETY_PERCENT_FULL = 90.0f;
 
     @Override
-    public void applyPolicy(OutboundQueue outboundQueue, Packet packet) {
-        if (outboundQueue.isSnapshotFull()) {
-            throw new OutboundQueueFullException(outboundQueue.getSnapshotSize());
+    public Decision applyPolicy(OutboundQueue outboundQueue, Packet packet, boolean capacityExceeded) {
+        if ((capacityExceeded || outboundQueue.getPercentageUsed() >= NINETY_PERCENT_FULL) && packet.isUdp()) {
+            return Decision.REJECT_SILENTLY;
         }
-
-        float percentageUsed = outboundQueue.getPercentageUsed();
-        if (percentageUsed >= THREE_QUARTERS_FULL && packet.isUdp()) {
-            throw new OutboundQueuePolicyViolationException(packet, percentageUsed);
-        }
+        return Decision.ACCEPT;
     }
 }

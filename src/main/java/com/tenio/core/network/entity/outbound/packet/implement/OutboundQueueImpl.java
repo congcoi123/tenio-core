@@ -25,12 +25,11 @@ THE SOFTWARE.
 package com.tenio.core.network.entity.outbound.packet.implement;
 
 import com.tenio.core.admin.OperationalHistory;
-import com.tenio.core.exception.OutboundQueueFullException;
-import com.tenio.core.exception.OutboundQueuePolicyViolationException;
 import com.tenio.core.network.entity.outbound.packet.DeliveryOptions;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
+import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy.Decision;
 
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
@@ -161,36 +160,17 @@ public final class OutboundQueueImpl implements OutboundQueue {
     }
 
     @Override
-    public void put(Packet packet) {
-        putWithDelivery(packet);
-    }
-
-    @Override
-    public Admission putWithDelivery(Packet packet) {
+    public Admission put(Packet packet) {
         Objects.requireNonNull(packet, "packet");
         synchronized (queue) {
             if (delivery != null || packet.getDeliveryOptions() != null) {
                 return enhancedPut(packet);
             }
             snapshotSize = queue.size();
-            if (isSnapshotFull()) {
-                if (monitor != null && monitor.diagnostics) {
-                    monitor.fullDrops++;
-                }
-                throw new OutboundQueueFullException(snapshotSize);
-            }
-            try {
-                outboundQueuePolicy.applyPolicy(this, packet);
-            } catch (OutboundQueuePolicyViolationException rejected) {
-                if (monitor != null && monitor.diagnostics) {
-                    monitor.policyDrops++;
-                }
-                throw rejected;
-            } catch (OutboundQueueFullException full) {
-                if (monitor != null && monitor.diagnostics) {
-                    monitor.fullDrops++;
-                }
-                throw full;
+            boolean capacityExceeded = isSnapshotFull();
+            var decision = Objects.requireNonNull(outboundQueuePolicy.applyPolicy(this, packet, capacityExceeded), "policy decision");
+            if (decision != Decision.ACCEPT || capacityExceeded) {
+                return reject(capacityExceeded, decision == Decision.REJECT_SILENTLY);
             }
             queue.add(packet);
             snapshotSize = queue.size();
@@ -319,42 +299,34 @@ public final class OutboundQueueImpl implements OutboundQueue {
         int packetBytes = packet.getData() == null ? 0 : packet.getData().length;
         long replacedBytes = replacement == null ? 0 : delivery.sizes.get(replacement);
         int finalSize = queue.size() + (replacement == null ? 1 : 0);
-        if (finalSize > maxSize
-                || (delivery.maximumBytes > 0
-                && delivery.bytes - replacedBytes + packetBytes > delivery.maximumBytes)) {
-            if (monitor != null && monitor.diagnostics) {
-                monitor.fullDrops++;
-            }
-            if (options != null
-                    && options.mode() == DeliveryOptions.Mode.BEST_EFFORT
-                    && !packet.isMarkedAsLast()) {
-                if (monitor != null && monitor.diagnostics) {
-                    delivery.bestEffortDrops++;
-                }
-                return Admission.DROPPED;
-            }
-            throw new OutboundQueueFullException(snapshotSize);
-        }
+        boolean capacityExceeded = finalSize > maxSize
+                || (delivery.maximumBytes > 0 && delivery.bytes - replacedBytes + packetBytes > delivery.maximumBytes);
         int position = replacement == null ? -1 : ((LinkedList<Packet>) queue).indexOf(replacement);
         if (replacement != null) {
             queue.remove(replacement);
             snapshotSize = queue.size();
         }
         try {
-            outboundQueuePolicy.applyPolicy(this, packet);
-        } catch (RuntimeException rejected) {
+            var decision = Objects.requireNonNull(outboundQueuePolicy.applyPolicy(this, packet, capacityExceeded), "policy decision");
+            if (decision != Decision.ACCEPT || capacityExceeded) {
+                if (replacement != null) {
+                    ((LinkedList<Packet>) queue).add(position, replacement);
+                }
+                snapshotSize = queue.size();
+                if (capacityExceeded && options != null
+                        && options.mode() == DeliveryOptions.Mode.BEST_EFFORT
+                        && !packet.isMarkedAsLast()
+                        && monitor != null && monitor.diagnostics) {
+                    delivery.bestEffortDrops++;
+                }
+                return reject(capacityExceeded, decision == Decision.REJECT_SILENTLY);
+            }
+        } catch (RuntimeException failure) {
             if (replacement != null) {
                 ((LinkedList<Packet>) queue).add(position, replacement);
             }
             snapshotSize = queue.size();
-            if (monitor != null && monitor.diagnostics) {
-                if (rejected instanceof OutboundQueueFullException) {
-                    monitor.fullDrops++;
-                } else if (rejected instanceof OutboundQueuePolicyViolationException) {
-                    monitor.policyDrops++;
-                }
-            }
-            throw rejected;
+            throw failure;
         }
         if (replacement != null) {
             forget(replacement);
@@ -372,6 +344,19 @@ public final class OutboundQueueImpl implements OutboundQueue {
             updatePressure();
         }
         return Admission.ENQUEUED;
+    }
+
+    private Admission reject(boolean capacityExceeded, boolean silent) {
+        if (capacityExceeded) {
+            if (monitor != null && monitor.diagnostics) {
+                monitor.fullDrops++;
+            }
+            return silent ? Admission.SILENTLY_DROPPED : Admission.DROPPED;
+        }
+        if (monitor != null && monitor.diagnostics) {
+            monitor.policyDrops++;
+        }
+        return silent ? Admission.SILENTLY_POLICY_REJECTED : Admission.POLICY_REJECTED;
     }
 
     @Override

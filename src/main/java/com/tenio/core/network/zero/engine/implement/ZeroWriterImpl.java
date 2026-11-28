@@ -25,8 +25,6 @@ THE SOFTWARE.
 package com.tenio.core.network.zero.engine.implement;
 
 import com.tenio.core.event.implement.EventManager;
-import com.tenio.core.exception.OutboundQueueFullException;
-import com.tenio.core.exception.OutboundQueuePolicyViolationException;
 import com.tenio.core.network.codec.encoder.BinaryPacketEncoder;
 import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.Packet;
@@ -173,48 +171,45 @@ public final class ZeroWriterImpl extends AbstractZeroEngine implements ZeroWrit
         // loops through the outbound queue and handles its packets
         var outboundQueue = session.fetchOutboundQueue();
         if (outboundQueue != null) {
-            try {
-                if (isWarnEnabled()) {
-                    int remaining = session.pollSlowConsumingOutboundQueueWarning();
-                    if (remaining > 0) {
-                        warn("[Slow Consuming Outbound Queue] Remaining: ", remaining, " > ", session);
-                    }
-                }
-
-                // put new item into the queue
-                if (packet.getDeliveryOptions() == null) {
-                    outboundQueue.put(packet);
-                } else {
-                    var result = outboundQueue.putWithDelivery(packet);
-                    if (result == OutboundQueue.Admission.DROPPED) {
-                        session.addDroppedPackets(1);
-                        networkWriterStatistic.updateWrittenDroppedPacketsByFull(1);
-                        warnFullQueue(session, outboundQueue);
-                    }
-                    if (result != OutboundQueue.Admission.ENQUEUED) {
-                        packet.setRecipients(null);
-                        return;
-                    }
-                }
-
-                // duplicated entries are expected
-                sessionTicketsQueueManager.getQueueByElementId(session.getId()).add(session);
-
-                packet.setRecipients(null);
-            } catch (OutboundQueuePolicyViolationException exception) {
-                session.addDroppedPackets(1);
-                networkWriterStatistic.updateWrittenDroppedPacketsByPolicy(1);
-            } catch (OutboundQueueFullException exception) {
+            var result = outboundQueue.put(packet);
+            if (result.isCapacityRejection()) {
                 session.addDroppedPackets(1);
                 networkWriterStatistic.updateWrittenDroppedPacketsByFull(1);
-                warnFullQueue(session, outboundQueue);
+                if (!result.isSilent()) {
+                    warnQueueRejection(session, outboundQueue, "Full");
+                }
+            } else if (result.isPolicyRejection()) {
+                session.addDroppedPackets(1);
+                networkWriterStatistic.updateWrittenDroppedPacketsByPolicy(1);
+                if (!result.isSilent()) {
+                    warnQueueRejection(session, outboundQueue, "Policy");
+                }
+            }
+            if (result != OutboundQueue.Admission.ENQUEUED) {
+                packet.setRecipients(null);
+                return;
+            }
+            warnSlowQueue(session);
+
+            // duplicated entries are expected
+            sessionTicketsQueueManager.getQueueByElementId(session.getId()).add(session);
+
+            packet.setRecipients(null);
+        }
+    }
+
+    private void warnSlowQueue(Session session) {
+        if (isWarnEnabled()) {
+            int remaining = session.pollSlowConsumingOutboundQueueWarning();
+            if (remaining > 0) {
+                warn("[Slow Consuming Outbound Queue] Remaining: ", remaining, " > ", session);
             }
         }
     }
 
-    private void warnFullQueue(Session session, OutboundQueue outboundQueue) {
+    private void warnQueueRejection(Session session, OutboundQueue outboundQueue, String reason) {
         if (isWarnEnabled() && session.pollOutboundQueueFullWarning()) {
-            warn("[Outbound Queue Full] Rejected packet; depth: ", outboundQueue.getSnapshotSize(),
+            warn("[Outbound Queue ", reason, "] Rejected packet; depth: ", outboundQueue.getSnapshotSize(),
                     ", sessionId: ", session.getId());
         }
     }

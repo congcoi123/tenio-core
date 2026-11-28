@@ -165,7 +165,7 @@
 - Added authenticated session recovery with rotating tokens and snapshot/replay support.
 - Added public room discovery and typed player/room state replication.
 - Added delivery modes for queued-message replacement, expiry and best-effort overflow.
-- Updated the default outbound policy to reject UDP at 75% queue occupancy and allow TCP until full.
+- Centralize 90% UDP admission and silent drops in the default policy; use enum results for outbound rejections, retaining counters and TCP/WebSocket warnings.
 - Added performance history with rotating archives and desktop charts.
 - Improved WebSocket handshakes, fragmentation, control frames and listener lifecycle.
 - Improved startup diagnostics and network shutdown; fixed TCP reader stalls and room discovery issues.

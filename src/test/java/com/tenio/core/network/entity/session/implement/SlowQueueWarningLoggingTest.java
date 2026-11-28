@@ -35,6 +35,7 @@ import com.tenio.core.network.entity.outbound.packet.Packet;
 import com.tenio.core.network.entity.outbound.packet.implement.OutboundQueueImpl;
 import com.tenio.core.network.entity.outbound.packet.implement.PacketImpl;
 import com.tenio.core.network.entity.outbound.packet.policy.DefaultOutboundQueuePolicy;
+import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
 import com.tenio.core.network.entity.session.Session;
 import com.tenio.core.network.entity.session.manager.SessionManager;
 import com.tenio.core.network.netty.NettyWebSocketImpl;
@@ -196,6 +197,7 @@ class SlowQueueWarningLoggingTest {
     void outboundWarningsAreRateLimitedWithoutConsumingDiagnosticReads() throws Exception {
         var session = SessionImpl.newInstance();
         var queue = mock(OutboundQueue.class);
+        when(queue.put(any(Packet.class))).thenReturn(OutboundQueue.Admission.ENQUEUED);
         session.configureOutboundQueue(queue);
         session.configureSlowConsumingOutboundQueueWarningThreshold(2);
         var time = installGate(session, "outboundQueueWarning", 2);
@@ -216,6 +218,7 @@ class SlowQueueWarningLoggingTest {
     void nonPositiveThresholdsAllocateNoGatesAndDoNotReadOutboundQueue() throws Exception {
         var session = SessionImpl.newInstance();
         var queue = mock(OutboundQueue.class);
+        when(queue.put(any(Packet.class))).thenReturn(OutboundQueue.Admission.ENQUEUED);
         session.configureOutboundQueue(queue);
         for (int threshold : new int[]{0, -1}) {
             session.configureSlowConsumingInboundQueueWarningThreshold(threshold);
@@ -253,6 +256,7 @@ class SlowQueueWarningLoggingTest {
         var session = spy(SessionImpl.newInstance());
         when(session.isActivated()).thenReturn(true);
         var queue = mock(OutboundQueue.class);
+        when(queue.put(any(Packet.class))).thenReturn(OutboundQueue.Admission.ENQUEUED);
         when(queue.getSnapshotSize()).thenReturn(1);
         session.configureOutboundQueue(queue);
         session.configureSlowConsumingOutboundQueueWarningThreshold(1);
@@ -350,7 +354,8 @@ class SlowQueueWarningLoggingTest {
         session.enqueueInbound(mock(DataCollection.class));
         assertThrows(InboundQueueFullException.class, () -> session.enqueueInbound(mock(DataCollection.class)));
         var queue = mock(OutboundQueue.class);
-        Mockito.doThrow(new com.tenio.core.exception.OutboundQueueFullException(1)).when(queue).put(any(Packet.class));
+        when(queue.put(any(Packet.class))).thenReturn(OutboundQueue.Admission.ENQUEUED);
+        when(queue.put(any(Packet.class))).thenReturn(OutboundQueue.Admission.DROPPED);
         session.configureOutboundQueue(queue);
         var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
         writer.setNetworkWriterStatistic(mock(NetworkWriterStatistic.class));
@@ -369,13 +374,14 @@ class SlowQueueWarningLoggingTest {
         var session = spy(SessionImpl.newInstance());
         when(session.isActivated()).thenReturn(true);
         var queue = OutboundQueueImpl.newInstance();
-        queue.configureMaxSize(4);
+        queue.configureMaxSize(10);
         queue.configureOutboundQueuePolicy(new DefaultOutboundQueuePolicy());
         queue.enableMonitoring(null, session.getId(), "TCP");
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 9; i++) {
             queue.put(PacketImpl.newInstance());
         }
         session.configureOutboundQueue(queue);
+        session.configureSlowConsumingOutboundQueueWarningThreshold(1);
         var stats = mock(NetworkWriterStatistic.class);
         var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
         writer.setNetworkWriterStatistic(stats);
@@ -389,6 +395,106 @@ class SlowQueueWarningLoggingTest {
         assertEquals(10, queue.statistics().policyDrops());
         assertEquals(0, queue.statistics().fullDrops());
         verify(stats, times(10)).updateWrittenDroppedPacketsByPolicy(1);
+    }
+
+    @Test
+    void udpCapacityDropsAreSilentForPacketAndByteBoundsInEveryMode() throws Exception {
+        for (boolean byteBound : new boolean[]{false, true}) {
+            var session = spy(SessionImpl.newInstance());
+            when(session.isActivated()).thenReturn(true);
+            var queue = OutboundQueueImpl.newInstance();
+            queue.configureMaxSize(1);
+            queue.configureOutboundQueuePolicy(new DefaultOutboundQueuePolicy());
+            queue.enableMonitoring(null, session.getId(), "TCP");
+            if (byteBound) {
+                queue.configureDeliveryByteLimit(1);
+            } else {
+                queue.put(PacketImpl.newInstance());
+            }
+            session.configureOutboundQueue(queue);
+            session.configureSlowConsumingOutboundQueueWarningThreshold(1);
+            var stats = mock(NetworkWriterStatistic.class);
+            var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
+            writer.setNetworkWriterStatistic(stats);
+            for (var options : new DeliveryOptions[]{
+                    null, DeliveryOptions.important(),
+                    DeliveryOptions.replaceable("state", Duration.ZERO),
+                    DeliveryOptions.bestEffort(Duration.ZERO)}) {
+                var udp = PacketImpl.newInstance();
+                udp.setTransportType(TransportType.UDP);
+                udp.setData(new byte[]{1, 2});
+                udp.setDeliveryOptions(options);
+                enqueue(writer, session, udp);
+            }
+            assertEquals(4, queue.statistics().fullDrops());
+            assertEquals(0, queue.statistics().policyDrops());
+            assertEquals(4, session.getDroppedPackets());
+            verify(stats, times(4)).updateWrittenDroppedPacketsByFull(1);
+            assertNull(field(session, "fullQueueWarnings"));
+            assertEquals(0, appender.events.size());
+        }
+    }
+
+    @Test
+    void customTcpPolicyRejectionsRemainCountedAndVisibleWithoutLogFloods() {
+        var session = spy(SessionImpl.newInstance());
+        when(session.isActivated()).thenReturn(true);
+        var queue = OutboundQueueImpl.newInstance();
+        queue.configureMaxSize(10);
+        queue.configureOutboundQueuePolicy((outbound, packet, capacityExceeded) -> OutboundQueuePolicy.Decision.REJECT);
+        queue.enableMonitoring(null, session.getId(), "TCP");
+        session.configureOutboundQueue(queue);
+        var stats = mock(NetworkWriterStatistic.class);
+        var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
+        writer.setNetworkWriterStatistic(stats);
+        var tcp = PacketImpl.newInstance();
+        tcp.setTransportType(TransportType.TCP);
+        for (int i = 0; i < 10; i++) {
+            enqueue(writer, session, tcp);
+        }
+        assertEquals(10, session.getDroppedPackets());
+        assertEquals(10, queue.statistics().policyDrops());
+        assertEquals(0, queue.getSize());
+        verify(stats, times(10)).updateWrittenDroppedPacketsByPolicy(1);
+        assertEquals(1, appender.events.size());
+        assertTrue(appender.events.getFirst().getMessage().getFormattedMessage().contains("Outbound Queue Policy"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void aCustomPolicyControlsRejectionVisibilityForEveryTransport(boolean silent) throws Exception {
+        for (var transport : new TransportType[]{TransportType.TCP, TransportType.UDP, TransportType.WEB_SOCKET}) {
+            appender.events.clear();
+            var session = spy(SessionImpl.newInstance());
+            when(session.isActivated()).thenReturn(true);
+            var queue = OutboundQueueImpl.newInstance();
+            queue.configureMaxSize(10);
+            queue.configureOutboundQueuePolicy((outbound, packet, capacityExceeded) ->
+                    silent ? OutboundQueuePolicy.Decision.REJECT_SILENTLY : OutboundQueuePolicy.Decision.REJECT);
+            queue.enableMonitoring(null, session.getId(), "TCP");
+            session.configureOutboundQueue(queue);
+            session.configureSlowConsumingOutboundQueueWarningThreshold(1);
+            var stats = mock(NetworkWriterStatistic.class);
+            var writer = ZeroWriterImpl.newInstance(mock(EventManager.class));
+            writer.setNetworkWriterStatistic(stats);
+            var packet = PacketImpl.newInstance();
+            packet.setTransportType(transport);
+            for (int i = 0; i < 10; i++) {
+                enqueue(writer, session, packet);
+            }
+            assertEquals(10, session.getDroppedPackets());
+            assertEquals(10, queue.statistics().policyDrops());
+            assertEquals(0, queue.getSize());
+            verify(stats, times(10)).updateWrittenDroppedPacketsByPolicy(1);
+            verify(session, org.mockito.Mockito.never()).pollSlowConsumingOutboundQueueWarning();
+            assertEquals(silent ? 0 : 1, appender.events.size());
+            if (silent) {
+                assertNull(field(session, "fullQueueWarnings"));
+            } else {
+                assertTrue(appender.events.getFirst().getMessage().getFormattedMessage().contains("Outbound Queue Policy"));
+                assertNull(appender.events.getFirst().getThrown());
+            }
+        }
     }
 
     @Test

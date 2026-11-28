@@ -95,7 +95,7 @@ selected explicitly on `InitialRoomSetting.Builder` and are created per room ins
 | Interface | Built-in behavior when no override is supplied | How to change it |
 | --- | --- | --- |
 | `ConnectionFilter` | `DefaultConnectionFilter` rejects banned IPs and connections above `max-connections-per-ip`. The configured limit is applied at startup. | Register a filter bean implementing the complete admission/counting/ban contract. |
-| `OutboundQueuePolicy` | `DefaultOutboundQueuePolicy` rejects a full queue and rejects incoming UDP at 75% packet occupancy. TCP remains eligible until full. Delivery modes do not override admission, reorder queued packets or promise delivery. Current direct Netty WebSocket writes bypass the shared queue. | Register a policy bean to change admission rules; hard packet/byte bounds still apply. |
+| `OutboundQueuePolicy` | `DefaultOutboundQueuePolicy` silently rejects UDP at 90% packet occupancy or a hard capacity bound. TCP remains eligible until full, with visible capacity rejections. Delivery modes do not override admission, reorder queued packets or promise delivery. Current direct Netty WebSocket writes bypass the shared queue. | Register a policy bean to change admission rules; hard packet/byte bounds still apply. |
 | `DatagramPacketPolicy` | `DefaultDatagramPacketPolicy`: `ZeroMap`/`MsgPackMap` use integer `u` (convey ID) and nested `d` (payload). `ZeroArray` takes its last integer as convey ID and removes that element from the payload. Missing/unsupported content is not routed as a player command. | Register a policy bean matching your client's UDP envelope. It does not extract application command codes. |
 | `RequestPolicy` | No extra preprocessing of queued connection/UDP-access requests. This is not the gameplay command router. | Register a policy bean to preprocess those requests. |
 | `BinaryPacketCompressor` | No application compressor is installed. | Register a compressor bean and implement the matching client codec. |
@@ -127,11 +127,11 @@ TenIO implementations can override them; an unavailable diagnostic is not the sa
 | `Room` | Short `addPlayer` overloads delegate without a password, with the default slot and participant role; short spectator promotion uses the default slot. `clear()` throws unless implemented. | Override only to customize those defaults; implement cleanup for a custom room. |
 | `RoomManager` | Ownerless creation delegates with `null` owner. `clear()` and discovery enablement throw unless supported; `getDirectory()` returns `null`. `refreshDiscovery(room)` refreshes an existing directory, otherwise does nothing. | Custom managers must implement discovery/cleanup. Publish rooms explicitly; direct room mutations require refresh. |
 | `ChannelManager` | `createChannel(id)` delegates with `null` properties. | Supply properties through the full overload. |
-| `Session` | `close()` uses `EXCEPTION` for connection and player reasons. Inbound monitoring enablement is a no-op; statistics return `null`. `pollSlowConsumingOutboundQueueWarning()` delegates to the backlog getter; `pollOutboundQueueFullWarning()` permits reporting a capacity rejection. | Use explicit close reasons; custom sessions implement diagnostics and warning suppression if offered. `SessionImpl` supports monitor-gated diagnostics and per-session warning suppression. |
+| `Session` | `close()` uses `EXCEPTION` for connection and player reasons. Inbound monitoring enablement is a no-op; statistics return `null`. `pollSlowConsumingOutboundQueueWarning()` delegates to the backlog getter; `pollOutboundQueueFullWarning()` permits reporting an outbound capacity/policy rejection. | Use explicit close reasons; custom sessions implement diagnostics and warning suppression if offered. `SessionImpl` supports monitor-gated diagnostics and per-session warning suppression. |
 | `SessionManager` | `getOperationalHistory()` returns `null`. | Custom managers return their configured recorder; callers handle absence. |
 | `Response` | Delivery methods have no fallback implementation. `ResponseImpl` starts with no delivery options and basic FIFO behavior. | Custom responses implement `delivery(...)` and `getDeliveryOptions()`; queue policy controls admission independently of mode. |
 | `Packet` | Delivery methods have no fallback implementation. `PacketImpl` starts with no options and deadline `0` (none). | Custom packets implement the delivery metadata contract. |
-| `OutboundQueue` | The short monitoring overload enables diagnostics plus optional history. `statistics()` reports current depth, `-1` for unavailable capacity/high-water/drop counters, and `0` pressure age. Delivery counters default to `-1`; configuring byte limits throws. `putWithDelivery` delegates to legacy `put` and returns `ENQUEUED`. | `OutboundQueueImpl` supplies diagnostics and delivery semantics. Custom queues must override delivery methods to provide replacement/expiry; the fallback does not provide those guarantees. |
+| `OutboundQueue` | The short monitoring overload enables diagnostics plus optional history. `statistics()` reports current depth, `-1` for unavailable capacity/high-water/drop counters, and `0` pressure age. Delivery counters default to `-1`. `put` reports admission as an enum; `putWithDelivery` delegates to it and preserves its result. | `OutboundQueueImpl` supplies diagnostics and delivery semantics. Custom queues must implement admission results and override delivery methods to provide replacement/expiry; the fallback preserves their admission result. |
 
 ## Client commands
 
@@ -238,18 +238,20 @@ A non-positive value disables that direction's warnings. These settings are inde
 The standard session warns when an enqueue attempt first observes a backlog at or above the
 threshold. During sustained congestion, reminders are limited to one per 30 seconds for each
 session and direction. A later enqueue observation below the threshold rearms the next warning.
-The inbound observation occurs before admitting the new message, as does the outbound check.
+The inbound observation occurs before admission. Outbound backlog is checked after successful
+admission; rejected packets do not trigger slow-queue warnings.
 Warnings describe backlog rather than measuring client speed directly, and do not change queue
 capacity, drop policies or message processing. No warning timer or scheduled task is created.
 
 Full-queue rejections have separate WARN messages: `[Inbound Queue Full]` and
-`[Outbound Queue Full]`. The standard session logs the first capacity rejection immediately and
-limits further full-queue warnings to one per 30 seconds for each session and direction, even
-when slow-queue thresholds are disabled. These messages omit exception stack traces. Their warning
-state is allocated lazily on the first WARN-enabled capacity rejection. WebSocket writes rejected
-by Netty's non-writable channel check use the same outbound warning gate. UDP congestion-policy
-rejections are silent at the writer and remain counted as policy drops; capacity rejections remain
-counted as full drops. Unexpected failures retain their existing error reporting.
+`[Outbound Queue Full]`. Visible outbound policy rejections use `[Outbound Queue Policy]`.
+The default outbound policy makes UDP rejections silent; TCP/WebSocket rejections remain visible.
+The standard session logs the first visible rejection immediately and limits reminders to one per
+30 seconds for each session and direction, even when slow-queue thresholds are disabled. Outbound
+capacity and policy warnings share that budget. Expected outbound rejections use enum results,
+without exceptions or stack traces. Warning state is allocated lazily on the first WARN-enabled
+visible rejection. Netty's non-writable WebSocket channel check uses the same outbound warning
+gate. Unexpected failures retain normal error reporting.
 
 ## Rooms and shared state
 
@@ -309,7 +311,7 @@ happens to queued messages; `OutboundQueuePolicy` independently decides whether 
 
 | Transport | Default admission rule |
 | --- | --- |
-| UDP | Reject incoming packets when current packet occupancy is at least 75%. |
+| UDP | Reject incoming packets when current packet occupancy is at least 90%. |
 | TCP | Remain eligible until the queue is full. |
 | WebSocket | Direct Netty writes use their own writability/backpressure checks. If a WebSocket packet is explicitly passed through the queue policy, it remains eligible until full. |
 
@@ -324,11 +326,37 @@ eligible replacement, the previous unclaimed packet is temporarily removed befor
 validation; a non-growing update can therefore reuse its slot without consuming reserved headroom.
 If policy validation rejects it, the previous packet and its accounting are restored.
 
-Direct queue calls retain their documented rejection exceptions. The network writer handles
-expected policy rejections silently, records policy/full drops separately and rate-limits
-full-capacity warnings as described above. Best-effort capacity failure returns a dropped
-admission result. Responses without options retain basic FIFO behavior with no expiry or
-replacement and allocate neither delivery options nor enhanced queue bookkeeping.
+`OutboundQueuePolicy.applyPolicy(queue, packet, capacityExceeded)` returns a `Decision` enum.
+The queue supplies `capacityExceeded` after accounting for packet count, serialized bytes and any
+eligible replacement. All UDP-specific admission and silence rules live in
+`DefaultOutboundQueuePolicy`; the queue applies decisions uniformly to every transport.
+
+| Policy decision | Behavior |
+| --- | --- |
+| `ACCEPT` | Enqueue if hard bounds permit it; otherwise return a visible capacity rejection. |
+| `REJECT` | Return a visible rejection, counted as capacity when a hard bound is exceeded, otherwise as policy. |
+| `REJECT_SILENTLY` | Return the same rejection category without a rejection warning; counters remain active. |
+
+Custom policies may return `ACCEPT` to allow UDP above 90%, or choose visible/silent rejection for
+any transport. No decision can bypass hard bounds. Decisions and admission results are enum
+constants, so normal acceptance and rejection require no result allocation or congestion exception.
+
+`put(packet)` returns the outcome for the writer to process. `putWithDelivery(packet)` delegates
+to it and preserves the result. Both basic and enhanced delivery use the same admission path.
+
+| Admission result | Writer behavior |
+| --- | --- |
+| `ENQUEUED` | Schedule the session for writing. |
+| `EXPIRED` | Skip the stale packet; expiry diagnostics apply. |
+| `DROPPED` / `SILENTLY_DROPPED` | Count a capacity drop; warn only for `DROPPED`. |
+| `POLICY_REJECTED` / `SILENTLY_POLICY_REJECTED` | Count a policy drop; warn only for `POLICY_REJECTED`. |
+
+Expected policy and hard-capacity rejections never throw, for any transport or delivery mode.
+The default policy silently rejects UDP at 90% occupancy or a hard packet/byte bound; TCP capacity
+rejections remain visible. Session/network counters stay active; per-queue diagnostics remain
+monitor-gated. Unexpected failures retain their existing error logging. Responses without options
+retain basic FIFO behavior with no expiry or replacement and allocate neither delivery options
+nor enhanced queue bookkeeping.
 
 The `Priority` enum, priority record component and `withPriority(...)` have been removed.
 Existing factory calls remain valid. Direct construction now uses
@@ -468,36 +496,6 @@ File mode uses a bounded asynchronous write queue and no in-memory event archive
 pending writes during graceful shutdown and logs export failures. Keep or rotate the files according
 to your deployment's retention policy.
 
-## Guides and examples
-
-- [Framework services guide](./docs/framework-services.md): command execution, recovery,
-  response delivery, performance history, room discovery and replicated state.
-- [Server initialization example](./docs/examples/ApplicationFeatures.java): room discovery and replicated state setup.
-- [Room command example](./docs/examples/ReadyCommand.java): ordered room mutation and state snapshots.
-- [Recovery policy example](./docs/examples/SnapshotRecovery.java): application handshake and recovery delivery.
-- [Runnable server/client example](https://github.com/congcoi123/tenio-examples#example-13-framework-services):
-  a TCP walkthrough of the framework services and client protocol.
-- [Validation](./docs/validation.md): regression coverage, integration checks and benchmark scope.
-- [Benchmark source](./src/test/java/com/tenio/core/benchmark/DisabledFeatureBenchmark.java): run
-  `DisabledFeatureBenchmark.main()` in IntelliJ. The [benchmark instructions](./docs/benchmarks/disabled-results.md)
-  include command-line steps for Windows, Linux and macOS.
-
-## Requirements
-Java 21+
-
-## Dependencies
-- HTTP [Jetty](https://eclipse.dev/jetty)
-- Websocket [Netty](https://netty.io)
-
-## License
-The [`TenIO`](https://github.com/congcoi123/tenio) project is currently available under the [MIT](./LICENSE) License.
-
-## Changelog
-Please check out the [changelog](./CHANGELOG.md) for more details.
-
-## Contributing
-Please check out the [checklist](./CHECKLIST.md) and [contributing guideline](./CONTRIBUTING.md) for more details.
-
 ## WebSocket transport
 
 Declare a WebSocket port and choose the bind address in XML:
@@ -539,6 +537,36 @@ startup. Do not use test keys or disable certificate verification in deployed cl
 Application login and authorization remain required; an HTTP upgrade is not a player login.
 
 Example 7 includes a JDK WebSocket test client for login, fragmented movement, ping and close.
+
+## Guides and examples
+
+- [Framework services guide](./docs/framework-services.md): command execution, recovery,
+  response delivery, performance history, room discovery and replicated state.
+- [Server initialization example](./docs/examples/ApplicationFeatures.java): room discovery and replicated state setup.
+- [Room command example](./docs/examples/ReadyCommand.java): ordered room mutation and state snapshots.
+- [Recovery policy example](./docs/examples/SnapshotRecovery.java): application handshake and recovery delivery.
+- [Runnable server/client example](https://github.com/congcoi123/tenio-examples#example-13-framework-services):
+  a TCP walkthrough of the framework services and client protocol.
+- [Validation](./docs/validation.md): regression coverage, integration checks and benchmark scope.
+- [Benchmark source](./src/test/java/com/tenio/core/benchmark/DisabledFeatureBenchmark.java): run
+  `DisabledFeatureBenchmark.main()` in IntelliJ. The [benchmark instructions](./docs/benchmarks/disabled-results.md)
+  include command-line steps for Windows, Linux and macOS.
+
+## Requirements
+Java 21+
+
+## Dependencies
+- HTTP [Jetty](https://eclipse.dev/jetty)
+- Websocket [Netty](https://netty.io)
+
+## License
+The [`TenIO`](https://github.com/congcoi123/tenio) project is currently available under the [MIT](./LICENSE) License.
+
+## Changelog
+Please check out the [changelog](./CHANGELOG.md) for more details.
+
+## Contributing
+Please check out the [checklist](./CHECKLIST.md) and [contributing guideline](./CONTRIBUTING.md) for more details.
 
 ## Installation
 Maven Central

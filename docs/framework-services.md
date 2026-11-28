@@ -114,7 +114,7 @@ FIFO order without expiry or replacement; `replaceable(key, lifetime)` can super
 unclaimed update; `bestEffort(lifetime)` allows capacity dropping and optional expiry.
 
 Congestion admission is a separate `OutboundQueuePolicy` responsibility. The default policy
-rejects a full queue and rejects incoming UDP at 75% or greater packet occupancy. TCP remains
+silently rejects incoming UDP at 90% or greater packet occupancy or a hard capacity bound. TCP remains
 eligible until full. Delivery mode cannot bypass these rules, provide UDP reliability, reorder
 retained FIFO packets or bypass hard packet/byte bounds. Register an application policy bean to
 change admission rules. Current direct Netty WebSocket writes use writability checks rather than
@@ -124,13 +124,28 @@ The priority component, `Priority` enum and `withPriority(...)` API have been re
 compatibility adapters. The record constructor is now `DeliveryOptions(mode, key, timeToLive)`.
 Existing mode factory methods keep their signatures; custom admission rules belong in a policy.
 
-BEST_EFFORT drops on capacity admission failure. Queue-policy rejections remain explicit and are
-counted separately from full-queue drops. The network writer handles policy drops silently; full
-queues produce at most one concise WARN per 30 seconds for each standard session/direction.
-Inbound full queues use the same rate limit. Expected rejection warnings omit stack traces, while
-unexpected failures retain normal error reporting. Direct queue calls retain their exception
-contracts. Never use replaceable/best-effort for purchases or final
-match results.
+`OutboundQueuePolicy.applyPolicy(queue, packet, capacityExceeded)` returns a `Decision` enum:
+`ACCEPT`, `REJECT` or `REJECT_SILENTLY`. The queue computes the capacity flag from projected packet
+count and byte usage, allowing for an eligible replacement. Policies control admission and
+rejection visibility; the queue enforces hard bounds uniformly for every transport. All UDP rules
+live in `DefaultOutboundQueuePolicy`. A custom policy can admit UDP above 90% or make a rejection
+visible/silent for any transport, but cannot bypass hard bounds.
+
+`put` returns `ENQUEUED`, `EXPIRED`, `DROPPED`, `POLICY_REJECTED`,
+`SILENTLY_DROPPED` or `SILENTLY_POLICY_REJECTED`. Hard-bound failures count as capacity drops;
+other policy rejections count as policy drops. The writer counts both visible and silent outcomes,
+logs only visible rejections and schedules only admitted packets. `putWithDelivery` delegates to
+`put` and preserves its result for basic and enhanced delivery alike.
+Expected outbound policy and capacity rejections never throw, regardless of transport or delivery
+mode. Enum decisions/results require no allocation. Unexpected failures retain normal error logging.
+
+The default policy silently rejects UDP at 90% occupancy or at a hard packet/byte bound. TCP and
+WebSocket capacity rejections remain visible through the standard session's rate-limited warning
+gate. Session/network totals are recorded even without monitor; queue diagnostics require monitor.
+BEST_EFFORT capacity rejections also update their dedicated diagnostics when monitor is enabled.
+Outbound visible capacity/policy rejections share at most one WARN per 30 seconds. Inbound full
+queues use the same rate limit. Expected rejection warnings omit stack traces. Never use
+replaceable/best-effort for purchases or final match results.
 
 Responses with no delivery metadata retain basic FIFO behavior without replacement or expiry,
 subject to the same transport admission policy, and keep the allocation-free basic queue path. The first explicitly

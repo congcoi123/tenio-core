@@ -272,11 +272,12 @@ public interface Session {
     int pollSlowConsumingOutboundQueueWarning();
 
     /**
-     * Reserves an outbound full-queue warning slot. Call only after a capacity rejection and when
+     * Reserves an outbound rejection warning slot shared by capacity and policy warnings.
+     * Call only after a rejection whose policy permits logging and when
      * WARN logging is enabled. The standard session permits the first warning immediately, then at
      * most one per 30 seconds, independently of inbound capacity and slow-queue warnings.
      *
-     * @return {@code true} when the writer should log this full-queue warning
+     * @return {@code true} when the writer should log this outbound rejection warning
      */
     boolean pollOutboundQueueFullWarning();
 

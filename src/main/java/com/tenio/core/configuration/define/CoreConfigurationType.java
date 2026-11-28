@@ -28,7 +28,7 @@ import com.tenio.common.configuration.ConfigurationType;
 import com.tenio.core.configuration.CoreConfiguration;
 import com.tenio.core.entity.define.mode.PlayerDisconnectMode;
 import com.tenio.core.entity.define.mode.RoomRemoveMode;
-import com.tenio.core.exception.OutboundQueueFullException;
+import com.tenio.core.network.entity.outbound.packet.OutboundQueue;
 import com.tenio.core.network.entity.outbound.packet.policy.OutboundQueuePolicy;
 import com.tenio.core.network.entity.session.Session;
 import java.util.HashMap;
@@ -134,7 +134,7 @@ public enum CoreConfigurationType implements ConfigurationType {
    * its own queue, and this setting applies for all of them.
    *
    * @see OutboundQueuePolicy
-   * @see OutboundQueueFullException
+   * @see OutboundQueue.Admission
    */
   PROP_MAX_SESSION_RESPONSE_QUEUE_SIZE("max-session-response-queue-size"),
   /**
